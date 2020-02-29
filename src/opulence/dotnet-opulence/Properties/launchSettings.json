@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "dotnet-opulence": {
+      "commandName": "Project",
+      "commandLineArgs": ""
+    }
+  }
+}

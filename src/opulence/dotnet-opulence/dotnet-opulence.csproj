@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>Opulence</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    <PackageId>Opulence.dotnet-opulence</PackageId>
+    <ToolCommandName>opulence</ToolCommandName>
+    <Nullable>Enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="KubernetesClient" Version="1.6.11" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.4.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.4.0" />
+    <PackageReference Include="semver" Version="2.0.6" />
+    <PackageReference Include="Sln" Version="0.3.0" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20071.2" />
+    <PackageReference Include="System.Commandline.Rendering" Version="0.3.0-alpha.20070.2" />
+    <PackageReference Include="System.Reflection.Metadata" Version="1.8.0" />
+    <PackageReference Include="YamlDotNet.Signed" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Opulence\Opulence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="build\**" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="buildMultiTargeting\**" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Templates\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Imports.targets" />
+  </ItemGroup>
+  
+</Project>
