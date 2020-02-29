@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,7 +20,7 @@ namespace Opulence
             }
 
             var directory = new DirectoryInfo(directoryPath);
-            
+
             while (true)
             {
                 var filePath = Path.Combine(directory.FullName, fileName);
@@ -33,7 +33,7 @@ namespace Opulence
                 {
                     return null;
                 }
-                
+
                 if (directory.Parent == null)
                 {
                     return null;
@@ -56,7 +56,7 @@ namespace Opulence
             }
 
             var directory = new DirectoryInfo(directoryPath);
-            
+
             while (true)
             {
                 if (directory.EnumerateFiles(searchPattern).Any())
@@ -68,7 +68,7 @@ namespace Opulence
                 {
                     return Array.Empty<FileInfo>();
                 }
-                
+
                 if (directory.Parent == null)
                 {
                     return Array.Empty<FileInfo>();

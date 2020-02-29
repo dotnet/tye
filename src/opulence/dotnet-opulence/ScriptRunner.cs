@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,7 +34,7 @@ namespace Opulence
                 var code = File.ReadAllText(scriptFilePath);
                 var script = CSharpScript.Create<object>(
                     code,
-                    options: ScriptOptions.Default.WithImports(new []{ "System", "System.Collections.Generic", }),
+                    options: ScriptOptions.Default.WithImports(new[] { "System", "System.Collections.Generic", }),
                     globalsType: typeof(PipelineHolder),
                     assemblyLoader: null);
                 script = script.ContinueWith<object>(@"return await Pipeline.ExecuteAsync(__Pipeline);", options: ScriptOptions.Default);
@@ -58,10 +58,10 @@ namespace Opulence
                 output.WriteDebugLine($"Done compiling {Path.GetFileName(scriptFilePath)}'.");
 
                 var pipeline = new CustomizationPipeline(
-                    output, 
+                    output,
                     rootDirectory: Path.GetDirectoryName(scriptFilePath)!,
                     name: Names.NormalizeToDns(Path.GetFileNameWithoutExtension(projectFile.Name)),
-                    solution: null, 
+                    solution: null,
                     projectFile);
                 var holder = new PipelineHolder(pipeline);
 
@@ -115,7 +115,7 @@ namespace Opulence
                 var code = File.ReadAllText(scriptFilePath);
                 var script = CSharpScript.Create<object>(
                     code,
-                    options: ScriptOptions.Default.WithImports(new []{ "System", "System.Collections.Generic", }),
+                    options: ScriptOptions.Default.WithImports(new[] { "System", "System.Collections.Generic", }),
                     globalsType: typeof(PipelineHolder),
                     assemblyLoader: null);
                 script = script.ContinueWith<object>(@"return await Pipeline.ExecuteAsync(__Pipeline);", options: ScriptOptions.Default);
@@ -139,10 +139,10 @@ namespace Opulence
                 output.WriteDebugLine($"Done compiling {Path.GetFileName(scriptFilePath)}'.");
 
                 var pipeline = new CustomizationPipeline(
-                    output, 
-                    rootDirectory: Path.GetDirectoryName(scriptFilePath)!, 
+                    output,
+                    rootDirectory: Path.GetDirectoryName(scriptFilePath)!,
                     name: Names.NormalizeToDns(Path.GetFileNameWithoutExtension(solutionFile.Name)),
-                    solution, 
+                    solution,
                     projectFile: null);
                 var holder = new PipelineHolder(pipeline);
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
@@ -62,21 +62,21 @@ namespace Opulence
             using (var step = output.BeginStep("Looking For .sln File..."))
             {
                 solutionFilePath = DirectorySearch.AscendingWildcardSearch(directory.FullName, "*.sln").FirstOrDefault()?.FullName;
-                if (opulenceFilePath == null && 
-                    solutionFilePath != null && 
+                if (opulenceFilePath == null &&
+                    solutionFilePath != null &&
                     output.Confirm($"Use '{Path.GetDirectoryName(solutionFilePath)}' as Root?"))
                 {
                     opulenceFilePath = Path.Combine(Path.GetDirectoryName(solutionFilePath)!, "Opulence.csx");
                     step.MarkComplete();
                 }
-                else 
+                else
                 {
                     output.WriteInfoLine("Not Found.");
                     step.MarkComplete();
                 }
             }
 
-            if (opulenceFilePath == null && 
+            if (opulenceFilePath == null &&
                 Path.GetFullPath(directory.FullName) != Path.GetFullPath(Environment.CurrentDirectory))
             {
                 // User specified a directory other than the current one
@@ -188,6 +188,6 @@ namespace Opulence
             await writer.WriteLineAsync($"{{");
             await writer.WriteLineAsync($"    // Configure your service bindings here with code.");
             await writer.WriteLineAsync($"}});");
-        } 
+        }
     }
 }

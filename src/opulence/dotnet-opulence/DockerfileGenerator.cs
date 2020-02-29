@@ -42,7 +42,7 @@ namespace Opulence
 
             using var stream = File.OpenWrite(filePath);
             using var writer = new StreamWriter(stream, encoding: Encoding.UTF8, leaveOpen: true);
-            
+
             var entryPoint = Path.GetFileNameWithoutExtension(project.RelativeFilePath);
             output.WriteDebugLine($"Writing dockerfile to '{filePath}'.");
             if (container.UseMultiphaseDockerfile ?? true)
@@ -98,7 +98,7 @@ namespace Opulence
                 throw new ArgumentNullException(nameof(container));
             }
 
-            if (container.BaseImageName == null && 
+            if (container.BaseImageName == null &&
                 project.Frameworks.Any(f => f.Name == "Microsoft.AspNetCore.App"))
             {
                 container.BaseImageName = "mcr.microsoft.com/dotnet/core/aspnet";
@@ -135,7 +135,7 @@ namespace Opulence
             {
                 container.ImageName ??= $"{application.Globals.Registry?.Hostname}/{service.Service.Name.ToLowerInvariant()}";
             }
-            
+
             container.ImageTag ??= project.Version.Replace("+", "-");
         }
     }

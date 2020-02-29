@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
@@ -38,7 +38,7 @@ namespace Opulence
 
             if (outputs.Count == 0 || outputs.Contains("container"))
             {
-                steps.Add(new GenerateDockerfileStep(){ Force = force, });
+                steps.Add(new GenerateDockerfileStep() { Force = force, });
             }
 
             if (outputs.Count == 0 || outputs.Contains("chart"))

@@ -12,6 +12,56 @@
                 "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "format",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "dotnet-format",
+                "-w ${workspaceFolder}/tye.sln"
+            ],
+            "problemMatcher": {
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}"
+                ],
+                "severity": "warning",
+                "source": "dotnet format",
+                "pattern": {
+                    "regexp": "^\\s+(.*)\\((\\d+),(\\d+)\\):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "message": 4,
+                }
+            }
+        }
+        {
+            "label": "format-check",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "dotnet-format",
+                "-w ${workspaceFolder}/tye.sln",
+                "--check",
+                "--dry-run"
+            ],
+            "problemMatcher": {
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}"
+                ],
+                "severity": "warning",
+                "source": "dotnet format",
+                "pattern": {
+                    "regexp": "^\\s+(.*)\\((\\d+),(\\d+)\\):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "message": 4,
+                }
+            }
         }
     ]
 }

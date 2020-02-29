@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Threading.Tasks;
@@ -35,7 +35,7 @@ namespace Opulence
             }
 
             using var tempFile = TempFile.Create();
-            
+
             var dockerFilePath = Path.Combine(application.GetProjectDirectory(project), Path.GetDirectoryName(project.RelativeFilePath)!, "Dockerfile");
             if (File.Exists(dockerFilePath))
             {

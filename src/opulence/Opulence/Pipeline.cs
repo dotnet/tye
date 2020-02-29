@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Opulence
 {
     public abstract class Pipeline
-    { 
+    {
         private static readonly Dictionary<Type, List<MulticastDelegate>> callbacks = new Dictionary<Type, List<MulticastDelegate>>();
 
         public static void Configure<TApplication>(Action<TApplication> callback)
@@ -39,7 +39,7 @@ namespace Opulence
                 var method = pipeline.GetType().GetMethod("Register").MakeGenericMethod(type);
                 for (var i = 0; i < delegates.Count; i++)
                 {
-                    method.Invoke(pipeline, new[]{ delegates[i], });
+                    method.Invoke(pipeline, new[] { delegates[i], });
                 }
             }
 

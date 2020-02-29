@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Parsing;
@@ -15,7 +15,7 @@ namespace Opulence
         {
             get
             {
-                return new Option(new []{ "-e", "--environment" }, "Environemnt")
+                return new Option(new[] { "-e", "--environment" }, "Environemnt")
                 {
                     Argument = new Argument<string>("environment", () => "production")
                     {
@@ -48,7 +48,7 @@ namespace Opulence
                 argument.AddSuggestions(AllOutputs);
                 argument.SetDefaultValue(new List<string>(AllOutputs));
 
-                return new Option(new[]{ "-o", "--outputs" }, "Outputs to generate")
+                return new Option(new[] { "-o", "--outputs" }, "Outputs to generate")
                 {
                     Argument = argument,
                 };
@@ -85,7 +85,7 @@ namespace Opulence
                     Name = "project-file or solution-file or directory",
                 };
 
-                return new Option(new [] { "-p", "--project", }, "Project file, Solution file or directory")
+                return new Option(new[] { "-p", "--project", }, "Project file, Solution file or directory")
                 {
                     Argument = argument,
                 };
@@ -165,12 +165,12 @@ namespace Opulence
                 }
             }
         }
-    
+
         public static Option Verbosity
         {
             get
             {
-                return new Option(new [] { "-v", "--verbosity" }, "Output verbostiy")
+                return new Option(new[] { "-v", "--verbosity" }, "Output verbostiy")
                 {
                     Argument = new Argument<Verbosity>("one of: quiet|info|debug", () => Opulence.Verbosity.Info)
                     {

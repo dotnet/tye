@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using YamlDotNet.RepresentationModel;
 
 namespace Opulence

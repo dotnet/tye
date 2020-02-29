@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.IO;
@@ -109,7 +109,7 @@ namespace Opulence
 
         public void WriteCommandLine(string process, string args)
         {
-           WriteDebugLine($"> {process} {args}");
+            WriteDebugLine($"> {process} {args}");
         }
 
         public bool Confirm(string prompt)
@@ -149,7 +149,7 @@ namespace Opulence
             }
         }
 
-//
+        //
 
 
         public void WriteBanner()
@@ -202,7 +202,7 @@ namespace Opulence
                 if (output.Verbosity >= Verbosity.Info)
                 {
                     output.Console.SetTerminalForegroundColor(ConsoleColor.Red);
-                    output.Console.Out.WriteLine(new string(' ', output.indent + IndentAmount)+ line);
+                    output.Console.Out.WriteLine(new string(' ', output.indent + IndentAmount) + line);
                     output.Console.ResetTerminalForegroundColor();
                 }
             }
@@ -232,7 +232,7 @@ namespace Opulence
             }
 
             public bool Completed => message != null;
-            
+
             public string? Message => message;
             public string Title => title;
 
@@ -247,7 +247,7 @@ namespace Opulence
                 {
                     return;
                 }
-                
+
                 output.EndStep(this);
                 disposed = true;
             }

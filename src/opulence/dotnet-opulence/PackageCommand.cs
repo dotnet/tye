@@ -68,7 +68,7 @@ namespace Opulence
             // for just the project. We won't run the "application package" part.
             if (!string.Equals(".sln", projectFile.Extension, StringComparison.Ordinal))
             {
-                steps.Add(new WriteServiceYamlStep(){ OutputDirectory = outputDirectory, Force = force, });
+                steps.Add(new WriteServiceYamlStep() { OutputDirectory = outputDirectory, Force = force, });
             }
 
             var executor = new ServiceExecutor(output, application, steps);

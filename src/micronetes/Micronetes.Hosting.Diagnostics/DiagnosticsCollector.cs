@@ -849,5 +849,5 @@ namespace Micronetes.Hosting.Diagnostics
                 public const EventKeywords JsonMessage = (EventKeywords)8;
             }
         }
-        }
+    }
 }

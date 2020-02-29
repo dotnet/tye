@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Opulence
 {
@@ -7,7 +7,7 @@ namespace Opulence
         public override string DisplayText => "Building Docker Image...";
 
         public string Environment { get; set; } = "production";
-        
+
         public override async Task ExecuteAsync(OutputContext output, Application application, ServiceEntry service)
         {
             if (SkipWithoutProject(output, service, out var project))
