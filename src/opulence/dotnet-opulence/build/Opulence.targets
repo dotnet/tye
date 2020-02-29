@@ -1,0 +1,28 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <EvaluateOpulenceProjectInfoDependsOn>
+      $(EvaluateOpulenceProjectInfoDependsOn);
+      ResolveReferences;
+      ResolvePackageDependenciesDesignTime;
+      PrepareResources;
+      GetAssemblyAttributes;
+    </EvaluateOpulenceProjectInfoDependsOn>
+  </PropertyGroup>
+
+  <Target Name="EvaluateOpulenceProjectInfo" DependsOnTargets="$(EvaluateOpulenceProjectInfoDependsOn)">
+    <Error Message="OpulenceOutputFilePath was not specified." Condition="'$(OpulenceOutputFilePath)'==''" />
+
+    <PropertyGroup>
+      <_Frameworks>@(FrameworkReference, ',')</_Frameworks>
+    </PropertyGroup>
+    <ItemGroup>
+     <_Lines Include="version=$(InformationalVersion)" />
+     <_Lines Include="tfm=$(TargetFramework)" />
+     <_Lines Include="frameworks=$(_Frameworks)" />
+    </ItemGroup>
+
+    <WriteLinesToFile File="$(OpulenceOutputFilePath)" Lines="@(_Lines)" Overwrite="true" />
+  </Target>
+
+</Project>
