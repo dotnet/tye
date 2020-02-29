@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>Runtime helpers for m8s host platform</Description>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+</Project>

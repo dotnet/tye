@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "dotnet-micronetes": {
+      "commandName": "Project"
+    }
+  }
+}

@@ -1,0 +1,104 @@
+﻿@page "/"
+@inject Application application
+@implements IDisposable
+
+<h1>Services</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Source</th>
+            <th>Bindings</th>
+            <th>Replicas</th>
+            <th>Restarts</th>
+            <th>Logs</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var service in application.Services.Values)
+        {
+            var logsPath = $"logs/{service.Description.Name}";
+            var servicePath = $"services/{service.Description.Name}";
+            <tr @key="service.Description.Name">
+                <td><a href="@servicePath">@service.Description.Name</a></td>
+                <td>
+                    @service.ServiceType
+                </td>
+                <td>
+                    @if (service.Description.Project != null)
+                    {
+                        <p>@service.Description.Project</p>
+                    }
+                    else if (service.Description.DockerImage != null)
+                    {
+                        <p>@service.Description.DockerImage</p>
+                    }
+                </td>
+                <td>
+                    @if (service.Description.Bindings.Any())
+                    {
+                        foreach (var b in service.Description.Bindings)
+                        {
+                            if (b.Port != null)
+                            {
+                                if (b.Protocol == null || b.Protocol == "http" || b.Protocol == "https")
+                                {
+                                    var url = GetUrl(b);
+                                    <span><a href="@url" target="_blank">@url</a></span>
+                                }
+                                else
+                                {
+                                    <span>@GetUrl(b)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span>@b.ConnectionString</span>
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <p>none</p>
+                    }
+                </td>
+                <td>@service.Replicas.Count/@service.Description.Replicas</td>
+                <td>@service.Restarts</td>
+                <td>
+                    <NavLink href="@logsPath">View</NavLink>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+
+    private List<IDisposable> _subscriptions = new List<IDisposable>();
+
+    string GetUrl(ServiceBinding b)
+    {
+        return $"{(b.Protocol ?? "http")}://{b.Host ?? "localhost"}:{b.Port}";
+    }
+
+    protected override void OnInitialized()
+    {
+        foreach (var a in application.Services.Values)
+        {
+            _subscriptions.Add(a.ReplicaEvents.Subscribe(OnReplicaChanged));
+        }
+
+        base.OnInitialized();
+    }
+
+    private void OnReplicaChanged(ReplicaEvent replicaEvent)
+    {
+        InvokeAsync(() => StateHasChanged());
+    }
+
+    void IDisposable.Dispose()
+    {
+        _subscriptions.ForEach(d => d.Dispose());
+    }
+}

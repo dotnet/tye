@@ -1,0 +1,35 @@
+﻿@page "/services/{ServiceName}"
+@inject Application application
+
+@if (Service == null)
+{
+    <span>Unknown service @ServiceName</span>
+}
+else
+{
+    <h3>@Service.Description.Name</h3>
+
+    switch (Service.ServiceType)
+    {
+        case ServiceType.Container:
+            break;
+        case ServiceType.Executable:
+            break;
+        case ServiceType.Project:
+            break;
+    }
+}
+
+@code {
+    private Service _service;
+
+    [Parameter]
+    public string ServiceName { get; set; }
+
+    public Service Service => _service;
+
+    protected override void OnInitialized()
+    {
+        application.Services.TryGetValue(ServiceName, out _service);
+    }
+}
