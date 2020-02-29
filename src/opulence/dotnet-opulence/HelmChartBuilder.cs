@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Threading.Tasks;
@@ -42,7 +42,7 @@ namespace Opulence
             var projectDirectory = Path.Combine(application.RootDirectory, Path.GetDirectoryName(project.RelativeFilePath)!);
             var outputDirectoryPath = Path.Combine(projectDirectory, "bin");
             using var tempDirectory = TempDirectory.Create();
-            
+
             HelmChartGenerator.ApplyHelmChartDefaults(application, service, container, chart);
 
             var chartRoot = Path.Combine(projectDirectory, "charts");

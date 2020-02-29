@@ -28,7 +28,7 @@ namespace Opulence
             {
                 return;
             }
-            
+
             var toolType = typeof(TargetInstaller);
             var toolAssembly = toolType.GetTypeInfo().Assembly;
             var toolImportTargetsResourceName = $"Opulence.Resources.Imports.targets";

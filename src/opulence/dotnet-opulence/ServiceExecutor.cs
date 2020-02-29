@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -77,7 +77,7 @@ namespace Opulence
                 {
                     throw new ArgumentNullException(nameof(service));
                 }
-                
+
                 if (service.Service.Source is Project p)
                 {
                     project = p;

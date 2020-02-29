@@ -1,10 +1,10 @@
-using System.Linq;
+﻿using System.Linq;
 
 namespace System.CommandLine
 {
     internal static class ConsoleExtensions
     {
-       private static bool? _isConsoleRedirectionCheckSupported;
+        private static bool? _isConsoleRedirectionCheckSupported;
 
         private static bool IsConsoleRedirectionCheckSupported
         {
@@ -35,7 +35,7 @@ namespace System.CommandLine
                 ((dynamic)console).ForegroundColor = color;
             }
 
-            if (IsConsoleRedirectionCheckSupported && 
+            if (IsConsoleRedirectionCheckSupported &&
                 !Console.IsOutputRedirected)
             {
                 Console.ForegroundColor = color;
@@ -53,7 +53,7 @@ namespace System.CommandLine
                 ((dynamic)console).ForegroundColor = ConsoleColor.Red;
             }
 
-            if (IsConsoleRedirectionCheckSupported && 
+            if (IsConsoleRedirectionCheckSupported &&
                 !Console.IsOutputRedirected)
             {
                 Console.ResetColor();

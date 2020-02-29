@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using YamlDotNet.RepresentationModel;
 
@@ -32,10 +32,10 @@ namespace Opulence
             root.Add("metadata", metadata);
             metadata.Add("name", service.Service.Name);
 
-            var spec = new YamlMappingNode(); 
+            var spec = new YamlMappingNode();
             root.Add("spec", spec);
             spec.Add("workloadType", "core.oam.dev/v1alpha1.Server");
-            
+
             var containers = new YamlSequenceNode();
             spec.Add("containers", containers);
 

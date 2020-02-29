@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -60,7 +60,7 @@ namespace Opulence
                 throw new ArgumentNullException(nameof(environment));
             }
 
-            return Environments.Count  == 0 || Environments.Contains(environment, StringComparer.OrdinalIgnoreCase);
+            return Environments.Count == 0 || Environments.Contains(environment, StringComparer.OrdinalIgnoreCase);
         }
 
         internal bool IsMatchForProject(Application application, FileInfo projectFile)
@@ -80,7 +80,7 @@ namespace Opulence
                 return true;
             }
 
-            if (Service.Source is Project project && 
+            if (Service.Source is Project project &&
                 string.Equals(application.GetProjectDirectory(project), projectFile.DirectoryName, StringComparison.Ordinal))
             {
                 return true;
@@ -111,7 +111,7 @@ namespace Opulence
             ImageName = imageName;
             ImageTag = imageTag;
         }
-        
+
         public string ImageName { get; }
 
         public string ImageTag { get; }
@@ -140,7 +140,7 @@ namespace Opulence
             RootDirectory = rootDirectory;
         }
 
-        public override ApplicationGlobals Globals 
+        public override ApplicationGlobals Globals
         {
             get
             {

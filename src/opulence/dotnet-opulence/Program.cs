@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Help;
@@ -36,14 +36,14 @@ namespace Opulence
             builder.UseDebugDirective();
             builder.UseParseErrorReporting();
             builder.ParseResponseFileAs(ResponseFileHandling.ParseArgsAsSpaceSeparated);
-            builder.UsePrefixes(new []{ "-", "--", }); // disable garbage windows conventions
+            builder.UsePrefixes(new[] { "-", "--", }); // disable garbage windows conventions
 
             builder.CancelOnProcessTermination();
             builder.UseExceptionHandler(HandleException);
 
             // Allow fancy drawing.
             builder.UseAnsiTerminalWhenAvailable();
-            
+
             var parser = builder.Build();
             return await parser.InvokeAsync(args);
         }

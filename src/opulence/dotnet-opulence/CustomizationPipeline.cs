@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -74,7 +74,7 @@ namespace Opulence
                 string? projectFilePath = null;
                 if (solution != null)
                 {
-                    var project = FindProjectInSolution(solution,  service.FriendlyName);
+                    var project = FindProjectInSolution(solution, service.FriendlyName);
                     if (project == null)
                     {
                         output.WriteDebugLine($"Could not find project for service '{service.FriendlyName}'.");
@@ -97,12 +97,12 @@ namespace Opulence
                     projectRelativeFilePath = projectFile.FullName;
                     projectFilePath = projectFile.FullName;
                 }
-                
+
                 if (projectFilePath != null)
                 {
                     var project = new Project(projectRelativeFilePath!);
                     await ProjectReader.ReadProjectDetailsAsync(output, new FileInfo(projectFilePath), project);
-                    
+
                     service.Service.Source = project;
 
                     // Apply defaults to everything that has a project.
@@ -146,7 +146,7 @@ namespace Opulence
                 var project = solution.ProjectsInOrder[i];
                 var normalized = Names.NormalizeToFriendly(project.ProjectName);
 
-                if (string.Equals(normalized, projectName, StringComparison.Ordinal) && 
+                if (string.Equals(normalized, projectName, StringComparison.Ordinal) &&
                     project.AbsolutePath.EndsWith(".csproj", StringComparison.Ordinal))
                 {
                     return project;

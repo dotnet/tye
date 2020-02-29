@@ -1,4 +1,4 @@
-namespace Opulence
+﻿namespace Opulence
 {
     public static class Environments
     {

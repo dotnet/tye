@@ -1,4 +1,4 @@
-namespace Opulence
+﻿namespace Opulence
 {
     internal class StepView
     {

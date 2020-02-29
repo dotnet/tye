@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 
 namespace Opulence
 {
@@ -12,12 +12,12 @@ namespace Opulence
         private static void CopyCore(DirectoryInfo source, DirectoryInfo destination)
         {
             Directory.CreateDirectory(destination.FullName);
- 
+
             foreach (var file in source.GetFiles())
             {
                 file.CopyTo(Path.Combine(destination.FullName, file.Name), true);
             }
- 
+
             foreach (var nextSource in source.GetDirectories())
             {
                 var nextDestination = destination.CreateSubdirectory(nextSource.Name);

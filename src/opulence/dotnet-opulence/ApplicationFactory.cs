@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -129,7 +129,7 @@ namespace Opulence
                 }
             }
 
-            var application =  new GroveledApplication(globals, solutionFile.DirectoryName, services);
+            var application = new GroveledApplication(globals, solutionFile.DirectoryName, services);
 
             foreach (var service in application.Services)
             {
