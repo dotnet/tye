@@ -13,26 +13,22 @@ namespace Tye
     {
         public static Command CreateDeployCommand()
         {
-            var command = new Command("deploy", "Deploy the application");
-
-            var argument = new Argument("path")
+            var command = new Command("deploy", "Deploy the application")
             {
-                Description = "A solution or project file to generate a yaml manifest from",
-                Arity = ArgumentArity.ZeroOrOne
+                CommonArguments.Path_Required,
+                StandardOptions.Interactive,
+                StandardOptions.Verbosity,
             };
 
-            command.Add(argument);
-            command.Add(StandardOptions.Interactive);
-            command.Add(StandardOptions.Verbosity);
-
-            command.Handler = CommandHandler.Create<IConsole, string, Verbosity, bool>((console, path, verbosity, interactive) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool>((console, path, verbosity, interactive) =>
             {
-                var application = ResolveApplication(path);
-                if (application is null)
+                // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
+                if (path is null)
                 {
-                    throw new CommandException($"None of the supported files were found (tye.yaml, .csproj, .fsproj, .sln)");
+                    throw new CommandException("No project or solution file was found.");
                 }
 
+                var application = ResolveApplication(path);
                 return ExecuteAsync(new OutputContext(console, verbosity), application, environment: "production", interactive);
             });
 
