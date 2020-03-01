@@ -1,0 +1,27 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: multi-project
+services:
+- name: backend
+  project: backend/backend.csproj
+  bindings:
+  - port: 7000
+- name: frontend
+  project: frontend/frontend.csproj
+  replicas: 2
+  bindings:
+  - port: 8000
+- name: worker
+  project: worker/worker.csproj
+- name: rabbit
+  dockerImage: rabbitmq:3-management
+  bindings:
+    - port: 5672
+      protocol: rabbitmq
+    - name: management
+      port: 15672
+- name: zipkin
+  dockerImage: openzipkin/zipkin
+  bindings:
+    - port: 9411
+      protocol: http
