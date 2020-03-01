@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Micronetes.Hosting.Diagnostics;
@@ -25,7 +23,7 @@ namespace Micronetes.Hosting
         {
             foreach (var service in application.Services.Values)
             {
-                if (service.Description.External)
+                if (service.Description.RunInfo is null)
                 {
                     continue;
                 }
@@ -70,12 +68,13 @@ namespace Micronetes.Hosting
                             Thread = new Thread(() =>
                             {
                                 // TODO: Finding the application name requires msbuild knowledge
-                                _diagnosticsCollector.ProcessEvents(Path.GetFileNameWithoutExtension(process.Service.Status.ProjectFilePath),
-                                                                    process.Service.Description.Name,
-                                                                    process.Pid.Value,
-                                                                    replica.Name,
-                                                                    replica.Metrics,
-                                                                    cts.Token);
+                                _diagnosticsCollector.ProcessEvents(
+                                    Path.GetFileNameWithoutExtension(process.Service.Status.ProjectFilePath),
+                                    process.Service.Description.Name,
+                                    process.Pid!.Value,
+                                    replica.Name,
+                                    replica.Metrics,
+                                    cts.Token);
                             })
                         };
 
@@ -104,7 +103,7 @@ namespace Micronetes.Hosting
         private class Subscription { }
         private class DiagnosticsState
         {
-            public Thread Thread { get; set; }
+            public Thread Thread { get; set; } = default!;
             public CancellationTokenSource StoppingTokenSource { get; set; } = new CancellationTokenSource();
         }
     }

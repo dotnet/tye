@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using Micronetes.Hosting;
+using Tye.ConfigModel;
 
 namespace Tye
 {
@@ -57,8 +58,8 @@ namespace Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                var application = ResolveApplication(path);
-                return MicronetesHost.RunAsync(application, args);
+                var application = ConfigFactory.FromFile(path);
+                return MicronetesHost.RunAsync(application.ToHostingApplication(), args);
             });
 
             return command;

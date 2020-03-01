@@ -14,12 +14,12 @@ namespace Micronetes.Hosting
         public static async Task<ProcessResult> RunAsync(
             string filename,
             string arguments,
-            string workingDirectory = null,
+            string? workingDirectory = null,
             bool throwOnError = true,
-            IDictionary<string, string> environmentVariables = null,
-            Action<string> outputDataReceived = null,
-            Action<string> errorDataReceived = null,
-            Action<int> onStart = null,
+            IDictionary<string, string>? environmentVariables = null,
+            Action<string>? outputDataReceived = null,
+            Action<string>? errorDataReceived = null,
+            Action<int>? onStart = null,
             CancellationToken cancellationToken = default)
         {
             using var process = new Process()
@@ -106,7 +106,7 @@ namespace Micronetes.Hosting
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
 
-            var cancelledTcs = new TaskCompletionSource<object>();
+            var cancelledTcs = new TaskCompletionSource<object?>();
             using var _ = cancellationToken.Register(() => cancelledTcs.TrySetResult(null));
 
             var result = await Task.WhenAny(processLifetimeTask.Task, cancelledTcs.Task);

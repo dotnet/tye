@@ -18,7 +18,7 @@ namespace Micronetes.Hosting
 {
     public class ProxyService : IApplicationProcessor
     {
-        private IHost _host;
+        private IHost? _host;
         private readonly ILogger _logger;
 
         public ProxyService(ILogger logger)
@@ -35,7 +35,7 @@ namespace Micronetes.Hosting
                         {
                             foreach (var service in application.Services.Values)
                             {
-                                if (service.Description.External)
+                                if (service.Description.RunInfo == null)
                                 {
                                     // We eventually want to proxy everything, this is temporary
                                     continue;
@@ -69,7 +69,7 @@ namespace Micronetes.Hosting
 
                                     var ports = new List<int>();
 
-                                    for (int i = 0; i < service.Description.Replicas; i++)
+                                    for (var i = 0; i < service.Description.Replicas; i++)
                                     {
                                         // Reserve a port for each replica
                                         var port = GetNextPort();
@@ -92,7 +92,7 @@ namespace Micronetes.Hosting
 
                                             var next = (int)(Interlocked.Increment(ref count) % ports.Count);
 
-                                            NetworkStream targetStream = null;
+                                            NetworkStream? targetStream = null;
 
                                             try
                                             {
@@ -114,7 +114,10 @@ namespace Micronetes.Hosting
                                             {
                                                 _logger.LogDebug(ex, "Proxy error for service {ServiceName}", service.Description.Name);
 
-                                                await targetStream.DisposeAsync();
+                                                if (targetStream is object)
+                                                {
+                                                    await targetStream.DisposeAsync();
+                                                }
 
                                                 connection.Abort();
                                                 return;
@@ -171,7 +174,10 @@ namespace Micronetes.Hosting
             {
                 await _host.StopAsync();
 
-                await (_host as IAsyncDisposable).DisposeAsync();
+                if (_host is IAsyncDisposable disposable)
+                {
+                    await disposable.DisposeAsync();
+                }
             }
         }
     }

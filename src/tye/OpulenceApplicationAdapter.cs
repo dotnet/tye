@@ -1,14 +1,15 @@
 ﻿using System.Collections.Generic;
 using Opulence;
+using Tye.ConfigModel;
 
 namespace Tye
 {
     internal class OpulenceApplicationAdapter : Opulence.Application
     {
-        private readonly Micronetes.Hosting.Model.Application application;
+        private readonly ConfigApplication application;
 
         public OpulenceApplicationAdapter(
-            Micronetes.Hosting.Model.Application application,
+            ConfigApplication application,
             ApplicationGlobals globals,
             IReadOnlyList<ServiceEntry> services)
         {
@@ -19,7 +20,7 @@ namespace Tye
 
         public override ApplicationGlobals Globals { get; }
 
-        public override string RootDirectory => application.ContextDirectory;
+        public override string RootDirectory => application.Source.DirectoryName;
 
         public override IReadOnlyList<ServiceEntry> Services { get; }
     }

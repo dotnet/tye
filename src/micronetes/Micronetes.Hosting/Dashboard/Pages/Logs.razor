@@ -20,11 +20,11 @@ else
 
 @code {
     [Parameter]
-    public string ServiceName { get; set; }
+    public string ServiceName { get; set; } = default!;
 
-    public List<(string Text, int Id)> ApplicationLogs { get; set; }
+    public List<(string Text, int Id)>? ApplicationLogs { get; set; } 
 
-    private IDisposable _subscription;
+    private IDisposable? _subscription;
 
     protected override void OnInitialized()
     {

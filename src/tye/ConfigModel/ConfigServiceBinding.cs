@@ -1,8 +1,11 @@
-﻿namespace Micronetes.Hosting.Model
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Tye.ConfigModel
 {
-    public class ServiceBinding
+    internal class ConfigServiceBinding
     {
-        public string? Name { get; set; }
+        [Required]
+        public string Name { get; set; } = default!;
         public string? ConnectionString { get; set; }
         public int? Port { get; set; }
         public int? InternalPort { get; set; }

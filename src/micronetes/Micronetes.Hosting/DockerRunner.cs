@@ -24,7 +24,7 @@ namespace Micronetes.Hosting
             var index = 0;
             foreach (var s in application.Services)
             {
-                tasks[index++] = s.Value.Description.External ? Task.CompletedTask : StartContainerAsync(application, s.Value);
+                tasks[index++] = s.Value.Description.RunInfo is DockerRunInfo docker ? StartContainerAsync(application, s.Value, docker) : Task.CompletedTask;
             }
 
             return Task.WhenAll(tasks);
@@ -45,13 +45,8 @@ namespace Micronetes.Hosting
             return Task.WhenAll(tasks);
         }
 
-        private async Task StartContainerAsync(Application application, Service service)
+        private async Task StartContainerAsync(Application application, Service service, DockerRunInfo docker)
         {
-            if (service.Description.DockerImage == null)
-            {
-                return;
-            }
-
             if (!await _dockerInstalled.Value)
             {
                 _logger.LogError("Unable to start docker container for service {ServiceName}, Docker is not installed.", service.Description.Name);
@@ -63,12 +58,9 @@ namespace Micronetes.Hosting
             var serviceDescription = service.Description;
             var environmentArguments = "";
 
-            var dockerInfo = new DockerInformation()
-            {
-                Tasks = new Task[service.Description.Replicas.Value]
-            };
+            var dockerInfo = new DockerInformation(new Task[service.Description.Replicas]);
 
-            async Task RunDockerContainer(IEnumerable<(int Port, int? InternalPort, int BindingPort, string Protocol)> ports)
+            async Task RunDockerContainer(IEnumerable<(int Port, int? InternalPort, int BindingPort, string? Protocol)> ports)
             {
                 var hasPorts = ports.Any();
 
@@ -109,7 +101,7 @@ namespace Micronetes.Hosting
                     environmentArguments += $"-e {pair.Key}={pair.Value} ";
                 }
 
-                var command = $"run -d {environmentArguments} {portString} --name {replica} --restart=unless-stopped {service.Description.DockerImage} {service.Description.Args ?? ""}";
+                var command = $"run -d {environmentArguments} {portString} --name {replica} --restart=unless-stopped {docker.Image} {docker.Args ?? ""}";
                 _logger.LogInformation("Running docker command {Command}", command);
 
                 service.Logs.OnNext($"[{replica}]: {command}");
@@ -133,7 +125,7 @@ namespace Micronetes.Hosting
                     return;
                 }
 
-                var containerId = result.StandardOutput.Trim();
+                var containerId = (string?)result.StandardOutput.Trim();
 
                 // There's a race condition that sometimes makes us miss the output
                 // so keep trying to get the container id
@@ -194,9 +186,9 @@ namespace Micronetes.Hosting
             {
                 // Each replica is assigned a list of internal ports, one mapped to each external
                 // port
-                for (int i = 0; i < serviceDescription.Replicas; i++)
+                for (var i = 0; i < serviceDescription.Replicas; i++)
                 {
-                    var ports = new List<(int, int?, int, string)>();
+                    var ports = new List<(int, int?, int, string?)>();
                     foreach (var binding in serviceDescription.Bindings)
                     {
                         if (binding.Port == null)
@@ -212,9 +204,9 @@ namespace Micronetes.Hosting
             }
             else
             {
-                for (int i = 0; i < service.Description.Replicas; i++)
+                for (var i = 0; i < service.Description.Replicas; i++)
                 {
-                    dockerInfo.Tasks[i] = RunDockerContainer(Enumerable.Empty<(int, int?, int, string)>());
+                    dockerInfo.Tasks[i] = RunDockerContainer(Enumerable.Empty<(int, int?, int, string?)>());
                 }
             }
 
@@ -265,8 +257,13 @@ namespace Micronetes.Hosting
 
         private class DockerInformation
         {
-            public Task[] Tasks { get; set; }
-            public CancellationTokenSource StoppingTokenSource { get; set; } = new CancellationTokenSource();
+            public DockerInformation(Task[] tasks)
+            {
+                Tasks = tasks;
+            }
+
+            public Task[] Tasks { get; }
+            public CancellationTokenSource StoppingTokenSource { get; } = new CancellationTokenSource();
         }
     }
 }
