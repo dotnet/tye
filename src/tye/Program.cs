@@ -5,6 +5,7 @@ using System.CommandLine.Help;
 using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Tye
@@ -47,6 +48,12 @@ namespace Tye
         {
             context.Console.ResetTerminalForegroundColor();
             context.Console.SetTerminalForegroundColor(ConsoleColor.Red);
+
+            if (exception is TargetInvocationException tie &&
+                tie.InnerException is object)
+            {
+                exception = tie.InnerException;
+            }
 
             if (exception is OperationCanceledException)
             {

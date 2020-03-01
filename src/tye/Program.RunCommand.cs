@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.IO;
 using Micronetes.Hosting;
 
 namespace Tye
@@ -11,12 +12,7 @@ namespace Tye
         {
             var command = new Command("run", "run the application")
             {
-            };
-
-            var argument = new Argument("path")
-            {
-                Description = "A file or directory to execute. Supports a project files, solution files or a yaml manifest.",
-                Arity = ArgumentArity.ZeroOrOne
+                CommonArguments.Path_Required,
             };
 
             // TODO: We'll need to support a --build-args
@@ -53,16 +49,15 @@ namespace Tye
                 Required = false
             });
 
-            command.AddArgument(argument);
-
-            command.Handler = CommandHandler.Create<IConsole, string>((console, path) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo>((console, path) =>
             {
-                var application = ResolveApplication(path);
-                if (application is null)
+                // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
+                if (path is null)
                 {
-                    throw new CommandException($"None of the supported files were found (tye.yaml, .csproj, .fsproj, .sln)");
+                    throw new CommandException("No project or solution file was found.");
                 }
 
+                var application = ResolveApplication(path);
                 return MicronetesHost.RunAsync(application, args);
             });
 

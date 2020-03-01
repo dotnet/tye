@@ -16,22 +16,17 @@ namespace Tye
         {
             var command = new Command("init", "create a yaml manifest")
             {
+                CommonArguments.Path_Optional,
             };
 
-            var argument = new Argument("path")
+            command.Handler = CommandHandler.Create<IConsole, FileInfo?>((console, path) =>
             {
-                Description = "A solution or project file to generate a yaml manifest from",
-                Arity = ArgumentArity.ZeroOrOne
-            };
-
-            command.AddArgument(argument);
-
-            command.Handler = CommandHandler.Create<IConsole, string>((console, path) =>
-            {
-                if (File.Exists("tye.yaml"))
+                if (path is FileInfo &&
+                    path.Exists &&
+                    (string.Equals(".yml", path.Extension, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(".yaml", path.Extension, StringComparison.OrdinalIgnoreCase)))
                 {
-                    console.Out.WriteLine("\"tye.yaml\" already exists.");
-                    return;
+                    throw new CommandException($"File '{path.FullName}' already exists.");
                 }
 
                 var template = @"- name: app
@@ -46,39 +41,32 @@ namespace Tye
     # - port: 8080 # number port of the binding
 ";
 
-                try
+                if (path is FileInfo && path.Exists)
                 {
                     var application = ResolveApplication(path);
-                    if (application is object)
+                    var serializer = new SerializerBuilder()
+                        .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                        .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults)
+                        .Build();
+
+                    var extension = path.Extension.ToLowerInvariant();
+                    var directory = path.Directory;
+                    var descriptions = application.Services.Select(s => s.Value.Description).ToList();
+
+                    // Clear all bindings if any for solutions and project files
+                    if (extension == ".sln" || extension == ".csproj" || extension == ".fsproj")
                     {
-                        var serializer = new SerializerBuilder()
-                            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                            .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults)
-                            .Build();
-
-                        var extension = Path.GetExtension(application.Source).ToLowerInvariant();
-                        var directory = Path.GetDirectoryName(application.Source);
-                        var descriptions = application.Services.Select(s => s.Value.Description).ToList();
-
-                        // Clear all bindings if any for solutions and project files
-                        if (extension == ".sln" || extension == ".csproj" || extension == ".fsproj")
+                        foreach (var d in descriptions)
                         {
-                            foreach (var d in descriptions)
-                            {
-                                d.Bindings = null;
-                                d.Replicas = null;
-                                d.Build = null;
-                                d.Configuration = null;
-                                d.Project = d.Project.Substring(directory.Length).TrimStart(Path.DirectorySeparatorChar);
-                            }
+                            d.Bindings = null;
+                            d.Replicas = null;
+                            d.Build = null;
+                            d.Configuration = null;
+                            d.Project = d.Project.Substring(directory.FullName.Length).TrimStart(Path.DirectorySeparatorChar);
                         }
-
-                        template = serializer.Serialize(descriptions);
                     }
-                }
-                catch (FileNotFoundException)
-                {
-                    // No file found, just generate a new one
+
+                    template = serializer.Serialize(descriptions);
                 }
 
                 File.WriteAllText("tye.yaml", template);
@@ -88,66 +76,29 @@ namespace Tye
             return command;
         }
 
-        private static Application? ResolveApplication(string? path)
+        private static Application ResolveApplication(FileInfo file)
         {
-            if (string.IsNullOrEmpty(path))
+            if (!file.Exists)
             {
-                path = ResolveFileFromDirectory(Directory.GetCurrentDirectory());
-            }
-            else if (Directory.Exists(path))
-            {
-                path = ResolveFileFromDirectory(Path.GetFullPath(path));
+                throw new FileNotFoundException($"File '{file.FullName}' does not exist");
             }
 
-            if (path == null)
-            {
-                return null;
-            }
-
-            if (!File.Exists(path))
-            {
-                throw new FileNotFoundException($"{path} does not exist");
-            }
-
-            switch (Path.GetExtension(path).ToLower())
+            switch (file.Extension.ToLower())
             {
                 case ".yaml":
                 case ".yml":
-                    return Application.FromYaml(path);
+                    return Application.FromYaml(file.FullName);
 
                 case ".csproj":
                 case ".fsproj":
-                    return Application.FromProject(path);
+                    return Application.FromProject(file.FullName);
 
                 case ".sln":
-                    return Application.FromSolution(path);
+                    return Application.FromSolution(file.FullName);
 
                 default:
-                    throw new NotSupportedException($"{path} not supported");
+                    throw new NotSupportedException($"File '{file.FullName}' is not a supported format.");
             }
-        }
-
-        private static string? ResolveFileFromDirectory(string basePath)
-        {
-            var formats = new[] { "tye.yaml", "tye.yml", "*.csproj", "*.fsproj", "*.sln" };
-
-            foreach (var format in formats)
-            {
-                var files = Directory.GetFiles(basePath, format);
-                if (files.Length == 0)
-                {
-                    continue;
-                }
-
-                if (files.Length > 1)
-                {
-                    throw new InvalidOperationException($"Ambiguous match found {string.Join(", ", files.Select(Path.GetFileName))}");
-                }
-
-                return files[0];
-            }
-
-            return null;
         }
     }
 }
