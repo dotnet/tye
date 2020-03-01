@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Description>Runtime helpers for m8s host platform</Description>
+    <Description>Runtime helpers for tye host platform</Description>
     <Nullable>disable</Nullable>
   </PropertyGroup>
 
