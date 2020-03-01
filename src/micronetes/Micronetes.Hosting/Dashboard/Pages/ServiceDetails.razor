@@ -21,12 +21,12 @@ else
 }
 
 @code {
-    private Service _service;
+    private Service? _service;
 
     [Parameter]
-    public string ServiceName { get; set; }
+    public string ServiceName { get; set; } = default!;
 
-    public Service Service => _service;
+    public Service? Service => _service;
 
     protected override void OnInitialized()
     {

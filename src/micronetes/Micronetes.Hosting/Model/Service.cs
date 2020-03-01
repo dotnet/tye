@@ -9,8 +9,10 @@ namespace Micronetes.Hosting.Model
 {
     public class Service
     {
-        public Service()
+        public Service(ServiceDescription description)
         {
+            Description = description;
+
             Logs.Subscribe(entry =>
             {
                 if (CachedLogs.Count > 5000)
@@ -22,7 +24,7 @@ namespace Micronetes.Hosting.Model
             });
         }
 
-        public ServiceDescription Description { get; set; }
+        public ServiceDescription Description { get; }
 
         public int Restarts { get; set; }
 
@@ -30,17 +32,22 @@ namespace Micronetes.Hosting.Model
         {
             get
             {
-                if (Description.DockerImage != null)
+                if (Description.RunInfo is DockerRunInfo)
                 {
                     return ServiceType.Container;
                 }
 
-                if (Description.Project != null)
+                if (Description.RunInfo is ExecutableRunInfo)
+                {
+                    return ServiceType.Executable;
+                }
+
+                if (Description.RunInfo is ProjectRunInfo)
                 {
                     return ServiceType.Project;
                 }
 
-                return ServiceType.Executable;
+                return ServiceType.External;
             }
         }
 
@@ -86,20 +93,21 @@ namespace Micronetes.Hosting.Model
 
     public class ServiceStatus
     {
-        public string ProjectFilePath { get; set; }
-        public string ExecutablePath { get; set; }
-        public string Args { get; set; }
-        public string WorkingDirectory { get; set; }
+        public string? ProjectFilePath { get; set; }
+        public string? ExecutablePath { get; set; }
+        public string? Args { get; set; }
+        public string? WorkingDirectory { get; set; }
     }
 
     public class ProcessStatus : ReplicaStatus
     {
-        public ProcessStatus(Service service, string name) : base(service, name)
+        public ProcessStatus(Service service, string name)
+            : base(service, name)
         {
         }
         public int? ExitCode { get; set; }
         public int? Pid { get; set; }
-        public IDictionary<string, string> Environment { get; set; }
+        public IDictionary<string, string>? Environment { get; set; }
     }
 
     public class DockerStatus : ReplicaStatus
@@ -108,11 +116,11 @@ namespace Micronetes.Hosting.Model
         {
         }
 
-        public string DockerCommand { get; set; }
+        public string? DockerCommand { get; set; }
 
-        public string ContainerId { get; set; }
+        public string? ContainerId { get; set; }
 
-        public int DockerLogsPid { get; set; }
+        public int? DockerLogsPid { get; set; }
     }
 
     public class ReplicaStatus
@@ -127,7 +135,7 @@ namespace Micronetes.Hosting.Model
 
         public static JsonConverter<ReplicaStatus> JsonConverter = new Converter();
 
-        public IEnumerable<int> Ports { get; set; }
+        public IEnumerable<int>? Ports { get; set; }
 
         [JsonIgnore]
         public Service Service { get; }
@@ -155,6 +163,7 @@ namespace Micronetes.Hosting.Model
 
     public enum ServiceType
     {
+        External,
         Project,
         Executable,
         Container

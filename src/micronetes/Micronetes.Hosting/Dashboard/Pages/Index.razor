@@ -26,13 +26,13 @@
                     @service.ServiceType
                 </td>
                 <td>
-                    @if (service.Description.Project != null)
+                    @if (service.Description.RunInfo is ProjectRunInfo project)
                     {
-                        <p>@service.Description.Project</p>
+                        <p>@project.Project</p>
                     }
-                    else if (service.Description.DockerImage != null)
+                    else if (service.Description.RunInfo is DockerRunInfo docker)
                     {
-                        <p>@service.Description.DockerImage</p>
+                        <p>@docker.Image</p>
                     }
                 </td>
                 <td>

@@ -83,16 +83,17 @@ namespace Micronetes.Hosting.Diagnostics
             _options = options;
         }
 
-        public void ProcessEvents(string applicationName,
-                                  string serviceName,
-                                  int processId,
-                                  string replicaName,
-                                  IDictionary<string, string> metrics,
-                                  CancellationToken cancellationToken)
+        public void ProcessEvents(
+            string applicationName,
+            string serviceName,
+            int processId,
+            string replicaName,
+            IDictionary<string, string> metrics,
+            CancellationToken cancellationToken)
         {
             var hasEventPipe = false;
 
-            for (int i = 0; i < 10; ++i)
+            for (var i = 0; i < 10; ++i)
             {
                 if (DiagnosticsClient.GetPublishedProcesses().Contains(processId))
                 {
@@ -267,7 +268,7 @@ namespace Micronetes.Hosting.Diagnostics
 
         private void HandleLoggingEvents(EventPipeEventSource source, ILoggerFactory loggerFactory, string replicaName)
         {
-            string lastFormattedMessage = "";
+            var lastFormattedMessage = "";
 
             var logActivities = new Dictionary<Guid, LogActivityItem>();
             var stack = new Stack<Guid>();
@@ -357,8 +358,8 @@ namespace Micronetes.Hosting.Diagnostics
                     {
                         var formatString = formatElement.GetString();
                         var formatter = new LogValuesFormatter(formatString);
-                        object[] args = new object[formatter.ValueNames.Count];
-                        for (int i = 0; i < args.Length; i++)
+                        var args = new object[formatter.ValueNames.Count];
+                        for (var i = 0; i < args.Length; i++)
                         {
                             args[i] = message.GetProperty(formatter.ValueNames[i]).GetString();
                         }
@@ -413,7 +414,7 @@ namespace Micronetes.Hosting.Diagnostics
                         var payloadVal = (IDictionary<string, object>)traceEvent.PayloadValue(0);
                         var eventPayload = (IDictionary<string, object>)payloadVal["Payload"];
 
-                        ICounterPayload payload = CounterPayload.FromPayload(eventPayload);
+                        var payload = CounterPayload.FromPayload(eventPayload);
 
                         metrics[traceEvent.ProviderName + "/" + payload.Name] = payload.Value;
                     }
@@ -497,7 +498,7 @@ namespace Micronetes.Hosting.Diagnostics
                     {
                         var (activityId, duration) = GetActivityStop(arguments);
 
-                        int statusCode = 0;
+                        var statusCode = 0;
 
                         foreach (var arg in arguments)
                         {

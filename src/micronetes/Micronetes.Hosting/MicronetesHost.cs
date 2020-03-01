@@ -95,7 +95,7 @@ namespace Micronetes.Hosting
                 logger.LogError(0, ex, "Failed to launch application");
             }
 
-            var waitForStop = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
             lifetime.ApplicationStopping.Register(obj => waitForStop.TrySetResult(null), null);
 
             await waitForStop.Task;

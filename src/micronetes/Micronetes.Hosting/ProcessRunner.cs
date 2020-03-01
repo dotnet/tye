@@ -29,7 +29,16 @@ namespace Micronetes.Hosting
             var index = 0;
             foreach (var s in application.Services)
             {
-                tasks[index++] = s.Value.Description.External ? Task.CompletedTask : LaunchService(application, s.Value);
+                tasks[index++] = s.Value.ServiceType switch
+                {
+                    ServiceType.Container => Task.CompletedTask,
+                    ServiceType.External => Task.CompletedTask,
+
+                    ServiceType.Executable => LaunchService(application, s.Value),
+                    ServiceType.Project => LaunchService(application, s.Value),
+
+                    _ => throw new InvalidOperationException("Unknown ServiceType."),
+                };
             }
 
             return Task.WhenAll(tasks);
@@ -43,33 +52,33 @@ namespace Micronetes.Hosting
         private async Task LaunchService(Application application, Service service)
         {
             var serviceDescription = service.Description;
-
-            if (serviceDescription.DockerImage != null)
-            {
-                return;
-            }
-
             var serviceName = serviceDescription.Name;
 
             var path = "";
             var workingDirectory = "";
-            var args = service.Description.Args ?? "";
+            var args = "";
 
-            if (serviceDescription.Project != null)
+            if (serviceDescription.RunInfo is ProjectRunInfo project)
             {
-                var expandedProject = Environment.ExpandEnvironmentVariables(serviceDescription.Project);
+                var expandedProject = Environment.ExpandEnvironmentVariables(project.Project);
                 var fullProjectPath = Path.GetFullPath(Path.Combine(application.ContextDirectory, expandedProject));
                 path = GetExePath(fullProjectPath);
-                workingDirectory = Path.GetDirectoryName(fullProjectPath);
+                workingDirectory = Path.GetDirectoryName(fullProjectPath)!;
+                args = project.Args ?? "";
                 service.Status.ProjectFilePath = fullProjectPath;
+            }
+            else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
+            {
+                var expandedExecutable = Environment.ExpandEnvironmentVariables(executable.Executable);
+                path = Path.GetFullPath(Path.Combine(application.ContextDirectory, expandedExecutable));
+                workingDirectory = executable.WorkingDirectory != null ?
+                    Path.GetFullPath(Path.Combine(application.ContextDirectory, Environment.ExpandEnvironmentVariables(executable.WorkingDirectory))) :
+                    Path.GetDirectoryName(path)!;
+                args = executable.Args ?? "";
             }
             else
             {
-                var expandedExecutable = Environment.ExpandEnvironmentVariables(serviceDescription.Executable);
-                path = Path.GetFullPath(Path.Combine(application.ContextDirectory, expandedExecutable));
-                workingDirectory = serviceDescription.WorkingDirectory != null ?
-                    Path.GetFullPath(Path.Combine(application.ContextDirectory, Environment.ExpandEnvironmentVariables(serviceDescription.WorkingDirectory))) :
-                    Path.GetDirectoryName(path);
+                throw new InvalidOperationException("Unsupported ServiceType.");
             }
 
             // If this is a dll then use dotnet to run it
@@ -83,12 +92,11 @@ namespace Micronetes.Hosting
             service.Status.WorkingDirectory = workingDirectory;
             service.Status.Args = args;
 
-            var processInfo = new ProcessInfo
-            {
-                Tasks = new Task[service.Description.Replicas.Value]
-            };
-
-            if (service.Status.ProjectFilePath != null && service.Description.Build.GetValueOrDefault() && _buildProjects)
+            var processInfo = new ProcessInfo(new Task[service.Description.Replicas]);
+            if (service.Status.ProjectFilePath != null &&
+                service.Description.RunInfo is ProjectRunInfo project2 &&
+                project2.Build &&
+                _buildProjects)
             {
                 // Sometimes building can fail because of file locking (like files being open in VS)
                 _logger.LogInformation("Building project {ProjectFile}", service.Status.ProjectFilePath);
@@ -106,7 +114,7 @@ namespace Micronetes.Hosting
                 }
             }
 
-            async Task RunApplicationAsync(IEnumerable<(int Port, int BindingPort, string Protocol)> ports)
+            async Task RunApplicationAsync(IEnumerable<(int Port, int BindingPort, string? Protocol)> ports)
             {
                 var hasPorts = ports.Any();
 
@@ -215,7 +223,7 @@ namespace Micronetes.Hosting
                 // port
                 for (int i = 0; i < serviceDescription.Replicas; i++)
                 {
-                    var ports = new List<(int, int, string)>();
+                    var ports = new List<(int, int, string?)>();
                     foreach (var binding in serviceDescription.Bindings)
                     {
                         if (binding.Port == null)
@@ -233,7 +241,7 @@ namespace Micronetes.Hosting
             {
                 for (int i = 0; i < service.Description.Replicas; i++)
                 {
-                    processInfo.Tasks[i] = RunApplicationAsync(Enumerable.Empty<(int, int, string)>());
+                    processInfo.Tasks[i] = RunApplicationAsync(Enumerable.Empty<(int, int, string?)>());
                 }
             }
 
@@ -270,7 +278,7 @@ namespace Micronetes.Hosting
 
             var outputFileName = Path.GetFileNameWithoutExtension(projectFilePath) + (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : "");
 
-            var debugOutputPath = Path.Combine(Path.GetDirectoryName(projectFilePath), "bin", "Debug");
+            var debugOutputPath = Path.Combine(Path.GetDirectoryName(projectFilePath)!, "bin", "Debug");
 
             var tfms = Directory.Exists(debugOutputPath) ? Directory.GetDirectories(debugOutputPath) : Array.Empty<string>();
 
@@ -292,9 +300,15 @@ namespace Micronetes.Hosting
 
         private class ProcessInfo
         {
-            public Task[] Tasks { get; set; }
 
-            public CancellationTokenSource StoppedTokenSource { get; set; } = new CancellationTokenSource();
+            public ProcessInfo(Task[] tasks)
+            {
+                Tasks = tasks;
+            }
+
+            public Task[] Tasks { get; }
+
+            public CancellationTokenSource StoppedTokenSource { get; } = new CancellationTokenSource();
         }
     }
 }

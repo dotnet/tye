@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Opulence;
+using Tye.ConfigModel;
 
 namespace Tye
 {
@@ -28,28 +29,32 @@ namespace Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                var application = ResolveApplication(path);
+                var application = ConfigFactory.FromFile(path);
                 return ExecuteAsync(new OutputContext(console, verbosity), application, environment: "production", interactive);
             });
 
             return command;
         }
 
-        private static async Task ExecuteAsync(OutputContext output, Micronetes.Hosting.Model.Application application, string environment, bool interactive)
+        private static async Task ExecuteAsync(OutputContext output, ConfigApplication application, string environment, bool interactive)
         {
-            var globals = new ApplicationGlobals();
-            var services = new List<Opulence.ServiceEntry>();
-
-            foreach (var kvp in application.Services)
+            var globals = new ApplicationGlobals()
             {
-                if (kvp.Value.Description.Project is string projectFile)
+                Name = application.Name,
+                Registry = application.Registry is null ? null : new ContainerRegistry(application.Registry),
+            };
+
+            var services = new List<Opulence.ServiceEntry>();
+            foreach (var configService in application.Services)
+            {
+                if (configService.Project is string projectFile)
                 {
                     var project = new Project(projectFile);
-                    var service = new Service(kvp.Key)
+                    var service = new Service(configService.Name)
                     {
                         Source = project,
                     };
-                    var serviceEntry = new ServiceEntry(service, kvp.Key);
+                    var serviceEntry = new ServiceEntry(service, configService.Name);
 
                     await ProjectReader.ReadProjectDetailsAsync(output, new FileInfo(projectFile), project);
 
@@ -86,25 +91,15 @@ namespace Tye
             };
 
             steps.Add(new GenerateKubernetesManifestStep() { Environment = environment, });
-
-            // If this is command is for a project, then deploy the component manifest
-            // for just the project. We won't run the "application deploy" part.
-            if (!string.Equals(".csproj", Path.GetExtension(application.Source), StringComparison.Ordinal) &&
-                !string.Equals(".fsproj", Path.GetExtension(application.Source), StringComparison.Ordinal))
-            {
-                steps.Add(new DeployServiceYamlStep() { Environment = environment, });
-            }
+            steps.Add(new DeployServiceYamlStep() { Environment = environment, });
 
             var executor = new ServiceExecutor(output, opulenceApplication, steps);
             foreach (var service in opulenceApplication.Services)
             {
-                if (service.IsMatchForProject(opulenceApplication, new FileInfo(application.Source)))
-                {
-                    await executor.ExecuteAsync(service);
-                }
+                await executor.ExecuteAsync(service);
             }
 
-            await PackageApplicationAsync(output, opulenceApplication, Path.GetDirectoryName(application.Source), environment);
+            await PackageApplicationAsync(output, opulenceApplication, application.Source.Directory.Name, environment);
         }
 
         private static async Task PackageApplicationAsync(OutputContext output, Opulence.Application application, string applicationName, string environment)
