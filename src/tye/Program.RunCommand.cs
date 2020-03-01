@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using Micronetes.Hosting;
@@ -62,7 +62,7 @@ namespace Tye
                 {
                     throw new CommandException($"None of the supported files were found (tye.yaml, .csproj, .fsproj, .sln)");
                 }
-                
+
                 return MicronetesHost.RunAsync(application, args);
             });
 
