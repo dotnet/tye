@@ -5,10 +5,11 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Tye;
 
 namespace Opulence
 {
-    public class DeployCommand
+    internal static class DeployCommand
     {
         public static Command Create()
         {

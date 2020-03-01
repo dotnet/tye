@@ -5,7 +5,7 @@ using System.CommandLine.IO;
 
 namespace Opulence
 {
-    internal sealed class OutputContext
+    public sealed class OutputContext
     {
         private const int IndentAmount = 4;
 

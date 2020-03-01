@@ -6,7 +6,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Opulence
 {
-    internal sealed class ApplicationYamlWriter
+    public sealed class ApplicationYamlWriter
     {
         public static Task WriteAsync(OutputContext output, StreamWriter writer, Application application)
         {

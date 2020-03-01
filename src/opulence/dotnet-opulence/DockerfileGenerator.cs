@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Opulence
 {
-    internal static class DockerfileGenerator
+    public static class DockerfileGenerator
     {
         public static async Task WriteDockerfileAsync(OutputContext output, Application application, ServiceEntry service, Project project, ContainerInfo container, string filePath)
         {

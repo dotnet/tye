@@ -3,11 +3,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Tye;
 using YamlDotNet.RepresentationModel;
 
 namespace Opulence
 {
-    internal sealed class DeployServiceYamlStep : ServiceExecutor.Step
+    public sealed class DeployServiceYamlStep : ServiceExecutor.Step
     {
         public override string DisplayText => "Deploying Manifests...";
 

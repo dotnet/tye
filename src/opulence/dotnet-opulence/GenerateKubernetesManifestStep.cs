@@ -2,7 +2,7 @@
 
 namespace Opulence
 {
-    internal sealed class GenerateKubernetesManifestStep : ServiceExecutor.Step
+    public sealed class GenerateKubernetesManifestStep : ServiceExecutor.Step
     {
         public override string DisplayText => "Generating Manifests...";
 

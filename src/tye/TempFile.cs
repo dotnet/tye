@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Opulence
+namespace Tye
 {
     internal class TempFile : IDisposable
     {

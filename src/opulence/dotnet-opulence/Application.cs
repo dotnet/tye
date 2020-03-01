@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace Opulence
 {
-    internal abstract class Application
+    public abstract class Application
     {
         public abstract ApplicationGlobals Globals { get; }
 
@@ -25,7 +25,7 @@ namespace Opulence
         }
     }
 
-    internal class ServiceEntry
+    public class ServiceEntry
     {
         public ServiceEntry(Service service, string friendlyName, IEnumerable<string>? environments = null)
         {
@@ -63,7 +63,7 @@ namespace Opulence
             return Environments.Count == 0 || Environments.Contains(environment, StringComparer.OrdinalIgnoreCase);
         }
 
-        internal bool IsMatchForProject(Application application, FileInfo projectFile)
+        public bool IsMatchForProject(Application application, FileInfo projectFile)
         {
             if (application is null)
             {
