@@ -33,6 +33,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\tye\TempDirectory.cs" Link="TempDirectory.cs" />
+    <Compile Include="..\..\tye\TempFile.cs" Link="TempFile.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="Resources\Imports.targets" />
   </ItemGroup>
   

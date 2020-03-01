@@ -20,6 +20,7 @@ namespace Tye
 
             command.AddCommand(CreateInitCommand());
             command.AddCommand(CreateRunCommand(args));
+            command.AddCommand(CreateDeployCommand());
 
             // Show commandline help unless a subcommand was used.
             command.Handler = CommandHandler.Create<IHelpBuilder>(help =>

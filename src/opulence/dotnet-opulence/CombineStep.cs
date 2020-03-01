@@ -1,13 +1,9 @@
-﻿using System.CommandLine.Invocation;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using YamlDotNet.RepresentationModel;
 
 namespace Opulence
 {
-    internal sealed class CombineStep : ServiceExecutor.Step
+    public sealed class CombineStep : ServiceExecutor.Step
     {
         public override string DisplayText => "Compiling Services...";
 

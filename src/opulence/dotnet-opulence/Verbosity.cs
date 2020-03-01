@@ -1,6 +1,6 @@
 ﻿namespace Opulence
 {
-    internal enum Verbosity
+    public enum Verbosity
     {
         Quiet,
         Info,

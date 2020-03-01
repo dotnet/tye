@@ -6,7 +6,7 @@ using Microsoft.Build.Construction;
 
 namespace Opulence
 {
-    internal static class ApplicationFactory
+    public static class ApplicationFactory
     {
         public static async Task<Application> CreateApplicationAsync(OutputContext output, FileInfo projectFile)
         {

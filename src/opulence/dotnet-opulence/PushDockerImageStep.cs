@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Opulence
 {
-    internal sealed class PushDockerImageStep : ServiceExecutor.Step
+    public sealed class PushDockerImageStep : ServiceExecutor.Step
     {
         public override string DisplayText => "Pushing Docker Image...";
 

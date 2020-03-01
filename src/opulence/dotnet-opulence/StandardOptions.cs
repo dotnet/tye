@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Opulence
 {
-    internal static class StandardOptions
+    public static class StandardOptions
     {
         private static readonly string[] AllOutputs = new string[] { "container", "chart", };
 
@@ -31,6 +31,17 @@ namespace Opulence
             get
             {
                 return new Option("--force", "Force overwrite of existing files")
+                {
+                    Argument = new Argument<bool>(),
+                };
+            }
+        }
+
+        public static Option Interactive
+        {
+            get
+            {
+                return new Option(new[] { "-i", "--interactive", }, "Interactive mode")
                 {
                     Argument = new Argument<bool>(),
                 };

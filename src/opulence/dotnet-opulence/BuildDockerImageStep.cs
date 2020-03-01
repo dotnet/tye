@@ -2,7 +2,7 @@
 
 namespace Opulence
 {
-    internal sealed class BuildDockerImageStep : ServiceExecutor.Step
+    public sealed class BuildDockerImageStep : ServiceExecutor.Step
     {
         public override string DisplayText => "Building Docker Image...";
 

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Opulence
 {
-    internal sealed class ServiceExecutor
+    public sealed class ServiceExecutor
     {
         private readonly OutputContext output;
         private readonly Application application;

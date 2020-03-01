@@ -7,7 +7,7 @@ using Semver;
 
 namespace Opulence
 {
-    internal static class ProjectReader
+    public static class ProjectReader
     {
         public static async Task ReadProjectDetailsAsync(OutputContext output, FileInfo projectFile, Project project)
         {
