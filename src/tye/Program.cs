@@ -18,6 +18,9 @@ namespace Tye
                 Description = "Developer tools and publishing for microservices.",
             };
 
+            command.AddCommand(CreateInitCommand());
+            command.AddCommand(CreateRunCommand(args));
+
             // Show commandline help unless a subcommand was used.
             command.Handler = CommandHandler.Create<IHelpBuilder>(help =>
             {

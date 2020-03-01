@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Microsoft.Build.Construction;
+using Tye;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -250,7 +251,7 @@ namespace Micronetes.Hosting.Model
 
             // If there's a launchSettings.json, then use it to get addresses
             var root = JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(launchSettingsPath));
-            var key = Path.GetFileNameWithoutExtension(projectFilePath);
+            var key = NameSanitizer.SanitizeToIdentifier(Path.GetFileNameWithoutExtension(projectFilePath));
             var profiles = root.GetProperty("profiles");
             return profiles.TryGetProperty(key, out projectSettings);
         }
