@@ -22,10 +22,13 @@ namespace Frontend
             Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration(config =>
                 {
-                    foreach (var directory in Directory.GetDirectories("/var/tye/bindings/"))
+                    if (Directory.Exists("/var/tye/bindings/"))
                     {
-                        Console.WriteLine($"Adding config in '{directory}'.");
-                        config.AddKeyPerFile(directory, optional: true);
+                        foreach (var directory in Directory.GetDirectories("/var/tye/bindings/"))
+                        {
+                            Console.WriteLine($"Adding config in '{directory}'.");
+                            config.AddKeyPerFile(directory, optional: true);
+                        }
                     }
                 })
                 .ConfigureWebHostDefaults(webBuilder =>

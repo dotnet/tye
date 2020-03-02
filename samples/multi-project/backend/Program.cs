@@ -13,7 +13,7 @@ namespace Backend
         public static void Main(string[] args)
         {
             Activity.DefaultIdFormat = ActivityIdFormat.W3C;
-            
+
             CreateHostBuilder(args).Build().Run();
         }
 
@@ -21,10 +21,13 @@ namespace Backend
             Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration(config =>
                 {
-                    foreach (var directory in Directory.GetDirectories("/var/tye/bindings/"))
+                    if (Directory.Exists("/var/tye/bindings/"))
                     {
-                        Console.WriteLine($"Adding config in '{directory}'.");
-                        config.AddKeyPerFile(directory, optional: true);
+                        foreach (var directory in Directory.GetDirectories("/var/tye/bindings/"))
+                        {
+                            Console.WriteLine($"Adding config in '{directory}'.");
+                            config.AddKeyPerFile(directory, optional: true);
+                        }
                     }
                 })
                 .ConfigureWebHostDefaults(web =>
