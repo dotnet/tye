@@ -36,10 +36,9 @@ namespace Backend
             {
                 endpoints.MapGet("/", async context =>
                 {
-                    var connection = context.Features.Get<IHttpConnectionFeature>();
                     var backendInfo = new BackendInfo()
                     {
-                        IP = connection.LocalIpAddress.ToString(),
+                        IP = context.Connection.LocalIpAddress.ToString(),
                         Hostname = Dns.GetHostName(),
                     };
 

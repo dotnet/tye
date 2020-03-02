@@ -53,8 +53,7 @@ namespace Frontend
                     var bytes = await httpClient.GetByteArrayAsync("/");
                     var backendInfo = JsonSerializer.Deserialize<BackendInfo>(bytes, options);
 
-                    var connection = context.Features.Get<IHttpConnectionFeature>();
-                    await context.Response.WriteAsync($"Frontend Listening IP: {connection.LocalIpAddress}{Environment.NewLine}");
+                    await context.Response.WriteAsync($"Frontend Listening IP: {context.Connection.LocalIpAddress}{Environment.NewLine}");
                     await context.Response.WriteAsync($"Frontend Hostname: {Dns.GetHostName()}{Environment.NewLine}");
                     await context.Response.WriteAsync($"EnvVar Configuration value: {Configuration["App:Value"]}{Environment.NewLine}");
 
