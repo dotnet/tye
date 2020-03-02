@@ -20,6 +20,7 @@ namespace Tye
             };
 
             command.AddCommand(CreateInitCommand());
+            command.AddCommand(CreateGenerateCommand());
             command.AddCommand(CreateRunCommand(args));
             command.AddCommand(CreateDeployCommand());
 
