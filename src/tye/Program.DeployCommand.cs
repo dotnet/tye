@@ -99,10 +99,10 @@ namespace Tye
                 await executor.ExecuteAsync(service);
             }
 
-            await PackageApplicationAsync(output, opulenceApplication, application.Source.Directory.Name, environment);
+            await DeployApplicationManifestAsync(output, opulenceApplication, application.Source.Directory.Name, environment);
         }
 
-        private static async Task PackageApplicationAsync(OutputContext output, Opulence.Application application, string applicationName, string environment)
+        private static async Task DeployApplicationManifestAsync(OutputContext output, Opulence.Application application, string applicationName, string environment)
         {
             using var step = output.BeginStep("Deploying Application Manifests...");
 
