@@ -36,7 +36,7 @@ namespace Opulence
                 throw new ArgumentNullException(nameof(title));
             }
 
-            WriteInfoLine("💰 " + title);
+            WriteInfoLine("⛵ " + title);
 
             indent += IndentAmount;
             var currentStep = new StepTracker(this, title);
@@ -154,23 +154,20 @@ namespace Opulence
 
         public void WriteBanner()
         {
-            // From: http://patorjk.com/software/taag/#p=display&f=Big%20Money-nw&t=Opulence
+            // From: https://www.asciiart.eu/vehicles/boats
             WriteInfoLine(string.Empty);
-            WriteInfoLine(@" $$$$$$\                      $$\                                         ");
-            WriteInfoLine(@"$$  __$$\                     $$ |                                        ");
-            WriteInfoLine(@"$$ /  $$ | $$$$$$\  $$\   $$\ $$ | $$$$$$\  $$$$$$$\   $$$$$$$\  $$$$$$\  ");
-            WriteInfoLine(@"$$ |  $$ |$$  __$$\ $$ |  $$ |$$ |$$  __$$\ $$  __$$\ $$  _____|$$  __$$\ ");
-            WriteInfoLine(@"$$ |  $$ |$$ /  $$ |$$ |  $$ |$$ |$$$$$$$$ |$$ |  $$ |$$ /      $$$$$$$$ |");
-            WriteInfoLine(@"$$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |$$   ____|$$ |  $$ |$$ |      $$   ____|");
-            WriteInfoLine(@" $$$$$$  |$$$$$$$  |\$$$$$$  |$$ |\$$$$$$$\ $$ |  $$ |\$$$$$$$\ \$$$$$$$\ ");
-            WriteInfoLine(@" \______/ $$  ____/  \______/ \__| \_______|\__|  \__| \_______| \_______|");
-            WriteInfoLine(@"          $$ |                                                            ");
-            WriteInfoLine(@"          $$ |                                                            ");
-            WriteInfoLine(@"          \__|                                                            ");
-            WriteInfoLine(@"--------------------------------------------------------------------------");
+            WriteInfoLine(@"              |    |    |               ");
+            WriteInfoLine(@"             )_)  )_)  )_)              ");
+            WriteInfoLine(@"            )___))___))___)\            ");
+            WriteInfoLine(@"           )____)____)_____)\\          ");
+            WriteInfoLine(@"         _____|____|____|____\\\__      ");
+            WriteInfoLine(@"---------\                   /--------- ");
+            WriteInfoLine(@"  ^^^^^ ^^^^^^^^^^^^^^^^^^^^^           ");
+            WriteInfoLine(@"    ^^^^      ^^^^     ^^^    ^^        ");
+            WriteInfoLine(@"         ^^^^      ^^^                  ");
+
             WriteInfoLine(string.Empty);
-            WriteInfoLine("White-Glove service for .NET and Kubernetes...");
-            WriteInfoLine("Someone will be right with you!");
+            WriteInfoLine("Sailing into microservices productivity!");
             WriteInfoLine(string.Empty);
         }
 
