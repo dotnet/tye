@@ -132,6 +132,7 @@ namespace Opulence
                 containers.Add(container);
                 container.Add("name", service.Service.Name); // NOTE: to really support multiple images we'd need to generate unique names.
                 container.Add("image", $"{image.ImageName}:{image.ImageTag}");
+                container.Add("imagePullPolicy", "Always"); // helps avoid problems with development + weak versioning
 
                 if (service.Service.Environment.Count > 0 ||
 
