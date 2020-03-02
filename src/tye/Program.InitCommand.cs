@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.IO;
+using Opulence;
 using Tye.ConfigModel;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -20,6 +21,9 @@ namespace Tye
 
             command.Handler = CommandHandler.Create<IConsole, FileInfo?>((console, path) =>
             {
+                var output = new OutputContext(console, Verbosity.Info);
+                output.WriteBanner();
+
                 if (path is FileInfo &&
                     path.Exists &&
                     (string.Equals(".yml", path.Extension, StringComparison.OrdinalIgnoreCase) ||
