@@ -22,7 +22,12 @@ namespace Opulence
             }
 
             service.Outputs.Add(KubernetesManifestGenerator.CreateDeployment(output, application, service));
-            service.Outputs.Add(KubernetesManifestGenerator.CreateService(output, application, service));
+
+            if (service.Service.Bindings.Count > 0)
+            {
+                service.Outputs.Add(KubernetesManifestGenerator.CreateService(output, application, service));
+            }
+
             return Task.CompletedTask;
         }
     }

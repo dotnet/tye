@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Opulence
 {
@@ -11,80 +10,64 @@ namespace Opulence
 
         public override Task ExecuteAsync(OutputContext output, Application application, ServiceEntry service)
         {
-            // Process bindings and turn them into environment variables.
-            foreach (var binding in service.Service.Bindings)
+            // No need to do this computation for a non-project since we're not deploying it.
+            if (!(service.Service.Source is Project))
             {
-                // Try to see if the other project is a service in this application. This can help with
-                // heuristics if the binding doesn't have all possible info specified.
-                var other = application.Services.FirstOrDefault(s => s.Service.Name == binding.Name);
+                return Task.CompletedTask;
+            }
 
-                var key = $"SERVICES__{binding.Name}";
+            // Process bindings and turn them into environment variables and secrets. There's
+            // some duplication with the code in m8s (Application.cs) for populating environments.
+            //
+            // service.Service.Bindings is the bindings OUT - this step computes bindings IN.
+            var bindings = new ComputedBindings();
+            service.Outputs.Add(bindings);
 
-                // Find the value that needs to go in this env-var (in priority order).
-                string value;
-                if (binding.ConnectionString != null)
+            foreach (var other in application.Services)
+            {
+                if (object.ReferenceEquals(service, other))
                 {
-                    binding.ConnectionString.Name ??= $"binding-{binding.Name}";
-
-                    // It's a secret! We don't use env-vars for this.
                     continue;
                 }
-                else if (binding.Protocol != null)
-                {
-                    // This is fully specified as a URL.
-                    value = ResolveUri(binding.Protocol, binding.Name, binding.Port);
-                }
-                else if (other?.Service.Source != null && other.AppliesToEnvironment(Environment))
-                {
-                    // If we get here it means that the other service is built from source.
-                    // In this case we'll assume that it's http on 80 as a reasonable guess.
-                    value = ResolveUri(other.Service.Protocol ?? "http", binding.Name, other.Service.Port);
-                }
-                else if (other?.Service.Source != null)
-                {
-                    // The other service is built from source, but doesn't apply to this environment.
-                    // This is likely user-error.
-                    throw new CommandException($"Unable to resolve the uri for binding '{binding.Name}'.");
-                }
-                else if (other?.Service.Source == null)
-                {
-                    // The service isn't built from source.
-                    binding.ConnectionString = new Secret() { Name = $"binding-{binding.Name}", };
 
-                    // It's a secret! We don't use env-vars for this.
-                    continue;
-                }
-                else
+                foreach (var binding in other.Service.Bindings)
                 {
-                    // Generic catch all case. We don't expect this to get hit because the three blocks
-                    // above cover all possibilities, but the compiler doesn't agree.
-                    throw new CommandException($"Unable to resolve the uri for binding '{binding.Name}'.");
-                }
+                    // The other thing is a project, and will be deployed along with this
+                    // service.
+                    var configName = binding.Name == other.Service.Name ? other.Service.Name.ToUpperInvariant() : $"{other.Service.Name.ToUpperInvariant()}__{binding.Name.ToUpperInvariant()}";
+                    if (other.Service.Source is Project)
+                    {
+                        if (!string.IsNullOrEmpty(binding.ConnectionString))
+                        {
+                            // Special case for connection strings
+                            bindings.Bindings.Add(new EnvironmentVariableInputBinding($"CONNECTIONSTRING__{configName}", binding.ConnectionString));
+                        }
 
-                service.Service.Environment[key] = value;
+                        if (!string.IsNullOrEmpty(binding.Protocol))
+                        {
+                            bindings.Bindings.Add(new EnvironmentVariableInputBinding($"SERVICE__{configName}__PROTOCOL", binding.Protocol));
+                        }
+
+                        if (binding.Port != null)
+                        {
+                            bindings.Bindings.Add(new EnvironmentVariableInputBinding($"SERVICE__{configName}__PORT", binding.Port.Value.ToString()));
+                        }
+
+                        bindings.Bindings.Add(new EnvironmentVariableInputBinding($"SERVICE__{configName}__HOST", binding.Host ?? other.Service.Name));
+                    }
+                    else
+                    {
+                        // The other service is not a project, so we'll use secrets.
+                        bindings.Bindings.Add(new SecretInputBinding(
+                            name: $"binding-{Environment}-{other.Service.Name}-{binding.Name}-secret",
+                            filename: $"CONNECTIONSTRING__{configName}",
+                            other,
+                            binding));
+                    }
+                }
             }
 
             return Task.CompletedTask;
-        }
-
-        private static string ResolveUri(string protocol, string name, int? port)
-        {
-            if (protocol == "http" && (port == 80 || port == null))
-            {
-                return $"{protocol}://{name}";
-            }
-            else if (protocol == "https" && (port == 443 || port == null))
-            {
-                return $"{protocol}://{name}";
-            }
-            else if (port == null)
-            {
-                return $"{protocol}://{name}";
-            }
-            else
-            {
-                return $"{protocol}://{name}:{port}";
-            }
         }
     }
 }

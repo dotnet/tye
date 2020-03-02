@@ -17,6 +17,7 @@ namespace Tye
             var command = new Command("generate", "Generate kubernetes manifests")
             {
                 CommonArguments.Path_Required,
+                StandardOptions.Interactive,
                 StandardOptions.Verbosity,
             };
 
@@ -24,7 +25,7 @@ namespace Tye
             // not documenting it right now.
             command.IsHidden = true;
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity>((console, path, verbosity) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool>((console, path, verbosity, interactive) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -33,59 +34,15 @@ namespace Tye
                 }
 
                 var application = ConfigFactory.FromFile(path);
-                return ExecuteAsync(new OutputContext(console, verbosity), application, environment: "production");
+                return ExecuteGenerateAsync(new OutputContext(console, verbosity), application, environment: "production", interactive);
             });
 
             return command;
         }
 
-        private static async Task ExecuteAsync(OutputContext output, ConfigApplication application, string environment)
+        private static async Task ExecuteGenerateAsync(OutputContext output, ConfigApplication application, string environment, bool interactive)
         {
-            var globals = new ApplicationGlobals()
-            {
-                Name = application.Name,
-                Registry = application.Registry is null ? null : new ContainerRegistry(application.Registry),
-            };
-
-            var services = new List<Opulence.ServiceEntry>();
-            foreach (var configService in application.Services)
-            {
-                if (configService.Project is string projectFile)
-                {
-                    var project = new Project(projectFile);
-                    var service = new Service(configService.Name)
-                    {
-                        Source = project,
-                    };
-                    var serviceEntry = new ServiceEntry(service, configService.Name);
-
-                    await ProjectReader.ReadProjectDetailsAsync(output, new FileInfo(projectFile), project);
-
-                    var container = new ContainerInfo();
-                    service.GeneratedAssets.Container = container;
-                    services.Add(serviceEntry);
-                }
-            }
-
-            var opulenceApplication = new OpulenceApplicationAdapter(application, globals, services);
-            if (opulenceApplication.Globals.Registry?.Hostname == null )
-            {
-                var registry = output.Prompt("Enter the Container Registry (ex: 'example.azurecr.io' for Azure or 'example' for dockerhub)");
-                opulenceApplication.Globals.Registry = new ContainerRegistry(registry);
-            }
-            else if (opulenceApplication.Globals.Registry?.Hostname == null)
-            {
-                throw new CommandException("A registry is required for generate operations. Add the registry to 'tye.yaml' or use '-i' for interactive mode.");
-            }
-
-            foreach (var service in opulenceApplication.Services)
-            {
-                if (service.Service.Source is Project project && service.Service.GeneratedAssets.Container is ContainerInfo container)
-                {
-                    DockerfileGenerator.ApplyContainerDefaults(opulenceApplication, service, project, container);
-                }
-            }
-
+            var opulenceApplication = await CreateOpulenceApplicationAsync(output, application, interactive);
             var steps = new List<ServiceExecutor.Step>()
             {
                 new CombineStep() { Environment = environment, },

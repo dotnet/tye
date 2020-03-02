@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace Opulence
@@ -49,13 +50,17 @@ namespace Opulence
             var ports = new YamlSequenceNode();
             spec.Add("ports", ports);
 
-            var port = new YamlMappingNode();
-            ports.Add(port);
+            // We figure out the port based on bindings
+            foreach (var binding in service.Service.Bindings)
+            {
+                var port = new YamlMappingNode();
+                ports.Add(port);
 
-            port.Add("name", "web");
-            port.Add("protocol", "TCP");
-            port.Add("port", "80");
-            port.Add("targetPort", "80");
+                port.Add("name", binding.Name ?? "web");
+                port.Add("protocol", "TCP"); // we use assume TCP. YOLO
+                port.Add("port", binding.Port?.ToString() ?? "80");
+                port.Add("targetPort", binding.Port?.ToString() ?? "80");
+            }
 
             return new KubernetesServiceOutput(service.Service.Name, new YamlDocument(root));
         }
@@ -76,6 +81,8 @@ namespace Opulence
             {
                 throw new ArgumentNullException(nameof(service));
             }
+
+            var bindings = service.Outputs.OfType<ComputedBindings>().FirstOrDefault();
 
             var root = new YamlMappingNode();
 
@@ -126,7 +133,13 @@ namespace Opulence
                 container.Add("name", service.Service.Name); // NOTE: to really support multiple images we'd need to generate unique names.
                 container.Add("image", $"{image.ImageName}:{image.ImageTag}");
 
-                if (service.Service.Environment.Count > 0)
+                if (service.Service.Environment.Count > 0 ||
+
+                    // We generate ASPNETCORE_URLS if there are bindings for http
+                    service.Service.Bindings.Any(b => b.Protocol == "http" || b.Protocol is null) ||
+
+                    // We generate environment variables for other services if there dependencies
+                    (bindings is object && bindings.Bindings.OfType<EnvironmentVariableInputBinding>().Any()))
                 {
                     var env = new YamlSequenceNode();
                     container.Add("env", env);
@@ -136,57 +149,88 @@ namespace Opulence
                         env.Add(new YamlMappingNode()
                         {
                             { "name", kvp.Key },
-                            { "value", kvp.Value.ToString() },
+                            { "value", new YamlScalarNode(kvp.Value.ToString()) { Style = ScalarStyle.SingleQuoted, } },
                         });
+                    }
+
+                    foreach (var binding in service.Service.Bindings)
+                    {
+                        if (binding.Protocol == "http" || binding.Protocol == null)
+                        {
+                            var port = binding.Port ?? 80;
+                            env.Add(new YamlMappingNode()
+                            {
+                                { "name", "ASPNETCORE_URLS" },
+                                { "value", $"http://*{(binding.Port == 80 ? "" : (":" + binding.Port.ToString()))}" },
+                            });
+                        }
+                    }
+
+                    if (bindings is object)
+                    {
+                        foreach (var binding in bindings.Bindings.OfType<EnvironmentVariableInputBinding>())
+                        {
+                            env.Add(new YamlMappingNode()
+                            {
+                                { "name", binding.Name },
+                                { "value", new YamlScalarNode(binding.Value) { Style = ScalarStyle.SingleQuoted, } },
+                            });
+                        }
                     }
                 }
 
-                if (service.Service.Bindings.Any(b => b.ConnectionString != null))
+                if (bindings is object && bindings.Bindings.OfType<SecretInputBinding>().Any())
                 {
                     var volumeMounts = new YamlSequenceNode();
                     container.Add("volumeMounts", volumeMounts);
 
-                    foreach (var binding in service.Service.Bindings.Where(b => b.ConnectionString != null))
+                    foreach (var binding in bindings.Bindings.OfType<SecretInputBinding>())
                     {
                         var volumeMount = new YamlMappingNode();
                         volumeMounts.Add(volumeMount);
 
-                        volumeMount.Add("name", $"{binding.Name}-secret");
-                        volumeMount.Add("mountPath", $"/var/bindings/{binding.Name}");
+                        volumeMount.Add("name", $"{binding.Service.Service.Name}-{binding.Binding.Name}");
+                        volumeMount.Add("mountPath", $"/var/tye/bindings/{binding.Service.Service.Name}-{binding.Binding.Name}");
                         volumeMount.Add("readOnly", "true");
                     }
                 }
 
-                var ports = new YamlSequenceNode();
-                container.Add("ports", ports);
+                if (service.Service.Bindings.Count > 0)
+                {
+                    var ports = new YamlSequenceNode();
+                    container.Add("ports", ports);
 
-                var containerPort = new YamlMappingNode();
-                ports.Add(containerPort);
-                containerPort.Add("containerPort", "80");
+                    foreach (var binding in service.Service.Bindings)
+                    {
+                        var containerPort = new YamlMappingNode();
+                        ports.Add(containerPort);
+                        containerPort.Add("containerPort", binding.Port?.ToString() ?? "80");
+                    }
+                }
             }
 
-            if (service.Service.Bindings.Any(b => b.ConnectionString != null))
+            if (bindings.Bindings.OfType<SecretInputBinding>().Any())
             {
                 var volumes = new YamlSequenceNode();
                 spec.Add("volumes", volumes);
 
-                foreach (var binding in service.Service.Bindings.Where(b => b.ConnectionString != null))
+                foreach (var binding in bindings.Bindings.OfType<SecretInputBinding>())
                 {
                     var volume = new YamlMappingNode();
                     volumes.Add(volume);
-                    volume.Add("name", $"{binding.Name}-secret");
+                    volume.Add("name", $"{binding.Service.Service.Name}-{binding.Binding.Name}");
 
                     var secret = new YamlMappingNode();
                     volume.Add("secret", secret);
-                    secret.Add("secretName", binding.ConnectionString!.Name!);
+                    secret.Add("secretName", binding.Name!);
 
                     var items = new YamlSequenceNode();
                     secret.Add("items", items);
 
                     var item = new YamlMappingNode();
                     items.Add(item);
-                    item.Add("key", "uri");
-                    item.Add("path", $"SERVICES__{binding.Name}");
+                    item.Add("key", "connectionstring");
+                    item.Add("path", binding.Filename);
                 }
             }
 
