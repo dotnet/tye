@@ -1,0 +1,99 @@
+﻿kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: backend
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/part-of: frontend-backend
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: backend
+        app.kubernetes.io/part-of: frontend-backend
+    spec:
+      containers:
+      - name: backend
+        image: rynowak/backend:0.1.17-alpha.gd8612934f5
+        env:
+        - name: ASPNETCORE_URLS
+          value: http://*:5050
+        - name: SERVICE__FRONTEND__PORT
+          value: '5051'
+        - name: SERVICE__FRONTEND__HOST
+          value: 'frontend'
+        ports:
+        - containerPort: 5050
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: backend
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/part-of: frontend-backend
+spec:
+  selector:
+    app.kubernetes.io/name: backend
+  type: ClusterIP
+  ports:
+  - name: web
+    protocol: TCP
+    port: 5050
+    targetPort: 5050
+...
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: frontend
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: frontend-backend
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: frontend
+        app.kubernetes.io/part-of: frontend-backend
+    spec:
+      containers:
+      - name: frontend
+        image: rynowak/frontend:0.1.17-alpha.gd8612934f5
+        env:
+        - name: ASPNETCORE_URLS
+          value: http://*:5051
+        - name: SERVICE__BACKEND__PORT
+          value: '5050'
+        - name: SERVICE__BACKEND__HOST
+          value: 'backend'
+        ports:
+        - containerPort: 5051
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: frontend
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: frontend-backend
+spec:
+  selector:
+    app.kubernetes.io/name: frontend
+  type: ClusterIP
+  ports:
+  - name: web
+    protocol: TCP
+    port: 5051
+    targetPort: 5051
+...
+tPort: 5051
+...
