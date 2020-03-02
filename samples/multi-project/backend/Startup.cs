@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -25,10 +26,22 @@ namespace Backend
 
             services.AddSingleton(sp =>
             {
+                AmqpTcpEndpoint endpoint;
+                var connectionString = Configuration["connectionstring:rabbit"];
+                if (connectionString == null)
+                {
+                    var host = Configuration["service:rabbit:host"];
+                    var port = int.Parse(Configuration["service:rabbit:port"]);
+                    endpoint = new AmqpTcpEndpoint(host, port);
+                }
+                else
+                {
+                    endpoint = new AmqpTcpEndpoint(new Uri(connectionString));
+                }
+
                 var factory = new ConnectionFactory()
                 {
-                    HostName = Configuration["service:rabbit:host"],
-                    Port = int.Parse(Configuration["service:rabbit:port"])
+                    Endpoint = endpoint,
                 };
                 var connection = factory.CreateConnection();
                 var channel = connection.CreateModel();

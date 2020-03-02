@@ -19,16 +19,12 @@ namespace Opulence
 
         public GeneratedAssets GeneratedAssets { get; } = new GeneratedAssets();
 
-        public int? Port { get; set; }
-
-        public string? Protocol { get; set; }
-
         public Source? Source { get; set; }
 
         public Dictionary<string, object> Environment { get; set; } = new Dictionary<string, object>();
 
-        public int Replicas { get; set; } = 1;
-
+        // Represents bindings *published* by this service
+        // See GeneratedAssets for bindings consumed by the service
         public List<ServiceBinding> Bindings { get; } = new List<ServiceBinding>();
     }
 }

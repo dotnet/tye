@@ -1,5 +1,8 @@
+using System;
 using System.Diagnostics;
+using System.IO;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using ProtoBuf.Grpc.Client;
 
@@ -17,6 +20,14 @@ namespace Frontend
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration(config =>
+                {
+                    foreach (var directory in Directory.GetDirectories("/var/tye/bindings/"))
+                    {
+                        Console.WriteLine($"Adding config in '{directory}'.");
+                        config.AddKeyPerFile(directory, optional: true);
+                    }
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

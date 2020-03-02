@@ -1,6 +1,7 @@
 # tye application configuration file
 # read all about it at https://github.com/dotnet/tye
 name: multi-project
+registry: rynowak
 services:
 - name: backend
   project: backend/backend.csproj
@@ -18,10 +19,3 @@ services:
   bindings:
     - port: 5672
       protocol: rabbitmq
-    - name: management
-      port: 15672
-- name: zipkin
-  dockerImage: openzipkin/zipkin
-  bindings:
-    - port: 9411
-      protocol: http

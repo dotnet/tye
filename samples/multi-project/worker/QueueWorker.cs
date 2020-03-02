@@ -61,10 +61,22 @@ namespace Worker
             {
                 try
                 {
+                    AmqpTcpEndpoint endpoint;
+                    var connectionString = _configuration["connectionstring:rabbit"];
+                    if (connectionString == null)
+                    {
+                        var host = _configuration["service:rabbit:host"];
+                        var port = int.Parse(_configuration["service:rabbit:port"]);
+                        endpoint = new AmqpTcpEndpoint(host, port);
+                    }
+                    else
+                    {
+                        endpoint = new AmqpTcpEndpoint(new Uri(connectionString));
+                    }
+
                     var factory = new ConnectionFactory()
                     {
-                        HostName = _configuration["service:rabbit:host"],
-                        Port = int.Parse(_configuration["service:rabbit:port"])
+                        Endpoint = endpoint,
                     };
 
                     var connection = factory.CreateConnection();

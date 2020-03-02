@@ -30,13 +30,35 @@ namespace Tye
                 }
 
                 var application = ConfigFactory.FromFile(path);
-                return ExecuteAsync(new OutputContext(console, verbosity), application, environment: "production", interactive);
+                return ExecuteDeployAsync(new OutputContext(console, verbosity), application, environment: "production", interactive);
             });
 
             return command;
         }
 
-        private static async Task ExecuteAsync(OutputContext output, ConfigApplication application, string environment, bool interactive)
+        private static async Task ExecuteDeployAsync(OutputContext output, ConfigApplication application, string environment, bool interactive)
+        {
+            var opulenceApplication = await CreateOpulenceApplicationAsync(output, application, interactive);
+            var steps = new List<ServiceExecutor.Step>()
+            {
+                new CombineStep() { Environment = environment, },
+                new BuildDockerImageStep() { Environment = environment, },
+                new PushDockerImageStep() { Environment = environment, },
+            };
+
+            steps.Add(new GenerateKubernetesManifestStep() { Environment = environment, });
+            steps.Add(new DeployServiceYamlStep() { Environment = environment, });
+
+            var executor = new ServiceExecutor(output, opulenceApplication, steps);
+            foreach (var service in opulenceApplication.Services)
+            {
+                await executor.ExecuteAsync(service);
+            }
+
+            await DeployApplicationManifestAsync(output, opulenceApplication, application.Source.Directory.Name, environment);
+        }
+
+        private static async Task<OpulenceApplicationAdapter> CreateOpulenceApplicationAsync(OutputContext output, ConfigApplication application, bool interactive)
         {
             var globals = new ApplicationGlobals()
             {
@@ -54,12 +76,46 @@ namespace Tye
                     {
                         Source = project,
                     };
+
+                    foreach (var configBinding in configService.Bindings)
+                    {
+                        service.Bindings.Add(new ServiceBinding(configBinding.Name ?? service.Name)
+                        {
+                            ConnectionString = configBinding.ConnectionString,
+                            Host = configBinding.Host,
+                            Port = configBinding.Port,
+                            Protocol = configBinding.Protocol,
+                        });
+                    }
+
                     var serviceEntry = new ServiceEntry(service, configService.Name);
 
                     await ProjectReader.ReadProjectDetailsAsync(output, new FileInfo(projectFile), project);
 
-                    var container = new ContainerInfo();
+                    var container = new ContainerInfo()
+                    {
+                        // Single-phase workflow doesn't currently work.
+                        UseMultiphaseDockerfile = true,
+                    };
                     service.GeneratedAssets.Container = container;
+                    services.Add(serviceEntry);
+                }
+                else
+                {
+                    // For a non-project, we don't really need much info about it, just the name and bindings
+                    var service = new Service(configService.Name);
+                    foreach (var configBinding in configService.Bindings)
+                    {
+                        service.Bindings.Add(new ServiceBinding(configBinding.Name ?? service.Name)
+                        {
+                            ConnectionString = configBinding.ConnectionString,
+                            Host = configBinding.Host,
+                            Port = configBinding.Port,
+                            Protocol = configBinding.Protocol,
+                        });
+                    }
+
+                    var serviceEntry = new ServiceEntry(service, configService.Name);
                     services.Add(serviceEntry);
                 }
             }
@@ -83,23 +139,7 @@ namespace Tye
                 }
             }
 
-            var steps = new List<ServiceExecutor.Step>()
-            {
-                new CombineStep() { Environment = environment, },
-                new BuildDockerImageStep() { Environment = environment, },
-                new PushDockerImageStep() { Environment = environment, },
-            };
-
-            steps.Add(new GenerateKubernetesManifestStep() { Environment = environment, });
-            steps.Add(new DeployServiceYamlStep() { Environment = environment, });
-
-            var executor = new ServiceExecutor(output, opulenceApplication, steps);
-            foreach (var service in opulenceApplication.Services)
-            {
-                await executor.ExecuteAsync(service);
-            }
-
-            await DeployApplicationManifestAsync(output, opulenceApplication, application.Source.Directory.Name, environment);
+            return opulenceApplication;
         }
 
         private static async Task DeployApplicationManifestAsync(OutputContext output, Opulence.Application application, string applicationName, string environment)
