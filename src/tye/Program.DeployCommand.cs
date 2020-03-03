@@ -5,7 +5,6 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Opulence;
 using Tye.ConfigModel;
 
 namespace Tye
@@ -38,7 +37,7 @@ namespace Tye
 
         private static async Task ExecuteDeployAsync(OutputContext output, ConfigApplication application, string environment, bool interactive)
         {
-            var opulenceApplication = await CreateOpulenceApplicationAsync(output, application, interactive);
+            var temporaryApplication = await CreateApplicationAdapterAsync(output, application, interactive);
             var steps = new List<ServiceExecutor.Step>()
             {
                 new CombineStep() { Environment = environment, },
@@ -49,16 +48,16 @@ namespace Tye
             steps.Add(new GenerateKubernetesManifestStep() { Environment = environment, });
             steps.Add(new DeployServiceYamlStep() { Environment = environment, });
 
-            var executor = new ServiceExecutor(output, opulenceApplication, steps);
-            foreach (var service in opulenceApplication.Services)
+            var executor = new ServiceExecutor(output, temporaryApplication, steps);
+            foreach (var service in temporaryApplication.Services)
             {
                 await executor.ExecuteAsync(service);
             }
 
-            await DeployApplicationManifestAsync(output, opulenceApplication, application.Source.Directory.Name, environment);
+            await DeployApplicationManifestAsync(output, temporaryApplication, application.Source.Directory.Name, environment);
         }
 
-        private static async Task<OpulenceApplicationAdapter> CreateOpulenceApplicationAsync(OutputContext output, ConfigApplication application, bool interactive)
+        private static async Task<TemporaryApplicationAdapter> CreateApplicationAdapterAsync(OutputContext output, ConfigApplication application, bool interactive)
         {
             var globals = new ApplicationGlobals()
             {
@@ -66,7 +65,7 @@ namespace Tye
                 Registry = application.Registry is null ? null : new ContainerRegistry(application.Registry),
             };
 
-            var services = new List<Opulence.ServiceEntry>();
+            var services = new List<Tye.ServiceEntry>();
             foreach (var configService in application.Services)
             {
                 if (configService.Project is string projectFile)
@@ -120,29 +119,29 @@ namespace Tye
                 }
             }
 
-            var opulenceApplication = new OpulenceApplicationAdapter(application, globals, services);
-            if (opulenceApplication.Globals.Registry?.Hostname == null && interactive)
+            var temporaryApplication = new TemporaryApplicationAdapter(application, globals, services);
+            if (temporaryApplication.Globals.Registry?.Hostname == null && interactive)
             {
                 var registry = output.Prompt("Enter the Container Registry (ex: 'example.azurecr.io' for Azure or 'example' for dockerhub)");
-                opulenceApplication.Globals.Registry = new ContainerRegistry(registry);
+                temporaryApplication.Globals.Registry = new ContainerRegistry(registry);
             }
-            else if (opulenceApplication.Globals.Registry?.Hostname == null)
+            else if (temporaryApplication.Globals.Registry?.Hostname == null)
             {
                 throw new CommandException("A registry is required for deploy operations. Add the registry to 'tye.yaml' or use '-i' for interactive mode.");
             }
 
-            foreach (var service in opulenceApplication.Services)
+            foreach (var service in temporaryApplication.Services)
             {
                 if (service.Service.Source is Project project && service.Service.GeneratedAssets.Container is ContainerInfo container)
                 {
-                    DockerfileGenerator.ApplyContainerDefaults(opulenceApplication, service, project, container);
+                    DockerfileGenerator.ApplyContainerDefaults(temporaryApplication, service, project, container);
                 }
             }
 
-            return opulenceApplication;
+            return temporaryApplication;
         }
 
-        private static async Task DeployApplicationManifestAsync(OutputContext output, Opulence.Application application, string applicationName, string environment)
+        private static async Task DeployApplicationManifestAsync(OutputContext output, Tye.Application application, string applicationName, string environment)
         {
             using var step = output.BeginStep("Deploying Application Manifests...");
 

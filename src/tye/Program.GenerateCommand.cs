@@ -5,7 +5,6 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Opulence;
 using Tye.ConfigModel;
 
 namespace Tye
@@ -42,7 +41,7 @@ namespace Tye
 
         private static async Task ExecuteGenerateAsync(OutputContext output, ConfigApplication application, string environment, bool interactive)
         {
-            var opulenceApplication = await CreateOpulenceApplicationAsync(output, application, interactive);
+            var temporaryApplication = await CreateApplicationAdapterAsync(output, application, interactive);
             var steps = new List<ServiceExecutor.Step>()
             {
                 new CombineStep() { Environment = environment, },
@@ -51,16 +50,16 @@ namespace Tye
 
             steps.Add(new GenerateKubernetesManifestStep() { Environment = environment, });
 
-            var executor = new ServiceExecutor(output, opulenceApplication, steps);
-            foreach (var service in opulenceApplication.Services)
+            var executor = new ServiceExecutor(output, temporaryApplication, steps);
+            foreach (var service in temporaryApplication.Services)
             {
                 await executor.ExecuteAsync(service);
             }
 
-            await GenerateApplicationManifestAsync(output, opulenceApplication, application.Source.Directory.Name, environment);
+            await GenerateApplicationManifestAsync(output, temporaryApplication, application.Source.Directory.Name, environment);
         }
 
-        private static async Task GenerateApplicationManifestAsync(OutputContext output, Opulence.Application application, string applicationName, string environment)
+        private static async Task GenerateApplicationManifestAsync(OutputContext output, Tye.Application application, string applicationName, string environment)
         {
             using var step = output.BeginStep("Generating Application Manifests...");
 
