@@ -236,6 +236,7 @@ namespace Micronetes.Hosting.Diagnostics
                     {
                     }
                     // If the process has already exited, a ServerNotAvailableException will be thrown.
+                    // This can always race with tye shutting down and a process being restarted on exiting.
                     catch (ServerNotAvailableException)
                     {
                     }
