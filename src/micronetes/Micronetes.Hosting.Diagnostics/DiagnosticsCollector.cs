@@ -197,6 +197,11 @@ namespace Micronetes.Hosting.Diagnostics
                 {
                     break;
                 }
+                // If the process has already exited, a ServerNotAvailableException will be thrown.
+                catch (ServerNotAvailableException)
+                {
+                    break;
+                }
                 catch (Exception ex)
                 {
                     if (!cancellationToken.IsCancellationRequested)
@@ -228,6 +233,10 @@ namespace Micronetes.Hosting.Diagnostics
                     // Since we are catching this in StopMonitor() we know that the pipe once existed (otherwise the exception would've 
                     // been thrown in StartMonitor directly)
                     catch (PlatformNotSupportedException)
+                    {
+                    }
+                    // If the process has already exited, a ServerNotAvailableException will be thrown.
+                    catch (ServerNotAvailableException)
                     {
                     }
                 }
