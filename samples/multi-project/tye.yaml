@@ -1,7 +1,6 @@
 # tye application configuration file
 # read all about it at https://github.com/dotnet/tye
 name: multi-project
-registry: rynowak
 services:
 - name: backend
   project: backend/backend.csproj
