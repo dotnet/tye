@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\micronetes\Micronetes.Hosting\Micronetes.Hosting.csproj" />
+    <ProjectReference Include="..\Tye.Hosting\Tye.Hosting.csproj" />
     <ProjectReference Include="..\Tye.Core\Tye.Core.csproj" />
   </ItemGroup>
 

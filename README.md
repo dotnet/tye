@@ -12,9 +12,9 @@ What tye can do:
 
 ## Current Status
 
-![CI](https://github.com/rynowak/tye/workflows/CI/badge.svg)
+![CI](https://github.com/dotnet/tye/workflows/CI/badge.svg)
 
-Dipper will be a combination of [Opulence](https://github.com/rynowak/opulence) and [Micronetes](https://github.com/davidfowl/micronetes) into a single tool.
+Tye is the combination of [Opulence](https://github.com/rynowak/opulence) and [Micronetes](https://github.com/davidfowl/micronetes) into a single tool.
 
 There's not much to see here right now, but keep watching this space for updates.
 
