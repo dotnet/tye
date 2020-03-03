@@ -18,9 +18,9 @@ namespace Tye.ConfigModel
 
         public List<ConfigService> Services { get; set; } = new List<ConfigService>();
 
-        public Application ToHostingApplication()
+        public Micronetes.Hosting.Model.Application ToHostingApplication()
         {
-            var services = new Dictionary<string, Service>();
+            var services = new Dictionary<string, Micronetes.Hosting.Model.Service>();
             foreach (var service in Services)
             {
                 RunInfo? runInfo;
@@ -45,14 +45,14 @@ namespace Tye.ConfigModel
                     throw new InvalidOperationException($"Cannot figure out how to run service '{service.Name}'.");
                 }
 
-                var description = new ServiceDescription(service.Name, runInfo)
+                var description = new Micronetes.Hosting.Model.ServiceDescription(service.Name, runInfo)
                 {
                     Replicas = service.Replicas ?? 1,
                 };
 
                 foreach (var binding in service.Bindings)
                 {
-                    description.Bindings.Add(new ServiceBinding()
+                    description.Bindings.Add(new Micronetes.Hosting.Model.ServiceBinding()
                     {
                         ConnectionString = binding.ConnectionString,
                         Host = binding.Host,
@@ -68,10 +68,10 @@ namespace Tye.ConfigModel
                     description.Configuration.Add(new ConfigurationSource(entry.Name, entry.Value));
                 }
 
-                services.Add(service.Name, new Service(description));
+                services.Add(service.Name, new Micronetes.Hosting.Model.Service(description));
             }
 
-            return new Application(Source, services);
+            return new Micronetes.Hosting.Model.Application(Source, services);
         }
     }
 }

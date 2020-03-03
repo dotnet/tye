@@ -1,8 +1,0 @@
-﻿<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ImportGroup Condition=" '$(TargetFramework)' == '' AND '$(ExcludeRestorePackageImports)' != 'true' ">
-    <Import Project="$(OpulenceTargetLocation)\buildMultiTargeting\Opulence.targets" Condition="'$(OpulenceTargetLocation)'!=''" />
-  </ImportGroup>
-  <ImportGroup Condition=" '$(TargetFramework)' != '' AND '$(ExcludeRestorePackageImports)' != 'true' ">
-    <Import Project="$(OpulenceTargetLocation)\build\Opulence.targets" Condition="'$(OpulenceTargetLocation)'!=''" />
-  </ImportGroup>
-</Project>

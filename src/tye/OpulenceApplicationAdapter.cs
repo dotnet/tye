@@ -1,14 +1,13 @@
 ﻿using System.Collections.Generic;
-using Opulence;
 using Tye.ConfigModel;
 
 namespace Tye
 {
-    internal class OpulenceApplicationAdapter : Opulence.Application
+    internal class TemporaryApplicationAdapter : Tye.Application
     {
         private readonly ConfigApplication application;
 
-        public OpulenceApplicationAdapter(
+        public TemporaryApplicationAdapter(
             ConfigApplication application,
             ApplicationGlobals globals,
             IReadOnlyList<ServiceEntry> services)

@@ -3,7 +3,6 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.IO;
-using Opulence;
 using Tye.ConfigModel;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;

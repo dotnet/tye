@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\micronetes\Micronetes.Hosting\Micronetes.Hosting.csproj" />
-    <ProjectReference Include="..\opulence\dotnet-opulence\dotnet-opulence.csproj" />
+    <ProjectReference Include="..\Tye.Core\Tye.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
