@@ -1,4 +1,4 @@
-﻿namespace Micronetes.Hosting
+﻿namespace Tye.Hosting
 {
     internal class ProcessResult
     {

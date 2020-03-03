@@ -1,4 +1,4 @@
-﻿namespace Micronetes.Hosting.Model
+﻿namespace Tye.Hosting.Model
 {
     public class ServiceBinding
     {

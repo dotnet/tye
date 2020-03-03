@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Micronetes.Hosting.Model
+namespace Tye.Hosting.Model
 {
     public class ServiceDescription
     {

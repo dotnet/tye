@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Micronetes.Hosting.Model
+namespace Tye.Hosting.Model
 {
     public enum ServiceState
     {

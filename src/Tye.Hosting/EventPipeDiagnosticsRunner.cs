@@ -2,11 +2,11 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Micronetes.Hosting.Diagnostics;
-using Micronetes.Hosting.Model;
+using Tye.Hosting.Diagnostics;
+using Tye.Hosting.Model;
 using Microsoft.Extensions.Logging;
 
-namespace Micronetes.Hosting
+namespace Tye.Hosting
 {
     public class EventPipeDiagnosticsRunner : IApplicationProcessor
     {

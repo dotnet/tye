@@ -7,14 +7,14 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Bedrock.Framework;
-using Micronetes.Hosting.Model;
+using Tye.Hosting.Model;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Micronetes.Hosting
+namespace Tye.Hosting
 {
     public class ProxyService : IApplicationProcessor
     {
@@ -84,7 +84,7 @@ namespace Micronetes.Hosting
                                     {
                                         long count = 0;
 
-                                        // o.UseConnectionLogging("Micronetes.Proxy");
+                                        // o.UseConnectionLogging("Tye.Proxy");
 
                                         o.Run(async connection =>
                                         {

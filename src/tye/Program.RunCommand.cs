@@ -2,7 +2,7 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
-using Micronetes.Hosting;
+using Tye.Hosting;
 using Tye.ConfigModel;
 
 namespace Tye
@@ -59,7 +59,7 @@ namespace Tye
                 }
 
                 var application = ConfigFactory.FromFile(path);
-                return MicronetesHost.RunAsync(application.ToHostingApplication(), args);
+                return TyeHost.RunAsync(application.ToHostingApplication(), args);
             });
 
             return command;

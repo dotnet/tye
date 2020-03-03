@@ -4,7 +4,7 @@
     "anonymousAuthentication": true
   },
   "profiles": {
-    "Micronetes.Hosting": {
+    "Tye.Hosting": {
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {

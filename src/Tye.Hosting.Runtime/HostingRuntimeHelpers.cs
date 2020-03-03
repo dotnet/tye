@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Micronetes.Hosting.Runtime
+namespace Tye.Hosting.Runtime
 {
     // This exists solely as a way to locate this dll
     public class HostingRuntimeHelpers

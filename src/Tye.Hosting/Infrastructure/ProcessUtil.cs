@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Mono.Unix.Native;
 
-namespace Micronetes.Hosting
+namespace Tye.Hosting
 {
     internal static class ProcessUtil
     {

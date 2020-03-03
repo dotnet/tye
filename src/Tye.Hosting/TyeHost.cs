@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Micronetes.Hosting.Diagnostics;
-using Micronetes.Hosting.Model;
+using Tye.Hosting.Diagnostics;
+using Tye.Hosting.Model;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -10,9 +10,9 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Filters;
 
-namespace Micronetes.Hosting
+namespace Tye.Hosting
 {
-    public class MicronetesHost
+    public class TyeHost
     {
         public static async Task RunAsync(Application application, string[] args)
         {
@@ -35,7 +35,7 @@ namespace Micronetes.Hosting
             builder.Services.AddOptions<StaticFileOptions>()
                 .PostConfigure(o =>
                 {
-                    var fileProvider = new ManifestEmbeddedFileProvider(typeof(MicronetesHost).Assembly, "wwwroot");
+                    var fileProvider = new ManifestEmbeddedFileProvider(typeof(TyeHost).Assembly, "wwwroot");
 
                     // Make sure we don't remove the existing file providers (blazor needs this)
                     o.FileProvider = new CompositeFileProvider(o.FileProvider, fileProvider);
@@ -55,7 +55,7 @@ namespace Micronetes.Hosting
 
             app.UseRouting();
 
-            var api = new MicronetesApi();
+            var api = new TyeDashboardApi();
 
             api.MapRoutes(app);
 

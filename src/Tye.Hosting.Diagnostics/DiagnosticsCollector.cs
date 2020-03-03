@@ -7,8 +7,8 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Micronetes.Hosting.Diagnostics.Logging;
-using Micronetes.Hosting.Diagnostics.Metrics;
+using Tye.Hosting.Diagnostics.Logging;
+using Tye.Hosting.Diagnostics.Metrics;
 using Microsoft.Diagnostics.NETCore.Client;
 using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Parsers;
@@ -18,7 +18,7 @@ using OpenTelemetry.Trace;
 using OpenTelemetry.Trace.Export;
 using Serilog;
 
-namespace Micronetes.Hosting.Diagnostics
+namespace Tye.Hosting.Diagnostics
 {
     public class DiagnosticsCollector
     {

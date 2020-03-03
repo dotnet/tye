@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Micronetes.Hosting.Model;
+using Tye.Hosting.Model;
 using YamlDotNet.Serialization;
 
 namespace Tye.ConfigModel
@@ -18,9 +18,9 @@ namespace Tye.ConfigModel
 
         public List<ConfigService> Services { get; set; } = new List<ConfigService>();
 
-        public Micronetes.Hosting.Model.Application ToHostingApplication()
+        public Tye.Hosting.Model.Application ToHostingApplication()
         {
-            var services = new Dictionary<string, Micronetes.Hosting.Model.Service>();
+            var services = new Dictionary<string, Tye.Hosting.Model.Service>();
             foreach (var service in Services)
             {
                 RunInfo? runInfo;
@@ -45,14 +45,14 @@ namespace Tye.ConfigModel
                     throw new InvalidOperationException($"Cannot figure out how to run service '{service.Name}'.");
                 }
 
-                var description = new Micronetes.Hosting.Model.ServiceDescription(service.Name, runInfo)
+                var description = new Tye.Hosting.Model.ServiceDescription(service.Name, runInfo)
                 {
                     Replicas = service.Replicas ?? 1,
                 };
 
                 foreach (var binding in service.Bindings)
                 {
-                    description.Bindings.Add(new Micronetes.Hosting.Model.ServiceBinding()
+                    description.Bindings.Add(new Tye.Hosting.Model.ServiceBinding()
                     {
                         ConnectionString = binding.ConnectionString,
                         Host = binding.Host,
@@ -68,10 +68,10 @@ namespace Tye.ConfigModel
                     description.Configuration.Add(new ConfigurationSource(entry.Name, entry.Value));
                 }
 
-                services.Add(service.Name, new Micronetes.Hosting.Model.Service(description));
+                services.Add(service.Name, new Tye.Hosting.Model.Service(description));
             }
 
-            return new Micronetes.Hosting.Model.Application(Source, services);
+            return new Tye.Hosting.Model.Application(Source, services);
         }
     }
 }

@@ -5,10 +5,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Micronetes.Hosting.Model;
+using Tye.Hosting.Model;
 using Microsoft.Extensions.Logging;
 
-namespace Micronetes.Hosting
+namespace Tye.Hosting
 {
     public class ProcessRunner : IApplicationProcessor
     {

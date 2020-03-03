@@ -2,19 +2,19 @@
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Micronetes.Hosting.Model;
+using Tye.Hosting.Model;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Micronetes.Hosting
+namespace Tye.Hosting
 {
-    public class MicronetesApi
+    public class TyeDashboardApi
     {
         private readonly JsonSerializerOptions _options;
 
-        public MicronetesApi()
+        public TyeDashboardApi()
         {
             _options = new JsonSerializerOptions()
             {

@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\tye\NameSanitizer.cs" Link="NameSanitizer.cs" />
+    <Compile Include="..\tye\NameSanitizer.cs" Link="NameSanitizer.cs" />
   </ItemGroup>
   
   <ItemGroup>
@@ -30,8 +30,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Micronetes.Hosting.Diagnostics\Micronetes.Hosting.Diagnostics.csproj" />
-    <ProjectReference Include="..\Micronetes.Hosting.Runtime\Micronetes.Hosting.Runtime.csproj" />
+    <ProjectReference Include="..\Tye.Hosting.Diagnostics\Tye.Hosting.Diagnostics.csproj" />
+    <ProjectReference Include="..\Tye.Hosting.Runtime\Tye.Hosting.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

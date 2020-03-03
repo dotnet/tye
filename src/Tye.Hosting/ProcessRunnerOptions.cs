@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Micronetes.Hosting
+namespace Tye.Hosting
 {
     public class ProcessRunnerOptions
     {

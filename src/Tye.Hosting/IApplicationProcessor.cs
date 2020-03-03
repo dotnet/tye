@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
-using Micronetes.Hosting.Model;
+using Tye.Hosting.Model;
 
-namespace Micronetes.Hosting
+namespace Tye.Hosting
 {
     public interface IApplicationProcessor
     {

@@ -5,7 +5,7 @@ using System.Reactive.Subjects;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Micronetes.Hosting.Model
+namespace Tye.Hosting.Model
 {
     public class Service
     {
