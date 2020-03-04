@@ -20,7 +20,13 @@ namespace E2ETest
             var webApplication = await host.StartAsync();
             try
             {
-                var client = new HttpClient(new RetryHandler(new SocketsHttpHandler()));
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                    AllowAutoRedirect = false
+                };
+
+                var client = new HttpClient(new RetryHandler(handler));
 
                 // Make sure dashboard and applications are up.
                 // Dashboard should be hosted in same process.
