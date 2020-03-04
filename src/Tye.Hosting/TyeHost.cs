@@ -15,6 +15,8 @@ using Serilog;
 using Serilog.Filters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Serilog.Core;
+using Serilog.Events;
 
 namespace Tye.Hosting
 {
@@ -35,6 +37,9 @@ namespace Tye.Hosting
 
         public WebApplication? DashboardWebApplication { get; set; }
 
+        // An additional sink that output will be piped to. Useful for testing.
+        public ILogEventSink? Sink { get; set; }
+
         public async Task RunAsync()
         {
             await StartAsync();
@@ -48,7 +53,7 @@ namespace Tye.Hosting
 
         public async Task<WebApplication> StartAsync()
         {
-            var app = BuildWebApplication(_application, _args);
+            var app = BuildWebApplication(_application, _args, Sink);
             DashboardWebApplication = app;
 
             ConfigureApplication(app);
@@ -98,19 +103,29 @@ namespace Tye.Hosting
             }
         }
 
-        private static WebApplication BuildWebApplication(Application application, string[] args)
+        private static WebApplication BuildWebApplication(
+            Application application,
+            string[] args,
+            ILogEventSink? sink)
         {
             var builder = WebApplication.CreateBuilder(args);
 
             // Logging for this application
-            builder.Host.UseSerilog((context, configuration) => configuration
-                .MinimumLevel.Verbose()
-                .Filter.ByExcluding(Matching.FromSource("Microsoft"))
-                .Enrich
-                .FromLogContext()
-                .WriteTo
-                .Console()
-            );
+            builder.Host.UseSerilog((context, configuration) =>
+            {
+                configuration
+                    .MinimumLevel.Verbose()
+                    .Filter.ByExcluding(Matching.FromSource("Microsoft"))
+                    .Enrich
+                    .FromLogContext()
+                    .WriteTo
+                    .Console();
+
+                if (sink is object)
+                {
+                    configuration.WriteTo.Sink(sink, LogEventLevel.Verbose);
+                }
+            });
 
             builder.Services.AddRazorPages(o => o.RootDirectory = "/Dashboard/Pages");
 

@@ -1,0 +1,36 @@
+<Project>
+
+  <!--
+    These are third party libraries that we use in this repo. We need to sign them even if they
+    are already signed. However, they must be signed with a 3rd party certificate.
+  -->
+  <ItemGroup>
+    <FileSignInfo Include="Bedrock.Framework.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Elasticsearch.Net.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="FeatherHttp.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="KubernetesClient.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="OpenTelemetry.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="OpenTelemetry.Api.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="OpenTelemetry.Exporter.Zipkin.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Semver.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.Extensions.Hosting.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.Extensions.Logging.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.Formatting.Compact.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.Formatting.Elasticsearch.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.Sinks.Console.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.Sinks.Elasticsearch.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.Sinks.File.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.Sinks.PeriodicBatching.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Serilog.Sinks.Seq.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Sln.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="YamlDotNet.dll" CertificateName="3PartySHA2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- We don't produce font files. We rebundle some for using the web brower, so they do not need to be signed. -->
+    <FileExtensionSignInfo Include=".otf" CertificateName="None" />
+    <FileExtensionSignInfo Include=".ttf" CertificateName="None" />
+  </ItemGroup>
+
+</Project>

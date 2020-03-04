@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Tye.Hosting.Model;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace Tye.Hosting
 {
@@ -127,6 +128,16 @@ namespace Tye.Hosting
                     // Default to development environment
                     ["DOTNET_ENVIRONMENT"] = "Development"
                 };
+
+                // Set up environment variables to use the version of dotnet we're using to run
+                // this is important for tests where we're not using a globally-installed dotnet.
+                var dotnetRoot = GetDotnetRoot();
+                if (dotnetRoot is object)
+                {
+                    environment["DOTNET_ROOT"] = dotnetRoot;
+                    environment["DOTNET_MULTILEVEL_LOOKUP"] = "0";
+                    environment["PATH"] = $"{dotnetRoot};{Environment.GetEnvironmentVariable("PATH")}";
+                }
 
                 application.PopulateEnvironment(service, (k, v) => environment[k] = v);
 
@@ -300,6 +311,23 @@ namespace Tye.Hosting
             }
 
             return Path.Combine(debugOutputPath, "netcoreapp3.1", outputFileName);
+        }
+
+        private static string? GetDotnetRoot()
+        {
+            var process = Process.GetCurrentProcess();
+            var entryPointFilePath = process.MainModule.FileName;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+                Path.GetFileNameWithoutExtension(entryPointFilePath) == "dotnet")
+            {
+                return Path.GetDirectoryName(entryPointFilePath);
+            }
+            else if (Path.GetFileName(entryPointFilePath) == "dotnet")
+            {
+                return Path.GetDirectoryName(entryPointFilePath);
+            }
+
+            return null;
         }
 
         private class ProcessInfo

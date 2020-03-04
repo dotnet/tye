@@ -12,11 +12,22 @@ using Tye;
 using Tye.ConfigModel;
 using Tye.Hosting;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace E2ETest
 {
     public class TyeRunTest
     {
+        private readonly ITestOutputHelper output;
+        private readonly TestOutputLogEventSink sink;
+
+        public TyeRunTest(ITestOutputHelper output)
+        {
+            this.output = output;
+            sink = new TestOutputLogEventSink(output);
+        }
+
+
         [Fact]
         public async Task SingleProjectTest()
         {
@@ -27,7 +38,11 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "test-project.csproj"));
 
             var application = ConfigFactory.FromFile(projectFile);
-            var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>());
+            var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
+            {
+                Sink = sink,
+            };
+
             await host.StartAsync();
             try
             {
@@ -41,7 +56,8 @@ namespace E2ETest
 
                 // Make sure dashboard and applications are up.
                 // Dashboard should be hosted in same process.
-                var dashboardResponse = await client.GetStringAsync(new Uri(host.DashboardWebApplication!.Addresses.First()));
+                var dashboardUri = new Uri(host.DashboardWebApplication!.Addresses.First());
+                var dashboardResponse = await client.GetStringAsync(dashboardUri);
 
                 // Only one service for single application.
                 var service = application.Services.First();
@@ -59,8 +75,22 @@ namespace E2ETest
 
                 // This isn't reliable right now because micronetes only guarantees the process starts, not that
                 // that kestrel started.
-                var appResponse = await client.GetAsync(uriBackendProcess);
-                Assert.Equal(HttpStatusCode.OK, appResponse.StatusCode);
+                try
+                {
+                    var appResponse = await client.GetAsync(uriBackendProcess);
+                    Assert.Equal(HttpStatusCode.OK, appResponse.StatusCode);
+                }
+                finally
+                {
+                    // If we failed, there's a good chance the service isn't running. Let's get the logs either way and put
+                    // them in the output.
+                    var request = new HttpRequestMessage(HttpMethod.Get, new Uri(dashboardUri, $"/api/v1/logs/{service.Name}"));
+                    var response = await client.SendAsync(request);
+                    var text = await response.Content.ReadAsStringAsync();
+
+                    output.WriteLine($"Logs for service: {service.Name}");
+                    output.WriteLine(text);
+                }
             }
             finally
             {
