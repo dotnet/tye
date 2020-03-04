@@ -18,17 +18,20 @@ namespace Tye
                 CommonArguments.Path_Optional,
             };
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo?>((console, path) =>
+            command.AddOption(new Option("--force")
+            {
+                Description = "Overrides the tye.yaml file if already present for project.",
+                Required = false
+            });
+
+            command.Handler = CommandHandler.Create<IConsole, FileInfo?, bool>((console, path, force) =>
             {
                 var output = new OutputContext(console, Verbosity.Info);
                 output.WriteBanner();
-
-                if (path is FileInfo &&
-                    path.Exists &&
-                    (string.Equals(".yml", path.Extension, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(".yaml", path.Extension, StringComparison.OrdinalIgnoreCase)))
+                if (path is FileInfo && path.Exists && !force)
                 {
-                    throw new CommandException($"File '{path.FullName}' already exists.");
+                    ThrowIfTyeFilePresent(path, "tye.yml");
+                    ThrowIfTyeFilePresent(path, "tye.yaml");
                 }
 
                 var template = @"
@@ -104,6 +107,15 @@ services:
             });
 
             return command;
+        }
+
+        private static void ThrowIfTyeFilePresent(FileInfo? path, string yml)
+        {
+            var tyeYaml = Path.Combine(path!.DirectoryName, yml);
+            if (File.Exists(tyeYaml))
+            {
+                throw new CommandException($"File '{tyeYaml}' already exists. Use --force to override the {yml} file if desired.");
+            }
         }
     }
 }
