@@ -18,13 +18,19 @@ namespace Tye
                 CommonArguments.Path_Optional,
             };
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo?>((console, path) =>
+            command.AddOption(new Option("--force")
+            {
+                Description = "Overrides the tye.yaml file if already present for project.",
+                Required = false
+            });
+
+            command.Handler = CommandHandler.Create<IConsole, FileInfo?, bool>((console, path, force) =>
             {
                 var output = new OutputContext(console, Verbosity.Info);
                 output.WriteBanner();
-                if (path is FileInfo &&
-                    path.Exists)
+                if (path is FileInfo && path.Exists && !force)
                 {
+                    // TODO do we event want to check for tye.yml?
                     ThrowIfTyeFilePresent(path, "tye.yml");
                     ThrowIfTyeFilePresent(path, "tye.yaml");
                 }
