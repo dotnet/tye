@@ -22,13 +22,11 @@ namespace Tye
             {
                 var output = new OutputContext(console, Verbosity.Info);
                 output.WriteBanner();
-
                 if (path is FileInfo &&
-                    path.Exists &&
-                    (string.Equals(".yml", path.Extension, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(".yaml", path.Extension, StringComparison.OrdinalIgnoreCase)))
+                    path.Exists)
                 {
-                    throw new CommandException($"File '{path.FullName}' already exists.");
+                    ThrowIfTyeFilePresent(path, "tye.yml");
+                    ThrowIfTyeFilePresent(path, "tye.yaml");
                 }
 
                 var template = @"
@@ -104,6 +102,15 @@ services:
             });
 
             return command;
+        }
+
+        private static void ThrowIfTyeFilePresent(FileInfo? path, string yml)
+        {
+            var tyeYaml = Path.Combine(path!.DirectoryName, yml);
+            if (File.Exists(tyeYaml))
+            {
+                throw new CommandException($"File '{tyeYaml}' already exists.");
+            }
         }
     }
 }
