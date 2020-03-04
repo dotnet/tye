@@ -68,10 +68,12 @@ namespace Tye
                 }
 
                 output.WriteDebugLine("Running 'dotnet msbuild'.");
-                output.WriteCommandLine("dotnet", $"msbuild {restore} /t:EvaluateTyeProjectInfo \"/p:TyeTargetLocation={programRoot}\" \"/p:TyeOutputFilePath={outputFilePath}\"");
+                var msbuildCommand = $"msbuild {restore} /t:EvaluateTyeProjectInfo \"/p:TyeTargetLocation={programRoot}\" \"/p:TyeOutputFilePath={outputFilePath}\"";
+
+                output.WriteCommandLine("dotnet", msbuildCommand);
                 var exitCode = await Process.ExecuteAsync(
                     $"dotnet",
-                    $"msbuild {restore} /t:EvaluateTyeProjectInfo \"/p:TyeTargetLocation={programRoot}\" \"/p:TyeOutputFilePath={outputFilePath}\"",
+                    msbuildCommand,
                     workingDir: projectFile.DirectoryName,
                     stdOut: capture.StdOut,
                     stdErr: capture.StdErr);
