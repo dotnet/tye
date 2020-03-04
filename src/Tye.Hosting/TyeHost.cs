@@ -29,7 +29,7 @@ namespace Tye.Hosting
             _args = args;
         }
 
-        public WebApplication? WebApplication { get; set; }
+        public WebApplication? DashboardWebApplication { get; set; }
 
         public async Task RunAsync()
         {
@@ -45,7 +45,7 @@ namespace Tye.Hosting
         public async Task<WebApplication> StartAsync()
         {
             var app = BuildWebApplication(_application, _args);
-            WebApplication = app;
+            DashboardWebApplication = app;
 
             ConfigureApplication(app);
 
@@ -85,11 +85,11 @@ namespace Tye.Hosting
             }
             finally
             {
-                if (WebApplication != null)
+                if (DashboardWebApplication != null)
                 {
                     // Stop the host after everything else has been shutdown
-                    await WebApplication.StopAsync();
-                    WebApplication.Dispose();
+                    await DashboardWebApplication.StopAsync();
+                    DashboardWebApplication.Dispose();
                 }
             }
         }

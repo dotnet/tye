@@ -30,7 +30,7 @@ namespace E2ETest
 
                 // Make sure dashboard and applications are up.
                 // Dashboard should be hosted in same process.
-                var dashboardResponse = await client.GetStringAsync(new Uri(host.WebApplication!.Addresses.First()));
+                var dashboardResponse = await client.GetStringAsync(new Uri(host.DashboardWebApplication!.Addresses.First()));
 
                 // Only one service for single application.
                 var service = application.Services.First();
