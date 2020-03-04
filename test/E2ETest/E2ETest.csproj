@@ -16,7 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Tye.Hosting\Tye.Hosting.csproj" />
     <ProjectReference Include="..\..\src\Tye.Core\Tye.Core.csproj" />
-    <ProjectReference Include="..\..\src\Tye\Tye.csproj" />
+    <ProjectReference Include="..\..\src\tye\tye.csproj" />
   </ItemGroup>
 
 </Project>
