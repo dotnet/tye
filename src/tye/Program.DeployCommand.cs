@@ -77,6 +77,8 @@ namespace Tye
                         Source = project,
                     };
 
+                    service.Replicas = configService.Replicas ?? 1;
+
                     foreach (var configBinding in configService.Bindings)
                     {
                         service.Bindings.Add(new ServiceBinding(configBinding.Name ?? service.Name)
