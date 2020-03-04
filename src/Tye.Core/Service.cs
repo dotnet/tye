@@ -26,5 +26,7 @@ namespace Tye
         // Represents bindings *published* by this service
         // See GeneratedAssets for bindings consumed by the service
         public List<ServiceBinding> Bindings { get; } = new List<ServiceBinding>();
+
+        public int Replicas { get; set; }
     }
 }

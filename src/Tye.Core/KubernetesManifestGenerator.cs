@@ -108,6 +108,8 @@ namespace Tye
             var spec = new YamlMappingNode();
             root.Add("spec", spec);
 
+            spec.Add("replicas", service.Service.Replicas.ToString());
+
             var selector = new YamlMappingNode();
             spec.Add("selector", selector);
 
