@@ -12,6 +12,10 @@ variables:
   - name: _BuildConfig
     value: Release
 
+    # used for post-build phases, internal builds only
+  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    - group: DotNet-AspNet-SDLValidation-Params
+
 # CI and PR triggers
 trigger:
   batch: true
@@ -58,6 +62,7 @@ stages:
             value: /p:DotNetSignType=$(_SignType)
                    /p:TeamName=$(_TeamName)
                    /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
+                   /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
           - name: _SignType
             value: real
         # else
@@ -156,23 +161,25 @@ stages:
             artifactType: Container
             parallel: true
 
-- template: eng\common\templates\post-build\post-build.yml
-  parameters:
-    # Symbol validation isn't being very reliable lately. This should be enabled back
-    # once this issue is resolved: https://github.com/dotnet/arcade/issues/2871
-    enableSymbolValidation: false
-    enableSourceLinkValidation: true
-    # This is to enable SDL runs part of Post-Build Validation Stage
-    SDLValidationParameters:
-      enable: true
-      continueOnError: false
-      params: ' -SourceToolsList @("policheck","credscan")
-      -TsaInstanceURL $(_TsaInstanceURL)
-      -TsaProjectName $(_TsaProjectName)
-      -TsaNotificationEmail $(_TsaNotificationEmail)
-      -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
-      -TsaBugAreaPath $(_TsaBugAreaPath)
-      -TsaIterationPath $(_TsaIterationPath)
-      -TsaRepositoryName "Tye"
-      -TsaCodebaseName "Tye"
-      -TsaPublish $True'
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - template: eng\common\templates\post-build\post-build.yml
+    parameters:
+      # Symbol validation isn't being very reliable lately. This should be enabled back
+      # once this issue is resolved: https://github.com/dotnet/arcade/issues/2871
+      enableSymbolValidation: false
+      # It's a private repo in github so this won't pass until we create an internal mirror
+      enableSourceLinkValidation: false
+      # This is to enable SDL runs part of Post-Build Validation Stage
+      SDLValidationParameters:
+        enable: true
+        continueOnError: false
+        params: ' -SourceToolsList @("policheck","credscan")
+        -TsaInstanceURL $(_TsaInstanceURL)
+        -TsaProjectName $(_TsaProjectName)
+        -TsaNotificationEmail $(_TsaNotificationEmail)
+        -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
+        -TsaBugAreaPath $(_TsaBugAreaPath)
+        -TsaIterationPath $(_TsaIterationPath)
+        -TsaRepositoryName "Tye"
+        -TsaCodebaseName "Tye"
+        -TsaPublish $True'
