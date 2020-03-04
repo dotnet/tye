@@ -17,7 +17,7 @@ namespace E2ETest
         {
             var application = ConfigFactory.FromFile(new FileInfo(Path.Combine(GetSolutionRootDirectory("tye"), "samples", "single-project", "test-project", "test-project.csproj")));
             var host = new TyeHost(application.ToHostingApplication(), new string[0]);
-            var webApplication = await host.StartAsync();
+            await host.StartAsync();
             try
             {
                 var handler = new HttpClientHandler
@@ -30,7 +30,7 @@ namespace E2ETest
 
                 // Make sure dashboard and applications are up.
                 // Dashboard should be hosted in same process.
-                var dashboardResponse = await client.GetStringAsync(new Uri(webApplication.Addresses.First()));
+                var dashboardResponse = await client.GetStringAsync(new Uri(host.DashboardWebApplication!.Addresses.First()));
 
                 // Only one service for single application.
                 var service = application.Services.First();
