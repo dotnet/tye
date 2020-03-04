@@ -6,7 +6,7 @@ using YamlDotNet.Serialization;
 
 namespace Tye.ConfigModel
 {
-    internal class ConfigApplication
+    public class ConfigApplication
     {
         // This gets set by all of the code paths that read the application
         [YamlIgnore]

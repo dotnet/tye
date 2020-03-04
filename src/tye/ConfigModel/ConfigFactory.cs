@@ -7,7 +7,7 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Tye.ConfigModel
 {
-    internal static class ConfigFactory
+    public static class ConfigFactory
     {
         public static ConfigApplication FromFile(FileInfo file)
         {

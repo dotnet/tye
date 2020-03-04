@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Tye.ConfigModel
 {
-    internal class ConfigServiceBinding
+    public class ConfigServiceBinding
     {
         public string? Name { get; set; }
         public string? ConnectionString { get; set; }
