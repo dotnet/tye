@@ -19,7 +19,7 @@ namespace Tye.Hosting
         private Microsoft.Extensions.Logging.ILogger? _logger;
         private IHostApplicationLifetime? _lifetime;
         private AggregateApplicationProcessor? _processor;
-        private WebApplication? _app;
+
         private readonly Application _application;
         private readonly string[] _args;
 
@@ -28,6 +28,8 @@ namespace Tye.Hosting
             _application = application;
             _args = args;
         }
+
+        public WebApplication? WebApplication { get; set; }
 
         public async Task RunAsync()
         {
@@ -43,7 +45,7 @@ namespace Tye.Hosting
         public async Task<WebApplication> StartAsync()
         {
             var app = BuildWebApplication(_application, _args);
-            _app = app;
+            WebApplication = app;
 
             ConfigureApplication(app);
 
@@ -83,11 +85,11 @@ namespace Tye.Hosting
             }
             finally
             {
-                if (_app != null)
+                if (WebApplication != null)
                 {
                     // Stop the host after everything else has been shutdown
-                    await _app.StopAsync();
-                    _app.Dispose();
+                    await WebApplication.StopAsync();
+                    WebApplication.Dispose();
                 }
             }
         }
