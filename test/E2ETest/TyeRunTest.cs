@@ -46,7 +46,6 @@ namespace E2ETest
 
                 var uriBackendProcess = new Uri(uriString);
 
-                // send request to service.
                 // This isn't reliable right now because micronetes only guarantees the process starts, not that
                 // that kestrel started.
                 var appResponse = await client.GetAsync(uriBackendProcess);
