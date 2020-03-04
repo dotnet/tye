@@ -87,6 +87,7 @@ namespace Tye.Hosting
                 {
                     // Stop the host after everything else has been shutdown
                     await _app.StopAsync();
+                    _app.Dispose();
                 }
             }
         }
