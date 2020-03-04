@@ -9,12 +9,89 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Filters;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace Tye.Hosting
 {
     public class TyeHost
     {
-        public static async Task RunAsync(Application application, string[] args)
+        private Microsoft.Extensions.Logging.ILogger? _logger;
+        private IHostApplicationLifetime? _lifetime;
+        private AggregateApplicationProcessor? _processor;
+        private WebApplication? _app;
+        private readonly Application _application;
+        private readonly string[] _args;
+
+        public TyeHost(Application application, string[] args)
+        {
+            _application = application;
+            _args = args;
+        }
+
+        public async Task RunAsync()
+        {
+            await StartAsync();
+
+            var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _lifetime?.ApplicationStopping.Register(obj => waitForStop.TrySetResult(null), null);
+            await waitForStop.Task;
+
+            await StopAsync();
+        }
+
+        public async Task<WebApplication> StartAsync()
+        {
+            var app = BuildWebApplication(_application, _args);
+            _app = app;
+
+            ConfigureApplication(app);
+
+            _logger = app.Logger;
+            _lifetime = app.ApplicationLifetime;
+
+            _logger.LogInformation("Executing application from  {Source}", _application.Source);
+
+            var configuration = app.Configuration;
+
+            _processor = CreateApplicationProcessor(_args, _logger, configuration);
+
+            await app.StartAsync();
+
+            _logger.LogInformation("Dashboard running on {Address}", app.Addresses.First());
+
+            try
+            {
+                await _processor.StartAsync(_application);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(0, ex, "Failed to launch application");
+            }
+
+            return app;
+        }
+
+        public async Task StopAsync()
+        {
+            try
+            {
+                if (_processor != null)
+                {
+                    await _processor.StopAsync(_application);
+                }
+            }
+            finally
+            {
+                if (_app != null)
+                {
+                    // Stop the host after everything else has been shutdown
+                    await _app.StopAsync();
+                }
+            }
+        }
+
+        private static WebApplication BuildWebApplication(Application application, string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -42,9 +119,12 @@ namespace Tye.Hosting
                 });
 
             builder.Services.AddSingleton(application);
+            var app = builder.Build();
+            return app;
+        }
 
-            using var app = builder.Build();
-
+        private static void ConfigureApplication(WebApplication app)
+        {
             var port = app.Configuration["port"] ?? "0";
 
             app.Listen($"http://127.0.0.1:{port}");
@@ -61,14 +141,10 @@ namespace Tye.Hosting
 
             app.MapBlazorHub();
             app.MapFallbackToPage("/_Host");
+        }
 
-            var logger = app.Logger;
-
-            logger.LogInformation("Executing application from  {Source}", application.Source);
-
-            var lifetime = app.ApplicationLifetime;
-            var configuration = app.Configuration;
-
+        private static AggregateApplicationProcessor CreateApplicationProcessor(string[] args, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
+        {
             var diagnosticOptions = DiagnosticOptions.FromConfiguration(configuration);
             var diagnosticsCollector = new DiagnosticsCollector(logger, diagnosticOptions);
 
@@ -81,36 +157,7 @@ namespace Tye.Hosting
                 new DockerRunner(logger),
                 new ProcessRunner(logger, ProcessRunnerOptions.FromArgs(args)),
             });
-
-            await app.StartAsync();
-
-            logger.LogInformation("Dashboard running on {Address}", app.Addresses.First());
-
-            try
-            {
-                await processor.StartAsync(application);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(0, ex, "Failed to launch application");
-            }
-
-            var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-            lifetime.ApplicationStopping.Register(obj => waitForStop.TrySetResult(null), null);
-
-            await waitForStop.Task;
-
-            logger.LogInformation("Shutting down...");
-
-            try
-            {
-                await processor.StopAsync(application);
-            }
-            finally
-            {
-                // Stop the host after everything else has been shutdown
-                await app.StopAsync();
-            }
+            return processor;
         }
     }
 }

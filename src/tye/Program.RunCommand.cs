@@ -59,7 +59,8 @@ namespace Tye
                 }
 
                 var application = ConfigFactory.FromFile(path);
-                return TyeHost.RunAsync(application.ToHostingApplication(), args);
+                var host = new TyeHost(application.ToHostingApplication(), args);
+                return host.RunAsync();
             });
 
             return command;

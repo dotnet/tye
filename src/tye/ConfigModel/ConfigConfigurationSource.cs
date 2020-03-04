@@ -2,7 +2,7 @@
 
 namespace Tye.ConfigModel
 {
-    internal class ConfigConfigurationSource
+    public class ConfigConfigurationSource
     {
         [Required]
         public string Name { get; set; } = default!;

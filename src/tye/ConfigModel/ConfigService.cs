@@ -4,7 +4,7 @@ using YamlDotNet.Serialization;
 
 namespace Tye.ConfigModel
 {
-    internal class ConfigService
+    public class ConfigService
     {
         [Required]
         public string Name { get; set; } = default!;

@@ -1,23 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{8C662D59-A3CB-466F-8E85-A8E6BA5E7601}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tye", "src\tye\tye.csproj", "{9BFE4070-D6D8-41F8-B92E-F85C3DCD7AB8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tye", "src\tye\tye.csproj", "{9BFE4070-D6D8-41F8-B92E-F85C3DCD7AB8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F19B02EB-A372-417A-B2C2-EA0D5A3C76D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "E2ETest", "test\E2ETest\E2ETest.csproj", "{D15E5FF6-C1E7-4110-A2BE-06ADA7ACA82B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "E2ETest", "test\E2ETest\E2ETest.csproj", "{D15E5FF6-C1E7-4110-A2BE-06ADA7ACA82B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tye.Hosting", "src\Tye.Hosting\Tye.Hosting.csproj", "{0F4F5A86-DD27-4AF9-BF97-221EAD5040E7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Hosting", "src\Tye.Hosting\Tye.Hosting.csproj", "{0F4F5A86-DD27-4AF9-BF97-221EAD5040E7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tye.Hosting.Diagnostics", "src\Tye.Hosting.Diagnostics\Tye.Hosting.Diagnostics.csproj", "{CEBFC149-8162-4A0A-9AD4-40498B9172CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Hosting.Diagnostics", "src\Tye.Hosting.Diagnostics\Tye.Hosting.Diagnostics.csproj", "{CEBFC149-8162-4A0A-9AD4-40498B9172CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tye.Hosting.Runtime", "src\Tye.Hosting.Runtime\Tye.Hosting.Runtime.csproj", "{34719884-1338-4965-BA2A-F98DB03733C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Hosting.Runtime", "src\Tye.Hosting.Runtime\Tye.Hosting.Runtime.csproj", "{34719884-1338-4965-BA2A-F98DB03733C2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tye.Core", "src\Tye.Core\Tye.Core.csproj", "{D0359C69-6EA9-4B03-9455-90E8E04F1CB0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Core", "src\Tye.Core\Tye.Core.csproj", "{D0359C69-6EA9-4B03-9455-90E8E04F1CB0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,9 +27,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{9BFE4070-D6D8-41F8-B92E-F85C3DCD7AB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -105,6 +102,9 @@ Global
 		{D0359C69-6EA9-4B03-9455-90E8E04F1CB0}.Release|x86.ActiveCfg = Release|Any CPU
 		{D0359C69-6EA9-4B03-9455-90E8E04F1CB0}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9BFE4070-D6D8-41F8-B92E-F85C3DCD7AB8} = {8C662D59-A3CB-466F-8E85-A8E6BA5E7601}
 		{D15E5FF6-C1E7-4110-A2BE-06ADA7ACA82B} = {F19B02EB-A372-417A-B2C2-EA0D5A3C76D5}
@@ -112,5 +112,8 @@ Global
 		{CEBFC149-8162-4A0A-9AD4-40498B9172CD} = {8C662D59-A3CB-466F-8E85-A8E6BA5E7601}
 		{34719884-1338-4965-BA2A-F98DB03733C2} = {8C662D59-A3CB-466F-8E85-A8E6BA5E7601}
 		{D0359C69-6EA9-4B03-9455-90E8E04F1CB0} = {8C662D59-A3CB-466F-8E85-A8E6BA5E7601}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D8002603-BB27-4500-BF86-274A8E72D302}
 	EndGlobalSection
 EndGlobal
