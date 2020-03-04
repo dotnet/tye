@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Description>Runtime helpers for tye host platform</Description>
     <Nullable>disable</Nullable>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
 </Project>

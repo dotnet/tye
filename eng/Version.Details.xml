@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Dependencies>
+  <ProductDependencies>
+  </ProductDependencies>
+  <ToolsetDependencies>
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="5.0.0-beta.20153.1">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>421b20fb860907c45673de791177e3fd61402197</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="5.0.0-beta.20153.1">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>421b20fb860907c45673de791177e3fd61402197</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="5.0.0-beta.20153.1">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>421b20fb860907c45673de791177e3fd61402197</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="5.0.0-beta.20153.1">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>421b20fb860907c45673de791177e3fd61402197</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="5.0.0-beta.20153.1">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>421b20fb860907c45673de791177e3fd61402197</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.19556.4">
+      <Uri>https://github.com/dotnet/arcade-services</Uri>
+      <Sha>c08500f460f54a3bace4ee2b007ab2b2deb12e1b</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="3.5.0-beta4-20128-03">
+      <Uri>https://github.com/dotnet/roslyn</Uri>
+      <Sha>8f010124a3a323b34f561d062025258668d91539</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.SourceLink" Version="1.0.0-beta2-19554-01">
+      <Uri>https://github.com/dotnet/sourcelink</Uri>
+      <Sha>
+      </Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DiaSymReader.Pdb2Pdb" Version="1.1.0-beta2-19575-01">
+      <Uri>https://github.com/dotnet/symreader-converter</Uri>
+      <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DiaSymReader.Converter" Version="1.1.0-beta2-19575-01">
+      <Uri>https://github.com/dotnet/symreader-converter</Uri>
+      <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
+    </Dependency>
+    <Dependency Name="XliffTasks" Version="1.0.0-beta.20153.1">
+      <Uri>https://github.com/dotnet/xliff-tasks</Uri>
+      <Sha>074d32a4d01bd2905d699083d4a419708c566084</Sha>
+    </Dependency>
+  </ToolsetDependencies>
+</Dependencies>

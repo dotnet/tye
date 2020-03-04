@@ -5,6 +5,7 @@
     <RootNamespace>Tye</RootNamespace>
     <LangVersion>8.0</LangVersion>
     <Nullable>Enable</Nullable>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
