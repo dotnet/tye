@@ -115,7 +115,7 @@ services:
             var tyeYaml = Path.Combine(path!.DirectoryName, yml);
             if (File.Exists(tyeYaml))
             {
-                throw new CommandException($"File '{tyeYaml}' already exists.");
+                throw new CommandException($"File '{tyeYaml}' already exists. Use --force to override the tye.yaml file if desired.");
             }
         }
     }
