@@ -70,7 +70,8 @@ namespace Tye
             {
                 if (configService.Project is string projectFile)
                 {
-                    var project = new Project(projectFile);
+                    var fullPathProjectFile = Path.Combine(application.Source.DirectoryName, projectFile);
+                    var project = new Project(fullPathProjectFile);
                     var service = new Service(configService.Name)
                     {
                         Source = project,
@@ -89,7 +90,7 @@ namespace Tye
 
                     var serviceEntry = new ServiceEntry(service, configService.Name);
 
-                    await ProjectReader.ReadProjectDetailsAsync(output, new FileInfo(projectFile), project);
+                    await ProjectReader.ReadProjectDetailsAsync(output, new FileInfo(fullPathProjectFile), project);
 
                     var container = new ContainerInfo()
                     {
