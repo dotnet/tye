@@ -30,7 +30,6 @@ namespace Tye
                 output.WriteBanner();
                 if (path is FileInfo && path.Exists && !force)
                 {
-                    // TODO do we event want to check for tye.yml?
                     ThrowIfTyeFilePresent(path, "tye.yml");
                     ThrowIfTyeFilePresent(path, "tye.yaml");
                 }
@@ -115,7 +114,7 @@ services:
             var tyeYaml = Path.Combine(path!.DirectoryName, yml);
             if (File.Exists(tyeYaml))
             {
-                throw new CommandException($"File '{tyeYaml}' already exists. Use --force to override the tye.yaml file if desired.");
+                throw new CommandException($"File '{tyeYaml}' already exists. Use --force to override the {yml} file if desired.");
             }
         }
     }
