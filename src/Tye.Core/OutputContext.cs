@@ -36,7 +36,7 @@ namespace Tye
                 throw new ArgumentNullException(nameof(title));
             }
 
-            WriteInfoLine("⛵ " + title);
+            WriteInfoLine(title);
 
             indent += IndentAmount;
             var currentStep = new StepTracker(this, title);
@@ -147,28 +147,6 @@ namespace Tye
                     return line.Trim();
                 }
             }
-        }
-
-        //
-
-
-        public void WriteBanner()
-        {
-            // From: https://www.asciiart.eu/vehicles/boats
-            WriteInfoLine(string.Empty);
-            WriteInfoLine(@"              |    |    |               ");
-            WriteInfoLine(@"             )_)  )_)  )_)              ");
-            WriteInfoLine(@"            )___))___))___)\            ");
-            WriteInfoLine(@"           )____)____)_____)\\          ");
-            WriteInfoLine(@"         _____|____|____|____\\\__      ");
-            WriteInfoLine(@"---------\                   /--------- ");
-            WriteInfoLine(@"  ^^^^^ ^^^^^^^^^^^^^^^^^^^^^           ");
-            WriteInfoLine(@"    ^^^^      ^^^^     ^^^    ^^        ");
-            WriteInfoLine(@"         ^^^^      ^^^                  ");
-
-            WriteInfoLine(string.Empty);
-            WriteInfoLine("Sailing into microservices productivity!");
-            WriteInfoLine(string.Empty);
         }
 
         public CapturedCommandOutput Capture()
