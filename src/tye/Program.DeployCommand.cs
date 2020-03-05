@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Tye.ConfigModel;
@@ -79,8 +80,24 @@ namespace Tye
 
                     service.Replicas = configService.Replicas ?? 1;
 
-                    foreach (var configBinding in configService.Bindings)
+                    if (configService.Bindings.Count > 1)
                     {
+                        // If there are more than one binding, append the port by default
+                        // to make sure there are no name conflicts.
+                        foreach (var configBinding in configService.Bindings)
+                        {
+                            service.Bindings.Add(new ServiceBinding(configBinding.Name ?? $"{service.Name}-{configBinding.Port}")
+                            {
+                                ConnectionString = configBinding.ConnectionString,
+                                Host = configBinding.Host,
+                                Port = configBinding.Port,
+                                Protocol = configBinding.Protocol,
+                            });
+                        }
+                    }
+                    else
+                    {
+                        var configBinding = configService.Bindings.First();
                         service.Bindings.Add(new ServiceBinding(configBinding.Name ?? service.Name)
                         {
                             ConnectionString = configBinding.ConnectionString,
