@@ -27,7 +27,6 @@ namespace Tye
             command.Handler = CommandHandler.Create<IConsole, FileInfo?, bool>((console, path, force) =>
             {
                 var output = new OutputContext(console, Verbosity.Info);
-                output.WriteBanner();
                 if (path is FileInfo && path.Exists && !force)
                 {
                     ThrowIfTyeFilePresent(path, "tye.yml");
