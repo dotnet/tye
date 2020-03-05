@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Tye;
 using Tye.ConfigModel;
 using Tye.Hosting;
 using Xunit;
@@ -15,8 +16,14 @@ namespace E2ETest
         [Fact]
         public async Task SingleProjectTest()
         {
-            var application = ConfigFactory.FromFile(new FileInfo(Path.Combine(GetSolutionRootDirectory("tye"), "samples", "single-project", "test-project", "test-project.csproj")));
-            var host = new TyeHost(application.ToHostingApplication(), new string[0]);
+            var projectDirectory = new DirectoryInfo(Path.Combine(GetSolutionRootDirectory("tye"), "samples", "single-project", "test-project"));
+            using var tempDirectory = TempDirectory.Create();
+            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+
+            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "test-project.csproj"));
+
+            var application = ConfigFactory.FromFile(projectFile);
+            var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>());
             await host.StartAsync();
             try
             {
