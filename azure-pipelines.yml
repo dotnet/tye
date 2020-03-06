@@ -182,4 +182,5 @@ stages:
         -TsaIterationPath $(_TsaIterationPath)
         -TsaRepositoryName "Tye"
         -TsaCodebaseName "Tye"
-        -TsaPublish $True'
+        -TsaPublish $True
+        -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'

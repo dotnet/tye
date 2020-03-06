@@ -162,7 +162,7 @@ namespace Tye.Hosting
 
                 _logger.LogInformation("docker logs collection for {ContainerName} complete with exit code {ExitCode}", replica, result.ExitCode);
 
-                // Docker has a tendency to hang so we're going to timeout this shutdown process
+                // Docker has a tendency to get stuck so we're going to timeout this shutdown process
                 var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
                 _logger.LogInformation("Stopping container {ContainerName} with ID {ContainerId}", replica, shortContainerId);
