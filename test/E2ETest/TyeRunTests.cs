@@ -21,12 +21,11 @@ namespace E2ETest
         private readonly ITestOutputHelper output;
         private readonly TestOutputLogEventSink sink;
 
-        public TyeRunTest(ITestOutputHelper output)
+        public TyeRunTests(ITestOutputHelper output)
         {
             this.output = output;
             sink = new TestOutputLogEventSink(output);
         }
-
 
         [Fact]
         public async Task SingleProjectTest()
