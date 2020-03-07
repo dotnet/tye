@@ -48,6 +48,7 @@ namespace Tye
             var steps = new List<ServiceExecutor.Step>()
             {
                 new CombineStep() { Environment = environment, },
+                new PublishProjectStep(),
                 new BuildDockerImageStep() { Environment = environment, }, // Make an image but don't push it
             };
 

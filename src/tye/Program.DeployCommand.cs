@@ -44,6 +44,7 @@ namespace Tye
             var steps = new List<ServiceExecutor.Step>()
             {
                 new CombineStep() { Environment = environment, },
+                new PublishProjectStep(),
                 new BuildDockerImageStep() { Environment = environment, },
                 new PushDockerImageStep() { Environment = environment, },
             };
@@ -100,7 +101,7 @@ namespace Tye
                     var container = new ContainerInfo()
                     {
                         // Single-phase workflow doesn't currently work.
-                        UseMultiphaseDockerfile = true,
+                        UseMultiphaseDockerfile = false,
                     };
                     service.GeneratedAssets.Container = container;
                     services.Add(serviceEntry);

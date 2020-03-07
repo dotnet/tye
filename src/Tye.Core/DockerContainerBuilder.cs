@@ -5,6 +5,7 @@
 using System;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Tye
@@ -51,12 +52,31 @@ namespace Tye
                 dockerFilePath = tempFile.FilePath;
             }
 
+            // We need to know if this is a single-phase or multi-phase dockerfile because the context directory will be
+            // different depending on that choice.
+            string contextDirectory;
+            if (container.UseMultiphaseDockerfile ?? true)
+            {
+                contextDirectory = ".";
+            }
+            else
+            {
+                var publishOutput = service.Outputs.OfType<ProjectPublishOutput>().FirstOrDefault();
+                if (publishOutput is null)
+                {
+                    throw new InvalidOperationException("We should have published the project for a single-phase dockerfile.");
+                }
+
+                contextDirectory = publishOutput.Directory.FullName;
+            }
+
+
             output.WriteDebugLine("Running 'docker build'.");
-            output.WriteCommandLine("docker", $"build . -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"");
+            output.WriteCommandLine("docker", $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"");
             var capture = output.Capture();
             var exitCode = await Process.ExecuteAsync(
                 $"docker",
-                $"build . -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"",
+                $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"",
                 application.GetProjectDirectory(project),
                 stdOut: capture.StdOut,
                 stdErr: capture.StdErr);
