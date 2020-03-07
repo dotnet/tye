@@ -3,7 +3,9 @@
 
   <PropertyGroup>
     <!-- tye doesn't work with artifact directory. -->
-    <BaseOutputPath />
-    <OutputPath />
+    <OutDirName>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\bin\'))</OutDirName>
+    <OutputPath>$(OutDirName)$(Configuration)\</OutputPath>
+    <BaseIntermediateOutputPath>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\obj\'))</BaseIntermediateOutputPath>
+    <IntemediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)</IntemediateOutputPath>
   </PropertyGroup>
 </Project>
