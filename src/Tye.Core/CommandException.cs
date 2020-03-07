@@ -6,7 +6,7 @@ using System;
 
 namespace Tye
 {
-    internal class CommandException : Exception
+    public class CommandException : Exception
     {
         public CommandException(string message)
             : base(message)
