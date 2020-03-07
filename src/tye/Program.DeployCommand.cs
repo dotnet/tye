@@ -100,7 +100,6 @@ namespace Tye
 
                     var container = new ContainerInfo()
                     {
-                        // Single-phase workflow doesn't currently work.
                         UseMultiphaseDockerfile = false,
                     };
                     service.GeneratedAssets.Container = container;
