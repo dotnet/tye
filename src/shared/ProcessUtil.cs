@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Mono.Unix.Native;
 
-namespace Tye.Hosting
+namespace Tye
 {
     internal static class ProcessUtil
     {

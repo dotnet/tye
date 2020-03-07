@@ -11,11 +11,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\shared\DockerDetector.cs" Link="DockerDetector.cs" />
+    <Compile Include="..\shared\KubectlDetector.cs" Link="KubectlDetector.cs" />
+    <Compile Include="..\shared\NameSanitizer.cs" Link="NameSanitizer.cs" />
+    <Compile Include="..\shared\ProcessUtil.cs" Link="ProcessUtil.cs" />
+    <Compile Include="..\shared\ProcessResult.cs" Link="ProcessResult.cs" />
+    <Compile Include="..\shared\TempDirectory.cs" Link="TempDirectory.cs" />
+    <Compile Include="..\shared\TempFile.cs" Link="TempFile.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Tye.Hosting\Tye.Hosting.csproj" />
     <ProjectReference Include="..\Tye.Core\Tye.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20104.2" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
   </ItemGroup>

@@ -15,7 +15,6 @@ namespace Tye.Hosting
     public class DockerRunner : IApplicationProcessor
     {
         private readonly ILogger _logger;
-        private readonly Lazy<Task<bool>> _dockerInstalled = new Lazy<Task<bool>>(DetectDockerInstalled);
 
         public DockerRunner(ILogger logger)
         {
@@ -51,11 +50,19 @@ namespace Tye.Hosting
 
         private async Task StartContainerAsync(Application application, Service service, DockerRunInfo docker)
         {
-            if (!await _dockerInstalled.Value)
+            if (!await DockerDetector.Instance.IsDockerInstalled.Value)
             {
                 _logger.LogError("Unable to start docker container for service {ServiceName}, Docker is not installed.", service.Description.Name);
 
                 service.Logs.OnNext($"Unable to start docker container for service {service.Description.Name}, Docker is not installed.");
+                return;
+            }
+
+            if (!await DockerDetector.Instance.IsDockerConnectedToDaemon.Value)
+            {
+                _logger.LogError("Unable to start docker container for service {ServiceName}, Docker is not running.", service.Description.Name);
+
+                service.Logs.OnNext($"Unable to start docker container for service {service.Description.Name}, Docker is not running.");
                 return;
             }
 
