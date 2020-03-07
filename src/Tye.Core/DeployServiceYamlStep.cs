@@ -26,6 +26,16 @@ namespace Tye
                 return;
             }
 
+            if (!await KubectlDetector.Instance.IsKubectlInstalled.Value)
+            {
+                throw new CommandException($"Cannot apply manifests for '{service.Service.Name}' because kubectl is not installed.");
+            }
+
+            if (!await KubectlDetector.Instance.IsKubectlConnectedToCluster.Value)
+            {
+                throw new CommandException($"Cannot apply manifests for '{service.Service.Name}' because kubectl is not connected to a cluster.");
+            }
+
             using var tempFile = TempFile.Create();
             output.WriteDebugLine($"Writing output to '{tempFile.FilePath}'.");
 

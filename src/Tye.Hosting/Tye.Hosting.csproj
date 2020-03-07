@@ -15,7 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\tye\NameSanitizer.cs" Link="NameSanitizer.cs" />
+    <Compile Include="..\shared\DockerDetector.cs" Link="DockerDetector.cs" />
+    <Compile Include="..\shared\NameSanitizer.cs" Link="NameSanitizer.cs" />
+    <Compile Include="..\shared\ProcessUtil.cs" Link="ProcessUtil.cs" />
+    <Compile Include="..\shared\ProcessResult.cs" Link="ProcessResult.cs" />
   </ItemGroup>
   
   <ItemGroup>

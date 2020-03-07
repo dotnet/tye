@@ -29,6 +29,16 @@ namespace Tye
                 return;
             }
 
+            if (!await DockerDetector.Instance.IsDockerInstalled.Value)
+            {
+                throw new CommandException($"Cannot generate a docker image for '{service.Service.Name}' because docker is not installed.");
+            }
+
+            if (!await DockerDetector.Instance.IsDockerConnectedToDaemon.Value)
+            {
+                throw new CommandException($"Cannot generate a docker image for '{service.Service.Name}' because docker is not running.");
+            }
+
             await DockerContainerBuilder.BuildContainerImageAsync(output, application, service, project, container);
         }
     }

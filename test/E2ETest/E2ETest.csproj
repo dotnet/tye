@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\src\tye\TempDirectory.cs" Link="TempDirectory.cs" />
+    <Compile Include="..\..\src\shared\TempDirectory.cs" Link="TempDirectory.cs" />
   </ItemGroup>
 
   <ItemGroup>

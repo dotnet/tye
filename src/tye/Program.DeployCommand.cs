@@ -161,6 +161,16 @@ namespace Tye
                 await ApplicationYamlWriter.WriteAsync(output, writer, application);
             }
 
+            if (!await KubectlDetector.Instance.IsKubectlInstalled.Value)
+            {
+                throw new CommandException($"Cannot apply manifests because kubectl is not installed.");
+            }
+
+            if (!await KubectlDetector.Instance.IsKubectlConnectedToCluster.Value)
+            {
+                throw new CommandException($"Cannot apply manifests because kubectl is not connected to a cluster.");
+            }
+
             output.WriteDebugLine("Running 'kubectl apply'.");
             output.WriteCommandLine("kubectl", $"apply -f \"{tempFile.FilePath}\"");
             var capture = output.Capture();
