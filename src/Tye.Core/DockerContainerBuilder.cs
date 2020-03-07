@@ -70,7 +70,6 @@ namespace Tye
                 contextDirectory = publishOutput.Directory.FullName;
             }
 
-
             output.WriteDebugLine("Running 'docker build'.");
             output.WriteCommandLine("docker", $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"");
             var capture = output.Capture();
