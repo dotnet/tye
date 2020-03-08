@@ -22,7 +22,8 @@ namespace E2ETest
             sink = new TestOutputLogEventSink(output);
         }
 
-        [Fact]
+        [ConditionalFact]
+        [SkipIfNoDocker]
         public async Task SingleProjectGenerateTest()
         {
             var projectName = "single-project";

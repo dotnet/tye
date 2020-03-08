@@ -13,13 +13,6 @@
   <ItemGroup>
     <EmbeddedResource Include="wwwroot\**" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\shared\DockerDetector.cs" Link="DockerDetector.cs" />
-    <Compile Include="..\shared\NameSanitizer.cs" Link="NameSanitizer.cs" />
-    <Compile Include="..\shared\ProcessUtil.cs" Link="ProcessUtil.cs" />
-    <Compile Include="..\shared\ProcessResult.cs" Link="ProcessResult.cs" />
-  </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="Bedrock.Framework" Version="0.1.38-alpha.gd25d5b37ad" />
@@ -36,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Tye.Hosting.Diagnostics\Tye.Hosting.Diagnostics.csproj" />
+    <ProjectReference Include="..\Tye.Core\Tye.Core.csproj" />
     <ProjectReference Include="..\Tye.Hosting.Runtime\Tye.Hosting.Runtime.csproj" />
   </ItemGroup>
 

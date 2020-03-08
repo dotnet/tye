@@ -25,11 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\shared\DockerDetector.cs" Link="DockerDetector.cs" />
     <Compile Include="..\shared\KubectlDetector.cs" Link="KubectlDetector.cs" />
-    <Compile Include="..\shared\NameSanitizer.cs" Link="NameSanitizer.cs" />
-    <Compile Include="..\shared\ProcessUtil.cs" Link="ProcessUtil.cs" />
-    <Compile Include="..\shared\ProcessResult.cs" Link="ProcessResult.cs" />
     <Compile Include="..\shared\TempDirectory.cs" Link="TempDirectory.cs" />
     <Compile Include="..\shared\TempFile.cs" Link="TempFile.cs" />
   </ItemGroup>
