@@ -25,7 +25,7 @@ namespace E2ETest
                 }
             }
 
-            return null;
+            return null!;
         }
     }
 }
