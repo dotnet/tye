@@ -6,7 +6,7 @@ using System;
 
 namespace Tye
 {
-    public static class NameSanitizer
+    internal static class NameSanitizer
     {
         // Converts an arbitrary string into something usable as a C# identifier.
         //

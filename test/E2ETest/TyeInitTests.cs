@@ -50,7 +50,7 @@ namespace E2ETest
             output.WriteLine(projectFile.Exists.ToString());
             var directory = new DirectoryInfo(tempDirectory.DirectoryPath);
 
-            var application = FromFile(projectFile);
+            var application = ConfigFactory.FromFile(projectFile);
 
             output.WriteLine(application.Services.Count.ToString());
             foreach (var service in application.Services)
