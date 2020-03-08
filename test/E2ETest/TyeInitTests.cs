@@ -2,7 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.IO;
+using System.Text.Json;
+using Microsoft.Build.Construction;
 using Tye;
 using Tye.ConfigModel;
 using Xunit;
@@ -50,7 +53,36 @@ namespace E2ETest
             output.WriteLine(projectFile.Exists.ToString());
             var directory = new DirectoryInfo(tempDirectory.DirectoryPath);
 
-            var application = ConfigFactory.FromFile(projectFile);
+            var application = new ConfigApplication()
+            {
+                Source = projectFile,
+            };
+
+            var solution = SolutionFile.Parse(projectFile.FullName);
+            foreach (var project in solution.ProjectsInOrder)
+            {
+                if (project.ProjectType != SolutionProjectType.KnownToBeMSBuildFormat)
+                {
+                    continue;
+                }
+
+                var extension = Path.GetExtension(project.AbsolutePath).ToLower();
+                switch (extension)
+                {
+                    case ".csproj":
+                    case ".fsproj":
+                        break;
+                    default:
+                        continue;
+                }
+
+                var description = CreateService(new FileInfo(project.AbsolutePath));
+                if (description != null)
+                {
+                    output.WriteLine("Adding description");
+                    application.Services.Add(description);
+                }
+            }
 
             output.WriteLine(application.Services.Count.ToString());
             foreach (var service in application.Services)
@@ -94,6 +126,86 @@ namespace E2ETest
             output.WriteLine(content);
 
             Assert.Equal(expectedContent, content);
+        }
+
+
+        private bool TryGetLaunchProfile(FileInfo file, out JsonElement launchProfile)
+        {
+            var launchSettingsPath = Path.Combine(file.DirectoryName, "Properties", "launchSettings.json");
+            if (!File.Exists(launchSettingsPath))
+            {
+                launchProfile = default;
+                return false;
+            }
+
+            // If there's a launchSettings.json, then use it to get addresses
+            var root = JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(launchSettingsPath));
+            var key = SanitizeToIdentifier(Path.GetFileNameWithoutExtension(file.Name));
+            var profiles = root.GetProperty("profiles");
+            return profiles.TryGetProperty(key, out launchProfile);
+        }
+
+        public static string SanitizeToIdentifier(string name)
+        {
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            // This is not perfect. For now it just handles cases we've encountered.
+            return name.Replace("-", "_");
+        }
+
+        private ConfigService? CreateService(FileInfo file)
+        {
+            output.WriteLine(file.FullName);
+            if (!TryGetLaunchProfile(file, out var launchProfile))
+            {
+                output.WriteLine("No launch profile");
+                return null;
+            }
+
+            var service = new ConfigService()
+            {
+                Name = Path.GetFileNameWithoutExtension(file.Name).ToLowerInvariant(),
+                Project = file.FullName.Replace('\\', '/'),
+            };
+
+            output.WriteLine(service.Name);
+            output.WriteLine(service.Project);
+
+            PopulateFromLaunchProfile(service, launchProfile);
+
+            return service;
+        }
+
+        private static void PopulateFromLaunchProfile(ConfigService service, JsonElement launchProfile)
+        {
+            if (service.Bindings.Count == 0 && launchProfile.TryGetProperty("applicationUrl", out var applicationUrls))
+            {
+                var addresses = applicationUrls.GetString().Split(';', StringSplitOptions.RemoveEmptyEntries);
+                foreach (var address in addresses)
+                {
+                    var uri = new Uri(address);
+                    service.Bindings.Add(new ConfigServiceBinding()
+                    {
+                        Port = uri.Port,
+                        Protocol = uri.Scheme
+                    });
+                }
+            }
+
+            if (service.Configuration.Count == 0 && launchProfile.TryGetProperty("environmentVariables", out var environmentVariables))
+            {
+                foreach (var envVar in environmentVariables.EnumerateObject())
+                {
+                    service.Configuration.Add(new ConfigConfigurationSource()
+                    {
+                        Name = envVar.Name,
+                        Value = envVar.Value.GetString()
+                    });
+                }
+            }
         }
     }
 }
