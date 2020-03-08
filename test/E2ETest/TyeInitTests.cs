@@ -134,9 +134,12 @@ namespace E2ETest
             var launchSettingsPath = Path.Combine(file.DirectoryName, "Properties", "launchSettings.json");
             if (!File.Exists(launchSettingsPath))
             {
+                output.WriteLine(launchSettingsPath);
                 launchProfile = default;
                 return false;
             }
+
+            output.WriteLine("Found: " + launchSettingsPath);
 
             // If there's a launchSettings.json, then use it to get addresses
             var root = JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(launchSettingsPath));
