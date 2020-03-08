@@ -55,7 +55,7 @@ namespace Tye
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo>((console, path) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo>(async (console, path) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -68,8 +68,8 @@ namespace Tye
 
                 InitializeThreadPoolSettings(serviceCount);
 
-                var host = new TyeHost(application.ToHostingApplication(), args);
-                return host.RunAsync();
+                using var host = new TyeHost(application.ToHostingApplication(), args);
+                await host.RunAsync();
             });
 
             return command;

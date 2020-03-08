@@ -37,7 +37,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "test-project.csproj"));
 
             var application = ConfigFactory.FromFile(projectFile);
-            var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
+            using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
             {
                 Sink = sink,
             };
