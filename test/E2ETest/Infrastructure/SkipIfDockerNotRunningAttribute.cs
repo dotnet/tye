@@ -8,17 +8,17 @@ using Tye;
 namespace E2ETest
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
-    internal class SkipIfNoDockerAttribute : Attribute
+    internal class SkipIfDockerNotRunningAttribute : Attribute, ITestCondition 
     {
-        public SkipIfNoDockerAttribute()
+        public SkipIfDockerNotRunningAttribute()
         {
-            IsMet = DockerDetector.Instance.;
+            // TODO Check performance of this.
+            IsMet = DockerDetector.Instance.IsDockerConnectedToDaemon.Value.GetAwaiter().GetResult();
             SkipReason = "Docker is not installed or running.";
         }
 
         public bool IsMet { get; }
 
         public string SkipReason { get; set; }
-
     }
 }

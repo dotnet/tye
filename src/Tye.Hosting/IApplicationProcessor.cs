@@ -9,8 +9,8 @@ namespace Tye.Hosting
 {
     public interface IApplicationProcessor
     {
-        Task StartAsync(Application application);
+        Task StartAsync(Tye.Hosting.Model.Application application);
 
-        Task StopAsync(Application application);
+        Task StopAsync(Tye.Hosting.Model.Application application);
     }
 }

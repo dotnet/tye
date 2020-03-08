@@ -28,7 +28,7 @@ namespace Tye.Hosting
             _buildProjects = options.BuildProjects;
         }
 
-        public Task StartAsync(Application application)
+        public Task StartAsync(Tye.Hosting.Model.Application application)
         {
             var tasks = new Task[application.Services.Count];
             var index = 0;
@@ -49,12 +49,12 @@ namespace Tye.Hosting
             return Task.WhenAll(tasks);
         }
 
-        public Task StopAsync(Application application)
+        public Task StopAsync(Tye.Hosting.Model.Application application)
         {
             return KillRunningProcesses(application.Services);
         }
 
-        private async Task LaunchService(Application application, Service service)
+        private async Task LaunchService(Tye.Hosting.Model.Application application, Tye.Hosting.Model.Service service)
         {
             var serviceDescription = service.Description;
             var serviceName = serviceDescription.Name;
@@ -263,9 +263,9 @@ namespace Tye.Hosting
             service.Items[typeof(ProcessInfo)] = processInfo;
         }
 
-        private Task KillRunningProcesses(IDictionary<string, Service> services)
+        private Task KillRunningProcesses(IDictionary<string, Tye.Hosting.Model.Service> services)
         {
-            static async Task KillProcessAsync(Service service)
+            static async Task KillProcessAsync(Tye.Hosting.Model.Service service)
             {
                 if (service.Items.TryGetValue(typeof(ProcessInfo), out var stateObj) && stateObj is ProcessInfo state)
                 {

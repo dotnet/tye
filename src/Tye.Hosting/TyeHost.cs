@@ -26,10 +26,10 @@ namespace Tye.Hosting
         private IHostApplicationLifetime? _lifetime;
         private AggregateApplicationProcessor? _processor;
 
-        private readonly Application _application;
+        private readonly Tye.Hosting.Model.Application _application;
         private readonly string[] _args;
 
-        public TyeHost(Application application, string[] args)
+        public TyeHost(Tye.Hosting.Model.Application application, string[] args)
         {
             _application = application;
             _args = args;
@@ -104,7 +104,7 @@ namespace Tye.Hosting
         }
 
         private static WebApplication BuildWebApplication(
-            Application application,
+            Tye.Hosting.Model.Application application,
             string[] args,
             ILogEventSink? sink)
         {

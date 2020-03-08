@@ -23,7 +23,7 @@ namespace E2ETest
         }
 
         [ConditionalFact]
-        [SkipIfNoDocker]
+        [SkipIfDockerNotRunning]
         public async Task SingleProjectGenerateTest()
         {
             var projectName = "single-project";
@@ -49,7 +49,8 @@ namespace E2ETest
             Assert.Equal(expectedContent, content);
         }
 
-        [Fact]
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
         public async Task FrontendBackendGenerateTest()
         {
             var projectName = "frontend-backend";
@@ -75,7 +76,8 @@ namespace E2ETest
             Assert.Equal(expectedContent, content);
         }
 
-        [Fact]
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
         public async Task MultipleProjectGenerateTest()
         {
             var projectName = "multi-project";
