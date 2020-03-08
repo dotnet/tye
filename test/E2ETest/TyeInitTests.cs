@@ -3,14 +3,23 @@
 // See the LICENSE file in the project root for more information.
 
 using System.IO;
-using System.Threading.Tasks;
 using Tye;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace E2ETest
 {
     public class TyeInitTests
     {
+        private readonly ITestOutputHelper output;
+        private readonly TestOutputLogEventSink sink;
+
+        public TyeInitTests(ITestOutputHelper output)
+        {
+            this.output = output;
+            sink = new TestOutputLogEventSink(output);
+        }
+
         [Fact]
         public void SingleProjectInitTest()
         {
@@ -41,6 +50,8 @@ namespace E2ETest
             var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
             var expectedContent = File.ReadAllText("testassets/init/multi-project.yaml");
 
+            output.WriteLine(content);
+
             Assert.Equal(expectedContent, content);
         }
 
@@ -58,6 +69,8 @@ namespace E2ETest
 
             var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
             var expectedContent = File.ReadAllText("testassets/init/frontend-backend.yaml");
+
+            output.WriteLine(content);
 
             Assert.Equal(expectedContent, content);
         }
