@@ -46,7 +46,17 @@ namespace E2ETest
             File.Delete(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "multi-project.sln"));
+            output.WriteLine(projectFile.Exists.ToString());
+            var directory = new DirectoryInfo(tempDirectory.DirectoryPath);
+            foreach (var file in directory.GetFiles())
+            {
+                output.WriteLine(file.FullName);
+            }
 
+            foreach (var file in directory.GetDirectories())
+            {
+                output.WriteLine(file.FullName);
+            }
             var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
             var expectedContent = File.ReadAllText("testassets/init/multi-project.yaml");
 
