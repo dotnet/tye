@@ -76,6 +76,11 @@ services:
                         service.Bindings = null!;
                         service.Configuration = null!;
                         service.Project = service.Project!.Substring(directory.FullName.Length).TrimStart('/');
+
+                        //if (service.Project == null)
+                        //{
+
+                        //}
                     }
 
                     // If the input file is a sln/project then place the config next to it

@@ -4,6 +4,7 @@
 
 using System.IO;
 using Tye;
+using Tye.ConfigModel;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -48,6 +49,16 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "multi-project.sln"));
             output.WriteLine(projectFile.Exists.ToString());
             var directory = new DirectoryInfo(tempDirectory.DirectoryPath);
+
+            var application = FromFile(projectFile);
+
+            output.WriteLine(application.Services.Count.ToString());
+            foreach (var service in application.Services)
+            {
+                output.WriteLine(service.Name);
+                output.WriteLine(service.Project);
+            }
+
             foreach (var file in directory.GetFiles())
             {
                 output.WriteLine(file.FullName);
