@@ -65,8 +65,7 @@ namespace Tye.ConfigModel
                     continue;
                 }
 
-                var projectFilePath = project.AbsolutePath.Replace('\\', Path.DirectorySeparatorChar);
-                var extension = Path.GetExtension(projectFilePath).ToLower();
+                var extension = Path.GetExtension(project.AbsolutePath).ToLower();
                 switch (extension)
                 {
                     case ".csproj":
@@ -76,7 +75,7 @@ namespace Tye.ConfigModel
                         continue;
                 }
 
-                var description = CreateService(new FileInfo(projectFilePath));
+                var description = CreateService(new FileInfo(project.AbsolutePath.Replace('\\', '/')));
                 if (description != null)
                 {
                     application.Services.Add(description);
@@ -140,7 +139,7 @@ namespace Tye.ConfigModel
             var service = new ConfigService()
             {
                 Name = Path.GetFileNameWithoutExtension(file.Name).ToLowerInvariant(),
-                Project = file.FullName,
+                Project = file.FullName.Replace('\\', '/'),
             };
 
             PopulateFromLaunchProfile(service, launchProfile);

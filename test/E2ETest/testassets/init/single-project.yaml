@@ -1,0 +1,6 @@
+﻿# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: test-project
+services:
+- name: test-project
+  project: test-project.csproj

@@ -18,4 +18,13 @@
     <ProjectReference Include="..\..\src\tye\tye.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="testassets\init\frontend-backend.yaml" />
+    <None Remove="testassets\init\multi-project.yaml" />
+  </ItemGroup>
+
 </Project>

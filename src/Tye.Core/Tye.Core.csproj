@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-<PropertyGroup>
+  <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <RootNamespace>Tye</RootNamespace>
     <LangVersion>8.0</LangVersion>
@@ -33,7 +33,7 @@
     <Compile Include="..\shared\TempDirectory.cs" Link="TempDirectory.cs" />
     <Compile Include="..\shared\TempFile.cs" Link="TempFile.cs" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <EmbeddedResource Include="Resources\Imports.targets" />
   </ItemGroup>

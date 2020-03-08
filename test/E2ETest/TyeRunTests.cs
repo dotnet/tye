@@ -16,22 +16,21 @@ using Xunit.Abstractions;
 
 namespace E2ETest
 {
-    public class TyeRunTest
+    public class TyeRunTests
     {
         private readonly ITestOutputHelper output;
         private readonly TestOutputLogEventSink sink;
 
-        public TyeRunTest(ITestOutputHelper output)
+        public TyeRunTests(ITestOutputHelper output)
         {
             this.output = output;
             sink = new TestOutputLogEventSink(output);
         }
 
-
         [Fact]
         public async Task SingleProjectTest()
         {
-            var projectDirectory = new DirectoryInfo(Path.Combine(GetSolutionRootDirectory("tye"), "samples", "single-project", "test-project"));
+            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "single-project", "test-project"));
             using var tempDirectory = TempDirectory.Create();
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
@@ -96,30 +95,6 @@ namespace E2ETest
             {
                 await host.StopAsync();
             }
-        }
-
-
-        // https://github.com/dotnet/aspnetcore/blob/5a0526dfd991419d5bce0d8ea525b50df2e37b04/src/Testing/src/TestPathUtilities.cs
-        // This can get into a bad pattern for having crazy paths in places. Eventually, especially if we use helix,
-        // we may want to avoid relying on sln position.
-        public static string GetSolutionRootDirectory(string solution)
-        {
-            var applicationBasePath = AppContext.BaseDirectory;
-            var directoryInfo = new DirectoryInfo(applicationBasePath);
-
-            do
-            {
-                var projectFileInfo = new FileInfo(Path.Combine(directoryInfo.FullName, $"{solution}.sln"));
-                if (projectFileInfo.Exists)
-                {
-                    return projectFileInfo.DirectoryName;
-                }
-
-                directoryInfo = directoryInfo.Parent;
-            }
-            while (directoryInfo.Parent != null);
-
-            throw new Exception($"Solution file {solution}.sln could not be found in {applicationBasePath} or its parent directories.");
         }
     }
 }
