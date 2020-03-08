@@ -21,7 +21,7 @@ namespace Tye
                 CommonArguments.Path_Optional,
             };
 
-            command.AddOption(new Option("--force")
+            command.AddOption(new Option(new[] { "-f", "--force" })
             {
                 Description = "Overrides the tye.yaml file if already present for project.",
                 Required = false
