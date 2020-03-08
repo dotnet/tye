@@ -36,6 +36,8 @@ namespace E2ETest
             var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
             var expectedContent = File.ReadAllText("testassets/init/single-project.yaml");
 
+            output.WriteLine(content);
+
             Assert.Equal(expectedContent, content);
         }
 
@@ -54,6 +56,8 @@ namespace E2ETest
             var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
             var expectedContent = File.ReadAllText("testassets/init/multi-project.yaml");
 
+            output.WriteLine(content);
+
             Assert.Equal(expectedContent, content);
         }
 
@@ -71,6 +75,8 @@ namespace E2ETest
 
             var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
             var expectedContent = File.ReadAllText("testassets/init/frontend-backend.yaml");
+
+            output.WriteLine(content);
 
             Assert.Equal(expectedContent, content);
         }
