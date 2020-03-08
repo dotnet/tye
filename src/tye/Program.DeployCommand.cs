@@ -61,7 +61,7 @@ namespace Tye
             await DeployApplicationManifestAsync(output, temporaryApplication, application.Source.Directory.Name, environment);
         }
 
-        private static async Task<TemporaryApplicationAdapter> CreateApplicationAdapterAsync(OutputContext output, ConfigApplication application, bool interactive)
+        internal static async Task<TemporaryApplicationAdapter> CreateApplicationAdapterAsync(OutputContext output, ConfigApplication application, bool interactive)
         {
             var globals = new ApplicationGlobals()
             {

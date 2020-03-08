@@ -23,6 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="testassets\generate\frontend-backend.yaml" />
+    <None Remove="testassets\generate\multi-project.yaml" />
+    <None Remove="testassets\generate\single-project.yaml" />
     <None Remove="testassets\init\frontend-backend.yaml" />
     <None Remove="testassets\init\multi-project.yaml" />
   </ItemGroup>

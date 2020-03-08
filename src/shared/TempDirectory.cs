@@ -12,16 +12,18 @@ namespace Tye
         public static TempDirectory Create()
         {
             var directoryPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            Directory.CreateDirectory(directoryPath);
-            return new TempDirectory(directoryPath);
+            var directoryInfo = Directory.CreateDirectory(directoryPath);
+            return new TempDirectory(directoryPath, directoryInfo);
         }
 
-        private TempDirectory(string directoryPath)
+        private TempDirectory(string directoryPath, DirectoryInfo directoryInfo)
         {
             DirectoryPath = directoryPath;
+            DirectoryInfo = directoryInfo;
         }
 
         public string DirectoryPath { get; }
+        public DirectoryInfo DirectoryInfo { get; }
 
         public void Dispose()
         {
