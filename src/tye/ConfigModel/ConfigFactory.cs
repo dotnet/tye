@@ -75,7 +75,7 @@ namespace Tye.ConfigModel
                         continue;
                 }
 
-                var description = CreateService(new FileInfo(project.AbsolutePath));
+                var description = CreateService(new FileInfo(project.AbsolutePath.Replace('\\', '/')));
                 if (description != null)
                 {
                     application.Services.Add(description);

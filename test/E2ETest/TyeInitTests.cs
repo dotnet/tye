@@ -128,7 +128,6 @@ namespace E2ETest
             Assert.Equal(expectedContent, content);
         }
 
-
         private bool TryGetLaunchProfile(FileInfo file, out JsonElement launchProfile)
         {
             output.WriteLine(file.FullName);
