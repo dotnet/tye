@@ -131,7 +131,10 @@ namespace E2ETest
 
         private bool TryGetLaunchProfile(FileInfo file, out JsonElement launchProfile)
         {
+            output.WriteLine(file.FullName);
+            output.WriteLine(file.DirectoryName);
             var launchSettingsPath = Path.Combine(file.DirectoryName, "Properties", "launchSettings.json");
+            output.WriteLine(launchSettingsPath);
             if (!File.Exists(launchSettingsPath))
             {
                 output.WriteLine(launchSettingsPath);
