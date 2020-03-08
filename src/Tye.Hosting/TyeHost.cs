@@ -5,22 +5,22 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Tye.Hosting.Diagnostics;
-using Tye.Hosting.Model;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Filters;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Serilog.Core;
 using Serilog.Events;
+using Serilog.Filters;
+using Tye.Hosting.Diagnostics;
+using Tye.Hosting.Model;
 
 namespace Tye.Hosting
 {
-    public class TyeHost
+    public class TyeHost : IDisposable
     {
         private Microsoft.Extensions.Logging.ILogger? _logger;
         private IHostApplicationLifetime? _lifetime;
@@ -98,7 +98,6 @@ namespace Tye.Hosting
                 {
                     // Stop the host after everything else has been shutdown
                     await DashboardWebApplication.StopAsync();
-                    DashboardWebApplication.Dispose();
                 }
             }
         }
@@ -180,6 +179,11 @@ namespace Tye.Hosting
                 new ProcessRunner(logger, ProcessRunnerOptions.FromArgs(args)),
             });
             return processor;
+        }
+
+        public void Dispose()
+        {
+            DashboardWebApplication?.Dispose();
         }
     }
 }
