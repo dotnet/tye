@@ -23,7 +23,13 @@ namespace Tye
                 StandardOptions.Verbosity,
             };
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool>((console, path, verbosity, interactive) =>
+            command.AddOption(new Option(new[] { "-f", "--force" })
+            {
+                Description = "Override validation and force deployment.",
+                Required = false
+            });
+
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool>((console, path, verbosity, interactive, force) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -32,14 +38,24 @@ namespace Tye
                 }
 
                 var application = ConfigFactory.FromFile(path);
-                return ExecuteDeployAsync(new OutputContext(console, verbosity), application, environment: "production", interactive);
+                return ExecuteDeployAsync(new OutputContext(console, verbosity), application, environment: "production", interactive, force);
             });
 
             return command;
         }
 
-        private static async Task ExecuteDeployAsync(OutputContext output, ConfigApplication application, string environment, bool interactive)
+        private static async Task ExecuteDeployAsync(OutputContext output, ConfigApplication application, string environment, bool interactive, bool force)
         {
+            if (!await KubectlDetector.Instance.IsKubectlInstalled.Value)
+            {
+                throw new CommandException($"Cannot apply manifests because kubectl is not installed.");
+            }
+
+            if (!await KubectlDetector.Instance.IsKubectlConnectedToCluster.Value)
+            {
+                throw new CommandException($"Cannot apply manifests because kubectl is not connected to a cluster.");
+            }
+
             var temporaryApplication = await CreateApplicationAdapterAsync(output, application, interactive);
             var steps = new List<ServiceExecutor.Step>()
             {
@@ -47,6 +63,7 @@ namespace Tye
                 new PublishProjectStep(),
                 new BuildDockerImageStep() { Environment = environment, },
                 new PushDockerImageStep() { Environment = environment, },
+                new ValidateSecretStep() { Environment = environment, Interactive = interactive, Force = force, },
             };
 
             steps.Add(new GenerateKubernetesManifestStep() { Environment = environment, });
@@ -159,16 +176,6 @@ namespace Tye
                 using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
 
                 await ApplicationYamlWriter.WriteAsync(output, writer, application);
-            }
-
-            if (!await KubectlDetector.Instance.IsKubectlInstalled.Value)
-            {
-                throw new CommandException($"Cannot apply manifests because kubectl is not installed.");
-            }
-
-            if (!await KubectlDetector.Instance.IsKubectlConnectedToCluster.Value)
-            {
-                throw new CommandException($"Cannot apply manifests because kubectl is not connected to a cluster.");
             }
 
             output.WriteDebugLine("Running 'kubectl apply'.");
