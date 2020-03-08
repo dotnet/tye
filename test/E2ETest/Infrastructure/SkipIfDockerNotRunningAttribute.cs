@@ -8,7 +8,7 @@ using Tye;
 namespace E2ETest
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
-    internal class SkipIfDockerNotRunningAttribute : Attribute, ITestCondition 
+    internal class SkipIfDockerNotRunningAttribute : Attribute, ITestCondition
     {
         public SkipIfDockerNotRunningAttribute()
         {
