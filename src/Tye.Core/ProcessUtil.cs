@@ -13,7 +13,7 @@ using Mono.Unix.Native;
 
 namespace Tye
 {
-    internal static class ProcessUtil
+    public static class ProcessUtil
     {
         public static async Task<ProcessResult> RunAsync(
             string filename,

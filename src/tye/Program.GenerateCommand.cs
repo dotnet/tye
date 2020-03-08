@@ -35,49 +35,10 @@ namespace Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                var application = ConfigFactory.FromFile(path);
-                return ExecuteGenerateAsync(new OutputContext(console, verbosity), application, environment: "production", interactive);
+                return GenerateHost.GenerateAsync(console, path, verbosity, interactive);
             });
 
             return command;
-        }
-
-        private static async Task ExecuteGenerateAsync(OutputContext output, ConfigApplication application, string environment, bool interactive)
-        {
-            var temporaryApplication = await CreateApplicationAdapterAsync(output, application, interactive);
-            var steps = new List<ServiceExecutor.Step>()
-            {
-                new CombineStep() { Environment = environment, },
-                new PublishProjectStep(),
-                new BuildDockerImageStep() { Environment = environment, }, // Make an image but don't push it
-            };
-
-            steps.Add(new GenerateKubernetesManifestStep() { Environment = environment, });
-
-            var executor = new ServiceExecutor(output, temporaryApplication, steps);
-            foreach (var service in temporaryApplication.Services)
-            {
-                await executor.ExecuteAsync(service);
-            }
-
-            await GenerateApplicationManifestAsync(output, temporaryApplication, application.Source.Directory.Name, environment);
-        }
-
-        private static async Task GenerateApplicationManifestAsync(OutputContext output, Tye.Application application, string applicationName, string environment)
-        {
-            using var step = output.BeginStep("Generating Application Manifests...");
-
-            var outputFilePath = Path.GetFullPath(Path.Combine(".", $"{applicationName}-{environment}.yaml"));
-            output.WriteInfoLine($"Writing output to '{outputFilePath}'.");
-
-            {
-                using var stream = File.OpenWrite(outputFilePath);
-                using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
-
-                await ApplicationYamlWriter.WriteAsync(output, writer, application);
-            }
-
-            step.MarkComplete();
         }
     }
 }

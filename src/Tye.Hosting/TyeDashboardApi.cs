@@ -55,7 +55,7 @@ namespace Tye.Hosting
 
         private async Task Services(HttpContext context)
         {
-            var app = context.RequestServices.GetRequiredService<Application>();
+            var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
 
             context.Response.ContentType = "application/json";
 
@@ -66,7 +66,7 @@ namespace Tye.Hosting
 
         private async Task Service(HttpContext context)
         {
-            var app = context.RequestServices.GetRequiredService<Application>();
+            var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
 
             var name = (string)context.Request.RouteValues["name"];
             context.Response.ContentType = "application/json";
@@ -88,7 +88,7 @@ namespace Tye.Hosting
 
         private async Task Logs(HttpContext context)
         {
-            var app = context.RequestServices.GetRequiredService<Application>();
+            var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
 
             var name = (string)context.Request.RouteValues["name"];
             context.Response.ContentType = "application/json";
@@ -110,7 +110,7 @@ namespace Tye.Hosting
 
         private async Task AllMetrics(HttpContext context)
         {
-            var app = context.RequestServices.GetRequiredService<Application>();
+            var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
 
             var sb = new StringBuilder();
             foreach (var s in app.Services.OrderBy(s => s.Key))
@@ -138,7 +138,7 @@ namespace Tye.Hosting
 
         private async Task Metics(HttpContext context)
         {
-            var app = context.RequestServices.GetRequiredService<Application>();
+            var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
 
             var sb = new StringBuilder();
 

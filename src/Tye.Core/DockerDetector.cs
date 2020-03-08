@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Tye
 {
-    internal class DockerDetector
+    public class DockerDetector
     {
         public static DockerDetector Instance { get; } = new DockerDetector();
 

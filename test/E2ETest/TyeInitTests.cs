@@ -2,12 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.IO;
-using System.Text.Json;
-using Microsoft.Build.Construction;
 using Tye;
-using Tye.ConfigModel;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -30,6 +26,8 @@ namespace E2ETest
             var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "single-project", "test-project"));
             using var tempDirectory = TempDirectory.Create();
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+
+            File.Delete(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "test-project.csproj"));
 

@@ -23,7 +23,7 @@ namespace Tye.Hosting
             _diagnosticsCollector = diagnosticsCollector;
         }
 
-        public Task StartAsync(Application application)
+        public Task StartAsync(Tye.Hosting.Model.Application application)
         {
             foreach (var service in application.Services.Values)
             {
@@ -38,7 +38,7 @@ namespace Tye.Hosting
             return Task.CompletedTask;
         }
 
-        public Task StopAsync(Application application)
+        public Task StopAsync(Tye.Hosting.Model.Application application)
         {
             foreach (var service in application.Services.Values)
             {
