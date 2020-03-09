@@ -149,8 +149,8 @@ namespace E2ETest
                     var appResponse = await client.GetAsync(uriBackendProcess);
                     Assert.Equal(HttpStatusCode.OK, appResponse.StatusCode);
                     var content = await appResponse.Content.ReadAsStringAsync();
-                    Assert.Contains("Frontend Listening IP: ::1", content);
-                    Assert.Contains("Backend Listening IP: ::1", content);
+                    Assert.Matches("Frontend Listening IP: (.+)/n", content);
+                    Assert.Matches("Backend Listening IP: (.+)/n", content);
                 }
                 finally
                 {
