@@ -9,4 +9,4 @@ services:
 - name: frontend
   project: frontend/frontend.csproj
   bindings:
-  - port: 5051
+  - port: 5050
