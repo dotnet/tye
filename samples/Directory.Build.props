@@ -7,6 +7,5 @@
     <OutputPath>$(OutDirName)$(Configuration)\</OutputPath>
     <BaseIntermediateOutputPath>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\obj\'))</BaseIntermediateOutputPath>
     <IntemediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)</IntemediateOutputPath>
-    <IsPackable>false</IsPackable>
   </PropertyGroup>
 </Project>
