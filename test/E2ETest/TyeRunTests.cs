@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -28,7 +29,7 @@ namespace E2ETest
         }
 
         [Fact]
-        public async Task SingleProjectTest()
+        public async Task SingleProjectRunTest()
         {
             var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "single-project", "test-project"));
             using var tempDirectory = TempDirectory.Create();
@@ -94,6 +95,88 @@ namespace E2ETest
             finally
             {
                 await host.StopAsync();
+            }
+        }
+
+        [Fact]
+        public async Task FrontendBackendRunTest()
+        {
+            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
+            using var tempDirectory = TempDirectory.Create();
+            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+
+            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+
+            var application = ConfigFactory.FromFile(projectFile);
+            using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
+            {
+                Sink = sink,
+            };
+
+            await host.StartAsync();
+            try
+            {
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                    AllowAutoRedirect = false
+                };
+
+                var client = new HttpClient(new RetryHandler(handler));
+
+                var dashboardUri = new Uri(host.DashboardWebApplication!.Addresses.First());
+                var dashboardResponse = await client.GetStringAsync(dashboardUri);
+
+                await CheckServiceIsUp(application, client, "backend", dashboardUri);
+                await CheckServiceIsUp(application, client, "frontend", dashboardUri);
+            }
+            finally
+            {
+                await host.StopAsync();
+            }
+        }
+
+        private async Task CheckServiceIsUp(ConfigApplication application, HttpClient client, string serviceName, Uri dashboardUri)
+        {
+            // make sure backend is up before frontend
+            var service = application.Services.Where(a => a.Name == serviceName).First();
+            var binding = service.Bindings.First();
+
+            var protocol = binding.Protocol != null && binding.Protocol.Length != 0 ? binding.Protocol : "http";
+            var hostName = binding.Host != null && binding.Host.Length != 0 ? binding.Host : "localhost";
+
+            var uriString = $"{protocol}://{hostName}:{binding.Port}";
+
+            // Confirm that the uri is in the dashboard response.
+
+            var uriBackendProcess = new Uri(uriString);
+
+            // This isn't reliable right now because micronetes only guarantees the process starts, not that
+            // that kestrel started.
+            try
+            {
+                var appResponse = await client.GetAsync(uriBackendProcess);
+                Assert.Equal(HttpStatusCode.OK, appResponse.StatusCode);
+                var content = await appResponse.Content.ReadAsStringAsync();
+                if (serviceName == "frontend")
+                {
+                    Assert.Matches("Frontend Listening IP: (.+)\n", content);
+                    Assert.Matches("Backend Listening IP: (.+)\n", content);
+                }
+            }
+            finally
+            {
+                // If we failed, there's a good chance the service isn't running. Let's get the logs either way and put
+                // them in the output.
+                foreach (var s in application.Services)
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Get, new Uri(dashboardUri, $"/api/v1/logs/{s.Name}"));
+                    var response = await client.SendAsync(request);
+                    var text = await response.Content.ReadAsStringAsync();
+
+                    output.WriteLine($"Logs for service: {s.Name}");
+                    output.WriteLine(text);
+                }
             }
         }
     }
