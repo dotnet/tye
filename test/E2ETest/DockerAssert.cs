@@ -18,13 +18,9 @@ namespace E2ETest
         // wierd and confusing.
         public static async Task AssertImageExistsAsync(ITestOutputHelper output, string repository)
         {
-            if (repository is null)
-            {
-                throw new ArgumentNullException(nameof(repository));
-            }
-
             var builder = new StringBuilder();
 
+            output.WriteLine($"> docker images \"{repository}\" --format \"{{{{.Repository}}}}\"");
             var exitCode = await Process.ExecuteAsync(
                 "docker",
                 $"images \"{repository}\" --format \"{{{{.Repository}}}}\"",
@@ -35,13 +31,71 @@ namespace E2ETest
                 throw new XunitException($"Running `docker images \"{repository}\"` failed." + Environment.NewLine + builder.ToString());
             }
 
-            var lines = builder.ToString().Split(new[] { '\r', '\n', });
+            var lines = builder.ToString().Split(new[] { '\r', '\n', }, StringSplitOptions.RemoveEmptyEntries);
             if (lines.Any(line => line == repository))
             {
                 return;
             }
 
             throw new XunitException($"Image '{repository}' was not found.");
+
+            void OnOutput(string text)
+            {
+                builder.AppendLine(text);
+                output.WriteLine(text);
+            }
+        }
+
+        public static async Task DeleteDockerImagesAsync(ITestOutputHelper output, string repository)
+        {
+            var ids = await ListDockerImagesIdsAsync(output, repository);
+
+            var builder = new StringBuilder();
+
+            foreach (var id in ids)
+            {
+
+                output.WriteLine($"> docker rmi \"{id}\"");
+                var exitCode = await Process.ExecuteAsync(
+                    "docker",
+                    $"rmi \"{id}\"",
+                    stdOut: OnOutput,
+                    stdErr: OnOutput);
+                if (exitCode != 0)
+                {
+                    throw new XunitException($"Running `docker rmi \"{id}\"` failed." + Environment.NewLine + builder.ToString());
+                }
+
+                builder.Clear();
+            }
+
+            void OnOutput(string text)
+            {
+                builder.AppendLine(text);
+                output.WriteLine(text);
+            }
+        }
+
+        private static async Task<string[]> ListDockerImagesIdsAsync(ITestOutputHelper output, string repository)
+        {
+            // docker images -q '{repository}' returns just the ID of the image (one per line)
+            // It does not fail if there are no matches, just returns empty output.
+
+            var builder = new StringBuilder();
+
+            output.WriteLine($"> docker images -q \"{repository}\"");
+            var exitCode = await Process.ExecuteAsync(
+                "docker",
+                $"images -q \"{repository}\"",
+                stdOut: OnOutput,
+                stdErr: OnOutput);
+            if (exitCode != 0)
+            {
+                throw new XunitException($"Running `docker images -q \"{repository}\"` failed." + Environment.NewLine + builder.ToString());
+            }
+
+            var lines = builder.ToString().Split(new[] { '\r', '\n', }, StringSplitOptions.RemoveEmptyEntries);
+            return lines;
 
             void OnOutput(string text)
             {
