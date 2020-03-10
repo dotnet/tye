@@ -14,18 +14,14 @@ namespace Tye
 {
     static partial class Program
     {
-        public static Command CreateGenerateCommand()
+        public static Command CreateBuildCommand()
         {
-            var command = new Command("generate", "generate kubernetes manifests")
+            var command = new Command("build", "build container for the application")
             {
                 CommonArguments.Path_Required,
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
             };
-
-            // This is a super-secret VIP-only command! It's useful for testing, but we're 
-            // not documenting it right now.
-            command.IsHidden = true;
 
             command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool>((console, path, verbosity, interactive) =>
             {
@@ -35,7 +31,7 @@ namespace Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                return GenerateHost.GenerateAsync(console, path, verbosity, interactive);
+                return BuildHost.BuildAsync(console, path, verbosity, interactive);
             });
 
             return command;

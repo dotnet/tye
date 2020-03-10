@@ -16,7 +16,7 @@ namespace Tye
     {
         public static Command CreateDeployCommand()
         {
-            var command = new Command("deploy", "Deploy the application")
+            var command = new Command("deploy", "deploy the application")
             {
                 CommonArguments.Path_Required,
                 StandardOptions.Interactive,
@@ -56,7 +56,7 @@ namespace Tye
                 throw new CommandException($"Cannot apply manifests because kubectl is not connected to a cluster.");
             }
 
-            var temporaryApplication = await CreateApplicationAdapterAsync(output, application, interactive);
+            var temporaryApplication = await CreateApplicationAdapterAsync(output, application, interactive, requireRegistry: true);
             var steps = new List<ServiceExecutor.Step>()
             {
                 new CombineStep() { Environment = environment, },
@@ -78,7 +78,7 @@ namespace Tye
             await DeployApplicationManifestAsync(output, temporaryApplication, application.Source.Directory.Name, environment);
         }
 
-        internal static async Task<TemporaryApplicationAdapter> CreateApplicationAdapterAsync(OutputContext output, ConfigApplication application, bool interactive)
+        internal static async Task<TemporaryApplicationAdapter> CreateApplicationAdapterAsync(OutputContext output, ConfigApplication application, bool interactive, bool requireRegistry)
         {
             var globals = new ApplicationGlobals()
             {
@@ -145,12 +145,19 @@ namespace Tye
             var temporaryApplication = new TemporaryApplicationAdapter(application, globals, services);
             if (temporaryApplication.Globals.Registry?.Hostname == null && interactive)
             {
-                var registry = output.Prompt("Enter the Container Registry (ex: 'example.azurecr.io' for Azure or 'example' for dockerhub)");
-                temporaryApplication.Globals.Registry = new ContainerRegistry(registry);
+                var registry = output.Prompt("Enter the Container Registry (ex: 'example.azurecr.io' for Azure or 'example' for dockerhub)", allowEmpty: !requireRegistry);
+                if (!string.IsNullOrWhiteSpace(registry))
+                {
+                    temporaryApplication.Globals.Registry = new ContainerRegistry(registry.Trim());
+                }
             }
-            else if (temporaryApplication.Globals.Registry?.Hostname == null)
+            else if (temporaryApplication.Globals.Registry?.Hostname == null && requireRegistry)
             {
                 throw new CommandException("A registry is required for deploy operations. Add the registry to 'tye.yaml' or use '-i' for interactive mode.");
+            }
+            else
+            {
+                // No registry specified, and that's OK!
             }
 
             foreach (var service in temporaryApplication.Services)
