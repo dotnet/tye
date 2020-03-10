@@ -26,6 +26,8 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task SingleProjectBuildTest()
         {
+            await DockerAssert.DeleteDockerImagesAsync(output, "test/test-project");
+
             var projectName = "single-project";
             var environment = "production";
 
@@ -39,15 +41,25 @@ namespace E2ETest
 
             application.Registry = "test";
 
-            await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+            try
+            {
+                await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
 
-            await DockerAssert.AssertImageExistsAsync(output, "test/test-project");
+                await DockerAssert.AssertImageExistsAsync(output, "test/test-project");
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, "test/test-project");
+            }
         }
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task FrontendBackendBuildTest()
         {
+            await DockerAssert.DeleteDockerImagesAsync(output, "test/backend");
+            await DockerAssert.DeleteDockerImagesAsync(output, "test/frontend");
+
             var projectName = "frontend-backend";
             var environment = "production";
 
@@ -61,16 +73,27 @@ namespace E2ETest
 
             application.Registry = "test";
 
-            await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+            try
+            {
+                await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
 
-            await DockerAssert.AssertImageExistsAsync(output, "test/backend");
-            await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
+                await DockerAssert.AssertImageExistsAsync(output, "test/backend");
+                await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, "test/backend");
+                await DockerAssert.DeleteDockerImagesAsync(output, "test/frontend");
+            }
         }
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task MultipleProjectBuildTest()
         {
+            await DockerAssert.DeleteDockerImagesAsync(output, "test/backend");
+            await DockerAssert.DeleteDockerImagesAsync(output, "test/frontend");
+            await DockerAssert.DeleteDockerImagesAsync(output, "test/worker");
 
             var projectName = "multi-project";
             var environment = "production";
@@ -85,17 +108,28 @@ namespace E2ETest
 
             application.Registry = "test";
 
-            await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+            try
+            {
+                await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
 
-            await DockerAssert.AssertImageExistsAsync(output, "test/backend");
-            await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
-            await DockerAssert.AssertImageExistsAsync(output, "test/worker");
+                await DockerAssert.AssertImageExistsAsync(output, "test/backend");
+                await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
+                await DockerAssert.AssertImageExistsAsync(output, "test/worker");
+            }
+            finally
+            {
+                await DockerAssert.AssertImageExistsAsync(output, "test/backend");
+                await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
+                await DockerAssert.AssertImageExistsAsync(output, "test/worker");
+            }
         }
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task BuildDoesNotRequireRegistry()
         {
+            await DockerAssert.DeleteDockerImagesAsync(output, "test-project");
+
             var projectName = "single-project";
             var environment = "production";
 
@@ -107,9 +141,16 @@ namespace E2ETest
 
             var application = ConfigFactory.FromFile(projectFile);
 
-            await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+            try
+            {
+                await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
 
-            await DockerAssert.AssertImageExistsAsync(output, "test-project");
+                await DockerAssert.AssertImageExistsAsync(output, "test-project");
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, "test-project");
+            }
         }
     }
 }
