@@ -11,12 +11,12 @@ using Xunit.Abstractions;
 
 namespace E2ETest
 {
-    public class TyeGenerateTests
+    public class TyeBuildTests
     {
         private readonly ITestOutputHelper output;
         private readonly TestOutputLogEventSink sink;
 
-        public TyeGenerateTests(ITestOutputHelper output)
+        public TyeBuildTests(ITestOutputHelper output)
         {
             this.output = output;
             sink = new TestOutputLogEventSink(output);
@@ -24,7 +24,7 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        public async Task SingleProjectGenerateTest()
+        public async Task SingleProjectBuildTest()
         {
             var projectName = "single-project";
             var environment = "production";
@@ -37,21 +37,16 @@ namespace E2ETest
 
             var application = ConfigFactory.FromFile(projectFile);
 
-            // Need to add docker registry for generate
             application.Registry = "test";
 
-            await GenerateHost.ExecuteGenerateAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+            await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
 
-            // name of application is the folder
-            var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-            var expectedContent = File.ReadAllText($"testassets/generate/{projectName}.yaml");
-
-            Assert.Equal(expectedContent, content);
+            await DockerAssert.AssertImageExistsAsync(output, "test/test-project");
         }
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        public async Task FrontendBackendGenerateTest()
+        public async Task FrontendBackendBuildTest()
         {
             var projectName = "frontend-backend";
             var environment = "production";
@@ -64,22 +59,19 @@ namespace E2ETest
 
             var application = ConfigFactory.FromFile(projectFile);
 
-            // Need to add docker registry for generate
             application.Registry = "test";
 
-            await GenerateHost.ExecuteGenerateAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+            await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
 
-            // name of application is the folder
-            var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-            var expectedContent = File.ReadAllText($"testassets/generate/{projectName}.yaml");
-
-            Assert.Equal(expectedContent, content);
+            await DockerAssert.AssertImageExistsAsync(output, "test/backend");
+            await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
         }
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        public async Task MultipleProjectGenerateTest()
+        public async Task MultipleProjectBuildTest()
         {
+
             var projectName = "multi-project";
             var environment = "production";
 
@@ -91,21 +83,18 @@ namespace E2ETest
 
             var application = ConfigFactory.FromFile(projectFile);
 
-            // Need to add docker registry for generate
             application.Registry = "test";
 
-            await GenerateHost.ExecuteGenerateAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+            await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
 
-            // name of application is the folder
-            var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-            var expectedContent = File.ReadAllText($"testassets/generate/{projectName}.yaml");
-
-            Assert.Equal(expectedContent, content);
+            await DockerAssert.AssertImageExistsAsync(output, "test/backend");
+            await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
+            await DockerAssert.AssertImageExistsAsync(output, "test/worker");
         }
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        public async Task GenerateWorksWithoutRegistry()
+        public async Task BuildDoesNotRequireRegistry()
         {
             var projectName = "single-project";
             var environment = "production";
@@ -118,13 +107,9 @@ namespace E2ETest
 
             var application = ConfigFactory.FromFile(projectFile);
 
-            await GenerateHost.ExecuteGenerateAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+            await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
 
-            // name of application is the folder
-            var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-            var expectedContent = File.ReadAllText($"testassets/generate/{projectName}-noregistry.yaml");
-
-            Assert.Equal(expectedContent, content);
+            await DockerAssert.AssertImageExistsAsync(output, "test-project");
         }
     }
 }

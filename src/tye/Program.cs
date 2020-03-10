@@ -26,6 +26,7 @@ namespace Tye
             command.AddCommand(CreateInitCommand());
             command.AddCommand(CreateGenerateCommand());
             command.AddCommand(CreateRunCommand(args));
+            command.AddCommand(CreateBuildCommand());
             command.AddCommand(CreateDeployCommand());
 
             // Show commandline help unless a subcommand was used.

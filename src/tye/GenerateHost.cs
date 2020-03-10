@@ -11,7 +11,7 @@ using Tye.ConfigModel;
 
 namespace Tye
 {
-    public class GenerateHost
+    public static class GenerateHost
     {
         public static Task GenerateAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive)
         {
@@ -21,7 +21,7 @@ namespace Tye
 
         public static async Task ExecuteGenerateAsync(OutputContext output, ConfigApplication application, string environment, bool interactive)
         {
-            var temporaryApplication = await Program.CreateApplicationAdapterAsync(output, application, interactive);
+            var temporaryApplication = await Program.CreateApplicationAdapterAsync(output, application, interactive, requireRegistry: false);
             var steps = new List<ServiceExecutor.Step>()
             {
                 new CombineStep() { Environment = environment, },
