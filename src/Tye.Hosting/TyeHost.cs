@@ -3,7 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Globalization;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -22,6 +25,9 @@ namespace Tye.Hosting
 {
     public class TyeHost : IDisposable
     {
+        private const int DefaultPort = 8000;
+        private const int AutodetectPort = 0;
+
         private Microsoft.Extensions.Logging.ILogger? _logger;
         private IHostApplicationLifetime? _lifetime;
         private AggregateApplicationProcessor? _processor;
@@ -56,12 +62,12 @@ namespace Tye.Hosting
             var app = BuildWebApplication(_application, _args, Sink);
             DashboardWebApplication = app;
 
-            ConfigureApplication(app);
-
             _logger = app.Logger;
             _lifetime = app.ApplicationLifetime;
 
-            _logger.LogInformation("Executing application from  {Source}", _application.Source);
+            _logger.LogInformation("Executing application from {Source}", _application.Source);
+
+            ConfigureApplication(app);
 
             var configuration = app.Configuration;
 
@@ -144,9 +150,9 @@ namespace Tye.Hosting
             return app;
         }
 
-        private static void ConfigureApplication(WebApplication app)
+        private void ConfigureApplication(WebApplication app)
         {
-            var port = app.Configuration["port"] ?? "0";
+            var port = ComputePort(app);
 
             app.Listen($"http://127.0.0.1:{port}");
 
@@ -162,6 +168,70 @@ namespace Tye.Hosting
 
             app.MapBlazorHub();
             app.MapFallbackToPage("/_Host");
+        }
+
+        private int ComputePort(WebApplication app)
+        {
+            // logic for computing the port:
+            // - we allow the user to specify the port... if they don't
+            // - we want to use a predictable port so that it's easy to remember how to
+            //   get to the dashboard ... and
+            // - we don't want to cause conflicts with any of the users known bindings
+            //   or something else running.
+
+            var port = app.Configuration["port"];
+            if (!string.IsNullOrEmpty(port))
+            {
+                // Port was passed in at the command-line, use it!
+                return int.Parse(port, NumberStyles.Number, CultureInfo.InvariantCulture);
+            }
+            else if (IsPortInUseByBinding(_application, DefaultPort))
+            {
+                // Port has been reserved for the app.
+                app.Logger.LogInformation($"Default dashboard port {DefaultPort} has been reserved by the application, choosing random port.");
+                return AutodetectPort;
+            }
+            else if (IsPortAlreadyInUse(DefaultPort))
+            {
+                // Port is in use by something already running.
+                app.Logger.LogInformation($"Default dashboard port {DefaultPort} is in use, choosing random port.");
+                return AutodetectPort;
+            }
+            else
+            {
+                return DefaultPort;
+            }
+        }
+
+        private static bool IsPortAlreadyInUse(int port)
+        {
+            var endpoint = new IPEndPoint(IPAddress.Loopback, port);
+            try
+            {
+                using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                socket.Bind(endpoint);
+                return false;
+            }
+            catch (SocketException e) when (e.SocketErrorCode == SocketError.AddressAlreadyInUse)
+            {
+                return true;
+            }
+        }
+
+        private static bool IsPortInUseByBinding(Model.Application application, int port)
+        {
+            foreach (var service in application.Services)
+            {
+                foreach (var binding in service.Value.Description.Bindings)
+                {
+                    if (binding.Port == port)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private static AggregateApplicationProcessor CreateApplicationProcessor(string[] args, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
