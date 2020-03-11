@@ -59,9 +59,14 @@ namespace Tye.Hosting
 
                                 foreach (var binding in service.Description.Bindings)
                                 {
-                                    if (binding.Port == null)
+                                    if (binding.Port == null && !binding.AutoAssignPort)
                                     {
                                         continue;
+                                    }
+
+                                    if (binding.Port == null)
+                                    {
+                                        binding.Port = GetNextPort();
                                     }
 
                                     if (service.Description.Replicas == 1)
@@ -80,7 +85,12 @@ namespace Tye.Hosting
                                         ports.Add(port);
                                     }
 
-                                    _logger.LogInformation("Mapping external port {ExternalPort} to internal port(s) {InternalPorts} for {ServiceName}", binding.Port, string.Join(", ", ports.Select(p => p.ToString())), service.Description.Name);
+                                    _logger.LogInformation(
+                                        "Mapping external port {ExternalPort} to internal port(s) {InternalPorts} for {ServiceName} binding {BindingName}", 
+                                        binding.Port, 
+                                        string.Join(", ", ports.Select(p => p.ToString())), 
+                                        service.Description.Name,
+                                        binding.Name ?? binding.Protocol);
 
                                     service.PortMap[binding.Port.Value] = ports;
 

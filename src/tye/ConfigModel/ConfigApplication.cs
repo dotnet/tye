@@ -60,6 +60,7 @@ namespace Tye.ConfigModel
                     {
                         ConnectionString = binding.ConnectionString,
                         Host = binding.Host,
+                        AutoAssignPort = binding.AutoAssignPort,
                         InternalPort = binding.InternalPort,
                         Name = binding.Name,
                         Port = binding.Port,
