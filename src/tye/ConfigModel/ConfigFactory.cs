@@ -157,7 +157,10 @@ namespace Tye.ConfigModel
                     var uri = new Uri(address);
                     service.Bindings.Add(new ConfigServiceBinding()
                     {
-                        Port = uri.Port,
+                        // Don't use ports from launch profiles. These are very likely to be the same defaults (5000, 5001) 
+                        // that were generated when the project was created, and so they will almost always conflict
+                        // between multiple apps.
+                        AutoAssignPort = true,
                         Protocol = uri.Scheme
                     });
                 }
