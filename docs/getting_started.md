@@ -16,14 +16,6 @@
     > 0.1.0-alpha.20161.4+d69009b73074973484b1602011dbb0c730f013bf
     ```
 
-## Getting Started with Deployment
-
-1. Installing [docker](https://docs.docker.com/install/) on your operating system.
-
-1. A container registry. Docker by default will create a container registry on [DockerHub](https://hub.docker.com/). You could also use [Azure Container Registry](https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-prepare-acr) or another container registry of your choice.
-
-1. A Kubernetes Cluster. You can try using a local Kubernetes cluster by enabling [Kubernetes in Docker Desktop](https://www.docker.com/blog/docker-windows-desktop-now-kubernetes/), however it does take up quite a bit of memory. YOu could also use [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster) or another kubernetes provider of your choice.
-
 ## Make a new application
 
 1. Make a new folder called `microservice` and navigate to it:
@@ -302,45 +294,72 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
    Navigate to <http://localhost:8000> to see the dashboard running. Now you will see both `redis` and the `redis-cli` running. Navigate to the `frontend` application and verify that the data returned is the same after refreshing the page multiple times. New content will be loaded every 15 seconds, so if you wait that long and refresh again, you should see new data. You can also look at the redis-cli logs and see what data is being cached in redis.
 
+## Getting Started with Deployment
+
+1. Installing [docker](https://docs.docker.com/install/) on your operating system.
+
+1. A container registry. Docker by default will create a container registry on [DockerHub](https://hub.docker.com/). You could also use [Azure Container Registry](https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-prepare-acr) or another container registry of your choice.
+
+1. A Kubernetes Cluster. You can try using a local Kubernetes cluster by enabling [Kubernetes in Docker Desktop](https://www.docker.com/blog/docker-windows-desktop-now-kubernetes/), however it does take up quite a bit of memory. YOu could also use [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster) or another kubernetes provider of your choice.
+
 ## Deploying the application
 
-Now that we have our application running locally with multiple containers, let's deploy the application. In this example, we will deploy to Kubernetes.
+Now that we have our application running locally with multiple containers, let's deploy the application. In this example, we will deploy to Kubernetes by using `tye deploy`.
 
 1. Deploy redis to Kubernetes
-    Create a file called `redis.yaml` which will contain the redis configuration:
-    ```yaml
+
+    `tye deploy` will not deploy the redis configuration, so you need to deploy it first. Run:
     ```
+    kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/d79f790ba13791c1964ed03c31da0cd12b101f39/docs/yaml/redis.yaml?token=AB7K4FLEULBCQQU6NLXZEDC6OPIU4
+    ```
+
+    This will create a deployment and service for redis. You can see that by running:
+    ```
+    kubectl get deployments
+    ```
+
+    You will see redis deployed and running.
+
+1. Adding a container registry to `tye.yaml`
+
+    Based on what container registry you configured, add the following line in the `tye.yaml` file:
+
+    ```
+    name: microservice
+    registry: <registry_name>
+    ```
+
+    If you are using dockerhub, the registry_name will be in the format of 'example'. If you are using Azure Kubernetes Service (AKS), the registry_name will be in the format of example.azurecr.io.
 
 1. Deploy to Kubernetes
-    Next, deploy the application by running.
+
+    Next, deploy the rest of the application by running.
 
     ```
-    tye deploy -i
+    tye deploy
     ```
-
-    Tye will prompt you for a container registry when required.
 
     tye deploy will:
 
-    - Create a docker image.
-    - Push the docker image to your repository.
+    - Create a docker image for each project in your application.
+    - Push each docker image to your container registry.
     - Generate a Kubernetes Deployment and Service.
     - Apply the generated Deployment and Service to your current Kubernetes context.
 
 1. Test it out!
 
-You should now see three pods running after deploying.
+    You should now see three pods running after deploying.
 
-```
-kubectl get pods
-```
+    ```
+    kubectl get pods
+    ```
 
-```
-NAME                                             READY   STATUS    RESTARTS   AGE
-backend-ccfcd756f-xk2q9                          1/1     Running   0          85m
-frontend-84bbdf4f7d-6r5zp                        1/1     Running   0          85m
-redis-5f554bd8bd-rv26p                           1/1     Running   0          98m
-```
+    ```
+    NAME                                             READY   STATUS    RESTARTS   AGE
+    backend-ccfcd756f-xk2q9                          1/1     Running   0          85m
+    frontend-84bbdf4f7d-6r5zp                        1/1     Running   0          85m
+    redis-5f554bd8bd-rv26p                           1/1     Running   0          98m
+    ```
 
 
 ## Going deep
