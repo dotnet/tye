@@ -1,22 +1,22 @@
 # Getting Started
 
-This walkthrough assumes you are using .NET Core 3.1, but tye can be used with earlier versions of .NET Core.
+## Getting Started with Local Development
 
-## Pre-requisites
-
-1. Install .NET Core from [.NET Downloads(<http://dot.net>) version 3.1.
+1. Install [.NET Core 3.1.](<http://dot.net>).
 1. Install tye via the following command:
 
     ```text
-    dotnet tool install -g tye --version 0.1.0-alpha.20156.10 --add-source https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json
+    dotnet tool install -g tye --version 0.1.0-alpha.20161.4 --interactive --add-source https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json
     ```
 
 1. Verify the installation was complete by running:
 
     ```
     tye --version
-    > 0.1.0-alpha.20156.10+64482e9c2c9d6b13dadd79d600ca101ef34feb79
+    > 0.1.0-alpha.20161.4+d69009b73074973484b1602011dbb0c730f013bf
     ```
+
+## Getting Started with Deployment
 
 1. Installing [docker](https://docs.docker.com/install/) on your operating system.
 
@@ -42,10 +42,10 @@ This walkthrough assumes you are using .NET Core 3.1, but tye can be used with e
 1. Run this new project with `tye` command line:
 
     ```
-    tye run frontend --port 8001
+    tye run frontend
     ```
 
-    With just a single application, tye will do two things: start the frontend application and run a dashboard. Navigate to <http://localhost:8001> to see the dashboard running.
+    With just a single application, tye will do two things: start the frontend application and run a dashboard. Navigate to <http://localhost:8000> to see the dashboard running.
 
     The dashboard should show the `frontend` application running. You should be able to view the application logs and you should be able to hit navigate to the application in your browser.
 
@@ -54,27 +54,6 @@ This walkthrough assumes you are using .NET Core 3.1, but tye can be used with e
     ```
     dotnet new webapi -n backend
     ```
-
-1. Change the ports to `5002` and `5003` on the `backend` project in `Properties/launchSettings.json`.
-    ```JSON
-    {
-    ...
-        "profiles": {
-            ...
-            "backend": {
-                "commandName": "Project",
-                "launchBrowser": true,
-                "launchUrl": "weatherforecast",
-                "applicationUrl": "https://localhost:5002;http://localhost:5003",
-                "environmentVariables": {
-                    "ASPNETCORE_ENVIRONMENT": "Development"
-                }
-            }
-        }
-    }
-    ```
-
-    This avoids the port conflict between the frontend and the backend projects.
 
 1. Create a solution file and add both projects
 
@@ -89,14 +68,14 @@ This walkthrough assumes you are using .NET Core 3.1, but tye can be used with e
 1. If you haven't already, stop the existing `tye run` command using `Ctrl + C`. Run the `tye` command line in the folder with the solution.
 
     ```
-    tye run --port 8001
+    tye run
     ```
 
     The dashboard should show both the `frontend` and `backend` services.
 
 ## Service Discovery and Communication
 
-1. Now that we have 2 applications running, lets make them communicate. By default, **tye** enables service discovery by injecting environment variables with a specific naming convention.
+1. Now that we have 2 applications running, lets make them communicate. By default, `tye` enables service discovery by injecting environment variables with a specific naming convention.
 
     Add this method to the frontend project at the bottom of the Startup.cs class:
     ```C#
@@ -105,27 +84,51 @@ This walkthrough assumes you are using .NET Core 3.1, but tye can be used with e
         return new Uri($"http://{configuration[$"service:{name}:host"]}:{configuration[$"service:{name}:port"]}");
     }
     ```
-    This method resolved the URL using the **tye** naming convention for services. For more information on this, see the [Service Definition](service_definition.md).
+    This method resolved the URL using the `tye` naming convention for services. For more information on this, see the [Service Definition](service_definition.md).
+
+1. Add a file `WeatherForecast.cs` to the `frontend` project.
+    ```C#
+    using System;
+
+    namespace frontend
+    {
+        public class WeatherForecast
+        {
+            public DateTime Date { get; set; }
+
+            public int TemperatureC { get; set; }
+
+            public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+
+            public string Summary { get; set; }
+        }
+    }
+    ```
 
 1. Add a file `WeatherClient.cs` to the `frontend` project with the following contents:
    ```C#
-   using System.Net.Http;
-   using System.Threading.Tasks;
+    using System.Net.Http;
+    using System.Text.Json;
+    using System.Threading.Tasks;
 
-   public class WeatherClient
-   {
-       private readonly HttpClient client;
+    namespace frontend
+    {
+        public class WeatherClient
+        {
+            private readonly HttpClient client;
 
-       public WeatherClient(HttpClient client)
-       {
-           this.client = client;
-       }
+            public WeatherClient(HttpClient client)
+            {
+                this.client = client;
+            }
 
-       public async Task<string> GetWeatherAsync()
-       {
-           return await this.client.GetStringAsync("/weatherforecast");
-       }
-   }
+            public async Task<WeatherForecast[]> GetWeatherAsync()
+            {
+                var responseMessage = await this.client.GetAsync("/weatherforecast");
+                return await JsonSerializer.DeserializeAsync<WeatherForecast[]>(await responseMessage.Content.ReadAsStreamAsync());
+            }
+        }
+    }
    ```
 
 1. Now register this client in `Startup.cs` class in `ConfigureServices` of the `frontend` project:
@@ -142,16 +145,16 @@ This walkthrough assumes you are using .NET Core 3.1, but tye can be used with e
    ```
    This will wire up the `WeatherClient` to use the correct URL for the `backend` service.
 
-1. Add a `Message` property to the `Index` page model under `Pages\Index.cshtml.cs` in the `frontend` project.
-   ```C#
-   public string Message { get; set; }
-   ```
+1. Add a `Forecasts` property to the `Index` page model under `Pages\Index.cshtml.cs` in the `frontend` project.
+    ```C#
+    public WeatherForecast[] Forecasts { get; set; }
+    ```
 
    Change the `OnGet` method to take the `WeatherClient` to call the `backend` service and store the result in the `Message` property:
    ```C#
    public async Task OnGet([FromServices]WeatherClient client)
    {
-       Message = await client.GetWeatherAsync();
+        Forecasts = await client.GetWeatherAsync();
    }
    ``` 
 
@@ -164,20 +167,38 @@ This walkthrough assumes you are using .NET Core 3.1, but tye can be used with e
 
    Weather Forecast:
 
-   @Model.Message
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Temp. (C)</th>
+                <th>Temp. (F)</th>
+                <th>Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in @Model.Forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
    ```
 
 1. Run the project and the `frontend` service should be able to successfully call the `backend` service!
 
 ## Adding dependencies
 
-We just showed how **tye** makes it easier to communicate between 2 applications running locally but what happens if we want to use redis to store weather information?
+We just showed how `tye` makes it easier to communicate between 2 applications running locally but what happens if we want to use redis to store weather information?
 
-### Docker
+`Tye` can use `docker` to run images that run as part of your application. If you haven't already, make sure docker is installed on your operating system ([install docker](https://docs.docker.com/install/)) .
 
-**Tye** can use `docker` to run images that run as part of your application. If you haven't already, make sure docker is installed on your operating system ([install docker](https://docs.docker.com/install/)) .
-
-1. To create a **tye** manifest from the solution file.
+1. To create a `tye` manifest from the solution file.
    ```
    tye init microservice.sln
    ```
@@ -251,7 +272,7 @@ We just showed how **tye** makes it easier to communicate between 2 applications
         });
    }
    ```
-   The above configures redis to use the host and port for the `redis` service injected by the **tye** host.
+   The above configures redis to use the host and port for the `redis` service injected by the `tye` host.
 
 1. Modify `tye.yaml` to include redis as a dependency.
 
@@ -276,10 +297,10 @@ We just showed how **tye** makes it easier to communicate between 2 applications
 1. Run the `tye` command line in the solution root
 
    ```
-   tye run --port 8001
+   tye run
    ```
 
-   This should run the applications (including redis in the docker containers) and you should be able to view the logs for each of the services running. Navigate to the `frontend` project and verify that the data returned is the same after refreshing the page multiple times, and that new content is loaded after 15 seconds.
+   Navigate to <http://localhost:8000> to see the dashboard running. Now you will see both `redis` and the `redis-cli` running. Navigate to the `frontend` application and verify that the data returned is the same after refreshing the page multiple times. New content will be loaded every 15 seconds, so if you wait that long and refresh again, you should see new data. You can also look at the redis-cli logs and see what data is being cached in redis.
 
 ## Deploying the application
 
@@ -343,7 +364,7 @@ Now that we have our application running locally with multiple containers, let's
 
 1. Deploy to Kubernetes
     Next, deploy the application by running.
-    
+
     ```
     tye deploy -i
     ```
@@ -366,8 +387,10 @@ kubectl get pods
 ```
 
 ```
-NAME
-
+NAME                                             READY   STATUS    RESTARTS   AGE
+backend-ccfcd756f-xk2q9                          1/1     Running   0          85m
+frontend-84bbdf4f7d-6r5zp                        1/1     Running   0          85m
+redis-5f554bd8bd-rv26p                           1/1     Running   0          98m
 ```
 
 
