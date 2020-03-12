@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -36,9 +35,7 @@ namespace E2ETest
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "test-project.csproj"));
-
-            var application = ConfigFactory.FromFile(projectFile);
-            using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
+            using var host = new TyeHost(ConfigFactory.FromFile(projectFile).ToHostingApplication(), Array.Empty<string>())
             {
                 Sink = sink,
             };
@@ -60,8 +57,8 @@ namespace E2ETest
                 var dashboardResponse = await client.GetStringAsync(dashboardUri);
 
                 // Only one service for single application.
-                var service = application.Services.First();
-                var binding = service.Bindings.First();
+                var service = host.Application.Services.First().Value;
+                var binding = service.Description.Bindings.First();
 
                 var protocol = binding.Protocol?.Length != 0 ? binding.Protocol : "http";
                 var hostName = binding.Host != null && binding.Host.Length != 0 ? binding.Host : "localhost";
@@ -84,11 +81,11 @@ namespace E2ETest
                 {
                     // If we failed, there's a good chance the service isn't running. Let's get the logs either way and put
                     // them in the output.
-                    var request = new HttpRequestMessage(HttpMethod.Get, new Uri(dashboardUri, $"/api/v1/logs/{service.Name}"));
+                    var request = new HttpRequestMessage(HttpMethod.Get, new Uri(dashboardUri, $"/api/v1/logs/{service.Description.Name}"));
                     var response = await client.SendAsync(request);
                     var text = await response.Content.ReadAsStringAsync();
 
-                    output.WriteLine($"Logs for service: {service.Name}");
+                    output.WriteLine($"Logs for service: {service.Description.Name}");
                     output.WriteLine(text);
                 }
             }
@@ -106,9 +103,7 @@ namespace E2ETest
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
-
-            var application = ConfigFactory.FromFile(projectFile);
-            using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
+            using var host = new TyeHost(ConfigFactory.FromFile(projectFile).ToHostingApplication(), Array.Empty<string>())
             {
                 Sink = sink,
             };
@@ -127,8 +122,8 @@ namespace E2ETest
                 var dashboardUri = new Uri(host.DashboardWebApplication!.Addresses.First());
                 var dashboardResponse = await client.GetStringAsync(dashboardUri);
 
-                await CheckServiceIsUp(application, client, "backend", dashboardUri);
-                await CheckServiceIsUp(application, client, "frontend", dashboardUri);
+                await CheckServiceIsUp(host.Application, client, "backend", dashboardUri);
+                await CheckServiceIsUp(host.Application, client, "frontend", dashboardUri);
             }
             finally
             {
@@ -136,11 +131,11 @@ namespace E2ETest
             }
         }
 
-        private async Task CheckServiceIsUp(ConfigApplication application, HttpClient client, string serviceName, Uri dashboardUri)
+        private async Task CheckServiceIsUp(Tye.Hosting.Model.Application application, HttpClient client, string serviceName, Uri dashboardUri)
         {
             // make sure backend is up before frontend
-            var service = application.Services.Where(a => a.Name == serviceName).First();
-            var binding = service.Bindings.First();
+            var service = application.Services.Where(a => a.Value.Description.Name == serviceName).First().Value;
+            var binding = service.Description.Bindings.First();
 
             var protocol = binding.Protocol != null && binding.Protocol.Length != 0 ? binding.Protocol : "http";
             var hostName = binding.Host != null && binding.Host.Length != 0 ? binding.Host : "localhost";
@@ -168,13 +163,13 @@ namespace E2ETest
             {
                 // If we failed, there's a good chance the service isn't running. Let's get the logs either way and put
                 // them in the output.
-                foreach (var s in application.Services)
+                foreach (var s in application.Services.Values)
                 {
-                    var request = new HttpRequestMessage(HttpMethod.Get, new Uri(dashboardUri, $"/api/v1/logs/{s.Name}"));
+                    var request = new HttpRequestMessage(HttpMethod.Get, new Uri(dashboardUri, $"/api/v1/logs/{s.Description.Name}"));
                     var response = await client.SendAsync(request);
                     var text = await response.Content.ReadAsStringAsync();
 
-                    output.WriteLine($"Logs for service: {s.Name}");
+                    output.WriteLine($"Logs for service: {s.Description.Name}");
                     output.WriteLine(text);
                 }
             }

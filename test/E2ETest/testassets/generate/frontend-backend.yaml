@@ -22,13 +22,15 @@ spec:
         imagePullPolicy: Always
         env:
         - name: ASPNETCORE_URLS
-          value: http://*:5050
+          value: 'http://*'
+        - name: SERVICE__FRONTEND__PROTOCOL
+          value: 'http'
         - name: SERVICE__FRONTEND__PORT
-          value: '5051'
+          value: '80'
         - name: SERVICE__FRONTEND__HOST
           value: 'frontend'
         ports:
-        - containerPort: 5050
+        - containerPort: 80
 ...
 ---
 kind: Service
@@ -45,8 +47,8 @@ spec:
   ports:
   - name: backend
     protocol: TCP
-    port: 5050
-    targetPort: 5050
+    port: 80
+    targetPort: 80
 ...
 ---
 kind: Deployment
@@ -73,13 +75,15 @@ spec:
         imagePullPolicy: Always
         env:
         - name: ASPNETCORE_URLS
-          value: http://*:5051
+          value: 'http://*'
+        - name: SERVICE__BACKEND__PROTOCOL
+          value: 'http'
         - name: SERVICE__BACKEND__PORT
-          value: '5050'
+          value: '80'
         - name: SERVICE__BACKEND__HOST
           value: 'backend'
         ports:
-        - containerPort: 5051
+        - containerPort: 80
 ...
 ---
 kind: Service
@@ -96,6 +100,6 @@ spec:
   ports:
   - name: frontend
     protocol: TCP
-    port: 5051
-    targetPort: 5051
+    port: 80
+    targetPort: 80
 ...

@@ -41,6 +41,8 @@ namespace Tye.Hosting
             _args = args;
         }
 
+        public Tye.Hosting.Model.Application Application => _application;
+
         public WebApplication? DashboardWebApplication { get; set; }
 
         // An additional sink that output will be piped to. Useful for testing.

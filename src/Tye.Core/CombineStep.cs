@@ -20,6 +20,18 @@ namespace Tye
                 return Task.CompletedTask;
             }
 
+            // Compute ASPNETCORE_URLS based on the bindings exposed by *this* project.
+            foreach (var binding in service.Service.Bindings)
+            {
+                if (binding.Protocol == "http" || binding.Protocol == null)
+                {
+                    var port = binding.Port ?? 80;
+                    var urls = $"http://*{(port == 80 ? "" : (":" + port.ToString()))}";
+                    service.Service.Environment.Add("ASPNETCORE_URLS", urls);
+                    break;
+                }
+            }
+
             // Process bindings and turn them into environment variables and secrets. There's
             // some duplication with the code in m8s (Application.cs) for populating environments.
             //
@@ -45,6 +57,13 @@ namespace Tye
                         {
                             // Special case for connection strings
                             bindings.Bindings.Add(new EnvironmentVariableInputBinding($"CONNECTIONSTRING__{configName}", binding.ConnectionString));
+                        }
+
+                        if (binding.Protocol == "https")
+                        {
+                            // We skip https for now in deployment, because the E2E requires certificates
+                            // and we haven't done those features yet.
+                            continue;
                         }
 
                         if (!string.IsNullOrEmpty(binding.Protocol))

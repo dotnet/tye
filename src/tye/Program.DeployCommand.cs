@@ -102,13 +102,29 @@ namespace Tye
 
                     foreach (var configBinding in configService.Bindings)
                     {
-                        service.Bindings.Add(new ServiceBinding(configBinding.Name ?? service.Name)
+                        var binding = new ServiceBinding(configBinding.Name ?? service.Name)
                         {
                             ConnectionString = configBinding.ConnectionString,
                             Host = configBinding.Host,
                             Port = configBinding.Port,
                             Protocol = configBinding.Protocol,
-                        });
+                        };
+
+                        binding.Protocol ??= "http";
+
+                        if (binding.Port == null && configBinding.AutoAssignPort)
+                        {
+                            if (binding.Protocol == "http" || binding.Protocol == null)
+                            {
+                                binding.Port = 80;
+                            }
+                            else if (binding.Protocol == "https")
+                            {
+                                binding.Port = 443;
+                            }
+                        }
+
+                        service.Bindings.Add(binding);
                     }
 
                     var serviceEntry = new ServiceEntry(service, configService.Name);
@@ -117,7 +133,7 @@ namespace Tye
 
                     var container = new ContainerInfo()
                     {
-                        UseMultiphaseDockerfile = false,
+                        UseMultiphaseDockerfile = true,
                     };
                     service.GeneratedAssets.Container = container;
                     services.Add(serviceEntry);
