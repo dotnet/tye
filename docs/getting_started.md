@@ -305,61 +305,10 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 ## Deploying the application
 
 Now that we have our application running locally with multiple containers, let's deploy the application. In this example, we will deploy to Kubernetes.
+
 1. Deploy redis to Kubernetes
-    
     Create a file called `redis.yaml` which will contain the redis configuration:
     ```yaml
-    kind: Deployment
-    apiVersion: apps/v1
-    metadata:
-        name: redis
-        labels:
-            app.kubernetes.io/name: redis
-            app.kubernetes.io/part-of: microservice
-    spec:
-        selector:
-            matchLabels:
-            app.kubernetes.io/name: redis
-        replicas: 1
-        template:
-            metadata:
-            labels:
-                app.kubernetes.io/name: redis
-                app.kubernetes.io/part-of: microservice
-            spec:
-            containers:
-            - name: redis
-                image: redis
-                resources:
-                requests:
-                    cpu: 100m
-                    memory: 100Mi
-                ports:
-                - containerPort: 6379
-    ---
-
-    apiVersion: v1
-    kind: Service
-    metadata:
-    name: redis
-        labels:
-            app.kubernetes.io/name: redis
-            app.kubernetes.io/part-of: microservice
-    spec:
-        ports:
-        - port: 6379
-            targetPort: 6379
-        selector:
-            app.kubernetes.io/name: redis
-
-    ---
-    apiVersion: v1
-    kind: Secret
-    metadata:
-        name: binding-production-redis-redis-secret
-    type: Opaque
-    stringData:
-        connectionstring: redis:6379
     ```
 
 1. Deploy to Kubernetes
