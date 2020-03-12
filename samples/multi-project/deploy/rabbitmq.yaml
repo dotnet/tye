@@ -40,11 +40,11 @@ spec:
     port: 5672
     targetPort: 5672
 ...
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: binding-production-rabbit-rabbit-secret
-type: Opaque
-stringData:
-  connectionstring: amqp://rabbitmq:5672
+# ---
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: binding-production-rabbit-rabbit-secret
+# type: Opaque
+# stringData:
+#   connectionstring: amqp://rabbitmq:5672
