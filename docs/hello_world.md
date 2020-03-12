@@ -1,21 +1,5 @@
 # Getting Started
 
-## Getting Started with Local Development
-
-1. Install [.NET Core 3.1.](<http://dot.net>).
-1. Install tye via the following command:
-
-    ```text
-    dotnet tool install -g tye --version 0.1.0-alpha.20161.4 --interactive --add-source https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json
-    ```
-
-1. Verify the installation was complete by running:
-
-    ```
-    tye --version
-    > 0.1.0-alpha.20161.4+d69009b73074973484b1602011dbb0c730f013bf
-    ```
-
 ## Make a new application
 
 1. Make a new folder called `microservice` and navigate to it:
