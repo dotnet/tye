@@ -300,7 +300,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
 1. A container registry. Docker by default will create a container registry on [DockerHub](https://hub.docker.com/). You could also use [Azure Container Registry](https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-prepare-acr) or another container registry of your choice.
 
-1. A Kubernetes Cluster. You can try using a local Kubernetes cluster by enabling [Kubernetes in Docker Desktop](https://www.docker.com/blog/docker-windows-desktop-now-kubernetes/), however it does take up quite a bit of memory. YOu could also use [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster) or another kubernetes provider of your choice.
+1. A Kubernetes Cluster. You can try using a local Kubernetes cluster by enabling [Kubernetes in Docker Desktop](https://www.docker.com/blog/docker-windows-desktop-now-kubernetes/), however it does take up quite a bit of memory. You could also use [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster) or another kubernetes provider of your choice.
 
 ## Deploying the application
 
