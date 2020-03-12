@@ -55,15 +55,15 @@ namespace E2ETest
             foreach (var id in ids)
             {
 
-                output.WriteLine($"> docker rmi \"{id}\"");
+                output.WriteLine($"> docker rmi \"{id}\" --force");
                 var exitCode = await Process.ExecuteAsync(
                     "docker",
-                    $"rmi \"{id}\"",
+                    $"rmi \"{id}\" --force",
                     stdOut: OnOutput,
                     stdErr: OnOutput);
                 if (exitCode != 0)
                 {
-                    throw new XunitException($"Running `docker rmi \"{id}\"` failed." + Environment.NewLine + builder.ToString());
+                    throw new XunitException($"Running `docker rmi \"{id}\" --force` failed." + Environment.NewLine + builder.ToString());
                 }
 
                 builder.Clear();
