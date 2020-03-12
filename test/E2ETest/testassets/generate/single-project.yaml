@@ -22,10 +22,9 @@ spec:
         imagePullPolicy: Always
         env:
         - name: ASPNETCORE_URLS
-          value: http://*:5000
+          value: 'http://*'
         ports:
-        - containerPort: 5001
-        - containerPort: 5000
+        - containerPort: 80
 ...
 ---
 kind: Service
@@ -42,10 +41,6 @@ spec:
   ports:
   - name: test-project
     protocol: TCP
-    port: 5001
-    targetPort: 5001
-  - name: test-project
-    protocol: TCP
-    port: 5000
-    targetPort: 5000
+    port: 80
+    targetPort: 80
 ...

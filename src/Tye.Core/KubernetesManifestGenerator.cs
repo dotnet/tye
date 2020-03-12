@@ -61,13 +61,23 @@ namespace Tye
             // We figure out the port based on bindings
             foreach (var binding in service.Service.Bindings)
             {
-                var port = new YamlMappingNode();
-                ports.Add(port);
+                if (binding.Protocol == "https")
+                {
+                    // We skip https for now in deployment, because the E2E requires certificates
+                    // and we haven't done those features yet.
+                    continue;
+                }
 
-                port.Add("name", binding.Name ?? "web");
-                port.Add("protocol", "TCP"); // we use assume TCP. YOLO
-                port.Add("port", binding.Port?.ToString() ?? "80");
-                port.Add("targetPort", binding.Port?.ToString() ?? "80");
+                if (binding.Port != null)
+                {
+                    var port = new YamlMappingNode();
+                    ports.Add(port);
+
+                    port.Add("name", binding.Name ?? binding.Protocol ?? "http");
+                    port.Add("protocol", "TCP"); // we use assume TCP. YOLO
+                    port.Add("port", binding.Port.Value.ToString());
+                    port.Add("targetPort", binding.Port.Value.ToString());
+                }
             }
 
             return new KubernetesServiceOutput(service.Service.Name, new YamlDocument(root));
@@ -170,19 +180,6 @@ namespace Tye
                         });
                     }
 
-                    foreach (var binding in service.Service.Bindings)
-                    {
-                        if (binding.Protocol == "http" || binding.Protocol == null)
-                        {
-                            var port = binding.Port ?? 80;
-                            env.Add(new YamlMappingNode()
-                            {
-                                { "name", "ASPNETCORE_URLS" },
-                                { "value", $"http://*{(binding.Port == 80 ? "" : (":" + binding.Port.ToString()))}" },
-                            });
-                        }
-                    }
-
                     if (bindings is object)
                     {
                         foreach (var binding in bindings.Bindings.OfType<EnvironmentVariableInputBinding>())
@@ -219,9 +216,19 @@ namespace Tye
 
                     foreach (var binding in service.Service.Bindings)
                     {
-                        var containerPort = new YamlMappingNode();
-                        ports.Add(containerPort);
-                        containerPort.Add("containerPort", binding.Port?.ToString() ?? "80");
+                        if (binding.Protocol == "https")
+                        {
+                            // We skip https for now in deployment, because the E2E requires certificates
+                            // and we haven't done those features yet.
+                            continue;
+                        }
+
+                        if (binding.Port != null)
+                        {
+                            var containerPort = new YamlMappingNode();
+                            ports.Add(containerPort);
+                            containerPort.Add("containerPort", binding.Port.Value.ToString());
+                        }
                     }
                 }
             }

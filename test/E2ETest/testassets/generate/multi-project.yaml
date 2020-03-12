@@ -22,7 +22,9 @@ spec:
         imagePullPolicy: Always
         env:
         - name: ASPNETCORE_URLS
-          value: http://*:7000
+          value: 'http://*:7000'
+        - name: SERVICE__FRONTEND__PROTOCOL
+          value: 'http'
         - name: SERVICE__FRONTEND__PORT
           value: '8000'
         - name: SERVICE__FRONTEND__HOST
@@ -84,7 +86,9 @@ spec:
         imagePullPolicy: Always
         env:
         - name: ASPNETCORE_URLS
-          value: http://*:8000
+          value: 'http://*:8000'
+        - name: SERVICE__BACKEND__PROTOCOL
+          value: 'http'
         - name: SERVICE__BACKEND__PORT
           value: '7000'
         - name: SERVICE__BACKEND__HOST
@@ -145,10 +149,14 @@ spec:
         image: test/worker:1.0.0
         imagePullPolicy: Always
         env:
+        - name: SERVICE__BACKEND__PROTOCOL
+          value: 'http'
         - name: SERVICE__BACKEND__PORT
           value: '7000'
         - name: SERVICE__BACKEND__HOST
           value: 'backend'
+        - name: SERVICE__FRONTEND__PROTOCOL
+          value: 'http'
         - name: SERVICE__FRONTEND__PORT
           value: '8000'
         - name: SERVICE__FRONTEND__HOST

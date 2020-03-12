@@ -47,6 +47,8 @@ namespace Tye
             var outputFilePath = Path.GetFullPath(Path.Combine(application.RootDirectory, $"{applicationName}-generate-{environment}.yaml"));
             output.WriteInfoLine($"Writing output to '{outputFilePath}'.");
             {
+                File.Delete(outputFilePath);
+
                 using var stream = File.OpenWrite(outputFilePath);
                 using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
 

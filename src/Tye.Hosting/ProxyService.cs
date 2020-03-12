@@ -86,9 +86,9 @@ namespace Tye.Hosting
                                     }
 
                                     _logger.LogInformation(
-                                        "Mapping external port {ExternalPort} to internal port(s) {InternalPorts} for {ServiceName} binding {BindingName}", 
-                                        binding.Port, 
-                                        string.Join(", ", ports.Select(p => p.ToString())), 
+                                        "Mapping external port {ExternalPort} to internal port(s) {InternalPorts} for {ServiceName} binding {BindingName}",
+                                        binding.Port,
+                                        string.Join(", ", ports.Select(p => p.ToString())),
                                         service.Description.Name,
                                         binding.Name ?? binding.Protocol);
 

@@ -86,7 +86,7 @@ namespace Tye
                 throw new CommandException("'docker build' failed.");
             }
 
-            output.WriteInfoLine($"Created Docker Image: {container.ImageName}:{container.ImageTag}");
+            output.WriteInfoLine($"Created Docker Image: '{container.ImageName}:{container.ImageTag}'");
             service.Outputs.Add(new DockerImageOutput(container.ImageName!, container.ImageTag!));
         }
     }
