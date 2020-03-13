@@ -146,4 +146,6 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
     NAME                                             READY   STATUS    RESTARTS   AGE
     backend-ccfcd756f-xk2q9                          1/1     Running   0          85m
     frontend-84bbdf4f7d-6r5zp                        1/1     Running   0          85m
+    redis-5f554bd8bd-rv26p                           1/1     Running   0          98m
+
     ```
