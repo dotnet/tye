@@ -2,13 +2,6 @@
 
 Tye is a tool that makes developing, testing, and deploying microservices and distributed applications easier. Project Tye includes a local orchestrator to make developing microservices easier and the ability to deploy microservices to Kubernetes with minimal configuration.
 
-## Core Concepts
-
-There are two main workflows that tye has:
-
-- `tye run` allow you to run a multi-service application locally.
-- `tye deploy`
-
 ## Installing tye
 
 1. Install [.NET Core 3.1.](<http://dot.net>).
