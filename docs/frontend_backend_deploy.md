@@ -1,4 +1,3 @@
-
 # Getting Started with Deployment
 
 This tutorial assumes that you have completed the [Frontend Backend Run Sample](frontend_backend_run.md)
