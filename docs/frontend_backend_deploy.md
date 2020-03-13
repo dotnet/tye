@@ -11,20 +11,6 @@
 
 Now that we have our application running locally with multiple containers, let's deploy the application. In this example, we will deploy to Kubernetes by using `tye deploy`.
 
-1. Deploy redis to Kubernetes
-
-    `tye deploy` will not deploy the redis configuration, so you need to deploy it first. Run:
-    ```
-    kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/d79f790ba13791c1964ed03c31da0cd12b101f39/docs/yaml/redis.yaml?token=AB7K4FLEULBCQQU6NLXZEDC6OPIU4
-    ```
-
-    This will create a deployment and service for redis. You can see that by running:
-    ```
-    kubectl get deployments
-    ```
-
-    You will see redis deployed and running.
-
 1. Adding a container registry to `tye.yaml`
 
     Based on what container registry you configured, add the following line in the `tye.yaml` file:
@@ -53,7 +39,7 @@ Now that we have our application running locally with multiple containers, let's
 
 1. Test it out!
 
-    You should now see three pods running after deploying.
+    You should now see two pods running after deploying.
 
     ```
     kubectl get pods
@@ -63,5 +49,4 @@ Now that we have our application running locally with multiple containers, let's
     NAME                                             READY   STATUS    RESTARTS   AGE
     backend-ccfcd756f-xk2q9                          1/1     Running   0          85m
     frontend-84bbdf4f7d-6r5zp                        1/1     Running   0          85m
-    redis-5f554bd8bd-rv26p                           1/1     Running   0          98m
     ```

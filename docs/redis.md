@@ -109,3 +109,41 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
    ```
 
    Navigate to <http://localhost:8000> to see the dashboard running. Now you will see both `redis` and the `redis-cli` running. Navigate to the `frontend` application and verify that the data returned is the same after refreshing the page multiple times. New content will be loaded every 15 seconds, so if you wait that long and refresh again, you should see new data. You can also look at the redis-cli logs and see what data is being cached in redis.
+
+## Deploying redis
+   
+1. Deploy redis to Kubernetes
+
+    `tye deploy` will not deploy the redis configuration, so you need to deploy it first. Run:
+    ```
+    kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/d79f790ba13791c1964ed03c31da0cd12b101f39/docs/yaml/redis.yaml?token=AB7K4FLEULBCQQU6NLXZEDC6OPIU4
+    ```
+
+    This will create a deployment and service for redis. You can see that by running:
+    ```
+    kubectl get deployments
+    ```
+
+    You will see redis deployed and running.
+
+1. Deploy to Kubernetes
+
+    Next, deploy the rest of the application by running.
+
+    ```
+    tye deploy
+    ```
+
+1. Test it out!
+
+    You should now see three pods running after deploying.
+
+    ```
+    kubectl get pods
+    ```
+
+    ```
+    NAME                                             READY   STATUS    RESTARTS   AGE
+    backend-ccfcd756f-xk2q9                          1/1     Running   0          85m
+    frontend-84bbdf4f7d-6r5zp                        1/1     Running   0          85m
+    ```
