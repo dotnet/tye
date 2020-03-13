@@ -1,6 +1,8 @@
 
 # Getting Started with Deployment
 
+This tutorial assumes that you have completed the [Frontend Backend Run Sample](frontend_backend_run.md)
+
 Before we deploy, make sure you have the following installed on your machine.
 
 1. Installing [docker](https://docs.docker.com/install/) based on your operating system.
@@ -46,17 +48,23 @@ Now that we have our application running locally with multiple containers, let's
 
     You should now see two pods running after deploying.
 
-    ```
+    ```text
     kubectl get pods
     ```
 
-    ```
+    ```text
     NAME                                             READY   STATUS    RESTARTS   AGE
     backend-ccfcd756f-xk2q9                          1/1     Running   0          85m
     frontend-84bbdf4f7d-6r5zp                        1/1     Running   0          85m
     ```
 
-    You can visit 
+    You can visit the frontend application by port forwarding to the frontend pod.
+
+    ```text
+    kubectl port-forward frontend-84bbdf4f7d-6r5zp 8000:80
+    ```
+
+    Now navigate to <http://localhost:8000> to view the frontend application working on Kubernetes.
 
 ## Next Steps
 
