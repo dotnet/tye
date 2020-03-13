@@ -1,7 +1,4 @@
-﻿using System;
-using System.CommandLine;
-using System.CommandLine.IO;
-using System.IO;
+﻿using System.IO;
 using Tye.ConfigModel;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -31,6 +28,9 @@ namespace Tye
             var template = @"
 # tye application configuration file
 # read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
 #
 # define global settings here
 # name: exampleapp # application name
@@ -93,6 +93,10 @@ services:
                 template = @"
 # tye application configuration file
 # read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
+#
 ".TrimStart() + serializer.Serialize(application);
             }
 
