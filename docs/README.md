@@ -2,8 +2,9 @@
 
 | Topic | Description |
 |-------|-------------|
-|**[Getting Started](getting-started.md)** | Set up your development environment
-|**[Samples](hello_world.md)** | Learn how to run and deploy with tye
+|**[Getting Started](getting_started.md)** | Set up your development environment.
+|**[Frontend Backend Run Example](frontend_backend_run.md)** | Learn how to run an application locally with tye.
+|**[Frontend Backend Deploy Example](frontend_backend_deploy.md)** | Learn how to deploy an application with tye.
 |**[Tye Schema](schema.md)** | `tye.yaml` configuration.
 
 ## Further documentation
