@@ -50,3 +50,7 @@ Now that we have our application running locally with multiple containers, let's
     backend-ccfcd756f-xk2q9                          1/1     Running   0          85m
     frontend-84bbdf4f7d-6r5zp                        1/1     Running   0          85m
     ```
+
+## Next Steps
+
+Now that you are able to deploy an application to Kubernetes, learn how to add a non-project dependency to tye with our [Redis](redis.md) tutorial.

@@ -4,7 +4,7 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
 
 ## Installing tye
 
-1. Install [.NET Core 3.1.](<http://dot.net>).
+1. Install [.NET Core 3.1](<http://dot.net>).
 1. Install tye via the following command:
 
     ```text
