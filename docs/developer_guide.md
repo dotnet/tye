@@ -6,7 +6,7 @@ Building tye from source allows you to experiment, and to contribute your improv
 
 ## Install pre-requisites
 
-Tye uses [Arcade](https://github.com/dotnet/Arcade) to build. As of right now there are no prerequisites needed to build and edit the code. 
+Tye uses [Arcade](https://github.com/dotnet/Arcade) to build. As of right now there are no prerequisites needed to build and edit the code.
 
 We recommend using whatever developer tools you like for C# and .NET development. Visual Studio has [free versions](https://visualstudio.microsoft.com/downloads/) and VS Code has an available C# extension.
 
