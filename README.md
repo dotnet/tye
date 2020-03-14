@@ -1,4 +1,4 @@
-# Tye
+# Project Tye
 
 Tye is a tool that makes developing, testing, and deploying microservices and distributed applications easier. Project Tye includes a local orchestrator to make developing microservices easier and the ability to deploy microservices to Kubernetes with minimal configuration. 
 
@@ -12,7 +12,7 @@ What tye can do:
 
 ## Current Status
 
-Tye is an open source experiment that will last at least until Nov 2020. We are using this time to try radical ideas to improve microservices developer productivity and see what works. 
+Project Tye is an open source experiment that will last at least until Nov 2020. We are using this time to try radical ideas to improve microservices developer productivity and see what works. 
 
 We plan to do releases with new features roughly every 4 weeks.
 
