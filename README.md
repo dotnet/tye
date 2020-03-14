@@ -41,7 +41,7 @@ Check out the [contributing](/CONTRIBUTING.md) page to see the best places to lo
 
 ## Reporting security issues and bugs
 
-Tye is an experimental project, and as such we expect all users to take responsibility for evaluating the security of their own aplications.
+Tye is an experimental project, and as such we expect all users to take responsibility for evaluating the security of their own applications.
 
 Security issues and bugs should be reported privately, via email, to the Microsoft Security Response Center (MSRC) secure@microsoft.com. You should receive a response within 24 hours. If for some reason you do not, please follow up via email to ensure we received your original message. Further information, including the MSRC PGP key, can be found in the Security TechCenter.
 
