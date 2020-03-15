@@ -25,7 +25,14 @@ This tutorial will demonstrate how to use `tye run` to run a multi-project appli
 
     With just a single application, tye will do two things: start the frontend application and run a dashboard. Navigate to <http://localhost:8000> to see the dashboard running.
 
-    The dashboard should show the `frontend` application running. You should be able to view the application logs and you should be able to hit navigate to the application in your browser.
+    The dashboard should show the `frontend` application running.
+
+    - The `Logs` column has a link to view the streaming logs for the service.
+    - the `Bindings` column has links to the listening URLs of the service.
+    
+    Navigate to the `frontend` service using one of the links on the dashboard.
+
+    The dashboard will use port 8000 if possible. Services written using ASP.NET Core will have their listening ports assigned randomly if not explicitly configured.
 
 ## Running multiple applications with tye run
 
@@ -39,13 +46,12 @@ This tutorial will demonstrate how to use `tye run` to run a multi-project appli
 
     ```text
     dotnet new sln
-    dotnet sln add frontend
-    dotnet sln add backend
+    dotnet sln add frontend backend
     ```
 
     You should have a solution called `microservice.sln` that references the `frontend` and `backend` projects.
 
-1. If you haven't already, stop the existing `tye run` command using `Ctrl + C`. Run the `tye` command line in the folder with the solution.
+2. If you haven't already, stop the existing `tye run` command using `Ctrl + C`. Run the `tye` command line in the folder with the solution.
 
     ```text
     tye run
@@ -53,9 +59,13 @@ This tutorial will demonstrate how to use `tye run` to run a multi-project appli
 
     The dashboard should show both the `frontend` and `backend` services. You can navigate to both of them through either the dashboard of the url outputted by `tye run`.
 
+    > :warning: The `backend` service in this example was created using the `webapi` project template and will return an HTTP 404 for its root URL.
+
 ## Getting the frontend to communicate with the backend
 
 Now that we have two applications running, let's make them communicate. By default, `tye` enables service discovery by injecting environment variables with a specific naming convention.
+
+1. Open the solution in your editor of choice.
 
 1. Add a `GetUri()` method to the frontend project at the bottom of the Startup.cs class:
 
@@ -66,9 +76,9 @@ Now that we have two applications running, let's make them communicate. By defau
     }
     ```
 
-    This method resolved the URL using the `tye` naming convention for services. For more information on this, see the [Service Definition](service_discovery.md).
+    This method resolved the URL using the `tye` naming convention for services. For more information on, see [service discovery](service_discovery.md).
 
-1. Add a file `WeatherForecast.cs` to the `frontend` project.
+2. Add a file `WeatherForecast.cs` to the `frontend` project.
 
     ```C#
     using System;
@@ -90,7 +100,7 @@ Now that we have two applications running, let's make them communicate. By defau
 
     This will match the backend `WeatherForecast.cs`.
 
-1. Add a file `WeatherClient.cs` to the `frontend` project with the following contents:
+3. Add a file `WeatherClient.cs` to the `frontend` project with the following contents:
 
    ```C#
     using System.Net.Http;
@@ -101,23 +111,30 @@ Now that we have two applications running, let's make them communicate. By defau
     {
         public class WeatherClient
         {
+            private readonly JsonSerializerOptions options =     new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.    CamelCase,
+            };
+    
             private readonly HttpClient client;
-
+    
             public WeatherClient(HttpClient client)
             {
                 this.client = client;
             }
-
-            public async Task<WeatherForecast[]> GetWeatherAsync()
+    
+            public async Task<WeatherForecast[]>     GetWeatherAsync()
             {
-                var responseMessage = await this.client.GetAsync("/weatherforecast");
-                return await JsonSerializer.DeserializeAsync<WeatherForecast[]>(await responseMessage.Content.ReadAsStreamAsync());
+                var responseMessage = await this.client.    GetAsync("/weatherforecast");
+                var stream = await responseMessage.Content.    ReadAsStreamAsync();
+                return await JsonSerializer.    DeserializeAsync<WeatherForecast[]>(stream,     options);
             }
         }
     }
    ```
 
-1. Now register this client in `Startup.cs` class in `ConfigureServices` of the `frontend` project:
+4. Now register this client in `Startup.cs` class in `ConfigureServices` of the `frontend` project:
 
    ```C#
    public void ConfigureServices(IServiceCollection services)
@@ -133,7 +150,7 @@ Now that we have two applications running, let's make them communicate. By defau
 
    This will wire up the `WeatherClient` to use the correct URL for the `backend` service.
 
-1. Add a `Forecasts` property to the `Index` page model under `Pages\Index.cshtml.cs` in the `frontend` project.
+5. Add a `Forecasts` property to the `Index` page model under `Pages\Index.cshtml.cs` in the `frontend` project.
 
     ```C#
     public WeatherForecast[] Forecasts { get; set; }
@@ -148,9 +165,15 @@ Now that we have two applications running, let's make them communicate. By defau
    }
    ```
 
-1. Change the `Index.cshtml` razor view to render the `Forecasts` property in the razor page:
+6. Change the `Index.cshtml` razor view to render the `Forecasts` property in the razor page:
 
-   ```html
+   ```cshtml
+   @page
+   @model IndexModel
+   @{
+        ViewData["Title"] = "Home page";
+    }
+
    <div class="text-center">
        <h1 class="display-4">Welcome</h1>
        <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
@@ -181,8 +204,10 @@ Now that we have two applications running, let's make them communicate. By defau
     </table>
    ```
 
-1. Run the project and the `frontend` service should be able to successfully call the `backend` service!
+7. Run the project and the `frontend` service should be able to successfully call the `backend` service!
+
+    When you visit the `frontend` service you should see a table of weather data. This data was produced randomly in the `backend` service. The fact that you're seeing it in a web UI in the `frontend` means that the services are able to communicate.
 
 ## Next Steps
 
-Now that you are able to run a multi-project application with `tye run`, see the [Frontend Backend Deploy Sample](frontend_backed_deploy.md) to learn how to deploy this application to Kubernetes.
+Now that you are able to run a multi-project application with `tye run`, move on to the [Frontend Backend Deploy Sample](frontend_backed_deploy.md) to learn how to deploy this application to Kubernetes.

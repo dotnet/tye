@@ -6,23 +6,18 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
 `Tye` can use `docker` to run images that run as part of your application. If you haven't already, make sure docker is installed on your operating system ([install docker](https://docs.docker.com/install/)) .
 
-1. To create a `tye` manifest from the solution file.
-   ```
-   tye init microservice.sln
-   ```
-   This will create a manifest called `tye.yaml` with the following contents:
-   ```yaml
-    name: microservice
-    services:
-    - name: frontend
-        project: frontend\frontend.csproj
-    - name: backend
-        project: backend\backend.csproj
+
+1. Change the `WeatherForecastController.Get()` method in the `backend` project to cache the weather information in redis using an `IDistributedCache`.
+
+   Add the following `using`s to the top of the file:
+
+   ```C#
+   using Microsoft.Extensions.Caching.Distributed;
+   using System.Text.Json;
    ```
 
-   This will be the source of truth for `tye` execution from now on. To see a full schema of file, see the reference in the [schema reference](schema.md).
+   And update `Get()`:
 
-1. Change the `WeatherForecastController.Get` method in the `backend` project to cache the weather information in redis using an `IDistributedCache`.
    ```C#
    [HttpGet]
    public async Task<string> Get([FromServices]IDistributedCache cache)
@@ -53,14 +48,15 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
    This will store the weather data in Redis with an expiration time of 15 seconds.
 
-1. Add a package reference to `Microsoft.Extensions.Caching.StackExchangeRedis` in the backend project:
+
+2. Add a package reference to `Microsoft.Extensions.Caching.StackExchangeRedis` in the backend project:
 
    ```
    cd backend/
    dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis
    ```
 
-1. Modify `Startup.ConfigureServices` in the `backend` project to add the redis `IDistributedCache` implementation.
+3. Modify `Startup.ConfigureServices` in the `backend` project to add the redis `IDistributedCache` implementation.
    ```C#
    public void ConfigureServices(IServiceCollection services)
    {
@@ -82,63 +78,146 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
    ```
    The above configures redis to use the host and port for the `redis` service injected by the `tye` host.
 
-1. Modify `tye.yaml` to include redis as a dependency.
+4. Modify `tye.yaml` to include redis as a dependency.
+
+   > :bulb: You should have already created `tye.yaml` in a previous step near the end of the deployment tutorial.
 
    ```yaml
     name: microservice
     services:
     - name: backend
-        project: backend\backend.csproj
+      project: backend\backend.csproj
     - name: frontend
-        project: frontend\frontend.csproj
+      project: frontend\frontend.csproj
     - name: redis
-        dockerImage: redis
-        bindings:
-        - port: 6379
+      dockerImage: redis
+      bindings:
+      - port: 6379
     - name: redis-cli
-        dockerImage: redis
-        args: "redis-cli -h host.docker.internal MONITOR"
+      dockerImage: redis
+      args: "redis-cli -h host.docker.internal MONITOR"
    ```
 
-    We've added 2 services to the `tye.yaml` file. The redis service itself and a redis-cli service that we will use to watch the data being sent to and retrieved from redis.
+    We've added 2 services to the `tye.yaml` file. The `redis` service itself and a `redis-cli` service that we will use to watch the data being sent to and retrieved from redis.
 
-1. Run the `tye` command line in the solution root
+5. Run the `tye` command line in the solution root
+
+   > :bulb: Make sure your command-line is in the `microservices/` directory. One of the previous steps had you change directories to edit a specific project.
 
    ```
    tye run
    ```
 
-   Navigate to <http://localhost:8000> to see the dashboard running. Now you will see both `redis` and the `redis-cli` running. Navigate to the `frontend` application and verify that the data returned is the same after refreshing the page multiple times. New content will be loaded every 15 seconds, so if you wait that long and refresh again, you should see new data. You can also look at the redis-cli logs and see what data is being cached in redis.
+   Navigate to <http://localhost:8000> to see the dashboard running. Now you will see both `redis` and the `redis-cli` running listed in the dashboard.
+   
+   Navigate to the `frontend` application and verify that the data returned is the same after refreshing the page multiple times. New content will be loaded every 15 seconds, so if you wait that long and refresh again, you should see new data. You can also look at the `redis-cli` logs using the dashboard and see what data is being cached in redis.
 
 ## Deploying redis
    
 1. Deploy redis to Kubernetes
 
     `tye deploy` will not deploy the redis configuration, so you need to deploy it first. Run:
-    ```
-    kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/d79f790ba13791c1964ed03c31da0cd12b101f39/docs/yaml/redis.yaml?token=AB7K4FLEULBCQQU6NLXZEDC6OPIU4
+
+    ```text
+    kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/master/docs/yaml/redis.yaml?token=AAK5D65XGABGEPUJ2MFJBM26O35M2
     ```
 
     This will create a deployment and service for redis. You can see that by running:
-    ```
+
+    ```text
     kubectl get deployments
     ```
 
     You will see redis deployed and running.
 
-1. Deploy to Kubernetes
+2. Add secrets to the application
 
-    Next, deploy the rest of the application by running.
+    In order to access redis we need to add some code to the `backend` project to be able to read secrets from inside the container.
 
+    First, add the `KeyPerFile` configuration provider package to the backend project using the command line.
+
+    ```text
+    cd backend
+    dotnet add package Microsoft.Extensions.Configuration.KeyPerFile
+    cd ..
     ```
-    tye deploy
+
+    Next, add the following `using`s for the configuration provider near the top of `Program.cs`
+
+    ```C#
+    using System.IO;
+    using Microsoft.Extensions.Configuration.KeyPerFile;
     ```
 
-1. Test it out!
+    Then, add the following method to the `Program` class:
+
+    ```C#
+    private static void AddTyeBindingSecrets(IConfigurationBuilder config)
+    {
+        if (Directory.Exists("/var/tye/bindings/"))
+        {
+            foreach (var directory in Directory.GetDirectories("/var/tye/bindings/"))
+            {
+                Console.WriteLine($"Adding config in '{directory}'.");
+                config.AddKeyPerFile(directory, optional: true);
+            }
+        }
+    }
+    ```
+
+    Then update `CreateHostBuilder` to call the new method:
+
+    ```C#
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureAppConfiguration(config =>
+            {
+                AddTyeBindingSecrets(config);
+            })
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.UseStartup<Startup>();
+            });
+    ```
+
+3. Deploy to Kubernetes
+
+    Next, deploy the rest of the application by running:
+
+    ```text
+    tye deploy --interactive
+    ```
+
+    You'll be prompted for the connection string for redis. 
+
+    ```text
+    Validating Secrets...
+        Enter the connection string to use for service 'redis':
+    ```
+
+    Enter the following to use instance that you just deployed:
+
+    ```text
+    redis:6379
+    ```
+
+    `tye deploy` will create kubernetes secret to store the connection string.
+
+    ```text
+    Validating Secrets...
+        Enter the connection string to use for service 'redis': redis:6379
+        Created secret 'binding-production-redis-redis-secret'.
+    ```
+
+    > :question: `--interactive` is needed here to create the secret. This is a one-time configuration step. In a CI/CD scenario you would not want to have to specify connection strings over and over, deployment would rely on the existing configuration in the cluster.
+
+    > :bulb: Tye uses kubernetes secrets to store connection information about dependencies like redis that might live outside the cluster. Tye will automatically generate mappings between service names, binding names, and secret names.
+
+4. Test it out!
 
     You should now see three pods running after deploying.
 
-    ```
+    ```text
     kubectl get pods
     ```
 
@@ -147,5 +226,12 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
     backend-ccfcd756f-xk2q9                          1/1     Running   0          85m
     frontend-84bbdf4f7d-6r5zp                        1/1     Running   0          85m
     redis-5f554bd8bd-rv26p                           1/1     Running   0          98m
-
     ```
+
+    Just like last time, we'll need to port-forward to access the `frontend` from outside the cluster.
+
+    ```text
+    kubectl port-forward svc/frontend 5000:80
+    ``` 
+
+    Visit `http://localhost:5000` to see the `frontend` working in kubernetes.
