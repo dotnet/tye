@@ -40,12 +40,3 @@ spec:
       targetPort: 6379
   selector:
     app.kubernetes.io/name: redis
-
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: binding-production-redis-redis-secret
-type: Opaque
-stringData:
-  connectionstring: redis:6379

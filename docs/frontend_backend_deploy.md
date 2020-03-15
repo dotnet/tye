@@ -2,48 +2,47 @@
 
 This tutorial assumes that you have completed the [Frontend Backend Run Sample](frontend_backend_run.md)
 
-Before we deploy, make sure you have the following installed on your machine.
+> :bulb: `tye` will use your current credentials for pushing Docker images and accessing kubernetes clusters. If you have configured kubeclt with a context already, that's what `tye deploy` is going to use!
+
+Before we deploy, make sure you have the following ready...
 
 1. Installing [docker](https://docs.docker.com/install/) based on your operating system.
 
-1. A container registry. Docker by default will create a container registry on [DockerHub](https://hub.docker.com/). You could also use [Azure Container Registry](https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-prepare-acr) or another container registry of your choice.
+2. A container registry. Docker by default will create a container registry on [DockerHub](https://hub.docker.com/). You could also use [Azure Container Registry](https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-prepare-acr) or another container registry of your choice.
 
-1. A Kubernetes Cluster. There are many different options here, including:
+3. A Kubernetes Cluster. There are many different options here, including:
     - [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster)
     - [Kubernetes in Docker Desktop](https://www.docker.com/blog/docker-windows-desktop-now-kubernetes/), however it does take up quite a bit of memory.
     - [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
     - Another Kubernetes provider of your choice.
 
+> :warning: If you choose a container registry provided by a cloud provider (other than Dockerhub), you will likely have to take some steps to configure your kubernetes cluster to allow access. Follow the instructions provided by your cloud provider.
+
 ## Deploying the application
 
 Now that we have our application running locally with multiple containers, let's deploy the application. In this example, we will deploy to Kubernetes by using `tye deploy`.
 
-1. Adding a container registry to `tye.yaml`
-
-    Based on what container registry you configured, add the following line in the `tye.yaml` file:
-
-    ```yaml
-    name: microservice
-    registry: <registry_name>
-    ```
-
-    If you are using dockerhub, the registry_name will be in the format of 'example'. If you are using Azure Kubernetes Service (AKS), the registry_name will be in the format of example.azurecr.io.
-
 1. Deploy to Kubernetes
 
-    Next, deploy the rest of the application by running.
+    Deploy the rest of the application by running.
 
     ```text
-    tye deploy
+    tye deploy --interactive
     ```
+
+    > Enter the Container Registry (ex: 'example.azurecr.io' for Azure or 'example' for dockerhub):
+
+    You will be prompted to enter your container registry. This is needed to tag images, and to push them to a location accessible by kubernetes.
+
+    If you are using dockerhub, the registry name will your dockerhub username. If you are a standalone container registry (for instance from your cloud provider), the registry name will look like a hostname, eg: `example.azurecr.io`.
 
     `tye deploy` does many different things to deploy an application to Kubernetes. It will:
     - Create a docker image for each project in your application.
     - Push each docker image to your container registry.
-    - Generate a Kubernetes Deployment and Service for each project.
-    - Apply the generated Deployment and Service to your current Kubernetes context.
+    - Generate a Kubernetes `Deployment` and `Service` for each project.
+    - Apply the generated `Deployment` and `Service` to your current Kubernetes context.
 
-1. Test it out!
+2. Test it out!
 
     You should now see two pods running after deploying.
 
@@ -57,13 +56,82 @@ Now that we have our application running locally with multiple containers, let's
     frontend-84bbdf4f7d-6r5zp                        1/1     Running   0          85m
     ```
 
-    You can visit the frontend application by port forwarding to the frontend pod.
+    You'll have two services in addition to the built-in `kubernetes` service.
 
     ```text
-    kubectl port-forward frontend-84bbdf4f7d-6r5zp 8000:80
+    kubectl get service
     ```
 
-    Now navigate to <http://localhost:8000> to view the frontend application working on Kubernetes.
+    ```text
+    NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+    backend      ClusterIP   10.0.147.87   <none>        80/TCP    11s
+    frontend     ClusterIP   10.0.20.168   <none>        80/TCP    14s
+    kubernetes   ClusterIP   10.0.0.1      <none>        443/TCP   3d5h
+    ```
+
+    You can visit the frontend application by port forwarding to the frontend service.
+
+    ```text
+    kubectl port-forward svc/frontend 5000:80
+    ```
+
+    Now navigate to <http://localhost:5000> to view the frontend application working on Kubernetes. You should see the list of weather forcasts just like when you were running locally.
+
+    > :bulb: Currently `tye` does not provide a way to expose pods/services created to the public internet. We'll add features related to `Ingress` in future releases.
+
+    > :warning: Currently `tye` does not automatically enable TLS within the cluster, and so communication takes place over HTTP instead of HTTPS. This is typical way to deploy services in kubernetes - we may look to enable TLS as an option or by default in the future.
+
+## Exploring tye.yaml
+
+Tye has a optional configuration file (`tye.yaml`) to allow customizing settings. If you want to use `tye deploy` as part of a CI/CD system, it's expected that you'll have a `tye.yaml`.
+
+1. Scaffolding `tye.yaml`
+
+    Run the `tye init` command in the `microservices` directory to generate a default `tye.yaml`
+
+    ```text
+    tye init
+    ```
+
+    The contents of `tye.yaml` should look like:
+
+    ```yaml
+    # tye application configuration file
+    # read all about it at https://github.com/dotnet/tye
+    #
+    # when you've given us a try, we'd love to know what you think:
+    #    <survey link>
+    #
+    name: microservice
+    services:
+    - name: frontend
+    project: frontend/frontend.csproj
+    - name: backend
+    project: backend/backend.csproj
+    ```
+
+    The top level scope (like the `name` node) is where global settings are applied.
+
+    `tye.yaml` lists all of the application's services under the `services` node. This is the place for per-service configuration.
+
+    See [schema](schema.md) for more details about `tye.yaml`.
+
+    > :bulb: We provide a json-schema for `tye.yaml` and some editors support json-schema for completion and validation of yaml files. See [json-schema](/src/schema/README.md) for instructions.
+
+2. Adding a container registry to `tye.yaml`
+
+    Based on what container registry you configured, add the following line in the `tye.yaml` file:
+
+    ```yaml
+    name: microservice
+    registry: <registry_name>
+    ```
+
+    If you are using dockerhub, the registry_name will your dockerhub username. If you are a standalone container registry (for instance from your cloud provider), the registry_name will look like a hostname, eg: `example.azurecr.io`.
+
+    Now it's possible to use `tye deploy` without `--interactive` since the registry is stored as part of configuration.
+
+    > :question: This step may not make much sense if you're using `tye.yaml` to store a personal Dockerhub username. A more typical use case would storing the name of a private registry for use in a CI/CD system.
 
 ## Next Steps
 
