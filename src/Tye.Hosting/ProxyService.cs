@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.IO;
 
 namespace Tye.Hosting
 {
@@ -152,6 +153,10 @@ namespace Tye.Hosting
                                             catch (ConnectionResetException)
                                             {
                                                 // Connection was reset
+                                            }
+                                            catch (IOException)
+                                            {
+                                                // Reset can also appear as an IOException with an inner SocketException
                                             }
                                             catch (OperationCanceledException ex)
                                             {
