@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Net;
@@ -11,13 +12,11 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Bedrock.Framework;
-using Tye.Hosting.Model;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.IO;
 
 namespace Tye.Hosting
 {
