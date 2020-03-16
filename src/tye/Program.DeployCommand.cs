@@ -133,7 +133,7 @@ namespace Tye
 
                     var container = new ContainerInfo()
                     {
-                        UseMultiphaseDockerfile = true,
+                        UseMultiphaseDockerfile = false,
                     };
                     service.GeneratedAssets.Container = container;
                     services.Add(serviceEntry);
