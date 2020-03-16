@@ -52,6 +52,12 @@ namespace Tye
                     output.WriteDebugLine($"Validating secret '{secretInputBinding.Name}'.");
 
                     var config = KubernetesClientConfiguration.BuildDefaultConfig();
+
+                    // Workaround for https://github.com/kubernetes-client/csharp/issues/372
+                    var store = KubernetesClientConfiguration.LoadKubeConfig();
+                    var context = store.Contexts.Where(c => c.Name == config.CurrentContext).FirstOrDefault();
+                    config.Namespace ??= context?.ContextDetails?.Namespace;
+
                     var kubernetes = new Kubernetes(config);
 
                     try
