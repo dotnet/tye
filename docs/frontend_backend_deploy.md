@@ -2,7 +2,7 @@
 
 This tutorial assumes that you have completed the [Frontend Backend Run Sample](frontend_backend_run.md)
 
-> :bulb: `tye` will use your current credentials for pushing Docker images and accessing kubernetes clusters. If you have configured kubeclt with a context already, that's what `tye deploy` is going to use!
+> :bulb: `tye` will use your current credentials for pushing Docker images and accessing kubernetes clusters. If you have configured kubectl with a context already, that's what `tye deploy` is going to use!
 
 Before we deploy, make sure you have the following ready...
 
@@ -12,7 +12,7 @@ Before we deploy, make sure you have the following ready...
 
 3. A Kubernetes Cluster. There are many different options here, including:
     - [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster)
-    - [Kubernetes in Docker Desktop](https://www.docker.com/blog/docker-windows-desktop-now-kubernetes/), however it does take up quite a bit of memory.
+    - [Kubernetes in Docker Desktop](https://www.docker.com/blog/docker-windows-desktop-now-kubernetes/), however it does take up quite a bit of memory on your machine, so use with caution.
     - [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
     - Another Kubernetes provider of your choice.
 
@@ -24,7 +24,7 @@ Now that we have our application running locally with multiple containers, let's
 
 1. Deploy to Kubernetes
 
-    Deploy the rest of the application by running.
+    Deploy the application by running:
 
     ```text
     tye deploy --interactive
@@ -75,7 +75,7 @@ Now that we have our application running locally with multiple containers, let's
     kubectl port-forward svc/frontend 5000:80
     ```
 
-    Now navigate to <http://localhost:5000> to view the frontend application working on Kubernetes. You should see the list of weather forcasts just like when you were running locally.
+    Now navigate to <http://localhost:5000> to view the frontend application working on Kubernetes. You should see the list of weather forecasts just like when you were running locally.
 
     > :bulb: Currently `tye` does not provide a way to expose pods/services created to the public internet. We'll add features related to `Ingress` in future releases.
 
