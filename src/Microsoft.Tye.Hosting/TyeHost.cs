@@ -122,7 +122,8 @@ namespace Microsoft.Tye.Hosting
             {
                 configuration
                     .MinimumLevel.Verbose()
-                    .Filter.ByExcluding(Matching.FromSource("Microsoft"))
+                    .Filter.ByExcluding(Matching.FromSource("Microsoft.AspNetCore"))
+                    .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions"))
                     .Enrich
                     .FromLogContext()
                     .WriteTo
