@@ -9,12 +9,14 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Mono.Unix.Native;
 
 namespace Microsoft.Tye
 {
     public static class ProcessUtil
     {
+        [DllImport("libc", SetLastError = true, EntryPoint = "kill")]
+        private static extern int sys_kill(int pid, int sig);
+
         public static async Task<ProcessResult> RunAsync(
             string filename,
             string arguments,
@@ -119,7 +121,7 @@ namespace Microsoft.Tye
             {
                 if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    Syscall.kill(process.Id, Signum.SIGINT);
+                    sys_kill(process.Id, sig: 2); // SIGINT
 
                     var cancel = new CancellationTokenSource();
 
