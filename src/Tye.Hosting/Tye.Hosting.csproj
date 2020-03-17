@@ -4,6 +4,8 @@
     <OutputType>Library</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Description>Orchestration host APIs.</Description>
+    <AssemblyName>Microsoft.Tye.Hosting</AssemblyName>
+    <PackageId>Microsoft.Tye.Hosting</PackageId>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
     <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
     <Nullable>enable</Nullable>

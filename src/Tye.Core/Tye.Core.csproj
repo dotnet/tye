@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <RootNamespace>Tye</RootNamespace>
+    <AssemblyName>Microsoft.Tye.Core</AssemblyName>
+    <PackageId>Microsoft.Tye.Core</PackageId>
     <LangVersion>8.0</LangVersion>
     <Nullable>Enable</Nullable>
     <IsPackable>true</IsPackable>

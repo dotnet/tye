@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Description>Runtime helpers for tye host platform</Description>
+    <AssemblyName>Microsoft.Tye.Hosting.Runtime</AssemblyName>
+    <PackageId>Microsoft.Tye.Hosting.Runtime</PackageId>
     <Nullable>disable</Nullable>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
