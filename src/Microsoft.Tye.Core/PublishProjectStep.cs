@@ -31,7 +31,7 @@ namespace Microsoft.Tye
             }
 
             var projectFilePath = Path.Combine(application.RootDirectory, project.RelativeFilePath);
-            var outputDirectory = Path.Combine(Path.GetDirectoryName(projectFilePath), "bin", "Release", project.TargetFramework, "publish");
+            var outputDirectory = Path.Combine(Path.GetDirectoryName(projectFilePath)!, "bin", "Release", project.TargetFramework, "publish");
 
             output.WriteDebugLine("Running 'dotnet publish'.");
             output.WriteCommandLine("dotnet", $"publish \"{projectFilePath}\" -c Release -o \"{outputDirectory}\"");

@@ -40,7 +40,7 @@ namespace Microsoft.Tye
                 var type = kvp.Key;
                 var delegates = kvp.Value;
 
-                var method = pipeline.GetType().GetMethod("Register").MakeGenericMethod(type);
+                var method = pipeline.GetType().GetMethod("Register")!.MakeGenericMethod(type);
                 for (var i = 0; i < delegates.Count; i++)
                 {
                     method.Invoke(pipeline, new[] { delegates[i], });
