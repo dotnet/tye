@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using Tye;
+using Microsoft.Tye;
 
 namespace E2ETest
 {

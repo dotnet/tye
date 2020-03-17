@@ -9,7 +9,7 @@ using Microsoft.Build.Construction;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Tye.ConfigModel
+namespace Microsoft.Tye.ConfigModel
 {
     public static class ConfigFactory
     {

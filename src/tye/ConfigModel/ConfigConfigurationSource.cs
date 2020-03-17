@@ -4,7 +4,7 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace Tye.ConfigModel
+namespace Microsoft.Tye.ConfigModel
 {
     public class ConfigConfigurationSource
     {

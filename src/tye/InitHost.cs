@@ -1,9 +1,9 @@
 ﻿using System.IO;
-using Tye.ConfigModel;
+using Microsoft.Tye.ConfigModel;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Tye
+namespace Microsoft.Tye
 {
     public class InitHost
     {

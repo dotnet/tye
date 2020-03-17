@@ -11,13 +11,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F19B02EB-A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "E2ETest", "test\E2ETest\E2ETest.csproj", "{D15E5FF6-C1E7-4110-A2BE-06ADA7ACA82B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Hosting", "src\Tye.Hosting\Tye.Hosting.csproj", "{0F4F5A86-DD27-4AF9-BF97-221EAD5040E7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Hosting", "src\Microsoft.Tye.Hosting\Microsoft.Tye.Hosting.csproj", "{0F4F5A86-DD27-4AF9-BF97-221EAD5040E7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Hosting.Diagnostics", "src\Tye.Hosting.Diagnostics\Tye.Hosting.Diagnostics.csproj", "{CEBFC149-8162-4A0A-9AD4-40498B9172CD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Hosting.Diagnostics", "src\Microsoft.Tye.Hosting.Diagnostics\Microsoft.Tye.Hosting.Diagnostics.csproj", "{CEBFC149-8162-4A0A-9AD4-40498B9172CD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Hosting.Runtime", "src\Tye.Hosting.Runtime\Tye.Hosting.Runtime.csproj", "{34719884-1338-4965-BA2A-F98DB03733C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Hosting.Runtime", "src\Microsoft.Tye.Hosting.Runtime\Microsoft.Tye.Hosting.Runtime.csproj", "{34719884-1338-4965-BA2A-F98DB03733C2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Core", "src\Tye.Core\Tye.Core.csproj", "{D0359C69-6EA9-4B03-9455-90E8E04F1CB0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Core", "src\Microsoft.Tye.Core\Microsoft.Tye.Core.csproj", "{D0359C69-6EA9-4B03-9455-90E8E04F1CB0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

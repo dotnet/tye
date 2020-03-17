@@ -8,9 +8,9 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Tye;
-using Tye.ConfigModel;
-using Tye.Hosting;
+using Microsoft.Tye;
+using Microsoft.Tye.ConfigModel;
+using Microsoft.Tye.Hosting;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -131,7 +131,7 @@ namespace E2ETest
             }
         }
 
-        private async Task CheckServiceIsUp(Tye.Hosting.Model.Application application, HttpClient client, string serviceName, Uri dashboardUri)
+        private async Task CheckServiceIsUp(Microsoft.Tye.Hosting.Model.Application application, HttpClient client, string serviceName, Uri dashboardUri)
         {
             // make sure backend is up before frontend
             var service = application.Services.Where(a => a.Value.Description.Name == serviceName).First().Value;

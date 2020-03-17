@@ -7,7 +7,7 @@ using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.IO;
 
-namespace Tye
+namespace Microsoft.Tye
 {
     internal static class CommonArguments
     {

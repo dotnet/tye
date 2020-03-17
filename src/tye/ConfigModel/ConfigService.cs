@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using YamlDotNet.Serialization;
 
-namespace Tye.ConfigModel
+namespace Microsoft.Tye.ConfigModel
 {
     public class ConfigService
     {
