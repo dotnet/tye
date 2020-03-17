@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Description>Diagnostics collector and exporter for .NET Core applications.</Description>
+    <AssemblyName>Microsoft.Tye.Hosting.Diagnostics</AssemblyName>
+    <PackageId>Microsoft.Tye.Hosting.Diagnostics</PackageId>
     <Nullable>disable</Nullable>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
