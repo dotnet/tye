@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>Tye</RootNamespace>
     <AssemblyName>Microsoft.Tye.Core</AssemblyName>
     <PackageId>Microsoft.Tye.Core</PackageId>
@@ -12,8 +12,8 @@
 
   <ItemGroup>
     <PackageReference Include="KubernetesClient" Version="1.6.11" />
+    <PackageReference Include="Microsoft.Build" Version="16.5.0" />
     <PackageReference Include="semver" Version="2.0.6" />
-    <PackageReference Include="Sln" Version="0.3.0" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20071.2" />
     <PackageReference Include="System.Commandline.Rendering" Version="0.3.0-alpha.20070.2" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
