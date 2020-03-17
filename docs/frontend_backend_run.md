@@ -1,6 +1,6 @@
 # Frontend Backend sample with tye run
 
-This tutorial will demonstrate how to use `tye run` to run a multi-project application. If you haven't so already, follow the [Getting Started Instructions](getting_started.md) to install tye.
+This tutorial will demonstrate how to use [`tye run`](commandline/tye-run.md) to run a multi-project application. If you haven't so already, follow the [Getting Started Instructions](getting_started.md) to install tye.
 
 ## Running a single application with tye run
 
@@ -210,4 +210,4 @@ Now that we have two applications running, let's make them communicate. By defau
 
 ## Next Steps
 
-Now that you are able to run a multi-project application with `tye run`, move on to the [Frontend Backend Deploy Sample](frontend_backed_deploy.md) to learn how to deploy this application to Kubernetes.
+Now that you are able to run a multi-project application with [`tye run`](commandline/tye-run.md), move on to the [Frontend Backend Deploy Sample](frontend_backed_deploy.md) to learn how to deploy this application to Kubernetes.
