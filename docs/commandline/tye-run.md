@@ -26,8 +26,8 @@ The path to either a file or directory to run `tye run` on. Can either be a yaml
 If a directory path is specified, `tye run` will default to using these files, in the following order:
 
 - `tye.yaml`
-- `sln`
-- `csproj/fsproj`
+- `*.sln`
+- `*.csproj/*.fsproj`
 
 ## Options
 
