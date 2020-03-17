@@ -53,7 +53,7 @@ The path to either a file or directory to run `tye init` on. Can either be a yam
     tye init PATH_TO_DIRECTORY
     ```
 
-- Scaffold a `tye.yaml` from a project file (csproj, fsproj):
+- Scaffold a `tye.yaml` from a project file (*.csproj, *.fsproj):
 
     ```text
     tye init project.csproj
