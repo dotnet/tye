@@ -14,8 +14,8 @@ namespace Microsoft.Tye
 {
     public static class ProcessUtil
     {
-        [DllImport ("libc", SetLastError=true, EntryPoint="kill")]
-		private static extern int sys_kill(int pid, int sig);
+        [DllImport("libc", SetLastError = true, EntryPoint = "kill")]
+        private static extern int sys_kill(int pid, int sig);
 
         public static async Task<ProcessResult> RunAsync(
             string filename,
