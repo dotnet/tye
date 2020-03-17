@@ -35,6 +35,13 @@ namespace Tye
                 Required = false
             });
 
+            command.AddOption(new Option("--logs")
+            {
+                Description = "Write structured application logs to the specified log providers. Supported providers are console, elastic (Elasticsearch), ai (ApplicationInsights), seq.",
+                Argument = new Argument<string>("logs"),
+                Required = false
+            });
+
             command.AddOption(new Option("--dtrace")
             {
                 Description = "Write distributed traces to the specified providers. Supported providers are zipkin.",

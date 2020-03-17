@@ -34,10 +34,14 @@ If a directory path is specified, `tye run` will default to using these files, i
 - `--no-build`
 
     Does not build projects before running.
-    
+
 - `--port <port>`
 
     The port to run the dashboard on. Defaults to port 8000 if not specified.
+
+- `--logs`
+
+    Write structured application logs to the specified log providers. Supported providers are console, elastic (Elasticsearch), ai (ApplicationInsights), seq.
 
 - `--dtrace <logs>`  
 
