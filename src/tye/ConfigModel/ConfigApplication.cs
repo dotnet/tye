@@ -5,10 +5,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Tye.Hosting.Model;
+using Microsoft.Tye.Hosting.Model;
 using YamlDotNet.Serialization;
 
-namespace Tye.ConfigModel
+namespace Microsoft.Tye.ConfigModel
 {
     public class ConfigApplication
     {

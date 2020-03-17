@@ -6,11 +6,11 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.IO;
-using Tye.ConfigModel;
+using Microsoft.Tye.ConfigModel;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Tye
+namespace Microsoft.Tye
 {
     static partial class Program
     {

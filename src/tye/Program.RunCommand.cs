@@ -7,10 +7,10 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Threading;
-using Tye.ConfigModel;
-using Tye.Hosting;
+using Microsoft.Tye.ConfigModel;
+using Microsoft.Tye.Hosting;
 
-namespace Tye
+namespace Microsoft.Tye
 {
     static partial class Program
     {

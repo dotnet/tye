@@ -12,7 +12,7 @@ using System.CommandLine.Parsing;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace Tye
+namespace Microsoft.Tye
 {
     static partial class Program
     {

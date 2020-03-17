@@ -3,9 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using Tye.ConfigModel;
+using Microsoft.Tye.ConfigModel;
 
-namespace Tye
+namespace Microsoft.Tye
 {
     internal class TemporaryApplicationAdapter : Tye.Application
     {

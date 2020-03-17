@@ -5,7 +5,7 @@
 using System;
 using System.IO;
 
-namespace Tye
+namespace Microsoft.Tye
 {
     internal class TempFile : IDisposable
     {

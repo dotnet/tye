@@ -7,9 +7,9 @@ using System.CommandLine;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Tye.ConfigModel;
+using Microsoft.Tye.ConfigModel;
 
-namespace Tye
+namespace Microsoft.Tye
 {
     public static class GenerateHost
     {

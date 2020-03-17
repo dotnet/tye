@@ -5,7 +5,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Tye
+namespace Microsoft.Tye
 {
     internal class KubectlDetector
     {

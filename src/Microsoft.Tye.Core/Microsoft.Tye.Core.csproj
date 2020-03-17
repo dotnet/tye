@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>Tye</RootNamespace>
+    <AssemblyName>Microsoft.Tye.Core</AssemblyName>
+    <PackageId>Microsoft.Tye.Core</PackageId>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>Enable</Nullable>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="KubernetesClient" Version="1.6.11" />
+    <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
+    <PackageReference Include="semver" Version="2.0.6" />
+    <PackageReference Include="Sln" Version="0.3.0" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20071.2" />
+    <PackageReference Include="System.Commandline.Rendering" Version="0.3.0-alpha.20070.2" />
+    <PackageReference Include="YamlDotNet" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="build\**" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="buildMultiTargeting\**" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Templates\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\shared\KubectlDetector.cs" Link="KubectlDetector.cs" />
+    <Compile Include="..\shared\TempDirectory.cs" Link="TempDirectory.cs" />
+    <Compile Include="..\shared\TempFile.cs" Link="TempFile.cs" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Imports.targets" />
+  </ItemGroup>
+
+</Project>

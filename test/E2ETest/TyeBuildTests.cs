@@ -4,8 +4,8 @@
 
 using System.IO;
 using System.Threading.Tasks;
-using Tye;
-using Tye.ConfigModel;
+using Microsoft.Tye;
+using Microsoft.Tye.ConfigModel;
 using Xunit;
 using Xunit.Abstractions;
 

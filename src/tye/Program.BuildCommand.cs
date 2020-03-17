@@ -8,9 +8,9 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Tye.ConfigModel;
+using Microsoft.Tye.ConfigModel;
 
-namespace Tye
+namespace Microsoft.Tye
 {
     static partial class Program
     {

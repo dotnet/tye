@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.IO;
-using Tye;
+using Microsoft.Tye;
 using Xunit;
 using Xunit.Abstractions;
 
