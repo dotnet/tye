@@ -65,6 +65,10 @@ Familiarize yourself with the [developer guide](/docs/developer_guide.md) for in
 
 Tye is a new project with lots of aspects that are dificult to test. We don't currently have many tests as part of the repository and expect to increase the test coverage over time. For right now, try to understand if the area you're working in is already covered by tests, and expand them if possible.
 
-## Code of conduct
+## .NET Foundation
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).  For more information, see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+Tye is a [.NET Foundation](https://www.dotnetfoundation.org/projects) project.
+
+This project has adopted the code of conduct defined by the [Contributor Covenant](http://contributor-covenant.org/) to clarify expected behavior in our community. For more information, see the [.NET Foundation Code of Conduct](http://www.dotnetfoundation.org/code-of-conduct).
+
+General .NET OSS discussions: [.NET Foundation forums](https://forums.dotnetfoundation.org)
