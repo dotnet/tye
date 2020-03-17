@@ -28,8 +28,8 @@ The path to either a file or directory to execute `tye deploy` on. Can either be
 If a directory path is specified, `tye deploy` will default to using these files, in the following order:
 
 - `tye.yaml`
-- `sln`
-- `csproj/fsproj`
+- `*.sln`
+- `*.csproj/*.fsproj`
 
 ## Options
 
