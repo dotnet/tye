@@ -111,10 +111,10 @@ Now that we have two applications running, let's make them communicate. By defau
     {
         public class WeatherClient
         {
-            private readonly JsonSerializerOptions options =     new JsonSerializerOptions()
+            private readonly JsonSerializerOptions options = new JsonSerializerOptions()
             {
                 PropertyNameCaseInsensitive = true,
-                PropertyNamingPolicy = JsonNamingPolicy.    CamelCase,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
     
             private readonly HttpClient client;
@@ -124,11 +124,11 @@ Now that we have two applications running, let's make them communicate. By defau
                 this.client = client;
             }
     
-            public async Task<WeatherForecast[]>     GetWeatherAsync()
+            public async Task<WeatherForecast[]> GetWeatherAsync()
             {
-                var responseMessage = await this.client.    GetAsync("/weatherforecast");
-                var stream = await responseMessage.Content.    ReadAsStreamAsync();
-                return await JsonSerializer.    DeserializeAsync<WeatherForecast[]>(stream,     options);
+                var responseMessage = await this.client.GetAsync("/weatherforecast");
+                var stream = await responseMessage.Content.ReadAsStreamAsync();
+                return await JsonSerializer.DeserializeAsync<WeatherForecast[]>(stream, options);
             }
         }
     }
