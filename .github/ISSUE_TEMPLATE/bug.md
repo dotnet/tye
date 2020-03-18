@@ -19,4 +19,4 @@ Got Exceptions? Include both the message and the stack trace
 
 - Include the output of `tye --version`
 - If possible rerun the command with `-v debug` and include the output
-- The platfrom (Linux/macOS/Windows)
+- The platform (Linux/macOS/Windows)
