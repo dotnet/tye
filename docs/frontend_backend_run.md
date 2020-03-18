@@ -210,4 +210,4 @@ Now that we have two applications running, let's make them communicate. By defau
 
 ## Next Steps
 
-Now that you are able to run a multi-project application with [`tye run`](commandline/tye-run.md), move on to the [Frontend Backend Deploy Sample](frontend_backed_deploy.md) to learn how to deploy this application to Kubernetes.
+Now that you are able to run a multi-project application with [`tye run`](commandline/tye-run.md), move on to the [Frontend Backend Deploy Sample](frontend_backend_deploy.md) to learn how to deploy this application to Kubernetes.
