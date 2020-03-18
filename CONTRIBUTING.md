@@ -63,7 +63,7 @@ Familiarize yourself with the [developer guide](/docs/developer_guide.md) for in
 
 ### Tests
 
-Tye is a new project with lots of aspects that are dificult to test. We don't currently have many tests as part of the repository and expect to increase the test coverage over time. For right now, try to understand if the area you're working in is already covered by tests, and expand them if possible.
+Tye is a new project with lots of aspects that are difficult to test. We don't currently have many tests as part of the repository and expect to increase the test coverage over time. For right now, try to understand if the area you're working in is already covered by tests, and expand them if possible.
 
 ## .NET Foundation
 
