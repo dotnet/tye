@@ -1,9 +1,14 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Tye.Hosting.Model;
 using Microsoft.Extensions.Logging;
+using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
 {
@@ -16,17 +21,19 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
         }
 
-        public async Task StartAsync(Model.Application application)
+        public Task StartAsync(Model.Application application)
         {
             // This transforms a ProjectRunInfo into
-
+            var tasks = new List<Task>();
             foreach (var s in application.Services.Values)
             {
                 if (s.Description.RunInfo is ProjectRunInfo project)
                 {
-                    await TransformProjectToContainer(application, s, project);
+                    tasks.Add(TransformProjectToContainer(application, s, project));
                 }
             }
+
+            return Task.WhenAll(tasks);
         }
 
         private async Task TransformProjectToContainer(Model.Application application, Model.Service service, ProjectRunInfo project)

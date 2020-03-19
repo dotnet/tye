@@ -69,7 +69,7 @@ namespace Microsoft.Tye.Hosting
             var serviceDescription = service.Description;
             var environmentArguments = "";
             var volumes = "";
-            var workingDirectory = docker.WorkingDirectory == null ? "" : $"-w {docker.WorkingDirectory}";
+            var workingDirectory = docker.WorkingDirectory != null ? $"-w {docker.WorkingDirectory}" : "";
 
             var dockerInfo = new DockerInformation(new Task[service.Description.Replicas]);
 
