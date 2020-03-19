@@ -4,23 +4,36 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
 
 ## Installing tye
 
-**We're currently in the process of getting publicly available builds working. This should only take a few hours. Right now these instructions only work if you have access to the .NET team's internal feeds, that will be remedied soon, thanks for your patience.**
-
 1. Install [.NET Core 3.1](<http://dot.net>).
-1. Install tye via the following command:
+2. Install tye via the following command:
 
     ```text
-    dotnet tool install -g tye --version 0.1.0-alpha.20161.4 --interactive --add-source https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json
+    dotnet tool install -g Microsoft.Tye --version "0.1.0-alpha.20168.8" --add-source https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
     ```
 
-1. Verify the installation was complete by running:
+    OR
+
+    ```text
+    dotnet tool update -g Microsoft.Tye --version "0.1.0-alpha.20168.8" --add-source https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
+    ```
+
+3. Verify the installation was complete by running:
 
     ```
     tye --version
-    > 0.1.0-alpha.20161.4+d69009b73074973484b1602011dbb0c730f013bf
+    > 0.1.0-alpha.20168.8+f45b9444d4894009bde48e2a3411a52dd09497b1
     ```
 
 ## Next steps
 
 1. Once tye is installed, continue to the [Frontend-Backend sample](frontend_backend_run.md).
 2. Check out additional samples for more advanced concepts, such as using redis, rabbitmq, and service discovery.
+
+
+## Working with CI builds
+
+This will install the newest available build from our CI.
+
+```txt
+dotnet tool install -g Microsoft.Tye --version "0.1.0-*" --add-source https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
+```
