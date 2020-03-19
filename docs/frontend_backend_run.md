@@ -204,7 +204,7 @@ Now that we have two applications running, let's make them communicate. By defau
     </table>
    ```
 
-7. Run the project and the `frontend` service should be able to successfully call the `backend` service!
+7. Run the project with [`tye run`](commandline/tye-run.md) and the `frontend` service should be able to successfully call the `backend` service!
 
     When you visit the `frontend` service you should see a table of weather data. This data was produced randomly in the `backend` service. The fact that you're seeing it in a web UI in the `frontend` means that the services are able to communicate.
 
