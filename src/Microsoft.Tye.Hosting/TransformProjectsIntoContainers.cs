@@ -50,13 +50,16 @@ namespace Microsoft.Tye.Hosting
 
             service.Logs.OnNext($"dotnet publish \"{service.Status.ProjectFilePath}\" /nologo");
 
-            var buildResult = await ProcessUtil.RunAsync("dotnet", $"publish \"{service.Status.ProjectFilePath}\" /nologo",
-                                                        outputDataReceived: data => service.Logs.OnNext(data),
-                                                        throwOnError: false);
+            var buildResult = await ProcessUtil.RunAsync("dotnet", $"publish \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false);
+
+            service.Logs.OnNext(buildResult.StandardOutput);
 
             if (buildResult.ExitCode != 0)
             {
-                _logger.LogInformation("Publishing {ProjectFile} failed with exit code {ExitCode}: " + buildResult.StandardOutput + buildResult.StandardError, service.Status.ProjectFilePath, buildResult.ExitCode);
+                _logger.LogInformation("Publishing {ProjectFile} failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, service.Status.ProjectFilePath, buildResult.ExitCode);
+
+                // Null out the RunInfo so that
+                serviceDescription.RunInfo = null;
                 return;
             }
 
@@ -78,7 +81,7 @@ namespace Microsoft.Tye.Hosting
 
         private static string DetermineContainerImage(string targetFramework)
         {
-            // TODO: Determine the base iamge from the tfm
+            // TODO: Determine the base image from the tfm
             return "mcr.microsoft.com/dotnet/core/sdk:3.1-buster";
         }
 
