@@ -68,6 +68,8 @@ namespace Microsoft.Tye.Hosting
 
             var serviceDescription = service.Description;
             var environmentArguments = "";
+            var volumes = "";
+            var workingDirectory = docker.WorkingDirectory == null ? "" : $"-w {docker.WorkingDirectory}";
 
             var dockerInfo = new DockerInformation(new Task[service.Description.Replicas]);
 
@@ -95,6 +97,9 @@ namespace Microsoft.Tye.Hosting
                 {
                     status.Ports = ports.Select(p => p.Port);
 
+                    // These ports should also be passed in not assuming ASP.NET Core
+                    environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://*:{p.Port}"));
+
                     portString = string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.InternalPort ?? p.Port}"));
 
                     foreach (var p in ports)
@@ -112,7 +117,12 @@ namespace Microsoft.Tye.Hosting
                     environmentArguments += $"-e {pair.Key}={pair.Value} ";
                 }
 
-                var command = $"run -d {environmentArguments} {portString} --name {replica} --restart=unless-stopped {docker.Image} {docker.Args ?? ""}";
+                foreach (var pair in docker.VolumeMappings)
+                {
+                    volumes += $"-v {pair.Key}:{pair.Value} ";
+                }
+
+                var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {docker.Image} {docker.Args ?? ""}";
                 _logger.LogInformation("Running docker command {Command}", command);
 
                 service.Logs.OnNext($"[{replica}]: {command}");
