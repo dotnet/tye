@@ -46,27 +46,27 @@ namespace Microsoft.Tye.Hosting
             service.Status.ProjectFilePath = fullProjectPath;
 
             // Sometimes building can fail because of file locking (like files being open in VS)
-            _logger.LogInformation("Building project {ProjectFile}", service.Status.ProjectFilePath);
+            _logger.LogInformation("Publishing project {ProjectFile}", service.Status.ProjectFilePath);
 
-            service.Logs.OnNext($"dotnet build \"{service.Status.ProjectFilePath}\" /nologo");
+            service.Logs.OnNext($"dotnet publish \"{service.Status.ProjectFilePath}\" /nologo");
 
-            var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo",
+            var buildResult = await ProcessUtil.RunAsync("dotnet", $"publish \"{service.Status.ProjectFilePath}\" /nologo",
                                                         outputDataReceived: data => service.Logs.OnNext(data),
                                                         throwOnError: false);
 
             if (buildResult.ExitCode != 0)
             {
-                _logger.LogInformation("Building {ProjectFile} failed with exit code {ExitCode}: " + buildResult.StandardOutput + buildResult.StandardError, service.Status.ProjectFilePath, buildResult.ExitCode);
+                _logger.LogInformation("Publishing {ProjectFile} failed with exit code {ExitCode}: " + buildResult.StandardOutput + buildResult.StandardError, service.Status.ProjectFilePath, buildResult.ExitCode);
                 return;
             }
 
             var targetFramework = GetTargetFramework(service.Status.ProjectFilePath);
 
             // We transform the project information into the following docker command:
-            // docker run -w /app -v {projectDir}:/app -it {image} dotnet /app/bin/Debug/{tfm}/{outputfile}.dll
+            // docker run -w /app -v {projectDir}:/app -it {image} dotnet /app/bin/Debug/{tfm}/publish/{outputfile}.dll
             var containerImage = DetermineContainerImage(targetFramework);
             var outputFileName = Path.GetFileNameWithoutExtension(service.Status.ProjectFilePath) + ".dll";
-            var dockerRunInfo = new DockerRunInfo(containerImage, $"dotnet /app/bin/Debug/{targetFramework}/{outputFileName} {project.Args}")
+            var dockerRunInfo = new DockerRunInfo(containerImage, $"dotnet /app/bin/Debug/{targetFramework}/publish/{outputFileName} {project.Args}")
             {
                 WorkingDirectory = "/app"
             };
