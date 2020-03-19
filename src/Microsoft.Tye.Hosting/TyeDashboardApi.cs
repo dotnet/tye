@@ -37,7 +37,7 @@ namespace Microsoft.Tye.Hosting
             endpoints.MapGet("/api/v1/services/{name}", Service);
             endpoints.MapGet("/api/v1/logs/{name}", Logs);
             endpoints.MapGet("/api/v1/metrics", AllMetrics);
-            endpoints.MapGet("/api/v1/metrics/{name}", Metics);
+            endpoints.MapGet("/api/v1/metrics/{name}", Metrics);
         }
 
         private Task ServiceIndex(HttpContext context)
@@ -136,7 +136,7 @@ namespace Microsoft.Tye.Hosting
             await context.Response.WriteAsync(sb.ToString());
         }
 
-        private async Task Metics(HttpContext context)
+        private async Task Metrics(HttpContext context)
         {
             var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
 
