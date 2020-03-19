@@ -16,7 +16,7 @@ namespace Microsoft.Tye.Hosting.Model
 
         public string Name { get; }
 
-        public RunInfo? RunInfo { get; }
+        public RunInfo? RunInfo { get; set; }
 
         public int Replicas { get; set; } = 1;
         public List<ServiceBinding> Bindings { get; } = new List<ServiceBinding>();

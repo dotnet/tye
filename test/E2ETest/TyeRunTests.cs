@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.Tye;
 using Microsoft.Tye.ConfigModel;
 using Microsoft.Tye.Hosting;
+using Microsoft.Tye.Hosting.Model;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -111,6 +113,46 @@ namespace E2ETest
             await host.StartAsync();
             try
             {
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                    AllowAutoRedirect = false
+                };
+
+                var client = new HttpClient(new RetryHandler(handler));
+
+                var dashboardUri = new Uri(host.DashboardWebApplication!.Addresses.First());
+                var dashboardResponse = await client.GetStringAsync(dashboardUri);
+
+                await CheckServiceIsUp(host.Application, client, "backend", dashboardUri);
+                await CheckServiceIsUp(host.Application, client, "frontend", dashboardUri);
+            }
+            finally
+            {
+                await host.StopAsync();
+            }
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task FrontendBackendRunTestWithDocker()
+        {
+            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
+            using var tempDirectory = TempDirectory.Create();
+            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+
+            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            using var host = new TyeHost(ConfigFactory.FromFile(projectFile).ToHostingApplication(), new[] { "--docker" })
+            {
+                Sink = sink,
+            };
+
+            await host.StartAsync();
+            try
+            {
+                // Make sure we're runningn containers
+                Assert.True(host.Application.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
+
                 var handler = new HttpClientHandler
                 {
                     ServerCertificateCustomValidationCallback = (a, b, c, d) => true,

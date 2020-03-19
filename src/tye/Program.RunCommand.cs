@@ -55,6 +55,12 @@ namespace Microsoft.Tye
                 Required = false
             });
 
+            command.AddOption(new Option("--docker")
+            {
+                Description = "Run projects as docker containers.",
+                Required = false
+            });
+
             command.Handler = CommandHandler.Create<IConsole, FileInfo>(async (console, path) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654

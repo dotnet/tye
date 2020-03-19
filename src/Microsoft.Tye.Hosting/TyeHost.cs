@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -14,12 +15,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Tye.Hosting.Diagnostics;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Filters;
-using Microsoft.Tye.Hosting.Diagnostics;
-using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
 {
@@ -246,13 +246,21 @@ namespace Microsoft.Tye.Hosting
             // Print out what providers were selected and their values
             diagnosticOptions.DumpDiagnostics(logger);
 
-            var processor = new AggregateApplicationProcessor(new IApplicationProcessor[] {
+            var processors = new List<IApplicationProcessor>
+            {
                 new EventPipeDiagnosticsRunner(logger, diagnosticsCollector),
                 new ProxyService(logger),
                 new DockerRunner(logger),
                 new ProcessRunner(logger, ProcessRunnerOptions.FromArgs(args)),
-            });
-            return processor;
+            };
+
+            // If the docker command is specified then transport the ProjectRunInfo into DockerRunInfo
+            if (args.Contains("--docker"))
+            {
+                processors.Insert(0, new TransformProjectsIntoContainers(logger));
+            }
+
+            return new AggregateApplicationProcessor(processors);
         }
 
         public void Dispose()
