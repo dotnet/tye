@@ -21,7 +21,7 @@ Before we deploy, make sure you have the following ready...
 
 ## Deploying the application
 
-Now that we have our application running locally with multiple containers, let's deploy the application. In this example, we will deploy to Kubernetes by using `tye deploy`.
+Now that we have our application running locally, let's deploy the application. In this example, we will deploy to Kubernetes by using `tye deploy`.
 
 1. Deploy to Kubernetes
 
