@@ -31,7 +31,7 @@ services:
 
 **application**: The *whole* application, (usually) includes multiple services. Maps conceptually to a `tye.yaml` or a `.sln`.
 
-**service**: An individual project, container, or process. Part of an appliction.
+**service**: An individual project, container, or process. Part of an application.
 
 **project**: A kind of service, specified by a buildable and runnable .NET project.
 
@@ -153,7 +153,7 @@ A list of environment variable mappings for the service. Does not apply when the
 
 Command-line arguments to use when launching the service. Does not apply when the service is external.
 
-#### `replicas` (integrer)
+#### `replicas` (integer)
 
 The number of replicas to create. Does not apply when the service is external.
 
@@ -173,7 +173,7 @@ A list of bindings *exposed* by the service. Bindings represent protocols *provi
 
 `EnvironmentVariable` elements appear in a list inside the `env` property of a `Service`.
 
-### Environment Varible Example
+### Environment Variable Example
 
 ```yaml
 name: myapplication
