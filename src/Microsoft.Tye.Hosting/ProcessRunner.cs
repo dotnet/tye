@@ -108,13 +108,13 @@ namespace Microsoft.Tye.Hosting
 
                 service.Logs.OnNext($"dotnet build \"{service.Status.ProjectFilePath}\" /nologo");
 
-                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo",
-                                                            outputDataReceived: data => service.Logs.OnNext(data),
-                                                            throwOnError: false);
+                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false);
+
+                service.Logs.OnNext(buildResult.StandardOutput);
 
                 if (buildResult.ExitCode != 0)
                 {
-                    _logger.LogInformation("Building {ProjectFile} failed with exit code {ExitCode}: " + buildResult.StandardOutput + buildResult.StandardError, service.Status.ProjectFilePath, buildResult.ExitCode);
+                    _logger.LogInformation("Building {ProjectFile} failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, service.Status.ProjectFilePath, buildResult.ExitCode);
                     return;
                 }
             }
