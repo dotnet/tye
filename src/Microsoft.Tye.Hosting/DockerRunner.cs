@@ -72,7 +72,7 @@ namespace Microsoft.Tye.Hosting
             var volumes = "";
             var workingDirectory = docker.WorkingDirectory != null ? $"-w {docker.WorkingDirectory}" : "";
 
-            // This ASP.NET Core specific
+            // This is .NET specific
             var userSecretStore = GetUserSecretsPathFromSecrets();
 
             if (!string.IsNullOrEmpty(userSecretStore))
@@ -272,6 +272,8 @@ namespace Microsoft.Tye.Hosting
 
         private static string? GetUserSecretsPathFromSecrets()
         {
+            // This is the logic used to determine the user secrets path
+            // See https://github.com/dotnet/extensions/blob/64140f90157fec1bfd8aeafdffe8f30308ccdf41/src/Configuration/Config.UserSecrets/src/PathHelper.cs#L27
             const string userSecretsFallbackDir = "DOTNET_USER_SECRETS_FALLBACK_DIR";
 
             // For backwards compat, this checks env vars first before using Env.GetFolderPath
