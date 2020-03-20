@@ -75,7 +75,9 @@ namespace Microsoft.Tye.Hosting
             else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
             {
                 var expandedExecutable = Environment.ExpandEnvironmentVariables(executable.Executable);
-                path = Path.GetFullPath(Path.Combine(application.ContextDirectory, expandedExecutable));
+                path = Path.GetExtension(expandedExecutable) == ".dll" ?
+                    Path.GetFullPath(Path.Combine(application.ContextDirectory, expandedExecutable)) :
+                    expandedExecutable;
                 workingDirectory = executable.WorkingDirectory != null ?
                     Path.GetFullPath(Path.Combine(application.ContextDirectory, Environment.ExpandEnvironmentVariables(executable.WorkingDirectory))) :
                     Path.GetDirectoryName(path)!;
