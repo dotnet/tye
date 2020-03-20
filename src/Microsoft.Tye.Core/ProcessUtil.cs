@@ -81,10 +81,6 @@ namespace Microsoft.Tye
                     {
                         errorDataReceived.Invoke(e.Data);
                     }
-                    else if (outputDataReceived != null)
-                    {
-                        outputDataReceived.Invoke(e.Data);
-                    }
                     else
                     {
                         errorBuilder.AppendLine(e.Data);

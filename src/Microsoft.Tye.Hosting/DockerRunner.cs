@@ -4,11 +4,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Tye.Hosting.Model;
 using Microsoft.Extensions.Logging;
+using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
 {
@@ -70,6 +71,15 @@ namespace Microsoft.Tye.Hosting
             var environmentArguments = "";
             var volumes = "";
             var workingDirectory = docker.WorkingDirectory != null ? $"-w {docker.WorkingDirectory}" : "";
+
+            // This is .NET specific
+            var userSecretStore = GetUserSecretsPathFromSecrets();
+
+            if (!string.IsNullOrEmpty(userSecretStore))
+            {
+                // Map the user secrets on this drive to user secrets
+                docker.VolumeMappings[userSecretStore] = "/root/.microsoft/usersecrets:ro";
+            }
 
             var dockerInfo = new DockerInformation(new Task[service.Description.Replicas]);
 
@@ -260,19 +270,28 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        private static async Task<bool> DetectDockerInstalled()
+        private static string? GetUserSecretsPathFromSecrets()
         {
-            // Detect Docker installation
-            try
+            // This is the logic used to determine the user secrets path
+            // See https://github.com/dotnet/extensions/blob/64140f90157fec1bfd8aeafdffe8f30308ccdf41/src/Configuration/Config.UserSecrets/src/PathHelper.cs#L27
+            const string userSecretsFallbackDir = "DOTNET_USER_SECRETS_FALLBACK_DIR";
+
+            // For backwards compat, this checks env vars first before using Env.GetFolderPath
+            var appData = Environment.GetEnvironmentVariable("APPDATA");
+            var root = appData                                                                   // On Windows it goes to %APPDATA%\Microsoft\UserSecrets\
+                       ?? Environment.GetEnvironmentVariable("HOME")                             // On Mac/Linux it goes to ~/.microsoft/usersecrets/
+                       ?? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
+                       ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+                       ?? Environment.GetEnvironmentVariable(userSecretsFallbackDir);            // this fallback is an escape hatch if everything else fails
+
+            if (string.IsNullOrEmpty(root))
             {
-                await ProcessUtil.RunAsync("docker", "version", throwOnError: false);
-                return true;
+                return null;
             }
-            catch (Exception)
-            {
-                // Unfortunately, process throws
-                return false;
-            }
+
+            return !string.IsNullOrEmpty(appData)
+                ? Path.Combine(root, "Microsoft", "UserSecrets")
+                : Path.Combine(root, ".microsoft", "usersecrets");
         }
 
         public async Task HandleStaleReplica(ReplicaEvent replicaEvent)
