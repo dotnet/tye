@@ -75,6 +75,12 @@ namespace Microsoft.Tye.Hosting
             };
             dockerRunInfo.VolumeMappings[Path.GetDirectoryName(service.Status.ProjectFilePath)!] = "/app";
 
+            // Make volume mapping works when running as a container
+            foreach (var mapping in project.VolumeMappings)
+            {
+                dockerRunInfo.VolumeMappings[mapping.Key] = mapping.Value;
+            }
+
             // Change the project into a container info
             serviceDescription.RunInfo = dockerRunInfo;
         }
