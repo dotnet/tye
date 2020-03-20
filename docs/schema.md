@@ -21,7 +21,7 @@ services:
 - name: worker
   project: worker/worker.csproj
 - name: rabbit
-  dockerImage: rabbitmq:3-management
+  image: rabbitmq:3-management
   bindings:
     - port: 5672
       protocol: rabbitmq
@@ -97,7 +97,7 @@ services:
   - port: 7000
   # a container service
 - name: rabbit
-  dockerImage: rabbitmq:3-management
+  image: rabbitmq:3-management
   bindings:
     - port: 5672
       protocol: rabbitmq
@@ -118,11 +118,11 @@ Including a `project` entry marks the service as a *project*:
 - It will build and run locally using the .NET project during development. 
 - It will be packaged and deployed during deployments.
 
-#### `dockerImage` (string)
+#### `image` (string)
 
 The name and optional tag of an image that can be run using Docker. 
 
-Including `dockerImage` marks the service as a *container*:
+Including `image` marks the service as a *container*:
 
 - It will pulled and run locally using Docker during development.
 - It will not be deployed during deployment.

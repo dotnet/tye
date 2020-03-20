@@ -32,9 +32,11 @@ namespace Microsoft.Tye.ConfigModel
                 {
                     runInfo = null;
                 }
-                else if (service.DockerImage is object)
+                else if (service.DockerImage is object || service.Image is object)
                 {
-                    var dockerRunInfo = new DockerRunInfo(service.DockerImage, service.Args);
+                    var image = service.Image ?? service.DockerImage;
+
+                    var dockerRunInfo = new DockerRunInfo(image!, service.Args);
 
                     foreach (var mapping in service.Volumes)
                     {
