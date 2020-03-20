@@ -143,5 +143,15 @@ namespace Microsoft.Tye
 
             return await processLifetimeTask.Task;
         }
+
+        public static void KillProcess(int pid)
+        {
+            try
+            {
+                Process.GetProcessById(pid)?.Kill();
+            }
+            catch (ArgumentException) { }
+            catch (InvalidOperationException) { }
+        }
     }
 }

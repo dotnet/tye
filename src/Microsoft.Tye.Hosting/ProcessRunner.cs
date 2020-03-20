@@ -15,7 +15,7 @@ using System.Diagnostics;
 
 namespace Microsoft.Tye.Hosting
 {
-    public class ProcessRunner : IApplicationProcessor
+    public class ProcessRunner : IApplicationProcessor, IReplicaInstantiator
     {
         private readonly ILogger _logger;
         private readonly bool _debugMode;
@@ -328,6 +328,32 @@ namespace Microsoft.Tye.Hosting
             }
 
             return null;
+        }
+
+        public Task HandleStaleReplica(ReplicaEvent replicaEvent)
+        {
+            var processStatus = (ProcessStatus)replicaEvent.Replica;
+            var pid = processStatus.Pid ?? -1;
+            if (pid != -1)
+                ProcessUtil.KillProcess(pid);
+
+            _logger.LogInformation("removed process {pid} from previous run", pid);
+
+            return Task.CompletedTask;
+        }
+
+        public ValueTask<string> SerializeReplica(ReplicaEvent replicaEvent)
+        {
+            var processStatus = (ProcessStatus)replicaEvent.Replica;
+            return new ValueTask<string>(processStatus.Pid?.ToString() ?? "-1");
+        }
+
+        public ValueTask<ReplicaEvent> DeserializeReplicaEvent(string serializedEvent)
+        {
+            if (serializedEvent is null || !int.TryParse(serializedEvent, out var pid))
+                pid = -1;
+
+            return new ValueTask<ReplicaEvent>(new ReplicaEvent(ReplicaState.Started, new ProcessStatus(null, null) { Pid = pid }));
         }
 
         private class ProcessInfo

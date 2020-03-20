@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Tye.Hosting
 {
-    public class DockerRunner : IApplicationProcessor
+    public class DockerRunner : IApplicationProcessor, IReplicaInstantiator
     {
         private readonly ILogger _logger;
 
@@ -275,6 +275,24 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
+        public async Task HandleStaleReplica(ReplicaEvent replicaEvent)
+        {
+            var container = replicaEvent.Replica.Name;
+
+            await ProcessUtil.RunAsync("docker", $"rm -f {container}",
+                throwOnError: false,
+                outputDataReceived: data => _logger.LogInformation("removed container {container} from previous run", container));
+        }
+
+        public ValueTask<string> SerializeReplica(ReplicaEvent replicaEvent)
+        {
+            return new ValueTask<string>(replicaEvent.Replica.Name);
+        }
+
+        public ValueTask<ReplicaEvent> DeserializeReplicaEvent(string serializedEvent)
+        {
+            return new ValueTask<ReplicaEvent>(new ReplicaEvent(ReplicaState.Started, new DockerStatus(null, serializedEvent)));
+        }
 
         private class DockerInformation
         {

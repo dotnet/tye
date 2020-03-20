@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine.Invocation;
 using System.Linq;
 using System.Text;
@@ -46,6 +47,16 @@ namespace E2ETest
             }
         }
 
+        public static Task AssertAllContainersExistAsync(ITestOutputHelper output, string[] containers)
+            => AssertAboutContainersAsync(output, containers,
+                (existing, given) => given.All(c => existing.Contains(c)),
+                given => $"Not all containers ({string.Join(", ", given)}) exist");
+
+        public static Task AssertNonContainersExistAsync(ITestOutputHelper output, string[] containers)
+            => AssertAboutContainersAsync(output, containers,
+                (existing, given) => given.All(c => !existing.Contains(c)),
+                given => $"Some containers ({string.Join(", ", given)}) exist");
+
         public static async Task DeleteDockerImagesAsync(ITestOutputHelper output, string repository)
         {
             var ids = await ListDockerImagesIdsAsync(output, repository);
@@ -68,6 +79,34 @@ namespace E2ETest
 
                 builder.Clear();
             }
+
+            void OnOutput(string text)
+            {
+                builder.AppendLine(text);
+                output.WriteLine(text);
+            }
+        }
+
+        private static async Task AssertAboutContainersAsync(ITestOutputHelper output, string[] containers, Func<HashSet<string>, string[], bool> predicate, Func<string[], string> errorText)
+        {
+            var builder = new StringBuilder();
+
+            output.WriteLine($"> docker ps --format \"{{{{.ID}}}}\"");
+            var exitCode = await Process.ExecuteAsync(
+                "docker",
+                $"ps --format \"{{{{.ID}}}}\"",
+                stdOut: OnOutput,
+                stdErr: OnOutput);
+            if (exitCode != 0)
+            {
+                throw new XunitException($"Running `docker ps` failed." + Environment.NewLine + builder.ToString());
+            }
+
+            var lines = new HashSet<string>(builder.ToString().Split(new[] { '\r', '\n', }, StringSplitOptions.RemoveEmptyEntries));
+            if (predicate(lines, containers))
+                return;
+
+            throw new XunitException(errorText(containers));
 
             void OnOutput(string text)
             {

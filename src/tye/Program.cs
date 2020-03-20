@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    static partial class Program
+    public static partial class Program
     {
         public static async Task<int> Main(string[] args)
         {
@@ -28,6 +28,7 @@ namespace Microsoft.Tye
             command.AddCommand(CreateRunCommand(args));
             command.AddCommand(CreateBuildCommand());
             command.AddCommand(CreateDeployCommand());
+            command.AddCommand(CreatePurgeCommand(args));
 
             // Show commandline help unless a subcommand was used.
             command.Handler = CommandHandler.Create<IHelpBuilder>(help =>
