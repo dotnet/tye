@@ -249,8 +249,39 @@ Specifies the hostname used by the binding. The protocol is used in [service dis
 
 #### `port` (string)
 
-Specifies the protocol used by the binding. The port is used in [service discovery](/docs/service_discovery.md) to construct a URL.
+Specifies the port used by the binding. The port is used in [service discovery](/docs/service_discovery.md) to construct a URL.
+
+#### `internalPort` (string)
+
+Specifies the internal port used by the binding when running in a docker container.
 
 #### `autoAssignPort` (bool)
 
 Specifies that the port should be assigned randomly. Defaults to `false`. This is currently only useful for projects - where the tye host will automatically infer bindings with `autoAssignPort: true`
+
+## Volumes
+
+`Volume` elements appear in a list inside the `volumes` property of a `Service`. Each volume specifies the local files or directories should be mapped into the docker container.
+
+### Volumes Example
+
+```yaml
+name: myapplication
+- name: nginx
+  dockerImage: nginx
+
+  # volumes appear here
+  volumes:
+    - source: config/nginx.conf
+      target: /etc/nginx/conf.d/default.conf
+```
+
+### Volume Properties
+
+#### `source` (string) *required*
+
+The local path.
+
+#### `target` (string) *required*
+
+The destination path within the container.
