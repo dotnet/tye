@@ -30,7 +30,7 @@ namespace Microsoft.Tye.Hosting.Model
                 // Inject normal configuration
                 foreach (var pair in service.Description.Configuration)
                 {
-                    set(pair.Name, pair.Value);
+                    set(pair.Name ?? "", pair.Value ?? "");
                 }
             }
 

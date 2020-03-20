@@ -22,10 +22,4 @@ namespace Microsoft.Tye.Hosting.Model
         public List<ServiceBinding> Bindings { get; } = new List<ServiceBinding>();
         public List<ConfigurationSource> Configuration { get; } = new List<ConfigurationSource>();
     }
-
-    public class ConfigurationSource
-    {
-        public string? Name { get; set; }
-        public string? Value { get; set; }
-    }
 }
