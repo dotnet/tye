@@ -72,7 +72,7 @@ namespace E2ETest
                 var dashboardString = await client.GetStringAsync($"{dashboardUri}api/v1/services/test-project");
 
                 var service = JsonSerializer.Deserialize<ServiceJson>(dashboardString, _options);
-                var binding = service.Description.Bindings.Where(b => b.Protocol == "http").Single();
+                var binding = service.Description!.Bindings.Where(b => b.Protocol == "http").Single();
                 var uriBackendProcess = new Uri($"{binding.Protocol}://localhost:{binding.Port}");
 
                 // This isn't reliable right now because micronetes only guarantees the process starts, not that
@@ -180,7 +180,7 @@ namespace E2ETest
             var dashboardString = await client.GetStringAsync($"{dashboardUri}api/v1/services/{serviceName}");
 
             var service = JsonSerializer.Deserialize<ServiceJson>(dashboardString, _options);
-            var binding = service.Description.Bindings.Where(b => b.Protocol == "http").Single();
+            var binding = service.Description!.Bindings.Where(b => b.Protocol == "http").Single();
             var uriBackendProcess = new Uri($"{binding.Protocol}://localhost:{binding.Port}");
 
             try
