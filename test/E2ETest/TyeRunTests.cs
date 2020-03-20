@@ -8,6 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Tye;
 using Microsoft.Tye.ConfigModel;
@@ -22,11 +24,22 @@ namespace E2ETest
     {
         private readonly ITestOutputHelper output;
         private readonly TestOutputLogEventSink sink;
+        private readonly JsonSerializerOptions _options;
 
         public TyeRunTests(ITestOutputHelper output)
         {
             this.output = output;
             sink = new TestOutputLogEventSink(output);
+
+            _options = new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true,
+            };
+
+            _options.Converters.Add(ReplicaStatusJson.JsonConverter);
+            _options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         }
 
         [Fact]
@@ -56,21 +69,11 @@ namespace E2ETest
                 // Make sure dashboard and applications are up.
                 // Dashboard should be hosted in same process.
                 var dashboardUri = new Uri(host.DashboardWebApplication!.Addresses.First());
-                var dashboardResponse = await client.GetStringAsync(dashboardUri);
+                var dashboardString = await client.GetStringAsync($"{dashboardUri}api/v1/services/test-project");
 
-                // Only one service for single application.
-                var service = host.Application.Services.First().Value;
-                var binding = service.Description.Bindings.First();
-
-                var protocol = binding.Protocol?.Length != 0 ? binding.Protocol : "http";
-                var hostName = binding.Host != null && binding.Host.Length != 0 ? binding.Host : "localhost";
-
-                var uriString = $"{protocol}://{hostName}:{binding.Port}";
-
-                // Confirm that the uri is in the dashboard response.
-                Assert.Contains(uriString, dashboardResponse);
-
-                var uriBackendProcess = new Uri(uriString);
+                var service = JsonSerializer.Deserialize<ServiceJson>(dashboardString, _options);
+                var binding = service.Description.Bindings.Where(b => b.Protocol == "http").Single();
+                var uriBackendProcess = new Uri($"{binding.Protocol}://localhost:{binding.Port}");
 
                 // This isn't reliable right now because micronetes only guarantees the process starts, not that
                 // that kestrel started.
@@ -122,7 +125,6 @@ namespace E2ETest
                 var client = new HttpClient(new RetryHandler(handler));
 
                 var dashboardUri = new Uri(host.DashboardWebApplication!.Addresses.First());
-                var dashboardResponse = await client.GetStringAsync(dashboardUri);
 
                 await CheckServiceIsUp(host.Application, client, "backend", dashboardUri);
                 await CheckServiceIsUp(host.Application, client, "frontend", dashboardUri);
@@ -162,7 +164,6 @@ namespace E2ETest
                 var client = new HttpClient(new RetryHandler(handler));
 
                 var dashboardUri = new Uri(host.DashboardWebApplication!.Addresses.First());
-                var dashboardResponse = await client.GetStringAsync(dashboardUri);
 
                 await CheckServiceIsUp(host.Application, client, "backend", dashboardUri);
                 await CheckServiceIsUp(host.Application, client, "frontend", dashboardUri);
@@ -176,20 +177,12 @@ namespace E2ETest
         private async Task CheckServiceIsUp(Microsoft.Tye.Hosting.Model.Application application, HttpClient client, string serviceName, Uri dashboardUri)
         {
             // make sure backend is up before frontend
-            var service = application.Services.Where(a => a.Value.Description.Name == serviceName).First().Value;
-            var binding = service.Description.Bindings.First();
+            var dashboardString = await client.GetStringAsync($"{dashboardUri}api/v1/services/{serviceName}");
 
-            var protocol = binding.Protocol != null && binding.Protocol.Length != 0 ? binding.Protocol : "http";
-            var hostName = binding.Host != null && binding.Host.Length != 0 ? binding.Host : "localhost";
+            var service = JsonSerializer.Deserialize<ServiceJson>(dashboardString, _options);
+            var binding = service.Description.Bindings.Where(b => b.Protocol == "http").Single();
+            var uriBackendProcess = new Uri($"{binding.Protocol}://localhost:{binding.Port}");
 
-            var uriString = $"{protocol}://{hostName}:{binding.Port}";
-
-            // Confirm that the uri is in the dashboard response.
-
-            var uriBackendProcess = new Uri(uriString);
-
-            // This isn't reliable right now because micronetes only guarantees the process starts, not that
-            // that kestrel started.
             try
             {
                 var appResponse = await client.GetAsync(uriBackendProcess);

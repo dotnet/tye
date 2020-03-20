@@ -70,7 +70,7 @@ namespace Microsoft.Tye.ConfigModel
 
                 foreach (var entry in service.Configuration)
                 {
-                    description.Configuration.Add(new ConfigurationSource(entry.Name, entry.Value));
+                    description.Configuration.Add(new ConfigurationSource { Name = entry.Name, Value = entry.Value });
                 }
 
                 services.Add(service.Name, new Tye.Hosting.Model.Service(description));

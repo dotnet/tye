@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json.Serialization;
+using System.Collections.Generic;
 
 namespace Microsoft.Tye.Hosting
 {
@@ -27,7 +29,8 @@ namespace Microsoft.Tye.Hosting
                 WriteIndented = true,
             };
 
-            _options.Converters.Add(ReplicaStatus.JsonConverter);
+            _options.Converters.Add(ReplicaStatusJson.JsonConverter);
+            _options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         }
 
         public void MapRoutes(IEndpointRouteBuilder endpoints)
@@ -83,7 +86,41 @@ namespace Microsoft.Tye.Hosting
                 return;
             }
 
-            await JsonSerializer.SerializeAsync(context.Response.Body, service, _options);
+            var serviceJson = CreateServiceJson(service);
+
+            await JsonSerializer.SerializeAsync(context.Response.Body, serviceJson, _options);
+        }
+
+        private static ServiceJson CreateServiceJson(Model.Service? service)
+        {
+            var serviceDesJson = new ServiceDescriptionJson()
+            {
+                Bindings = service.Description.Bindings,
+                Configuration = service.Description.Configuration,
+                Name = service.Description.Name,
+                Replicas = service.Description.Replicas
+            };
+
+            var replicateDictionary = new Dictionary<string, ReplicaStatusJson>();
+            foreach (var replica in service.Replicas)
+            {
+                replicateDictionary[replica.Key] = new ReplicaStatusJson()
+                {
+                    Name = replica.Value.Name,
+                    Ports = replica.Value.Ports
+                };
+            }
+
+            var serviceJson = new ServiceJson()
+            {
+                ServiceType = service.ServiceType,
+                Status = service.Status,
+                Description = serviceDesJson,
+                Replicas = replicateDictionary,
+                Restarts = service.Restarts
+            };
+
+            return serviceJson;
         }
 
         private async Task Logs(HttpContext context)
