@@ -4,14 +4,14 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.Tye.Hosting.Model
+namespace Microsoft.Tye.Hosting.Model.V1
 {
-    public class ServiceJson
+    public class V1Service
     {
-        public ServiceDescriptionJson? Description { get; set; }
+        public V1ServiceDescription? Description { get; set; }
         public ServiceType ServiceType { get; set; }
         public int Restarts { get; set; }
-        public ServiceStatus? Status { get; set; }
-        public Dictionary<string, ReplicaStatusJson>? Replicas { get; set; }
+        public V1ServiceStatus? Status { get; set; }
+        public Dictionary<string, V1ReplicaStatus>? Replicas { get; set; }
     }
 }

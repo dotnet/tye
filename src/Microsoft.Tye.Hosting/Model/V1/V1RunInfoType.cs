@@ -2,14 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
-
-namespace Microsoft.Tye.Hosting.Model
+namespace Microsoft.Tye.Hosting.Model.V1
 {
-    public class PortMapping
+    public enum V1RunInfoType
     {
-        public int ExternalPort { get; set; }
-
-        public List<int> InternalPorts { get; set; } = new List<int>();
+        Project,
+        Executable,
+        Docker
     }
 }

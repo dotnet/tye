@@ -15,6 +15,7 @@ using Microsoft.Tye;
 using Microsoft.Tye.ConfigModel;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
+using Microsoft.Tye.Hosting.Model.V1;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -38,7 +39,6 @@ namespace E2ETest
                 WriteIndented = true,
             };
 
-            _options.Converters.Add(ReplicaStatusJson.JsonConverter);
             _options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         }
 
@@ -71,7 +71,7 @@ namespace E2ETest
                 var dashboardUri = new Uri(host.DashboardWebApplication!.Addresses.First());
                 var dashboardString = await client.GetStringAsync($"{dashboardUri}api/v1/services/test-project");
 
-                var service = JsonSerializer.Deserialize<ServiceJson>(dashboardString, _options);
+                var service = JsonSerializer.Deserialize<V1Service>(dashboardString, _options);
                 var binding = service.Description!.Bindings.Where(b => b.Protocol == "http").Single();
                 var uriBackendProcess = new Uri($"{binding.Protocol}://localhost:{binding.Port}");
 
@@ -179,7 +179,7 @@ namespace E2ETest
             // make sure backend is up before frontend
             var dashboardString = await client.GetStringAsync($"{dashboardUri}api/v1/services/{serviceName}");
 
-            var service = JsonSerializer.Deserialize<ServiceJson>(dashboardString, _options);
+            var service = JsonSerializer.Deserialize<V1Service>(dashboardString, _options);
             var binding = service.Description!.Bindings.Where(b => b.Protocol == "http").Single();
             var uriBackendProcess = new Uri($"{binding.Protocol}://localhost:{binding.Port}");
 
