@@ -12,6 +12,7 @@ namespace Microsoft.Tye.Hosting.Model
             : base(service, name)
         {
         }
+
         public int? ExitCode { get; set; }
         public int? Pid { get; set; }
         public IDictionary<string, string>? Environment { get; set; }

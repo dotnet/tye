@@ -64,7 +64,13 @@ namespace Microsoft.Tye.Hosting
 
             var services = app.Services.OrderBy(s => s.Key).Select(s => s.Value);
 
-            await JsonSerializer.SerializeAsync(context.Response.Body, services, _options);
+            var list = new List<ServiceJson>();
+            foreach (var service in services)
+            {
+                list.Add(CreateServiceJson(service));
+            }
+
+            await JsonSerializer.SerializeAsync(context.Response.Body, list, _options);
         }
 
         private async Task Service(HttpContext context)
@@ -91,7 +97,7 @@ namespace Microsoft.Tye.Hosting
             await JsonSerializer.SerializeAsync(context.Response.Body, serviceJson, _options);
         }
 
-        private static ServiceJson CreateServiceJson(Model.Service? service)
+        private static ServiceJson CreateServiceJson(Model.Service service)
         {
             var serviceDesJson = new ServiceDescriptionJson()
             {
