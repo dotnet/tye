@@ -298,19 +298,31 @@ namespace Microsoft.Tye.Hosting
         {
             var container = replicaEvent.Replica.Name;
 
-            await ProcessUtil.RunAsync("docker", $"rm -f {container}",
-                throwOnError: false,
-                outputDataReceived: data => _logger.LogInformation("removed container {container} from previous run", container));
+            if (container != "")
+            {
+                await ProcessUtil.RunAsync("docker", $"rm -f {container}",
+                    throwOnError: false,
+                    outputDataReceived: data => _logger.LogInformation("removed container {container} from previous run", container));
+            }
         }
 
-        public ValueTask<string> SerializeReplica(ReplicaEvent replicaEvent)
+        public ValueTask<IDictionary<string, string>> SerializeReplica(ReplicaEvent replicaEvent)
         {
-            return new ValueTask<string>(replicaEvent.Replica.Name);
+            return new ValueTask<IDictionary<string, string>>(new Dictionary<string, string>()
+            {
+                ["state"] = replicaEvent.State.ToString(),
+                ["serviceName"] = replicaEvent.Replica.Service.Description.Name,
+                ["id"] = replicaEvent.Replica.Name
+            });
         }
 
-        public ValueTask<ReplicaEvent> DeserializeReplicaEvent(string serializedEvent)
+        public ValueTask<ReplicaEvent> DeserializeReplicaEvent(IDictionary<string, string> serializedEvent)
         {
-            return new ValueTask<ReplicaEvent>(new ReplicaEvent(ReplicaState.Started, new DockerStatus(null, serializedEvent)));
+            var state = Enum.Parse<ReplicaState>(serializedEvent["state"]);
+            var serviceName = serializedEvent["serviceName"];
+            var id = serializedEvent["id"];
+
+            return new ValueTask<ReplicaEvent>(new ReplicaEvent(state, new DockerStatus(new Model.Service(new ServiceDescription(serviceName, null)), id)));
         }
 
         private class DockerInformation

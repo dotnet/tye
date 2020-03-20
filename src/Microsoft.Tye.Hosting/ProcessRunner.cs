@@ -342,18 +342,25 @@ namespace Microsoft.Tye.Hosting
             return Task.CompletedTask;
         }
 
-        public ValueTask<string> SerializeReplica(ReplicaEvent replicaEvent)
+        public ValueTask<IDictionary<string, string>> SerializeReplica(ReplicaEvent replicaEvent)
         {
             var processStatus = (ProcessStatus)replicaEvent.Replica;
-            return new ValueTask<string>(processStatus.Pid?.ToString() ?? "-1");
+            return new ValueTask<IDictionary<string, string>>(new Dictionary<string, string>()
+            {
+                ["state"] = replicaEvent.State.ToString(),
+                ["serviceName"] = replicaEvent.Replica.Service.Description.Name,
+                ["pid"] = processStatus.Pid?.ToString() ?? "-1"
+            });
         }
 
-        public ValueTask<ReplicaEvent> DeserializeReplicaEvent(string serializedEvent)
+        public ValueTask<ReplicaEvent> DeserializeReplicaEvent(IDictionary<string, string> serializedEvent)
         {
-            if (serializedEvent is null || !int.TryParse(serializedEvent, out var pid))
-                pid = -1;
+            var state = Enum.Parse<ReplicaState>(serializedEvent["state"]);
+            var serviceName = serializedEvent["serviceName"];
+            var pid = int.Parse(serializedEvent["pid"]);
 
-            return new ValueTask<ReplicaEvent>(new ReplicaEvent(ReplicaState.Started, new ProcessStatus(null, null) { Pid = pid }));
+            return new ValueTask<ReplicaEvent>(new ReplicaEvent(state, new ProcessStatus(new Model.Service(new ServiceDescription(serviceName, null)), serviceName) { Pid = pid }));
+
         }
 
         private class ProcessInfo

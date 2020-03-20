@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
@@ -7,8 +8,8 @@ namespace Microsoft.Tye.Hosting
     {
         Task HandleStaleReplica(ReplicaEvent replicaEvent);
 
-        ValueTask<string> SerializeReplica(ReplicaEvent replicaEvent);
+        ValueTask<IDictionary<string, string>> SerializeReplica(ReplicaEvent replicaEvent);
 
-        ValueTask<ReplicaEvent> DeserializeReplicaEvent(string serializedEvent);
+        ValueTask<ReplicaEvent> DeserializeReplicaEvent(IDictionary<string, string> serializedEvent);
     }
 }

@@ -66,7 +66,7 @@ namespace Microsoft.Tye.Hosting
         {
             public ServiceType ServiceType { get; set; }
             public ReplicaState State { get; set; }
-            public string SerializedEvent { get; set; }
+            public IDictionary<string, string> SerializedEvent { get; set; }
         }
 
         private class StateStore : IDisposable
