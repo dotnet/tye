@@ -34,7 +34,14 @@ namespace Microsoft.Tye.ConfigModel
                 }
                 else if (service.DockerImage is object)
                 {
-                    runInfo = new DockerRunInfo(service.DockerImage, service.Args);
+                    var dockerRunInfo = new DockerRunInfo(service.DockerImage, service.Args);
+
+                    foreach (var mapping in service.Volumes)
+                    {
+                        dockerRunInfo.VolumeMappings[mapping.Source!] = mapping.Target!;
+                    }
+
+                    runInfo = dockerRunInfo;
                 }
                 else if (service.Executable is object)
                 {
@@ -42,7 +49,14 @@ namespace Microsoft.Tye.ConfigModel
                 }
                 else if (service.Project is object)
                 {
-                    runInfo = new ProjectRunInfo(service.Project, service.Args, service.Build ?? true);
+                    var projectInfo = new ProjectRunInfo(service.Project, service.Args, service.Build ?? true);
+
+                    foreach (var mapping in service.Volumes)
+                    {
+                        projectInfo.VolumeMappings[mapping.Source!] = mapping.Target!;
+                    }
+
+                    runInfo = projectInfo;
                 }
                 else
                 {

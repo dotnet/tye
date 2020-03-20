@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>Tye</RootNamespace>
+    <RootNamespace>Microsoft.Tye</RootNamespace>
     <AssemblyName>tye</AssemblyName>
     <PackageId>Microsoft.Tye</PackageId>
     <ToolCommandName>tye</ToolCommandName>

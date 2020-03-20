@@ -129,7 +129,8 @@ namespace Microsoft.Tye.Hosting
 
                 foreach (var pair in docker.VolumeMappings)
                 {
-                    volumes += $"-v {pair.Key}:{pair.Value} ";
+                    var sourcePath = Path.GetFullPath(Path.Combine(application.ContextDirectory, pair.Key.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)));
+                    volumes += $"-v {sourcePath}:{pair.Value} ";
                 }
 
                 var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {docker.Image} {docker.Args ?? ""}";

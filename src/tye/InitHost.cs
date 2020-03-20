@@ -75,6 +75,7 @@ services:
                     {
                         service.Bindings = null!;
                         service.Configuration = null!;
+                        service.Volumes = null!;
                         service.Project = service.Project!.Substring(directory.FullName.Length).TrimStart('/');
                     }
 
