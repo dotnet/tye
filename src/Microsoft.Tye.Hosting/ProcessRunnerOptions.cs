@@ -11,13 +11,19 @@ namespace Microsoft.Tye.Hosting
     {
         public bool DebugMode { get; set; }
         public bool BuildProjects { get; set; }
+        public string[]? ProjectsToDebug { get; set; }
+        public bool DebugAllProjects { get; set; }
 
-        public static ProcessRunnerOptions FromArgs(string[] args)
+        public static ProcessRunnerOptions FromArgs(string[] args, string projectsToDebug)
         {
+            var projectsToDebugArray = projectsToDebug.Split(",", StringSplitOptions.RemoveEmptyEntries);
+
             return new ProcessRunnerOptions
             {
                 BuildProjects = !args.Contains("--no-build"),
-                DebugMode = args.Contains("--debug")
+                DebugMode = args.Contains("--debug"),
+                ProjectsToDebug = projectsToDebugArray,
+                DebugAllProjects = projectsToDebugArray.Contains("all", StringComparer.OrdinalIgnoreCase)
             };
         }
     }

@@ -34,11 +34,18 @@ namespace Microsoft.Tye.Hosting
 
         private readonly Tye.Hosting.Model.Application _application;
         private readonly string[] _args;
+        private readonly string _projectsToDebug;
 
         public TyeHost(Tye.Hosting.Model.Application application, string[] args)
+            : this(application, args, "")
+        {
+        }
+
+        public TyeHost(Tye.Hosting.Model.Application application, string[] args, string projectsToDebug)
         {
             _application = application;
             _args = args;
+            _projectsToDebug = projectsToDebug;
         }
 
         public Tye.Hosting.Model.Application Application => _application;
@@ -73,7 +80,7 @@ namespace Microsoft.Tye.Hosting
 
             var configuration = app.Configuration;
 
-            _processor = CreateApplicationProcessor(_args, _logger, configuration);
+            _processor = CreateApplicationProcessor(_args, _projectsToDebug, _logger, configuration);
 
             await app.StartAsync();
 
@@ -238,7 +245,7 @@ namespace Microsoft.Tye.Hosting
             return false;
         }
 
-        private static AggregateApplicationProcessor CreateApplicationProcessor(string[] args, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
+        private static AggregateApplicationProcessor CreateApplicationProcessor(string[] args, string projectsToDebug, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
         {
             var diagnosticOptions = DiagnosticOptions.FromConfiguration(configuration);
             var diagnosticsCollector = new DiagnosticsCollector(logger, diagnosticOptions);
@@ -251,7 +258,7 @@ namespace Microsoft.Tye.Hosting
                 new EventPipeDiagnosticsRunner(logger, diagnosticsCollector),
                 new ProxyService(logger),
                 new DockerRunner(logger),
-                new ProcessRunner(logger, ProcessRunnerOptions.FromArgs(args)),
+                new ProcessRunner(logger, ProcessRunnerOptions.FromArgs(args, projectsToDebug)),
             };
 
             // If the docker command is specified then transport the ProjectRunInfo into DockerRunInfo

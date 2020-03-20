@@ -51,7 +51,8 @@ namespace Microsoft.Tye
 
             command.AddOption(new Option("--debug")
             {
-                Description = "Wait for debugger attach in all services.",
+                Argument = new Argument<string>("services|\"all\""),
+                Description = "Wait for debugger attach to specific services, comma delimited. Specify \"all\" to wait for all projects.",
                 Required = false
             });
 
@@ -61,7 +62,7 @@ namespace Microsoft.Tye
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo>(async (console, path) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, string>(async (console, path, debug) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -74,7 +75,7 @@ namespace Microsoft.Tye
 
                 InitializeThreadPoolSettings(serviceCount);
 
-                using var host = new TyeHost(application.ToHostingApplication(), args);
+                using var host = new TyeHost(application.ToHostingApplication(), args, debug);
                 await host.RunAsync();
             });
 

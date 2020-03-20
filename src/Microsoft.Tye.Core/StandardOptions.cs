@@ -185,7 +185,7 @@ namespace Microsoft.Tye
         {
             get
             {
-                return new Option(new[] { "-v", "--verbosity" }, "Output verbostiy")
+                return new Option(new[] { "-v", "--verbosity" }, "Output verbosity")
                 {
                     Argument = new Argument<Verbosity>("one of: quiet|info|debug", () => Tye.Verbosity.Info)
                     {

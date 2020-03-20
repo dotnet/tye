@@ -18,14 +18,12 @@ namespace Microsoft.Tye.Hosting
     public class ProcessRunner : IApplicationProcessor
     {
         private readonly ILogger _logger;
-        private readonly bool _debugMode;
-        private readonly bool _buildProjects;
+        private readonly ProcessRunnerOptions _options;
 
         public ProcessRunner(ILogger logger, ProcessRunnerOptions options)
         {
             _logger = logger;
-            _debugMode = options.DebugMode;
-            _buildProjects = options.BuildProjects;
+            _options = options;
         }
 
         public Task StartAsync(Tye.Hosting.Model.Application application)
@@ -103,7 +101,7 @@ namespace Microsoft.Tye.Hosting
             if (service.Status.ProjectFilePath != null &&
                 service.Description.RunInfo is ProjectRunInfo project2 &&
                 project2.Build &&
-                _buildProjects)
+                _options.BuildProjects)
             {
                 // Sometimes building can fail because of file locking (like files being open in VS)
                 _logger.LogInformation("Building project {ProjectFile}", service.Status.ProjectFilePath);
@@ -143,7 +141,7 @@ namespace Microsoft.Tye.Hosting
 
                 application.PopulateEnvironment(service, (k, v) => environment[k] = v);
 
-                if (_debugMode)
+                if (_options.DebugMode && (_options.DebugAllProjects || _options.ProjectsToDebug.Contains(serviceName, StringComparer.OrdinalIgnoreCase)))
                 {
                     environment["DOTNET_STARTUP_HOOKS"] = typeof(Hosting.Runtime.HostingRuntimeHelpers).Assembly.Location;
                 }
