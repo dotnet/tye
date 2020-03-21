@@ -123,6 +123,9 @@ namespace Microsoft.Tye.Hosting
 
             async Task RunApplicationAsync(IEnumerable<(int Port, int BindingPort, string? Protocol)> ports)
             {
+                // Make sure we yield before trying to start the process, this is important so we don't hang startup
+                await Task.Yield();
+
                 var hasPorts = ports.Any();
 
                 var environment = new Dictionary<string, string>
