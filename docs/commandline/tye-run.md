@@ -47,9 +47,9 @@ If a directory path is specified, `tye run` will default to using these files, i
 
     Write distributed traces to the specified providers. Supported providers are zipkin.
 
-- `--debug`
+- `--debug <service>`
 
-    Waits for debugger attach in all services.
+    Waits for debugger attach to service. Specify `*` to wait to attach to all services.
 
 ## Examples
 
@@ -68,5 +68,5 @@ If a directory path is specified, `tye run` will default to using these files, i
 - Run an application and wait for all projects to debug attach:
 
     ```text
-    tye run --debug
+    tye run --debug *
     ```
