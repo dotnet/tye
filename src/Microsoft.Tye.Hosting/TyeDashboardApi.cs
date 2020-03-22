@@ -164,11 +164,26 @@ namespace Microsoft.Tye.Hosting
             var replicateDictionary = new Dictionary<string, V1ReplicaStatus>();
             foreach (var replica in service.Replicas)
             {
-                replicateDictionary[replica.Key] = new V1ReplicaStatus()
+                var replicaStatus = new V1ReplicaStatus()
                 {
                     Name = replica.Value.Name,
-                    Ports = replica.Value.Ports
+                    Ports = replica.Value.Ports,
                 };
+
+                replicateDictionary[replica.Key] = replicaStatus;
+
+                if (replica.Value is ProcessStatus processStatus)
+                {
+                    replicaStatus.Pid = processStatus.Pid;
+                    replicaStatus.ExitCode = processStatus.ExitCode;
+                    replicaStatus.Environment = processStatus.Environment;
+                }
+                else if (replica.Value is DockerStatus dockerStatus)
+                {
+                    replicaStatus.DockerCommand = dockerStatus.DockerCommand;
+                    replicaStatus.DockerLogsPid = dockerStatus.DockerLogsPid;
+                    replicaStatus.ContainerId = dockerStatus.ContainerId;
+                }
             }
 
             var v1Status = new V1ServiceStatus()
