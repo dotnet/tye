@@ -192,13 +192,13 @@ namespace Microsoft.Tye.Hosting
             else if (IsPortInUseByBinding(_application, DefaultPort))
             {
                 // Port has been reserved for the app.
-                app.Logger.LogInformation($"Default dashboard port {DefaultPort} has been reserved by the application, choosing random port.");
+                app.Logger.LogInformation("Default dashboard port {DefaultPort} has been reserved by the application, choosing random port.", DefaultPort);
                 return AutodetectPort;
             }
             else if (IsPortAlreadyInUse(DefaultPort))
             {
                 // Port is in use by something already running.
-                app.Logger.LogInformation($"Default dashboard port {DefaultPort} is in use, choosing random port.");
+                app.Logger.LogInformation("Default dashboard port {DefaultPort} is in use, choosing random port.", DefaultPort);
                 return AutodetectPort;
             }
             else
@@ -254,7 +254,7 @@ namespace Microsoft.Tye.Hosting
                 new ProcessRunner(logger, ProcessRunnerOptions.FromArgs(args)),
             };
 
-            // If the docker command is specified then transport the ProjectRunInfo into DockerRunInfo
+            // If the docker command is specified then transform the ProjectRunInfo into DockerRunInfo
             if (args.Contains("--docker"))
             {
                 processors.Insert(0, new TransformProjectsIntoContainers(logger));
