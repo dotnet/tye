@@ -13,7 +13,7 @@ else
     <div style="overflow-y: scroll;position: absolute;height: 84%; width:75%; color:white;background-color:black;padding:10px">
         @foreach (var log in ApplicationLogs)
         {
-            <div @key="@log.Id" style="width:100%">@log.Text</div>
+            <div style="width:100%">@log.Text</div>
         }
     </div>
 }

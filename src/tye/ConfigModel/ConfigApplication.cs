@@ -20,6 +20,8 @@ namespace Microsoft.Tye.ConfigModel
 
         public string? Registry { get; set; }
 
+        public List<ConfigIngress> Ingress { get; set; } = new List<ConfigIngress>();
+
         public List<ConfigService> Services { get; set; } = new List<ConfigService>();
 
         public Tye.Hosting.Model.Application ToHostingApplication()
@@ -88,6 +90,36 @@ namespace Microsoft.Tye.ConfigModel
                 }
 
                 services.Add(service.Name, new Tye.Hosting.Model.Service(description));
+            }
+
+            foreach (var ingress in Ingress)
+            {
+                var rules = new List<IngressRule>();
+
+                foreach (var rule in ingress.Rules)
+                {
+                    rules.Add(new IngressRule(rule.Host, rule.Path, rule.Service!));
+                }
+
+                var runInfo = new IngressRunInfo(rules);
+
+                var description = new Tye.Hosting.Model.ServiceDescription(ingress.Name, runInfo)
+                {
+                    Replicas = ingress.Replicas ?? 1,
+                };
+
+                foreach (var binding in ingress.Bindings)
+                {
+                    description.Bindings.Add(new Tye.Hosting.Model.ServiceBinding()
+                    {
+                        AutoAssignPort = binding.AutoAssignPort,
+                        Name = binding.Name,
+                        Port = binding.Port,
+                        Protocol = binding.Protocol,
+                    });
+                }
+
+                services.Add(ingress.Name, new Tye.Hosting.Model.Service(description));
             }
 
             return new Tye.Hosting.Model.Application(Source, services);

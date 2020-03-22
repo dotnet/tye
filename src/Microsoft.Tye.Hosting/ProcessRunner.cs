@@ -34,13 +34,10 @@ namespace Microsoft.Tye.Hosting
             {
                 tasks[index++] = s.Value.ServiceType switch
                 {
-                    ServiceType.Container => Task.CompletedTask,
-                    ServiceType.External => Task.CompletedTask,
-
                     ServiceType.Executable => LaunchService(application, s.Value),
                     ServiceType.Project => LaunchService(application, s.Value),
 
-                    _ => throw new InvalidOperationException("Unknown ServiceType."),
+                    _ => Task.CompletedTask,
                 };
             }
 
