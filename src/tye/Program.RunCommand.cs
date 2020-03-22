@@ -51,7 +51,7 @@ namespace Microsoft.Tye
 
             command.AddOption(new Option("--debug")
             {
-                Argument = new Argument<string>("services|\"all\""),
+                Argument = new Argument<string[]>("service"),
                 Description = "Wait for debugger attach to specific services, comma delimited. Specify \"all\" to wait for all projects.",
                 Required = false
             });
@@ -62,7 +62,7 @@ namespace Microsoft.Tye
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, string>(async (console, path, debug) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, string[]>(async (console, path, debug) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)

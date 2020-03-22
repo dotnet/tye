@@ -34,18 +34,18 @@ namespace Microsoft.Tye.Hosting
 
         private readonly Tye.Hosting.Model.Application _application;
         private readonly string[] _args;
-        private readonly string _projectsToDebug;
+        private readonly string[] _servicesToDebug;
 
         public TyeHost(Tye.Hosting.Model.Application application, string[] args)
-            : this(application, args, "")
+            : this(application, args, new string[0])
         {
         }
 
-        public TyeHost(Tye.Hosting.Model.Application application, string[] args, string projectsToDebug)
+        public TyeHost(Tye.Hosting.Model.Application application, string[] args, string[] servicesToDebug)
         {
             _application = application;
             _args = args;
-            _projectsToDebug = projectsToDebug;
+            _servicesToDebug = servicesToDebug;
         }
 
         public Tye.Hosting.Model.Application Application => _application;
@@ -80,7 +80,7 @@ namespace Microsoft.Tye.Hosting
 
             var configuration = app.Configuration;
 
-            _processor = CreateApplicationProcessor(_args, _projectsToDebug, _logger, configuration);
+            _processor = CreateApplicationProcessor(_args, _servicesToDebug, _logger, configuration);
 
             await app.StartAsync();
 
@@ -245,7 +245,7 @@ namespace Microsoft.Tye.Hosting
             return false;
         }
 
-        private static AggregateApplicationProcessor CreateApplicationProcessor(string[] args, string projectsToDebug, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
+        private static AggregateApplicationProcessor CreateApplicationProcessor(string[] args, string[] _servicesToDebug, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
         {
             var diagnosticOptions = DiagnosticOptions.FromConfiguration(configuration);
             var diagnosticsCollector = new DiagnosticsCollector(logger, diagnosticOptions);
@@ -258,7 +258,7 @@ namespace Microsoft.Tye.Hosting
                 new EventPipeDiagnosticsRunner(logger, diagnosticsCollector),
                 new ProxyService(logger),
                 new DockerRunner(logger),
-                new ProcessRunner(logger, ProcessRunnerOptions.FromArgs(args, projectsToDebug)),
+                new ProcessRunner(logger, ProcessRunnerOptions.FromArgs(args, _servicesToDebug)),
             };
 
             // If the docker command is specified then transport the ProjectRunInfo into DockerRunInfo
