@@ -23,7 +23,7 @@ namespace Microsoft.Tye.Hosting
 
         public Task StartAsync(Model.Application application)
         {
-            // This transforms a ProjectRunInfo into
+            // This transforms a ProjectRunInfo into a container
             var tasks = new List<Task>();
             foreach (var s in application.Services.Values)
             {
