@@ -28,6 +28,7 @@ namespace Microsoft.Tye
                     var port = binding.Port ?? 80;
                     var urls = $"http://*{(port == 80 ? "" : (":" + port.ToString()))}";
                     service.Service.Environment.Add("ASPNETCORE_URLS", urls);
+                    service.Service.Environment.Add("PORT", port);
                     break;
                 }
             }
