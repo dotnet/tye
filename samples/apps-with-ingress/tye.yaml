@@ -1,0 +1,23 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
+#
+name: apps-with-ingress
+services:
+- name: ingress
+  image: nginx
+  bindings:
+    - port: 8080
+  volumes:
+    - source: nginx.conf
+      target: /etc/nginx/conf.d/default.conf
+- name: appA
+  project: ApplicationA/ApplicationA.csproj
+  bindings:
+    - port: 5005
+- name: appB
+  project: ApplicationB/ApplicationB.csproj
+  bindings:
+    - port: 5006
