@@ -52,7 +52,7 @@ namespace Microsoft.Tye
             command.AddOption(new Option("--debug")
             {
                 Argument = new Argument<string[]>("service"),
-                Description = "Wait for debugger attach to specific services, comma delimited. Specify \"all\" to wait for all projects.",
+                Description = "Wait for debugger attach to specific service. Specify \"*\" to wait for all services.",
                 Required = false
             });
 
