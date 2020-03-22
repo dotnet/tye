@@ -101,9 +101,19 @@ namespace Microsoft.Tye
             WriteLine(Verbosity.Info, message);
         }
 
+        public void WriteInfo(string message)
+        {
+            Write(Verbosity.Info, message);
+        }
+
         public void WriteInfoLine(string message)
         {
             WriteLine(Verbosity.Info, message);
+        }
+
+        public void WriteDebug(string message)
+        {
+            Write(Verbosity.Debug, message);
         }
 
         public void WriteDebugLine(string message)
