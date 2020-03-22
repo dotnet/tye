@@ -48,7 +48,7 @@ namespace Microsoft.Tye
             using var writer = new StreamWriter(stream, encoding: Encoding.UTF8, bufferSize: -1, leaveOpen: true);
 
             var entryPoint = Path.GetFileNameWithoutExtension(project.RelativeFilePath);
-            output.WriteDebugLine($"Writing dockerfile to '{filePath}'.");
+            output.WriteDebugLine($"Writing Dockerfile to '{filePath}'.");
             if (container.UseMultiphaseDockerfile ?? true)
             {
                 await WriteMultiphaseDockerfileAsync(writer, entryPoint, container);
@@ -57,7 +57,7 @@ namespace Microsoft.Tye
             {
                 await WriteLocalPublishDockerfileAsync(writer, entryPoint, container);
             }
-            output.WriteDebugLine("Done writing dockerfile.");
+            output.WriteDebugLine("Done writing Dockerfile.");
         }
 
         private static async Task WriteMultiphaseDockerfileAsync(StreamWriter writer, string applicationEntryPoint, ContainerInfo container)

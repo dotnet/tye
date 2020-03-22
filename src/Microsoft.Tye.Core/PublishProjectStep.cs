@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    // Used to publish a project when using a single-file dockerfile
+    // Used to publish a project when using a single-phase Dockerfile
     public class PublishProjectStep : ServiceExecutor.Step
     {
         public override string DisplayText => "Publishing Project...";

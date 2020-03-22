@@ -42,7 +42,7 @@ namespace Microsoft.Tye
         public string? ImageTag { get; set; }
 
         /// <summary>
-        /// Gets or a sets value which determines whether a multiphase dockerfile is used.
+        /// Gets or a sets value which determines whether a multi-phase Dockerfile is used.
         /// </summary>
         public bool? UseMultiphaseDockerfile { get; set; }
     }

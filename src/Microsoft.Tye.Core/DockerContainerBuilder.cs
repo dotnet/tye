@@ -44,7 +44,7 @@ namespace Microsoft.Tye
             var dockerFilePath = Path.Combine(application.GetProjectDirectory(project), Path.GetDirectoryName(project.RelativeFilePath)!, "Dockerfile");
             if (File.Exists(dockerFilePath))
             {
-                output.WriteDebugLine($"Using existing dockerfile '{dockerFilePath}'.");
+                output.WriteDebugLine($"Using existing Dockerfile '{dockerFilePath}'.");
             }
             else
             {
@@ -52,7 +52,7 @@ namespace Microsoft.Tye
                 dockerFilePath = tempFile.FilePath;
             }
 
-            // We need to know if this is a single-phase or multi-phase dockerfile because the context directory will be
+            // We need to know if this is a single-phase or multi-phase Dockerfile because the context directory will be
             // different depending on that choice.
             string contextDirectory;
             if (container.UseMultiphaseDockerfile ?? true)
@@ -64,7 +64,7 @@ namespace Microsoft.Tye
                 var publishOutput = service.Outputs.OfType<ProjectPublishOutput>().FirstOrDefault();
                 if (publishOutput is null)
                 {
-                    throw new InvalidOperationException("We should have published the project for a single-phase dockerfile.");
+                    throw new InvalidOperationException("We should have published the project for a single-phase Dockerfile.");
                 }
 
                 contextDirectory = publishOutput.Directory.FullName;
