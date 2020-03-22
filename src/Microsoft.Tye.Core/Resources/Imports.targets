@@ -1,8 +1,0 @@
-﻿<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <ImportGroup Condition=" '$(TargetFramework)' == '' AND '$(ExcludeRestorePackageImports)' != 'true' ">
-    <Import Project="$(TyeTargetLocation)\buildMultiTargeting\Tye.targets" Condition="'$(TyeTargetLocation)'!=''" />
-  </ImportGroup>
-  <ImportGroup Condition=" '$(TargetFramework)' != '' AND '$(ExcludeRestorePackageImports)' != 'true' ">
-    <Import Project="$(TyeTargetLocation)\build\Tye.targets" Condition="'$(TyeTargetLocation)'!=''" />
-  </ImportGroup>
-</Project>
