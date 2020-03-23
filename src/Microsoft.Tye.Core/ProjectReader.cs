@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -10,7 +11,9 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
+using Microsoft.Build.Construction;
 using Microsoft.Build.Definition;
+using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Locator;
@@ -21,7 +24,41 @@ namespace Microsoft.Tye
 {
     public static class ProjectReader
     {
+        private static object @lock = new object();
         private static bool registered;
+
+        public static IEnumerable<FileInfo> EnumerateProjects(FileInfo solutionFile)
+        {
+            EnsureMSBuildRegistered(null, solutionFile);
+            return EnumerateProjectsCore(solutionFile);
+        }
+
+        // Do not load MSBuild types before using EnsureMSBuildRegistered.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static IEnumerable<FileInfo> EnumerateProjectsCore(FileInfo solutionFile)
+        {
+            var solution = SolutionFile.Parse(solutionFile.FullName);
+            foreach (var project in solution.ProjectsInOrder)
+            {
+                if (project.ProjectType != SolutionProjectType.KnownToBeMSBuildFormat)
+                {
+                    continue;
+                }
+
+                var extension = Path.GetExtension(project.AbsolutePath).ToLower();
+                switch (extension)
+                {
+                    case ".csproj":
+                    case ".fsproj":
+                        break;
+                    default:
+                        continue;
+                }
+
+                yield return new FileInfo(project.AbsolutePath.Replace('\\', '/'));
+            }
+        }
+
         public static Task ReadProjectDetailsAsync(OutputContext output, FileInfo projectFile, Project project)
         {
             if (output is null)
@@ -29,64 +66,68 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(output));
             }
 
-            if (projectFile is null)
-            {
-                throw new ArgumentNullException(nameof(projectFile));
-            }
-
             if (project is null)
             {
                 throw new ArgumentNullException(nameof(project));
             }
 
-            EnsureMSBuildRegistered(projectFile);
+            EnsureMSBuildRegistered(output, projectFile);
 
-            using (var step = output.BeginStep("Reading Project Details..."))
+            EvaluateProject(output, projectFile, project);
+
+            if (!SemVersion.TryParse(project.Version, out var version))
             {
-                EvaluateProject(output, projectFile, project);
-
-                if (!SemVersion.TryParse(project.Version, out var version))
-                {
-                    output.WriteInfoLine($"No version or invalid version '{project.Version}' found, using default.");
-                    version = new SemVersion(0, 1, 0);
-                    project.Version = version.ToString();
-                }
-
-                step.MarkComplete();
+                output.WriteInfoLine($"No version or invalid version '{project.Version}' found, using default.");
+                version = new SemVersion(0, 1, 0);
+                project.Version = version.ToString();
             }
 
             return Task.CompletedTask;
         }
 
-        private static void EnsureMSBuildRegistered(FileInfo projectFile)
+        private static void EnsureMSBuildRegistered(OutputContext? output, FileInfo projectFile)
         {
             if (!registered)
             {
-                // It says VisualStudio - but we'll just use .NET SDK
-                var instances = MSBuildLocator.QueryVisualStudioInstances(new VisualStudioInstanceQueryOptions()
+                lock (@lock)
                 {
-                    DiscoveryTypes = DiscoveryType.DotNetSdk,
+                    output?.WriteDebugLine("Locating .NET SDK...");
 
-                    // Using the project as the working directory. We're making the assumption that
-                    // all of the projects want to use the same SDK version. This library is going
-                    // load a single version of the SDK's assemblies into our process, so we can't
-                    // use supprt SDKs at once without getting really tricky.
-                    //
-                    // The .NET SDK-based discovery uses `dotnet --info` and returns the SDK
-                    // in use for the directory.
-                    //
-                    // https://github.com/microsoft/MSBuildLocator/blob/master/src/MSBuildLocator/MSBuildLocator.cs#L320
-                    WorkingDirectory = projectFile.DirectoryName,
-                });
+                    // It says VisualStudio - but we'll just use .NET SDK
+                    var instances = MSBuildLocator.QueryVisualStudioInstances(new VisualStudioInstanceQueryOptions()
+                    {
+                        DiscoveryTypes = DiscoveryType.DotNetSdk,
 
-                var instance = instances.SingleOrDefault();
-                if (instance == null)
-                {
-                    throw new CommandException("Failed to find dotnet. Make sure the .NET SDK is installed and on the PATH.");
+                        // Using the project as the working directory. We're making the assumption that
+                        // all of the projects want to use the same SDK version. This library is going
+                        // load a single version of the SDK's assemblies into our process, so we can't
+                        // use supprt SDKs at once without getting really tricky.
+                        //
+                        // The .NET SDK-based discovery uses `dotnet --info` and returns the SDK
+                        // in use for the directory.
+                        //
+                        // https://github.com/microsoft/MSBuildLocator/blob/master/src/MSBuildLocator/MSBuildLocator.cs#L320
+                        WorkingDirectory = projectFile.DirectoryName,
+                    });
+
+                    var instance = instances.SingleOrDefault();
+                    if (instance == null)
+                    {
+                        throw new CommandException("Failed to find dotnet. Make sure the .NET SDK is installed and on the PATH.");
+                    }
+
+                    output?.WriteDebugLine("Found .NET SDK at: " + instance.MSBuildPath);
+
+                    try
+                    {
+                        MSBuildLocator.RegisterInstance(instance);
+                        output?.WriteDebug("Registered .NET SDK.");
+                    }
+                    finally
+                    {
+                        registered = true;
+                    }
                 }
-
-                MSBuildLocator.RegisterInstance(instance);
-                registered = true;
             }
         }
 
@@ -96,16 +137,25 @@ namespace Microsoft.Tye
         {
             var sw = Stopwatch.StartNew();
 
+            // We need to isolate projects from each other for testing. MSBuild does not support
+            // loading the same project twice in the same collection.
+            var projectCollection = new ProjectCollection();
+
             ProjectInstance projectInstance;
+
             try
             {
                 output.WriteDebugLine($"Loading project '{projectFile.FullName}'.");
-                projectInstance = ProjectInstance.FromFile(projectFile.FullName, new ProjectOptions());
+                var msbuildProject = Microsoft.Build.Evaluation.Project.FromFile(projectFile.FullName, new ProjectOptions()
+                {
+                    ProjectCollection = projectCollection,
+                });
+                projectInstance = msbuildProject.CreateProjectInstance();
                 output.WriteDebugLine($"Loaded project '{projectFile.FullName}'.");
             }
-            catch
+            catch (Exception ex)
             {
-                throw new CommandException($"Failed to load project: '{projectFile.FullName}'.");
+                throw new CommandException($"Failed to load project: '{projectFile.FullName}'.", ex);
             }
 
             // Currently we only log at debug level.

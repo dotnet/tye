@@ -129,6 +129,10 @@ namespace Microsoft.Tye.Hosting
                     environment["PORT"] = string.Join(";", ports.Select(p => $"{p.InternalPort ?? p.Port}"));
                 }
 
+                // See: https://github.com/docker/for-linux/issues/264
+                //
+                // The way we do proxying here doesn't really work for multi-container scenarios on linux
+                // without some more setup.
                 application.PopulateEnvironment(service, (key, value) => environment[key] = value, "host.docker.internal");
 
                 environment["APP_INSTANCE"] = replica;

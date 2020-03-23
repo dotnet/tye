@@ -57,25 +57,11 @@ namespace Microsoft.Tye.ConfigModel
                 Source = file,
             };
 
-            var solution = SolutionFile.Parse(file.FullName);
-            foreach (var project in solution.ProjectsInOrder)
+            // BE CAREFUL modifying this code. Avoid proliferating MSBuild types
+            // throughout the code, because we load them dynamically.
+            foreach (var projectFile in ProjectReader.EnumerateProjects(file))
             {
-                if (project.ProjectType != SolutionProjectType.KnownToBeMSBuildFormat)
-                {
-                    continue;
-                }
-
-                var extension = Path.GetExtension(project.AbsolutePath).ToLower();
-                switch (extension)
-                {
-                    case ".csproj":
-                    case ".fsproj":
-                        break;
-                    default:
-                        continue;
-                }
-
-                var description = CreateService(new FileInfo(project.AbsolutePath.Replace('\\', '/')));
+                var description = CreateService(projectFile);
                 if (description != null)
                 {
                     application.Services.Add(description);

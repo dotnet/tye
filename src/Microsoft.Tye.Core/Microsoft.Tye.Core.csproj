@@ -16,7 +16,7 @@
       The Microsoft.Build.Locator package takes care of dynamically loading these assemblies
       at runtime. We don't need/want to ship them, just to have them as references.
     -->
-    <PackageReference Include="Microsoft.Build" Version="16.5.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build" Version="16.3.0" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.2.6" />
     <!-- Hoisted to avoid a conflict with Microsoft.Build -->
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
