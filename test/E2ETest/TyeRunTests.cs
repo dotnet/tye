@@ -175,6 +175,26 @@ namespace E2ETest
             }
         }
 
+        [Fact]
+        public async Task NullDebugTargetsDoesNotThrow()
+        {
+            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "single-project", "test-project"));
+            using var tempDirectory = TempDirectory.Create();
+            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+
+            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "test-project.csproj"));
+
+            // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
+            using var host = new TyeHost(ConfigFactory.FromFile(projectFile).ToHostingApplication(), Array.Empty<string>(), null!)
+            {
+                Sink = sink,
+            };
+
+            await host.StartAsync();
+
+            await host.StopAsync();
+        }
+
         private async Task CheckServiceIsUp(Microsoft.Tye.Hosting.Model.Application application, HttpClient client, string serviceName, Uri dashboardUri, TimeSpan? timeout = default)
         {
             // make sure backend is up before frontend
