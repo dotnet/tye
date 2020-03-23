@@ -23,6 +23,8 @@ spec:
         env:
         - name: ASPNETCORE_URLS
           value: 'http://*'
+        - name: PORT
+          value: '80'
         - name: SERVICE__FRONTEND__PROTOCOL
           value: 'http'
         - name: SERVICE__FRONTEND__PORT
@@ -76,6 +78,8 @@ spec:
         env:
         - name: ASPNETCORE_URLS
           value: 'http://*'
+        - name: PORT
+          value: '80'
         - name: SERVICE__BACKEND__PROTOCOL
           value: 'http'
         - name: SERVICE__BACKEND__PORT

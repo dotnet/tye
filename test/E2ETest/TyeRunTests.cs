@@ -137,10 +137,11 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        [SkipOnLinux]
         public async Task FrontendBackendRunTestWithDocker()
         {
             var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
-            using var tempDirectory = TempDirectory.Create();
+            using var tempDirectory = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
@@ -165,8 +166,8 @@ namespace E2ETest
 
                 var dashboardUri = new Uri(host.DashboardWebApplication!.Addresses.First());
 
-                await CheckServiceIsUp(host.Application, client, "backend", dashboardUri);
-                await CheckServiceIsUp(host.Application, client, "frontend", dashboardUri);
+                await CheckServiceIsUp(host.Application, client, "backend", dashboardUri, timeout: TimeSpan.FromSeconds(60));
+                await CheckServiceIsUp(host.Application, client, "frontend", dashboardUri, timeout: TimeSpan.FromSeconds(60));
             }
             finally
             {
@@ -174,7 +175,7 @@ namespace E2ETest
             }
         }
 
-        private async Task CheckServiceIsUp(Microsoft.Tye.Hosting.Model.Application application, HttpClient client, string serviceName, Uri dashboardUri)
+        private async Task CheckServiceIsUp(Microsoft.Tye.Hosting.Model.Application application, HttpClient client, string serviceName, Uri dashboardUri, TimeSpan? timeout = default)
         {
             // make sure backend is up before frontend
             var dashboardString = await client.GetStringAsync($"{dashboardUri}api/v1/services/{serviceName}");
@@ -183,11 +184,28 @@ namespace E2ETest
             var binding = service.Description!.Bindings.Where(b => b.Protocol == "http").Single();
             var uriBackendProcess = new Uri($"{binding.Protocol}://localhost:{binding.Port}");
 
+            var startTime = DateTime.UtcNow;
             try
             {
+                // Wait up until the timeout to see if we can access the service.
+                // For instance if we have to pull a base-image it can take a while.
+                while (timeout.HasValue && startTime + timeout.Value > DateTime.UtcNow)
+                {
+                    try
+                    {
+                        await client.GetAsync(uriBackendProcess);
+                        break;
+                    }
+                    catch (HttpRequestException)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(3));
+                    }
+                }
+
                 var appResponse = await client.GetAsync(uriBackendProcess);
-                Assert.Equal(HttpStatusCode.OK, appResponse.StatusCode);
                 var content = await appResponse.Content.ReadAsStringAsync();
+                output.WriteLine(content);
+                Assert.Equal(HttpStatusCode.OK, appResponse.StatusCode);
                 if (serviceName == "frontend")
                 {
                     Assert.Matches("Frontend Listening IP: (.+)\n", content);

@@ -23,6 +23,8 @@ spec:
         env:
         - name: ASPNETCORE_URLS
           value: 'http://*'
+        - name: PORT
+          value: '80'
         ports:
         - containerPort: 80
 ...
