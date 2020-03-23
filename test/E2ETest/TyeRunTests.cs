@@ -155,9 +155,7 @@ namespace E2ETest
             };
 
             using var client = new HttpClient(new RetryHandler(handler));
-            
             await host.StartAsync();
-            
             var serviceApi = new Uri(host.DashboardWebApplication!.Addresses.First());
 
             try
