@@ -21,7 +21,7 @@ namespace Microsoft.Tye.Hosting
                 BuildProjects = !args.Contains("--no-build"),
                 DebugMode = args.Contains("--debug"),
                 ServicesToDebug = servicesToDebug,
-                DebugAllServices = servicesToDebug.Contains("*", StringComparer.OrdinalIgnoreCase)
+                DebugAllServices = servicesToDebug?.Contains("*", StringComparer.OrdinalIgnoreCase) ?? false
             };
         }
     }
