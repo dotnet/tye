@@ -8,9 +8,10 @@ using System.Text;
 
 namespace Microsoft.Tye.ConfigModel
 {
-    public class ConfigVolume
+    public class ConfigIngressRule
     {
-        public string? Source { get; set; }
-        public string? Target { get; set; }
+        public string? Path { get; set; }
+        public string? Host { get; set; }
+        public string? Service { get; set; }
     }
 }

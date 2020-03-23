@@ -13,7 +13,7 @@ namespace E2ETest
     public class RetryHandler : DelegatingHandler
     {
         private static readonly int MaxRetries = 5;
-        private static readonly TimeSpan InitialRetryDelay = TimeSpan.FromMilliseconds(100);
+        private static readonly TimeSpan InitialRetryDelay = TimeSpan.FromMilliseconds(500);
 
         public RetryHandler(HttpMessageHandler innerHandler)
             : base(innerHandler)

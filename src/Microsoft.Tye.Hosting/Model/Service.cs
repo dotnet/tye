@@ -6,7 +6,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reactive.Subjects;
-using System.Text.Json.Serialization;
 
 namespace Microsoft.Tye.Hosting.Model
 {
@@ -48,6 +47,11 @@ namespace Microsoft.Tye.Hosting.Model
                 if (Description.RunInfo is ProjectRunInfo)
                 {
                     return ServiceType.Project;
+                }
+
+                if (Description.RunInfo is IngressRunInfo)
+                {
+                    return ServiceType.Ingress;
                 }
 
                 return ServiceType.External;
