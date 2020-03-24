@@ -343,33 +343,33 @@ namespace Microsoft.Tye.Hosting
         public Task HandleStaleReplica(ReplicaEvent replicaEvent)
         {
             var processStatus = (ProcessStatus)replicaEvent.Replica;
-            var pid = processStatus.Pid ?? -1;
-            if (pid != -1)
-                ProcessUtil.KillProcess(pid);
-
-            _logger.LogInformation("removed process {pid} from previous run", pid);
+            if (processStatus.Pid.HasValue)
+            {
+                ProcessUtil.KillProcess(processStatus.Pid.Value);
+                _logger.LogInformation("removed process {pid} from previous run", processStatus.Pid.Value);
+            }
 
             return Task.CompletedTask;
         }
 
-        public ValueTask<IDictionary<string, string>> SerializeReplica(ReplicaEvent replicaEvent)
+        public IDictionary<string, string?> SerializeReplica(ReplicaEvent replicaEvent)
         {
             var processStatus = (ProcessStatus)replicaEvent.Replica;
-            return new ValueTask<IDictionary<string, string>>(new Dictionary<string, string>()
+            return new Dictionary<string, string?>()
             {
                 ["state"] = replicaEvent.State.ToString(),
                 ["serviceName"] = replicaEvent.Replica.Service.Description.Name,
-                ["pid"] = processStatus.Pid?.ToString() ?? "-1"
-            });
+                ["pid"] = processStatus.Pid?.ToString()
+            };
         }
 
-        public ValueTask<ReplicaEvent> DeserializeReplicaEvent(IDictionary<string, string> serializedEvent)
+        public ReplicaEvent DeserializeReplicaEvent(IDictionary<string, string?> serializedEvent)
         {
-            var state = Enum.Parse<ReplicaState>(serializedEvent["state"]);
-            var serviceName = serializedEvent["serviceName"];
-            var pid = int.Parse(serializedEvent["pid"]);
+            var state = Enum.Parse<ReplicaState>(serializedEvent["state"]!);
+            var serviceName = serializedEvent["serviceName"]!;
+            var pid = serializedEvent["pid"] is null ? null : (int?)int.Parse(serializedEvent["pid"]!);
 
-            return new ValueTask<ReplicaEvent>(new ReplicaEvent(state, new ProcessStatus(new Model.Service(new ServiceDescription(serviceName, null)), serviceName) { Pid = pid }));
+            return new ReplicaEvent(state, new ProcessStatus(new Model.Service(new ServiceDescription(serviceName, null)), serviceName) { Pid = pid });
 
         }
 

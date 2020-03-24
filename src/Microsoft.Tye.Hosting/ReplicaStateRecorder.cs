@@ -50,17 +50,14 @@ namespace Microsoft.Tye.Hosting
 
         private void OnReplicaChanged(ReplicaEvent replicaEvent)
         {
-            OnReplicaChangedAsync(replicaEvent).Wait(); // :(
-        }
-
-        private async Task OnReplicaChangedAsync(ReplicaEvent replicaEvent)
-        {
             if (replicaEvent.State != ReplicaState.Started)
+            {
                 return;
+            }
 
             _logger.LogDebug("recording replica change event for {name}", replicaEvent.Replica.Name);
 
-            await _registry.WriteReplicaEvent(replicaEvent);
+            _registry.WriteReplicaEvent(replicaEvent);
         }
 
         private class Subscription { }

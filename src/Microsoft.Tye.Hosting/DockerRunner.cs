@@ -317,28 +317,29 @@ namespace Microsoft.Tye.Hosting
             if (container != "")
             {
                 await ProcessUtil.RunAsync("docker", $"rm -f {container}",
-                    throwOnError: false,
-                    outputDataReceived: data => _logger.LogInformation("removed container {container} from previous run", container));
+                    throwOnError: false);
+
+                _logger.LogInformation("removed container {container} from previous run", container);
             }
         }
 
-        public ValueTask<IDictionary<string, string>> SerializeReplica(ReplicaEvent replicaEvent)
+        public IDictionary<string, string?> SerializeReplica(ReplicaEvent replicaEvent)
         {
-            return new ValueTask<IDictionary<string, string>>(new Dictionary<string, string>()
+            return new Dictionary<string, string?>()
             {
                 ["state"] = replicaEvent.State.ToString(),
                 ["serviceName"] = replicaEvent.Replica.Service.Description.Name,
                 ["id"] = replicaEvent.Replica.Name
-            });
+            };
         }
 
-        public ValueTask<ReplicaEvent> DeserializeReplicaEvent(IDictionary<string, string> serializedEvent)
+        public ReplicaEvent DeserializeReplicaEvent(IDictionary<string, string?> serializedEvent)
         {
-            var state = Enum.Parse<ReplicaState>(serializedEvent["state"]);
-            var serviceName = serializedEvent["serviceName"];
-            var id = serializedEvent["id"];
+            var state = Enum.Parse<ReplicaState>(serializedEvent["state"]!);
+            var serviceName = serializedEvent["serviceName"]!;
+            var id = serializedEvent["id"]!;
 
-            return new ValueTask<ReplicaEvent>(new ReplicaEvent(state, new DockerStatus(new Model.Service(new ServiceDescription(serviceName, null)), id)));
+            return new ReplicaEvent(state, new DockerStatus(new Model.Service(new ServiceDescription(serviceName, null)), id));
         }
 
         private class DockerInformation

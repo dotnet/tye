@@ -26,16 +26,16 @@ namespace Microsoft.Tye.Hosting
         public async Task Reset()
         {
             await PurgeAll();
-            _store.Reset(true, true);
+            _store.Reset(delete: true, create: true);
         }
 
-        public async Task WriteReplicaEvent(ReplicaEvent replicaEvent)
+        public void WriteReplicaEvent(ReplicaEvent replicaEvent)
         {
             var serviceType = replicaEvent.Replica.Service.ServiceType;
             if (_replicaInstantiators.TryGetValue(serviceType, out var instantiator))
             {
-                var serialized = await instantiator.SerializeReplica(replicaEvent);
-                await _store.WriteEvent(new StoreEvent
+                var serialized = instantiator.SerializeReplica(replicaEvent);
+                _store.WriteEvent(new StoreEvent
                 {
                     ServiceType = serviceType,
                     State = replicaEvent.State,
@@ -53,7 +53,7 @@ namespace Microsoft.Tye.Hosting
             {
                 if (_replicaInstantiators.TryGetValue(@event.ServiceType, out var instantiator))
                 {
-                    var replica = await instantiator.DeserializeReplicaEvent(@event.SerializedEvent);
+                    var replica = instantiator.DeserializeReplicaEvent(@event.SerializedEvent);
                     tasks.Add(instantiator.HandleStaleReplica(replica));
                 }
             }
@@ -70,7 +70,7 @@ namespace Microsoft.Tye.Hosting
         {
             public ServiceType ServiceType { get; set; }
             public ReplicaState State { get; set; }
-            public IDictionary<string, string> SerializedEvent { get; set; }
+            public IDictionary<string, string?> SerializedEvent { get; set; }
         }
 
         private class StateStore : IDisposable
@@ -83,18 +83,18 @@ namespace Microsoft.Tye.Hosting
             public StateStore(Model.Application application)
             {
                 _tyeFolderPath = Path.Join(Path.GetDirectoryName(application.Source), ".tye");
-                Reset(false, true);
+                Reset(delete: false, create: true);
 
                 _eventsFile = Path.Join(_tyeFolderPath, "events");
             }
 
-            public async Task WriteEvent(StoreEvent @event)
+            public void WriteEvent(StoreEvent @event)
             {
                 var contents = JsonSerializer.Serialize(@event, options: new JsonSerializerOptions
                 {
                     WriteIndented = false
                 });
-                await File.AppendAllTextAsync(_eventsFile, contents + Environment.NewLine);
+                File.AppendAllText(_eventsFile, contents + Environment.NewLine);
             }
 
             public async ValueTask<IList<StoreEvent>> GetEvents()
@@ -115,15 +115,19 @@ namespace Microsoft.Tye.Hosting
             public void Reset(bool delete, bool create)
             {
                 if (delete && Directory.Exists(_tyeFolderPath))
+                {
                     Directory.Delete(_tyeFolderPath, true);
+                }
 
                 if (create)
+                {
                     Directory.CreateDirectory(_tyeFolderPath);
+                }
             }
 
             public void Dispose()
             {
-                Reset(true, false);
+                Reset(delete: true, create: false);
             }
         }
     }

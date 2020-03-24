@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    public static partial class Program
+    static partial class Program
     {
         public static async Task<int> Main(string[] args)
         {

@@ -104,7 +104,9 @@ namespace E2ETest
 
             var lines = new HashSet<string>(builder.ToString().Split(new[] { '\r', '\n', }, StringSplitOptions.RemoveEmptyEntries));
             if (predicate(lines, containers))
+            {
                 return;
+            }
 
             throw new XunitException(errorText(containers));
 

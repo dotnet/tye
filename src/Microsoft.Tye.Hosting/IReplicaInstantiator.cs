@@ -12,8 +12,8 @@ namespace Microsoft.Tye.Hosting
     {
         Task HandleStaleReplica(ReplicaEvent replicaEvent);
 
-        ValueTask<IDictionary<string, string>> SerializeReplica(ReplicaEvent replicaEvent);
+        IDictionary<string, string?> SerializeReplica(ReplicaEvent replicaEvent);
 
-        ValueTask<ReplicaEvent> DeserializeReplicaEvent(IDictionary<string, string> serializedEvent);
+        ReplicaEvent DeserializeReplicaEvent(IDictionary<string, string?> serializedEvent);
     }
 }

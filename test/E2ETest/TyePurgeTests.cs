@@ -35,7 +35,7 @@ namespace E2ETest
         public async Task FrontendBackendPurgeTest()
         {
             var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
-            var tempDirectory = TempDirectory.Create();
+            using var tempDirectory = TempDirectory.Create();
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
@@ -66,12 +66,6 @@ namespace E2ETest
             {
                 await host.StopAsync();
             }
-
-            try
-            {
-                tempDirectory.Dispose();
-            }
-            catch (UnauthorizedAccessException) { }
         }
 
         [ConditionalFact]
@@ -79,7 +73,7 @@ namespace E2ETest
         public async Task MultiProjectPurgeTest()
         {
             var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "multi-project"));
-            var tempDirectory = TempDirectory.Create();
+            using var tempDirectory = TempDirectory.Create();
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
@@ -113,12 +107,6 @@ namespace E2ETest
             {
                 await host.StopAsync();
             }
-
-            try
-            {
-                tempDirectory.Dispose();
-            }
-            catch (UnauthorizedAccessException) { }
         }
 
         private int[] GetAllPids(Microsoft.Tye.Hosting.Model.Application application)
@@ -140,14 +128,16 @@ namespace E2ETest
 
         private async Task WaitUntilSpawned(Microsoft.Tye.Hosting.Model.Application application)
         {
-            int reties = 0;
+            int retries = 0;
             do
             {
-                if (reties > MaxRetries)
+                if (retries > MaxRetries)
+                {
                     throw new TimeoutException($"Could not reach response after {MaxRetries} reties");
+                }
 
                 await Task.Delay(500);
-                reties++;
+                retries++;
             } while (application.Services.Any(a => a.Value.Description.Replicas > a.Value.Replicas.Count));
         }
 
