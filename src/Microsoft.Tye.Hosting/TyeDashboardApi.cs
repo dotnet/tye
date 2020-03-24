@@ -112,7 +112,7 @@ namespace Microsoft.Tye.Hosting
                     ConnectionString = binding.ConnectionString,
                     AutoAssignPort = binding.AutoAssignPort,
                     Port = binding.Port,
-                    InternalPort = binding.InternalPort,
+                    ContainerPort = binding.ContainerPort,
                     Host = binding.Host,
                     Protocol = binding.Protocol
                 });

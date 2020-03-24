@@ -71,11 +71,11 @@ namespace Microsoft.Tye.Hosting
 
                                     if (binding.Protocol == "http" || binding.Protocol == null)
                                     {
-                                        binding.InternalPort = 80;
+                                        binding.ContainerPort = 80;
                                     }
                                     else if (binding.Protocol == "https")
                                     {
-                                        binding.InternalPort = 443;
+                                        binding.ContainerPort = 443;
                                     }
 
                                     if (service.Description.Replicas == 1)
