@@ -18,20 +18,20 @@ namespace Microsoft.Tye
 
         public DirectoryInfo OutputDirectory { get; set; } = default!;
 
-        public override Task ExecuteAsync(OutputContext output, Application application, ServiceEntry service)
+        public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             var yaml = service.Outputs.OfType<IYamlManifestOutput>().ToArray();
             if (yaml.Length == 0)
             {
-                output.WriteDebugLine($"No yaml manifests found for service '{service.FriendlyName}'. Skipping.");
+                output.WriteDebugLine($"No yaml manifests found for service '{service.Name}'. Skipping.");
                 return Task.CompletedTask;
             }
 
-            var outputFilePath = Path.Combine(OutputDirectory.FullName, $"{service.Service.Name}.yaml");
+            var outputFilePath = Path.Combine(OutputDirectory.FullName, $"{service.Name}.yaml");
             output.WriteInfoLine($"Writing output to '{outputFilePath}'.");
             if (File.Exists(outputFilePath) && !Force)
             {
-                throw new CommandException($"'{service.Service.Name}.yaml' already exists for project. use '--force' to overwrite.");
+                throw new CommandException($"'{service.Name}.yaml' already exists for project. use '--force' to overwrite.");
             }
 
             File.Delete(outputFilePath);

@@ -31,7 +31,7 @@ namespace Microsoft.Tye
         // Keep track of secrets we've seen so we don't validate them twice.
         public HashSet<string> Secrets { get; } = new HashSet<string>();
 
-        public override async Task ExecuteAsync(OutputContext output, Application application, ServiceEntry service)
+        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             var bindings = service.Outputs.OfType<ComputedBindings>().FirstOrDefault();
             if (bindings is null)
@@ -86,17 +86,17 @@ namespace Microsoft.Tye
                     if (!Interactive)
                     {
                         throw new CommandException(
-                            $"The secret '{secretInputBinding.Name}' used for service '{secretInputBinding.Service.Service.Name}' is missing from the deployment environment. " +
+                            $"The secret '{secretInputBinding.Name}' used for service '{secretInputBinding.Service.Name}' is missing from the deployment environment. " +
                             $"Rerun the command with --interactive to specify the value interactively, or with --force to skip validation. Alternatively " +
                             $"use the following command to manually create the secret." + System.Environment.NewLine +
                             $"kubectl create secret generic {secretInputBinding.Name} --from-literal=connectionstring=<value>");
                     }
 
                     // If we get here then we should create the sceret.
-                    var text = output.Prompt($"Enter the connection string to use for service '{secretInputBinding.Service.Service.Name}'", allowEmpty: true);
+                    var text = output.Prompt($"Enter the connection string to use for service '{secretInputBinding.Service.Name}'", allowEmpty: true);
                     if (string.IsNullOrWhiteSpace(text))
                     {
-                        output.WriteAlways($"Skipping creation of secret for '{secretInputBinding.Service.Service.Name}'. This may prevent creation of pods until secrets are created.");
+                        output.WriteAlways($"Skipping creation of secret for '{secretInputBinding.Service.Name}'. This may prevent creation of pods until secrets are created.");
                         output.WriteAlways($"Manually create a secret with:");
                         output.WriteAlways($"kubectl create secret generic {secretInputBinding.Name} --from-literal=connectionstring=<value>");
                         continue;
@@ -128,7 +128,7 @@ namespace Microsoft.Tye
             var yaml = service.Outputs.OfType<IYamlManifestOutput>().ToArray();
             if (yaml.Length == 0)
             {
-                output.WriteDebugLine($"No yaml manifests found for service '{service.FriendlyName}'. Skipping.");
+                output.WriteDebugLine($"No yaml manifests found for service '{service.Name}'. Skipping.");
                 return;
             }
 
@@ -163,7 +163,7 @@ namespace Microsoft.Tye
                 throw new CommandException("'kubectl apply' failed.");
             }
 
-            output.WriteInfoLine($"Deployed service '{service.FriendlyName}'.");
+            output.WriteInfoLine($"Deployed service '{service.Name}'.");
         }
     }
 }

@@ -12,7 +12,7 @@ namespace Microsoft.Tye
 
         public string Environment { get; set; } = "production";
 
-        public override async Task ExecuteAsync(OutputContext output, Application application, ServiceEntry service)
+        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             if (SkipWithoutProject(output, service, out var project))
             {
@@ -24,22 +24,17 @@ namespace Microsoft.Tye
                 return;
             }
 
-            if (SkipForEnvironment(output, service, Environment))
-            {
-                return;
-            }
-
             if (!await DockerDetector.Instance.IsDockerInstalled.Value)
             {
-                throw new CommandException($"Cannot generate a docker image for '{service.Service.Name}' because docker is not installed.");
+                throw new CommandException($"Cannot generate a docker image for '{service.Name}' because docker is not installed.");
             }
 
             if (!await DockerDetector.Instance.IsDockerConnectedToDaemon.Value)
             {
-                throw new CommandException($"Cannot generate a docker image for '{service.Service.Name}' because docker is not running.");
+                throw new CommandException($"Cannot generate a docker image for '{service.Name}' because docker is not running.");
             }
 
-            await DockerContainerBuilder.BuildContainerImageAsync(output, application, service, project, container);
+            await DockerContainerBuilder.BuildContainerImageAsync(output, application, project, container);
         }
     }
 }

@@ -2,15 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Microsoft.Tye.ConfigModel
+namespace Microsoft.Tye
 {
-    public class ConfigVolume
+    public sealed class ExternalServiceBuilder : ServiceBuilder
     {
-        public string? Source { get; set; }
-        public string? Target { get; set; }
+        public ExternalServiceBuilder(string name)
+            : base(name)
+        {
+        }
     }
 }

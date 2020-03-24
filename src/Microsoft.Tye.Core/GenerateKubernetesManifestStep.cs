@@ -13,23 +13,23 @@ namespace Microsoft.Tye
         public string Environment { get; set; } = "production";
 
 
-        public override Task ExecuteAsync(OutputContext output, Application application, ServiceEntry service)
+        public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             if (SkipWithoutContainerOutput(output, service))
             {
                 return Task.CompletedTask;
             }
 
-            if (SkipForEnvironment(output, service, Environment))
+            if (SkipWithoutProject(output, service, out var project))
             {
                 return Task.CompletedTask;
             }
 
-            service.Outputs.Add(KubernetesManifestGenerator.CreateDeployment(output, application, service));
+            service.Outputs.Add(KubernetesManifestGenerator.CreateDeployment(output, application, project));
 
-            if (service.Service.Bindings.Count > 0)
+            if (service.Bindings.Count > 0)
             {
-                service.Outputs.Add(KubernetesManifestGenerator.CreateService(output, application, service));
+                service.Outputs.Add(KubernetesManifestGenerator.CreateService(output, application, project));
             }
 
             return Task.CompletedTask;

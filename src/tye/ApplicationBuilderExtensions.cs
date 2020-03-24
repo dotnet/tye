@@ -4,61 +4,68 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Microsoft.Tye.Hosting.Model;
-using YamlDotNet.Serialization;
 
 namespace Microsoft.Tye.ConfigModel
 {
-    public class ConfigApplication
+    public static class ApplicationBuilderExtensions
     {
-        // This gets set by all of the code paths that read the application
-        [YamlIgnore]
-        public FileInfo Source { get; set; } = default!;
-
-        public string? Name { get; set; }
-
-        public string? Registry { get; set; }
-
-        public List<ConfigIngress> Ingress { get; set; } = new List<ConfigIngress>();
-
-        public List<ConfigService> Services { get; set; } = new List<ConfigService>();
-
-        public Tye.Hosting.Model.Application ToHostingApplication()
+        public static Tye.Hosting.Model.Application ToHostingApplication(this ApplicationBuilder application)
         {
             var services = new Dictionary<string, Tye.Hosting.Model.Service>();
-            foreach (var service in Services)
+            foreach (var service in application.Services)
             {
                 RunInfo? runInfo;
-                if (service.External)
+                int replicas;
+                var env = new List<ConfigurationSource>();
+                if (service is ExternalServiceBuilder)
                 {
                     runInfo = null;
+                    replicas = 1;
                 }
-                else if (service.Image is object)
+                else if (service is ContainerServiceBuilder container)
                 {
-                    var dockerRunInfo = new DockerRunInfo(service.Image, service.Args);
+                    var dockerRunInfo = new DockerRunInfo(container.Image, container.Args);
 
-                    foreach (var mapping in service.Volumes)
+                    foreach (var mapping in container.Volumes)
                     {
                         dockerRunInfo.VolumeMappings[mapping.Source!] = mapping.Target!;
                     }
 
                     runInfo = dockerRunInfo;
-                }
-                else if (service.Executable is object)
-                {
-                    runInfo = new ExecutableRunInfo(service.Executable, service.WorkingDirectory, service.Args);
-                }
-                else if (service.Project is object)
-                {
-                    var projectInfo = new ProjectRunInfo(service.Project, service.Args, service.Build ?? true);
+                    replicas = container.Replicas;
 
-                    foreach (var mapping in service.Volumes)
+                    foreach (var entry in container.EnvironmentVariables)
+                    {
+                        env.Add(new ConfigurationSource(entry.Name, entry.Value));
+                    }
+                }
+                else if (service is ExecutableServiceBuilder executable)
+                {
+                    runInfo = new ExecutableRunInfo(executable.Executable, executable.WorkingDirectory, executable.Args);
+                    replicas = executable.Replicas;
+
+                    foreach (var entry in executable.EnvironmentVariables)
+                    {
+                        env.Add(new ConfigurationSource(entry.Name, entry.Value));
+                    }
+                }
+                else if (service is ProjectServiceBuilder project)
+                {
+                    var projectInfo = new ProjectRunInfo(project.ProjectFile.FullName, project.Args, project.Build);
+
+                    foreach (var mapping in project.Volumes)
                     {
                         projectInfo.VolumeMappings[mapping.Source!] = mapping.Target!;
                     }
 
                     runInfo = projectInfo;
+                    replicas = project.Replicas;
+
+                    foreach (var entry in project.EnvironmentVariables)
+                    {
+                        env.Add(new ConfigurationSource(entry.Name, entry.Value));
+                    }
                 }
                 else
                 {
@@ -67,8 +74,9 @@ namespace Microsoft.Tye.ConfigModel
 
                 var description = new Tye.Hosting.Model.ServiceDescription(service.Name, runInfo)
                 {
-                    Replicas = service.Replicas ?? 1,
+                    Replicas = replicas,
                 };
+                description.Configuration.AddRange(env);
 
                 foreach (var binding in service.Bindings)
                 {
@@ -84,28 +92,24 @@ namespace Microsoft.Tye.ConfigModel
                     });
                 }
 
-                foreach (var entry in service.Configuration)
-                {
-                    description.Configuration.Add(new ConfigurationSource(entry.Name, entry.Value));
-                }
-
                 services.Add(service.Name, new Tye.Hosting.Model.Service(description));
             }
 
-            foreach (var ingress in Ingress)
+            // Ingress get turned into services for hosting
+            foreach (var ingress in application.Ingress)
             {
-                var rules = new List<IngressRule>();
+                var rules = new List<Tye.Hosting.Model.IngressRule>();
 
                 foreach (var rule in ingress.Rules)
                 {
-                    rules.Add(new IngressRule(rule.Host, rule.Path, rule.Service!));
+                    rules.Add(new Tye.Hosting.Model.IngressRule(rule.Host, rule.Path, rule.Service!));
                 }
 
                 var runInfo = new IngressRunInfo(rules);
 
                 var description = new Tye.Hosting.Model.ServiceDescription(ingress.Name, runInfo)
                 {
-                    Replicas = ingress.Replicas ?? 1,
+                    Replicas = ingress.Replicas,
                 };
 
                 foreach (var binding in ingress.Bindings)
@@ -122,7 +126,7 @@ namespace Microsoft.Tye.ConfigModel
                 services.Add(ingress.Name, new Tye.Hosting.Model.Service(description));
             }
 
-            return new Tye.Hosting.Model.Application(Source, services);
+            return new Tye.Hosting.Model.Application(application.Source, services);
         }
     }
 }
