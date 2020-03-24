@@ -12,7 +12,7 @@ namespace Microsoft.Tye
 {
     public static class DockerfileGenerator
     {
-        public static async Task WriteDockerfileAsync(OutputContext output, Application application, ServiceEntry service, Project project, ContainerInfo container, string filePath)
+        public static async Task WriteDockerfileAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container, string filePath)
         {
             if (output is null)
             {
@@ -22,11 +22,6 @@ namespace Microsoft.Tye
             if (application is null)
             {
                 throw new ArgumentNullException(nameof(application));
-            }
-
-            if (service is null)
-            {
-                throw new ArgumentNullException(nameof(service));
             }
 
             if (project is null)
@@ -47,7 +42,7 @@ namespace Microsoft.Tye
             using var stream = File.OpenWrite(filePath);
             using var writer = new StreamWriter(stream, encoding: Encoding.UTF8, bufferSize: -1, leaveOpen: true);
 
-            var entryPoint = Path.GetFileNameWithoutExtension(project.RelativeFilePath);
+            var entryPoint = Path.GetFileNameWithoutExtension(project.ProjectFile.Name);
             output.WriteDebugLine($"Writing Dockerfile to '{filePath}'.");
             if (container.UseMultiphaseDockerfile ?? true)
             {
@@ -80,16 +75,11 @@ namespace Microsoft.Tye
             await writer.WriteLineAsync($"ENTRYPOINT [\"dotnet\", \"{applicationEntryPoint}.dll\"]");
         }
 
-        public static void ApplyContainerDefaults(Application application, ServiceEntry service, Project project, ContainerInfo container)
+        public static void ApplyContainerDefaults(ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container)
         {
             if (application is null)
             {
                 throw new ArgumentNullException(nameof(application));
-            }
-
-            if (service is null)
-            {
-                throw new ArgumentNullException(nameof(service));
             }
 
             if (project is null)
@@ -131,16 +121,16 @@ namespace Microsoft.Tye
             container.BuildImageName ??= "mcr.microsoft.com/dotnet/core/sdk";
             container.BuildImageTag ??= "3.1";
 
-            if (container.ImageName == null && application.Globals.Registry?.Hostname == null)
+            if (container.ImageName == null && application.Registry?.Hostname == null)
             {
-                container.ImageName ??= service.Service.Name.ToLowerInvariant();
+                container.ImageName ??= project.Name.ToLowerInvariant();
             }
-            else if (container.ImageName == null && application.Globals.Registry?.Hostname != null)
+            else if (container.ImageName == null && application.Registry?.Hostname != null)
             {
-                container.ImageName ??= $"{application.Globals.Registry?.Hostname}/{service.Service.Name.ToLowerInvariant()}";
+                container.ImageName ??= $"{application.Registry?.Hostname}/{project.Name.ToLowerInvariant()}";
             }
 
-            container.ImageTag ??= project.Version.Replace("+", "-");
+            container.ImageTag ??= project.Version?.Replace("+", "-") ?? "latest";
         }
     }
 }

@@ -152,17 +152,8 @@ namespace Microsoft.Tye.ConfigModel
                 }
             }
 
-            if (service.Configuration.Count == 0 && launchProfile.TryGetProperty("environmentVariables", out var environmentVariables))
-            {
-                foreach (var envVar in environmentVariables.EnumerateObject())
-                {
-                    service.Configuration.Add(new ConfigConfigurationSource()
-                    {
-                        Name = envVar.Name,
-                        Value = envVar.Value.GetString()
-                    });
-                }
-            }
+            // Don't apply environment variables here. We don't want to carry forward settings from
+            // development into production.
         }
     }
 }

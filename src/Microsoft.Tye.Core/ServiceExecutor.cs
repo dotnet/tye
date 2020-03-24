@@ -13,10 +13,10 @@ namespace Microsoft.Tye
     public sealed class ServiceExecutor
     {
         private readonly OutputContext output;
-        private readonly Application application;
+        private readonly ApplicationBuilder application;
         private readonly Step[] steps;
 
-        public ServiceExecutor(OutputContext output, Application application, IEnumerable<Step> steps)
+        public ServiceExecutor(OutputContext output, ApplicationBuilder application, IEnumerable<Step> steps)
         {
             if (output is null)
             {
@@ -38,9 +38,9 @@ namespace Microsoft.Tye
             this.steps = steps.ToArray();
         }
 
-        public async Task ExecuteAsync(ServiceEntry service)
+        public async Task ExecuteAsync(ServiceBuilder service)
         {
-            using var tracker = output.BeginStep($"Processing Service '{service.FriendlyName}'...");
+            using var tracker = output.BeginStep($"Processing Service '{service.Name}'...");
             for (var i = 0; i < steps.Length; i++)
             {
                 var step = steps[i];
@@ -56,20 +56,9 @@ namespace Microsoft.Tye
         {
             public abstract string DisplayText { get; }
 
-            public abstract Task ExecuteAsync(OutputContext output, Application application, ServiceEntry service);
+            public abstract Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service);
 
-            protected bool SkipForEnvironment(OutputContext output, ServiceEntry service, string environment)
-            {
-                if (!service.AppliesToEnvironment(environment))
-                {
-                    output.WriteDebugLine($"Service '{service.FriendlyName}' is not part of environment '{environment}'. Skipping.");
-                    return true;
-                }
-
-                return false;
-            }
-
-            protected bool SkipWithoutProject(OutputContext output, ServiceEntry service, [MaybeNullWhen(returnValue: true)] out Project project)
+            protected bool SkipWithoutProject(OutputContext output, ServiceBuilder service, [MaybeNullWhen(returnValue: true)] out ProjectServiceBuilder project)
             {
                 if (output is null)
                 {
@@ -81,18 +70,18 @@ namespace Microsoft.Tye
                     throw new ArgumentNullException(nameof(service));
                 }
 
-                if (service.Service.Source is Project p)
+                if (service is ProjectServiceBuilder p)
                 {
                     project = p;
                     return false;
                 }
 
-                output.WriteInfoLine($"Service '{service.FriendlyName}' does not have a project associated. Skipping.");
+                output.WriteInfoLine($"Service '{service.Name}' does not have a project associated. Skipping.");
                 project = default!;
                 return true;
             }
 
-            protected bool SkipWithoutContainerInfo(OutputContext output, ServiceEntry service, [MaybeNullWhen(returnValue: true)] out ContainerInfo container)
+            protected bool SkipWithoutContainerInfo(OutputContext output, ServiceBuilder service, [MaybeNullWhen(returnValue: true)] out ContainerInfo container)
             {
                 if (output is null)
                 {
@@ -104,18 +93,18 @@ namespace Microsoft.Tye
                     throw new ArgumentNullException(nameof(service));
                 }
 
-                if (service.Service.GeneratedAssets.Container is ContainerInfo c)
+                if (service is ProjectServiceBuilder project && project.ContainerInfo is ContainerInfo c)
                 {
                     container = c;
                     return false;
                 }
 
-                output.WriteInfoLine($"Service '{service.FriendlyName}' does not produce a container. Skipping.");
+                output.WriteInfoLine($"Service '{service.Name}' does not produce a container. Skipping.");
                 container = default!;
                 return true;
             }
 
-            protected bool SkipWithoutContainerOutput(OutputContext output, ServiceEntry service)
+            protected bool SkipWithoutContainerOutput(OutputContext output, ServiceBuilder service)
             {
                 if (output is null)
                 {
@@ -132,7 +121,7 @@ namespace Microsoft.Tye
                     return false;
                 }
 
-                output.WriteInfoLine($"Service '{service.FriendlyName}' does not have a container. Skipping.");
+                output.WriteInfoLine($"Service '{service.Name}' does not have a container. Skipping.");
                 return true;
             }
         }

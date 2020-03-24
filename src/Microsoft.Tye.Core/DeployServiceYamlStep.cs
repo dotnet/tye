@@ -17,23 +17,23 @@ namespace Microsoft.Tye
 
         public string Environment { get; set; } = "production";
 
-        public override async Task ExecuteAsync(OutputContext output, Application application, ServiceEntry service)
+        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             var yaml = service.Outputs.OfType<IYamlManifestOutput>().ToArray();
             if (yaml.Length == 0)
             {
-                output.WriteDebugLine($"No yaml manifests found for service '{service.FriendlyName}'. Skipping.");
+                output.WriteDebugLine($"No yaml manifests found for service '{service.Name}'. Skipping.");
                 return;
             }
 
             if (!await KubectlDetector.Instance.IsKubectlInstalled.Value)
             {
-                throw new CommandException($"Cannot apply manifests for '{service.Service.Name}' because kubectl is not installed.");
+                throw new CommandException($"Cannot apply manifests for '{service.Name}' because kubectl is not installed.");
             }
 
             if (!await KubectlDetector.Instance.IsKubectlConnectedToCluster.Value)
             {
-                throw new CommandException($"Cannot apply manifests for '{service.Service.Name}' because kubectl is not connected to a cluster.");
+                throw new CommandException($"Cannot apply manifests for '{service.Name}' because kubectl is not connected to a cluster.");
             }
 
             using var tempFile = TempFile.Create();
@@ -67,7 +67,7 @@ namespace Microsoft.Tye
                 throw new CommandException("'kubectl apply' failed.");
             }
 
-            output.WriteInfoLine($"Deployed service '{service.FriendlyName}'.");
+            output.WriteInfoLine($"Deployed service '{service.Name}'.");
         }
     }
 }

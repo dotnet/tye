@@ -13,7 +13,7 @@ namespace Microsoft.Tye
 
         public string Environment { get; set; } = "production";
 
-        public override async Task ExecuteAsync(OutputContext output, Application application, ServiceEntry service)
+        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             if (SkipWithoutProject(output, service, out var _))
             {
@@ -21,11 +21,6 @@ namespace Microsoft.Tye
             }
 
             if (SkipWithoutContainerInfo(output, service, out var _))
-            {
-                return;
-            }
-
-            if (SkipForEnvironment(output, service, Environment))
             {
                 return;
             }

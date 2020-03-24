@@ -59,7 +59,7 @@ namespace Microsoft.Tye
             }
         }
 
-        public static Task ReadProjectDetailsAsync(OutputContext output, FileInfo projectFile, Project project)
+        public static Task ReadProjectDetailsAsync(OutputContext output, ProjectServiceBuilder project)
         {
             if (output is null)
             {
@@ -71,9 +71,9 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(project));
             }
 
-            EnsureMSBuildRegistered(output, projectFile);
+            EnsureMSBuildRegistered(output, project.ProjectFile);
 
-            EvaluateProject(output, projectFile, project);
+            EvaluateProject(output, project);
 
             if (!SemVersion.TryParse(project.Version, out var version))
             {
@@ -131,9 +131,16 @@ namespace Microsoft.Tye
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void LogIt(OutputContext output)
+        {
+            output.WriteDebugLine("Loaded: " + typeof(ProjectInstance).Assembly.FullName);
+            output.WriteDebugLine("Loaded From: " + typeof(ProjectInstance).Assembly.Location);
+        }
+
         // Do not load MSBuild types before using EnsureMSBuildRegistered.
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void EvaluateProject(OutputContext output, FileInfo projectFile, Project project)
+        private static void EvaluateProject(OutputContext output, ProjectServiceBuilder project)
         {
             var sw = Stopwatch.StartNew();
 
@@ -145,17 +152,17 @@ namespace Microsoft.Tye
 
             try
             {
-                output.WriteDebugLine($"Loading project '{projectFile.FullName}'.");
-                var msbuildProject = Microsoft.Build.Evaluation.Project.FromFile(projectFile.FullName, new ProjectOptions()
+                output.WriteDebugLine($"Loading project '{project.ProjectFile.FullName}'.");
+                var msbuildProject = Microsoft.Build.Evaluation.Project.FromFile(project.ProjectFile.FullName, new ProjectOptions()
                 {
                     ProjectCollection = projectCollection,
                 });
                 projectInstance = msbuildProject.CreateProjectInstance();
-                output.WriteDebugLine($"Loaded project '{projectFile.FullName}'.");
+                output.WriteDebugLine($"Loaded project '{project.ProjectFile.FullName}'.");
             }
             catch (Exception ex)
             {
-                throw new CommandException($"Failed to load project: '{projectFile.FullName}'.", ex);
+                throw new CommandException($"Failed to load project: '{project.ProjectFile.FullName}'.", ex);
             }
 
             // Currently we only log at debug level.

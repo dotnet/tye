@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -50,7 +49,9 @@ namespace E2ETest
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "test-project.csproj"));
-            using var host = new TyeHost(ConfigFactory.FromFile(projectFile).ToHostingApplication(), Array.Empty<string>())
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
             {
                 Sink = sink,
             };
@@ -108,7 +109,9 @@ namespace E2ETest
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
-            using var host = new TyeHost(ConfigFactory.FromFile(projectFile).ToHostingApplication(), Array.Empty<string>())
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
             {
                 Sink = sink,
             };
@@ -143,7 +146,9 @@ namespace E2ETest
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
-            using var host = new TyeHost(ConfigFactory.FromFile(projectFile).ToHostingApplication(), Array.Empty<string>())
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
             {
                 Sink = sink,
             };
@@ -211,7 +216,9 @@ namespace E2ETest
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
-            using var host = new TyeHost(ConfigFactory.FromFile(projectFile).ToHostingApplication(), new[] { "--docker" })
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            using var host = new TyeHost(application.ToHostingApplication(), new[] { "--docker" })
             {
                 Sink = sink,
             };
@@ -251,7 +258,9 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "test-project.csproj"));
 
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
-            using var host = new TyeHost(ConfigFactory.FromFile(projectFile).ToHostingApplication(), Array.Empty<string>(), null!)
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
             {
                 Sink = sink,
             };

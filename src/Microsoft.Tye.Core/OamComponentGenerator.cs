@@ -10,7 +10,7 @@ namespace Microsoft.Tye
 {
     internal static class OamComponentGenerator
     {
-        public static OamComponentOutput CreateOamComponent(OutputContext output, Application application, ServiceEntry service)
+        public static OamComponentOutput CreateOamComponent(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project)
         {
             if (output is null)
             {
@@ -22,9 +22,9 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(application));
             }
 
-            if (service is null)
+            if (project is null)
             {
-                throw new ArgumentNullException(nameof(service));
+                throw new ArgumentNullException(nameof(project));
             }
 
             var root = new YamlMappingNode();
@@ -34,7 +34,7 @@ namespace Microsoft.Tye
 
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
-            metadata.Add("name", service.Service.Name);
+            metadata.Add("name", project.Name);
 
             var spec = new YamlMappingNode();
             root.Add("spec", spec);
@@ -43,16 +43,16 @@ namespace Microsoft.Tye
             var containers = new YamlSequenceNode();
             spec.Add("containers", containers);
 
-            var images = service.Outputs.OfType<DockerImageOutput>();
+            var images = project.Outputs.OfType<DockerImageOutput>();
             foreach (var image in images)
             {
                 var container = new YamlMappingNode();
                 containers.Add(container);
-                container.Add("name", service.Service.Name); // NOTE: to really support multiple images we'd need to generate unique names.
+                container.Add("name", project.Name); // NOTE: to really support multiple images we'd need to generate unique names.
                 container.Add("image", $"{image.ImageName}:{image.ImageTag}");
             }
 
-            return new OamComponentOutput(service.Service.Name, new YamlDocument(root));
+            return new OamComponentOutput(project.Name, new YamlDocument(root));
         }
     }
 }

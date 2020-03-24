@@ -47,7 +47,7 @@ spec:
     app.kubernetes.io/name: backend
   type: ClusterIP
   ports:
-  - name: backend
+  - name: http
     protocol: TCP
     port: 80
     targetPort: 80
@@ -102,7 +102,7 @@ spec:
     app.kubernetes.io/name: frontend
   type: ClusterIP
   ports:
-  - name: frontend
+  - name: http
     protocol: TCP
     port: 80
     targetPort: 80
