@@ -18,7 +18,7 @@ namespace Microsoft.Tye.Hosting.Model
             Version = project.Version;
             AssemblyName = project.AssemblyName;
             TargetAssemblyPath = Path.Combine(project.ProjectFile.Directory.Name, project.TargetPath);
-            RunCommand =  project.RunCommand;
+            RunCommand = project.RunCommand;
             PublishOutputPath = Path.Combine(project.ProjectFile.Directory.Name, project.PublishDir);
         }
 
@@ -31,7 +31,7 @@ namespace Microsoft.Tye.Hosting.Model
         public string Version { get; }
 
         public string AssemblyName { get; }
-        
+
         public string TargetAssemblyPath { get; }
 
         public string PublishOutputPath { get; }
