@@ -201,6 +201,11 @@ namespace Microsoft.Tye
             project.PublishDir = projectInstance.GetPropertyValue("PublishDir");
             project.AssemblyName = projectInstance.GetPropertyValue("AssemblyName");
 
+            output.WriteDebugLine($"RunCommand={project.RunCommand}");
+            output.WriteDebugLine($"TargetPath={project.TargetPath}");
+            output.WriteDebugLine($"PublishDir={project.PublishDir}");
+            output.WriteDebugLine($"AssemblyName={project.AssemblyName}");
+
             var targetFramework = projectInstance.GetPropertyValue("TargetFramework");
             project.TargetFramework = targetFramework;
             output.WriteDebugLine($"Found target framework: {targetFramework}");
