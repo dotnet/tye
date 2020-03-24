@@ -70,7 +70,7 @@ namespace Microsoft.Tye.Hosting
         public Task PurgeAsync()
         {
             var app = BuildWebApplication(_application, _args, Sink);
-            var runners = CreateRunners(_application, _args, app.Logger, app.Configuration);
+            var runners = CreateRunners(_application, _args, Array.Empty<string>(), app.Logger, app.Configuration);
 
             using var replicaRegistry = new ReplicaRegistry(_application, runners);
             return replicaRegistry.Reset();
@@ -263,14 +263,14 @@ namespace Microsoft.Tye.Hosting
             // Print out what providers were selected and their values
             diagnosticOptions.DumpDiagnostics(logger);
 
-            var replicaRunners = CreateRunners(application, args, logger, configuration);
+            var replicaRunners = CreateRunners(application, args, _servicesToDebug, logger, configuration);
 
             var processors = new List<IApplicationProcessor>
             {
+                new ReplicaStateRecorder(application, logger, replicaRunners),
                 new EventPipeDiagnosticsRunner(logger, diagnosticsCollector),
                 new ProxyService(logger),
-                new IngressService(logger),
-                new DockerRunner(logger)
+                new IngressService(logger)
             };
 
             processors.AddRange(replicaRunners.Values.Distinct());
@@ -284,10 +284,10 @@ namespace Microsoft.Tye.Hosting
             return new AggregateApplicationProcessor(processors);
         }
 
-        private static Dictionary<ServiceType, IReplicaInstantiator> CreateRunners(Model.Application application, string[] args, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
+        private static Dictionary<ServiceType, IReplicaInstantiator> CreateRunners(Model.Application application, string[] args, string[] _servicesToDebug, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
         {
             var dockerRunner = new DockerRunner(logger);
-            var processRunner = new ProcessRunner(logger, ProcessRunnerOptions.FromArgs(args));
+            var processRunner = new ProcessRunner(logger, ProcessRunnerOptions.FromArgs(args, _servicesToDebug));
 
             return new Dictionary<ServiceType, IReplicaInstantiator>()
             {

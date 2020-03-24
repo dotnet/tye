@@ -22,7 +22,8 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                var application = ConfigFactory.FromFile(path);
+                var output = new OutputContext(console, Verbosity.Quiet);
+                var application = await ApplicationFactory.CreateAsync(output, path);
 
                 using var host = new TyeHost(application.ToHostingApplication(), args);
                 await host.PurgeAsync();
