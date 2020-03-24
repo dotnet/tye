@@ -23,7 +23,7 @@ namespace Microsoft.Tye.Hosting
 
         public Task StartAsync(Model.Application application)
         {
-            // This transforms a ProjectRunInfo into
+            // This transforms a ProjectRunInfo into a container
             var tasks = new List<Task>();
             foreach (var s in application.Services.Values)
             {
@@ -74,6 +74,12 @@ namespace Microsoft.Tye.Hosting
                 WorkingDirectory = "/app"
             };
             dockerRunInfo.VolumeMappings[Path.GetDirectoryName(service.Status.ProjectFilePath)!] = "/app";
+
+            // Make volume mapping works when running as a container
+            foreach (var mapping in project.VolumeMappings)
+            {
+                dockerRunInfo.VolumeMappings[mapping.Key] = mapping.Value;
+            }
 
             // Change the project into a container info
             serviceDescription.RunInfo = dockerRunInfo;

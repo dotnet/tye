@@ -35,11 +35,18 @@ namespace Microsoft.Tye.Hosting
 
         private readonly Tye.Hosting.Model.Application _application;
         private readonly string[] _args;
+        private readonly string[] _servicesToDebug;
 
         public TyeHost(Tye.Hosting.Model.Application application, string[] args)
+            : this(application, args, new string[0])
+        {
+        }
+
+        public TyeHost(Tye.Hosting.Model.Application application, string[] args, string[] servicesToDebug)
         {
             _application = application;
             _args = args;
+            _servicesToDebug = servicesToDebug;
         }
 
         public Tye.Hosting.Model.Application Application => _application;
@@ -83,7 +90,7 @@ namespace Microsoft.Tye.Hosting
 
             var configuration = app.Configuration;
 
-            _processor = CreateApplicationProcessor(_application, _args, _logger, configuration);
+            _processor = CreateApplicationProcessor(_application, _args, _servicesToDebug, _logger, configuration);
 
             await app.StartAsync();
 
@@ -202,13 +209,13 @@ namespace Microsoft.Tye.Hosting
             else if (IsPortInUseByBinding(_application, DefaultPort))
             {
                 // Port has been reserved for the app.
-                app.Logger.LogInformation($"Default dashboard port {DefaultPort} has been reserved by the application, choosing random port.");
+                app.Logger.LogInformation("Default dashboard port {DefaultPort} has been reserved by the application, choosing random port.", DefaultPort);
                 return AutodetectPort;
             }
             else if (IsPortAlreadyInUse(DefaultPort))
             {
                 // Port is in use by something already running.
-                app.Logger.LogInformation($"Default dashboard port {DefaultPort} is in use, choosing random port.");
+                app.Logger.LogInformation("Default dashboard port {DefaultPort} is in use, choosing random port.", DefaultPort);
                 return AutodetectPort;
             }
             else
@@ -248,7 +255,7 @@ namespace Microsoft.Tye.Hosting
             return false;
         }
 
-        private static AggregateApplicationProcessor CreateApplicationProcessor(Model.Application application, string[] args, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
+        private static AggregateApplicationProcessor CreateApplicationProcessor(Model.Application application, string[] args, string[] _servicesToDebug, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
         {
             var diagnosticOptions = DiagnosticOptions.FromConfiguration(configuration);
             var diagnosticsCollector = new DiagnosticsCollector(logger, diagnosticOptions);
@@ -260,14 +267,15 @@ namespace Microsoft.Tye.Hosting
 
             var processors = new List<IApplicationProcessor>
             {
-                new ReplicaStateRecorder(application, logger, replicaRunners),
                 new EventPipeDiagnosticsRunner(logger, diagnosticsCollector),
-                new ProxyService(logger)
+                new ProxyService(logger),
+                new IngressService(logger),
+                new DockerRunner(logger)
             };
 
             processors.AddRange(replicaRunners.Values.Distinct());
 
-            // If the docker command is specified then transport the ProjectRunInfo into DockerRunInfo
+            // If the docker command is specified then transform the ProjectRunInfo into DockerRunInfo
             if (args.Contains("--docker"))
             {
                 processors.Insert(1, new TransformProjectsIntoContainers(logger));

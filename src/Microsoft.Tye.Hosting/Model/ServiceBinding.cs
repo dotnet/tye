@@ -10,7 +10,7 @@ namespace Microsoft.Tye.Hosting.Model
         public string? ConnectionString { get; set; }
         public bool AutoAssignPort { get; set; }
         public int? Port { get; set; }
-        public int? InternalPort { get; set; }
+        public int? ContainerPort { get; set; }
         public string? Host { get; set; }
         public string? Protocol { get; set; }
     }

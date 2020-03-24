@@ -83,7 +83,7 @@ namespace Microsoft.Tye.Hosting
 
             var dockerInfo = new DockerInformation(new Task[service.Description.Replicas]);
 
-            async Task RunDockerContainer(IEnumerable<(int Port, int? InternalPort, int BindingPort, string? Protocol)> ports)
+            async Task RunDockerContainer(IEnumerable<(int Port, int? ContainerPort, int BindingPort, string? Protocol)> ports)
             {
                 var hasPorts = ports.Any();
 
@@ -107,17 +107,32 @@ namespace Microsoft.Tye.Hosting
                 {
                     status.Ports = ports.Select(p => p.Port);
 
-                    // These ports should also be passed in not assuming ASP.NET Core
-                    environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://*:{p.Port}"));
+                    // These are the ports that the application should use for binding
 
-                    portString = string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.InternalPort ?? p.Port}"));
+                    // 1. Tell the docker container what port to bind to
+                    portString = string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.ContainerPort ?? p.Port}"));
 
+                    // 2. Configure ASP.NET Core to bind to those same ports
+                    environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://*:{p.ContainerPort ?? p.Port}"));
+
+                    // Set the HTTPS port for the redirect middleware
                     foreach (var p in ports)
                     {
-                        environment[$"{p.Protocol?.ToUpper() ?? "HTTP"}_PORT"] = p.BindingPort.ToString();
+                        if (string.Equals(p.Protocol, "https", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // We need to set the redirect URL to the exposed port so the redirect works cleanly
+                            environment["HTTPS_PORT"] = p.BindingPort.ToString();
+                        }
                     }
+
+                    // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
+                    environment["PORT"] = string.Join(";", ports.Select(p => $"{p.ContainerPort ?? p.Port}"));
                 }
 
+                // See: https://github.com/docker/for-linux/issues/264
+                //
+                // The way we do proxying here doesn't really work for multi-container scenarios on linux
+                // without some more setup.
                 application.PopulateEnvironment(service, (key, value) => environment[key] = value, "host.docker.internal");
 
                 environment["APP_INSTANCE"] = replica;
@@ -129,7 +144,8 @@ namespace Microsoft.Tye.Hosting
 
                 foreach (var pair in docker.VolumeMappings)
                 {
-                    volumes += $"-v {pair.Key}:{pair.Value} ";
+                    var sourcePath = Path.GetFullPath(Path.Combine(application.ContextDirectory, pair.Key.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)));
+                    volumes += $"-v {sourcePath}:{pair.Value} ";
                 }
 
                 var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {docker.Image} {docker.Args ?? ""}";
@@ -227,7 +243,7 @@ namespace Microsoft.Tye.Hosting
                             continue;
                         }
 
-                        ports.Add((service.PortMap[binding.Port.Value][i], binding.InternalPort, binding.Port.Value, binding.Protocol));
+                        ports.Add((service.PortMap[binding.Port.Value][i], binding.ContainerPort, binding.Port.Value, binding.Protocol));
                     }
 
                     dockerInfo.Tasks[i] = RunDockerContainer(ports);

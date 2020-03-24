@@ -18,14 +18,12 @@ namespace Microsoft.Tye.Hosting
     public class ProcessRunner : IApplicationProcessor, IReplicaInstantiator
     {
         private readonly ILogger _logger;
-        private readonly bool _debugMode;
-        private readonly bool _buildProjects;
+        private readonly ProcessRunnerOptions _options;
 
         public ProcessRunner(ILogger logger, ProcessRunnerOptions options)
         {
             _logger = logger;
-            _debugMode = options.DebugMode;
-            _buildProjects = options.BuildProjects;
+            _options = options;
         }
 
         public Task StartAsync(Tye.Hosting.Model.Application application)
@@ -36,13 +34,10 @@ namespace Microsoft.Tye.Hosting
             {
                 tasks[index++] = s.Value.ServiceType switch
                 {
-                    ServiceType.Container => Task.CompletedTask,
-                    ServiceType.External => Task.CompletedTask,
-
                     ServiceType.Executable => LaunchService(application, s.Value),
                     ServiceType.Project => LaunchService(application, s.Value),
 
-                    _ => throw new InvalidOperationException("Unknown ServiceType."),
+                    _ => Task.CompletedTask,
                 };
             }
 
@@ -75,7 +70,9 @@ namespace Microsoft.Tye.Hosting
             else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
             {
                 var expandedExecutable = Environment.ExpandEnvironmentVariables(executable.Executable);
-                path = Path.GetFullPath(Path.Combine(application.ContextDirectory, expandedExecutable));
+                path = Path.GetExtension(expandedExecutable) == ".dll" ?
+                    Path.GetFullPath(Path.Combine(application.ContextDirectory, expandedExecutable)) :
+                    expandedExecutable;
                 workingDirectory = executable.WorkingDirectory != null ?
                     Path.GetFullPath(Path.Combine(application.ContextDirectory, Environment.ExpandEnvironmentVariables(executable.WorkingDirectory))) :
                     Path.GetDirectoryName(path)!;
@@ -101,7 +98,7 @@ namespace Microsoft.Tye.Hosting
             if (service.Status.ProjectFilePath != null &&
                 service.Description.RunInfo is ProjectRunInfo project2 &&
                 project2.Build &&
-                _buildProjects)
+                _options.BuildProjects)
             {
                 // Sometimes building can fail because of file locking (like files being open in VS)
                 _logger.LogInformation("Building project {ProjectFile}", service.Status.ProjectFilePath);
@@ -121,6 +118,9 @@ namespace Microsoft.Tye.Hosting
 
             async Task RunApplicationAsync(IEnumerable<(int Port, int BindingPort, string? Protocol)> ports)
             {
+                // Make sure we yield before trying to start the process, this is important so we don't hang startup
+                await Task.Yield();
+
                 var hasPorts = ports.Any();
 
                 var environment = new Dictionary<string, string>
@@ -141,20 +141,30 @@ namespace Microsoft.Tye.Hosting
 
                 application.PopulateEnvironment(service, (k, v) => environment[k] = v);
 
-                if (_debugMode)
+                if (_options.DebugMode && (_options.DebugAllServices || _options.ServicesToDebug.Contains(serviceName, StringComparer.OrdinalIgnoreCase)))
                 {
                     environment["DOTNET_STARTUP_HOOKS"] = typeof(Hosting.Runtime.HostingRuntimeHelpers).Assembly.Location;
                 }
 
                 if (hasPorts)
                 {
-                    // These ports should also be passed in not assuming ASP.NET Core
+                    // These are the ports that the application should use for binding
+
+                    // 1. Configure ASP.NET Core to bind to those same ports
                     environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://localhost:{p.Port}"));
 
+                    // Set the HTTPS port for the redirect middleware
                     foreach (var p in ports)
                     {
-                        environment[$"{p.Protocol?.ToUpper() ?? "HTTP"}_PORT"] = p.BindingPort.ToString();
+                        if (string.Equals(p.Protocol, "https", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // We need to set the redirect URL to the exposed port so the redirect works cleanly
+                            environment["HTTPS_PORT"] = p.BindingPort.ToString();
+                        }
                     }
+
+                    // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
+                    environment["PORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
                 }
 
                 while (!processInfo.StoppedTokenSource.IsCancellationRequested)

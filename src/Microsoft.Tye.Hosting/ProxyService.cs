@@ -69,6 +69,15 @@ namespace Microsoft.Tye.Hosting
                                         binding.Port = GetNextPort();
                                     }
 
+                                    if (binding.Protocol == "http" || binding.Protocol == null)
+                                    {
+                                        binding.ContainerPort = 80;
+                                    }
+                                    else if (binding.Protocol == "https")
+                                    {
+                                        binding.ContainerPort = 443;
+                                    }
+
                                     if (service.Description.Replicas == 1)
                                     {
                                         // No need to proxy

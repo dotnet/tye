@@ -23,6 +23,8 @@ spec:
         env:
         - name: ASPNETCORE_URLS
           value: 'http://*'
+        - name: PORT
+          value: '80'
         ports:
         - containerPort: 80
 ...
@@ -39,7 +41,7 @@ spec:
     app.kubernetes.io/name: test-project
   type: ClusterIP
   ports:
-  - name: test-project
+  - name: http
     protocol: TCP
     port: 80
     targetPort: 80

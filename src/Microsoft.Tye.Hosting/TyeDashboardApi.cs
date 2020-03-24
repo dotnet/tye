@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json.Serialization;
+using System.Collections.Generic;
+using Microsoft.Tye.Hosting.Model.V1;
 
 namespace Microsoft.Tye.Hosting
 {
@@ -27,7 +30,7 @@ namespace Microsoft.Tye.Hosting
                 WriteIndented = true,
             };
 
-            _options.Converters.Add(ReplicaStatus.JsonConverter);
+            _options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         }
 
         public void MapRoutes(IEndpointRouteBuilder endpoints)
@@ -61,7 +64,13 @@ namespace Microsoft.Tye.Hosting
 
             var services = app.Services.OrderBy(s => s.Key).Select(s => s.Value);
 
-            await JsonSerializer.SerializeAsync(context.Response.Body, services, _options);
+            var list = new List<V1Service>();
+            foreach (var service in services)
+            {
+                list.Add(CreateServiceJson(service));
+            }
+
+            await JsonSerializer.SerializeAsync(context.Response.Body, list, _options);
         }
 
         private async Task Service(HttpContext context)
@@ -83,7 +92,118 @@ namespace Microsoft.Tye.Hosting
                 return;
             }
 
-            await JsonSerializer.SerializeAsync(context.Response.Body, service, _options);
+            var serviceJson = CreateServiceJson(service);
+
+            await JsonSerializer.SerializeAsync(context.Response.Body, serviceJson, _options);
+        }
+
+        private static V1Service CreateServiceJson(Model.Service service)
+        {
+            var description = service.Description;
+            var bindings = description.Bindings;
+
+            var v1bindingList = new List<V1ServiceBinding>();
+
+            foreach (var binding in bindings)
+            {
+                v1bindingList.Add(new V1ServiceBinding()
+                {
+                    Name = binding.Name,
+                    ConnectionString = binding.ConnectionString,
+                    AutoAssignPort = binding.AutoAssignPort,
+                    Port = binding.Port,
+                    ContainerPort = binding.ContainerPort,
+                    Host = binding.Host,
+                    Protocol = binding.Protocol
+                });
+            }
+
+            var v1ConfigurationSourceList = new List<V1ConfigurationSource>();
+            foreach (var configSource in description.Configuration)
+            {
+                v1ConfigurationSourceList.Add(new V1ConfigurationSource()
+                {
+                    Name = configSource.Name,
+                    Value = configSource.Value
+                });
+            }
+
+            var v1RunInfo = new V1RunInfo();
+            if (description.RunInfo is DockerRunInfo dockerRunInfo)
+            {
+                v1RunInfo.Type = V1RunInfoType.Docker;
+                v1RunInfo.Image = dockerRunInfo.Image;
+                v1RunInfo.VolumeMappings = dockerRunInfo.VolumeMappings;
+                v1RunInfo.WorkingDirectory = dockerRunInfo.WorkingDirectory;
+                v1RunInfo.Args = dockerRunInfo.Args;
+            }
+            else if (description.RunInfo is ExecutableRunInfo executableRunInfo)
+            {
+                v1RunInfo.Type = V1RunInfoType.Executable;
+                v1RunInfo.Args = executableRunInfo.Args;
+                v1RunInfo.Executable = executableRunInfo.Executable;
+                v1RunInfo.WorkingDirectory = executableRunInfo.WorkingDirectory;
+            }
+            else if (description.RunInfo is ProjectRunInfo projectRunInfo)
+            {
+                v1RunInfo.Type = V1RunInfoType.Project;
+                v1RunInfo.Args = projectRunInfo.Args;
+                v1RunInfo.Build = projectRunInfo.Build;
+                v1RunInfo.Project = projectRunInfo.Project;
+            }
+
+            var v1ServiceDescription = new V1ServiceDescription()
+            {
+                Bindings = v1bindingList,
+                Configuration = v1ConfigurationSourceList,
+                Name = description.Name,
+                Replicas = description.Replicas,
+                RunInfo = v1RunInfo
+            };
+
+            var replicateDictionary = new Dictionary<string, V1ReplicaStatus>();
+            foreach (var replica in service.Replicas)
+            {
+                var replicaStatus = new V1ReplicaStatus()
+                {
+                    Name = replica.Value.Name,
+                    Ports = replica.Value.Ports,
+                };
+
+                replicateDictionary[replica.Key] = replicaStatus;
+
+                if (replica.Value is ProcessStatus processStatus)
+                {
+                    replicaStatus.Pid = processStatus.Pid;
+                    replicaStatus.ExitCode = processStatus.ExitCode;
+                    replicaStatus.Environment = processStatus.Environment;
+                }
+                else if (replica.Value is DockerStatus dockerStatus)
+                {
+                    replicaStatus.DockerCommand = dockerStatus.DockerCommand;
+                    replicaStatus.DockerLogsPid = dockerStatus.DockerLogsPid;
+                    replicaStatus.ContainerId = dockerStatus.ContainerId;
+                }
+            }
+
+            var v1Status = new V1ServiceStatus()
+            {
+                ProjectFilePath = service.Status.ProjectFilePath,
+                ExecutablePath = service.Status.ExecutablePath,
+                Args = service.Status.Args,
+                WorkingDirectory = service.Status.WorkingDirectory,
+            };
+
+            var serviceJson = new V1Service()
+            {
+                ServiceType = service.ServiceType,
+                Status = v1Status,
+                Description = v1ServiceDescription,
+                Replicas = replicateDictionary,
+                Restarts = service.Restarts
+            };
+
+            return serviceJson;
         }
 
         private async Task Logs(HttpContext context)

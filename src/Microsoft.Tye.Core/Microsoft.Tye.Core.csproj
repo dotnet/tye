@@ -12,16 +12,23 @@
 
   <ItemGroup>
     <PackageReference Include="KubernetesClient" Version="1.6.11" />
-    <PackageReference Include="Microsoft.Build" Version="16.5.0" />
+    <!--
+      The Microsoft.Build.Locator package takes care of dynamically loading these assemblies
+      at runtime. We don't need/want to ship them, just to have them as references.
+    -->
+    <PackageReference Include="Microsoft.Build" Version="16.3.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.2.6" />
+    <!-- Hoisted to avoid a conflict with Microsoft.Build -->
+    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <PackageReference Include="semver" Version="2.0.6" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20071.2" />
     <PackageReference Include="System.Commandline.Rendering" Version="0.3.0-alpha.20070.2" />
+    <!-- Hoisted to avoid a conflict with Microsoft.Build -->
+    <PackageReference Include="System.Security.Principal.Windows" Version="4.7.0" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="build\**" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="buildMultiTargeting\**" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Templates\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
@@ -29,10 +36,6 @@
     <Compile Include="..\shared\KubectlDetector.cs" Link="KubectlDetector.cs" />
     <Compile Include="..\shared\TempDirectory.cs" Link="TempDirectory.cs" />
     <Compile Include="..\shared\TempFile.cs" Link="TempFile.cs" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\Imports.targets" />
   </ItemGroup>
 
 </Project>

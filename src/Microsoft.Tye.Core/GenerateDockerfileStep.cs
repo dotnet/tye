@@ -13,7 +13,7 @@ namespace Microsoft.Tye
 
         public bool Force { get; set; }
 
-        public override async Task ExecuteAsync(OutputContext output, Application application, ServiceEntry service)
+        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             if (SkipWithoutProject(output, service, out var project))
             {
@@ -32,7 +32,7 @@ namespace Microsoft.Tye
 
             container.UseMultiphaseDockerfile ??= true;
 
-            var dockerFilePath = Path.Combine(application.GetProjectDirectory(project), "Dockerfile");
+            var dockerFilePath = Path.Combine(project.ProjectFile.DirectoryName, "Dockerfile");
             if (File.Exists(dockerFilePath) && !Force)
             {
                 throw new CommandException("'Dockerfile' already exists for project. use '--force' to overwrite.");
@@ -40,7 +40,7 @@ namespace Microsoft.Tye
 
             File.Delete(dockerFilePath);
 
-            await DockerfileGenerator.WriteDockerfileAsync(output, application, service, project, container, dockerFilePath);
+            await DockerfileGenerator.WriteDockerfileAsync(output, application, project, container, dockerFilePath);
             output.WriteInfoLine($"Generated Dockerfile at '{dockerFilePath}'.");
         }
     }

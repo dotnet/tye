@@ -13,7 +13,7 @@ namespace Microsoft.Tye
 {
     internal static class OamApplicationGenerator
     {
-        public static Task WriteOamApplicationAsync(TextWriter writer, OutputContext output, Application application, string applicationName, string environment)
+        public static Task WriteOamApplicationAsync(TextWriter writer, OutputContext output, ApplicationBuilder application, string environment)
         {
             if (writer is null)
             {
@@ -30,11 +30,6 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(application));
             }
 
-            if (applicationName is null)
-            {
-                throw new ArgumentNullException(nameof(applicationName));
-            }
-
             if (environment is null)
             {
                 throw new ArgumentNullException(nameof(environment));
@@ -45,10 +40,7 @@ namespace Microsoft.Tye
 
             foreach (var service in application.Services)
             {
-                if (service.AppliesToEnvironment(environment))
-                {
-                    componentManifests.AddRange(service.Outputs.OfType<OamComponentOutput>());
-                }
+                componentManifests.AddRange(service.Outputs.OfType<OamComponentOutput>());
             }
 
             var root = new YamlMappingNode();
@@ -58,7 +50,7 @@ namespace Microsoft.Tye
 
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
-            metadata.Add("name", applicationName.ToLowerInvariant());
+            metadata.Add("name", application.Name);
 
             var spec = new YamlMappingNode();
             root.Add("spec", spec);

@@ -12,7 +12,7 @@ namespace Microsoft.Tye
 {
     internal static class DockerContainerBuilder
     {
-        public static async Task BuildContainerImageAsync(OutputContext output, Application application, ServiceEntry service, Project project, ContainerInfo container)
+        public static async Task BuildContainerImageAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container)
         {
             if (output is null)
             {
@@ -22,11 +22,6 @@ namespace Microsoft.Tye
             if (application is null)
             {
                 throw new ArgumentNullException(nameof(application));
-            }
-
-            if (service is null)
-            {
-                throw new ArgumentNullException(nameof(service));
             }
 
             if (project is null)
@@ -41,18 +36,18 @@ namespace Microsoft.Tye
 
             using var tempFile = TempFile.Create();
 
-            var dockerFilePath = Path.Combine(application.GetProjectDirectory(project), Path.GetDirectoryName(project.RelativeFilePath)!, "Dockerfile");
+            var dockerFilePath = Path.Combine(project.ProjectFile.DirectoryName, "Dockerfile");
             if (File.Exists(dockerFilePath))
             {
-                output.WriteDebugLine($"Using existing dockerfile '{dockerFilePath}'.");
+                output.WriteDebugLine($"Using existing Dockerfile '{dockerFilePath}'.");
             }
             else
             {
-                await DockerfileGenerator.WriteDockerfileAsync(output, application, service, project, container, tempFile.FilePath);
+                await DockerfileGenerator.WriteDockerfileAsync(output, application, project, container, tempFile.FilePath);
                 dockerFilePath = tempFile.FilePath;
             }
 
-            // We need to know if this is a single-phase or multi-phase dockerfile because the context directory will be
+            // We need to know if this is a single-phase or multi-phase Dockerfile because the context directory will be
             // different depending on that choice.
             string contextDirectory;
             if (container.UseMultiphaseDockerfile ?? true)
@@ -61,10 +56,10 @@ namespace Microsoft.Tye
             }
             else
             {
-                var publishOutput = service.Outputs.OfType<ProjectPublishOutput>().FirstOrDefault();
+                var publishOutput = project.Outputs.OfType<ProjectPublishOutput>().FirstOrDefault();
                 if (publishOutput is null)
                 {
-                    throw new InvalidOperationException("We should have published the project for a single-phase dockerfile.");
+                    throw new InvalidOperationException("We should have published the project for a single-phase Dockerfile.");
                 }
 
                 contextDirectory = publishOutput.Directory.FullName;
@@ -76,7 +71,7 @@ namespace Microsoft.Tye
             var exitCode = await Process.ExecuteAsync(
                 $"docker",
                 $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"",
-                application.GetProjectDirectory(project),
+                project.ProjectFile.DirectoryName,
                 stdOut: capture.StdOut,
                 stdErr: capture.StdErr);
 
@@ -87,7 +82,7 @@ namespace Microsoft.Tye
             }
 
             output.WriteInfoLine($"Created Docker Image: '{container.ImageName}:{container.ImageTag}'");
-            service.Outputs.Add(new DockerImageOutput(container.ImageName!, container.ImageTag!));
+            project.Outputs.Add(new DockerImageOutput(container.ImageName!, container.ImageTag!));
         }
     }
 }

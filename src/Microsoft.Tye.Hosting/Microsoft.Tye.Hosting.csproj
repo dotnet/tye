@@ -19,7 +19,6 @@
   <ItemGroup>
     <PackageReference Include="Bedrock.Framework" Version="0.1.38-alpha.gd25d5b37ad" />
     <PackageReference Include="FeatherHttp" Version="0.1.42-alpha.gf06a8747e7" />
-    <PackageReference Include="Microsoft.Build" Version="16.5.0" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.0" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="3.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />

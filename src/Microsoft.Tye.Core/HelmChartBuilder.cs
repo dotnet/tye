@@ -11,7 +11,7 @@ namespace Microsoft.Tye
 {
     internal static class HelmChartBuilder
     {
-        public static async Task BuildHelmChartAsync(OutputContext output, Application application, ServiceEntry service, Project project, ContainerInfo container, HelmChartStep chart)
+        public static async Task BuildHelmChartAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container, HelmChartStep chart)
         {
             if (output is null)
             {
@@ -21,11 +21,6 @@ namespace Microsoft.Tye
             if (application is null)
             {
                 throw new ArgumentNullException(nameof(application));
-            }
-
-            if (service is null)
-            {
-                throw new ArgumentNullException(nameof(service));
             }
 
             if (project is null)
@@ -43,11 +38,11 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(chart));
             }
 
-            var projectDirectory = Path.Combine(application.RootDirectory, Path.GetDirectoryName(project.RelativeFilePath)!);
+            var projectDirectory = project.ProjectFile.DirectoryName;
             var outputDirectoryPath = Path.Combine(projectDirectory, "bin");
             using var tempDirectory = TempDirectory.Create();
 
-            HelmChartGenerator.ApplyHelmChartDefaults(application, service, container, chart);
+            HelmChartGenerator.ApplyHelmChartDefaults(application, project, container, chart);
 
             var chartRoot = Path.Combine(projectDirectory, "charts");
             var chartPath = Path.Combine(chartRoot, chart.ChartName);
@@ -62,7 +57,7 @@ namespace Microsoft.Tye
                 chartRoot = tempDirectory.DirectoryPath;
                 chartPath = Path.Combine(chartRoot, chart.ChartName);
                 output.WriteDebugLine($"Generating chart in '{chartPath}'.");
-                await HelmChartGenerator.GenerateAsync(output, application, service, project, container, chart, new DirectoryInfo(tempDirectory.DirectoryPath));
+                await HelmChartGenerator.GenerateAsync(output, application, project, container, chart, new DirectoryInfo(tempDirectory.DirectoryPath));
             }
 
             output.WriteDebugLine("Running 'helm package'.");

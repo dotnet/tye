@@ -16,7 +16,7 @@ namespace Microsoft.Tye
     {
         public static Command CreateBuildCommand()
         {
-            var command = new Command("build", "build container for the application")
+            var command = new Command("build", "build containers for the application")
             {
                 CommonArguments.Path_Required,
                 StandardOptions.Interactive,

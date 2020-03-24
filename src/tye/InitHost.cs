@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using Microsoft.Tye.ConfigModel;
+using Microsoft.Tye.Hosting.Dashboard;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -70,11 +71,13 @@ services:
                 {
                     // If the input file is a project or solution then use that as the name
                     application.Name = Path.GetFileNameWithoutExtension(path.Name).ToLowerInvariant();
+                    application.Ingress = null!;
 
                     foreach (var service in application.Services)
                     {
                         service.Bindings = null!;
                         service.Configuration = null!;
+                        service.Volumes = null!;
                         service.Project = service.Project!.Substring(directory.FullName.Length).TrimStart('/');
                     }
 

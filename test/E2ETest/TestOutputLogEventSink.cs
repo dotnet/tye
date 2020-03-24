@@ -32,7 +32,8 @@ namespace E2ETest
 
         public void Write(string value)
         {
-            output.WriteLine(value);
+            // our usage of IConsole includes newlines, so strip them out.
+            output.WriteLine(value.TrimEnd('\r', '\n'));
         }
     }
 }

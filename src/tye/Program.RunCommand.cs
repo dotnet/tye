@@ -51,7 +51,8 @@ namespace Microsoft.Tye
 
             command.AddOption(new Option("--debug")
             {
-                Description = "Wait for debugger attach in all services.",
+                Argument = new Argument<string[]>("service"),
+                Description = "Wait for debugger attach to specific service. Specify \"*\" to wait for all services.",
                 Required = false
             });
 
@@ -61,7 +62,7 @@ namespace Microsoft.Tye
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo>(async (console, path) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, string[]>(async (console, path, debug) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -69,12 +70,13 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                var application = ConfigFactory.FromFile(path);
+                var output = new OutputContext(console, Verbosity.Quiet);
+                var application = await ApplicationFactory.CreateAsync(output, path);
                 var serviceCount = application.Services.Count;
 
                 InitializeThreadPoolSettings(serviceCount);
 
-                using var host = new TyeHost(application.ToHostingApplication(), args);
+                using var host = new TyeHost(application.ToHostingApplication(), args, debug);
                 await host.RunAsync();
             });
 

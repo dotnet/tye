@@ -23,6 +23,8 @@ spec:
         env:
         - name: ASPNETCORE_URLS
           value: 'http://*:7000'
+        - name: PORT
+          value: '7000'
         - name: SERVICE__FRONTEND__PROTOCOL
           value: 'http'
         - name: SERVICE__FRONTEND__PORT
@@ -56,7 +58,7 @@ spec:
     app.kubernetes.io/name: backend
   type: ClusterIP
   ports:
-  - name: backend
+  - name: http
     protocol: TCP
     port: 7000
     targetPort: 7000
@@ -87,6 +89,8 @@ spec:
         env:
         - name: ASPNETCORE_URLS
           value: 'http://*:8000'
+        - name: PORT
+          value: '8000'
         - name: SERVICE__BACKEND__PROTOCOL
           value: 'http'
         - name: SERVICE__BACKEND__PORT
@@ -120,7 +124,7 @@ spec:
     app.kubernetes.io/name: frontend
   type: ClusterIP
   ports:
-  - name: frontend
+  - name: http
     protocol: TCP
     port: 8000
     targetPort: 8000

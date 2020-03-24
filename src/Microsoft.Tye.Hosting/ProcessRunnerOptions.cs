@@ -11,13 +11,17 @@ namespace Microsoft.Tye.Hosting
     {
         public bool DebugMode { get; set; }
         public bool BuildProjects { get; set; }
+        public string[]? ServicesToDebug { get; set; }
+        public bool DebugAllServices { get; set; }
 
-        public static ProcessRunnerOptions FromArgs(string[] args)
+        public static ProcessRunnerOptions FromArgs(string[] args, string[] servicesToDebug)
         {
             return new ProcessRunnerOptions
             {
                 BuildProjects = !args.Contains("--no-build"),
-                DebugMode = args.Contains("--debug")
+                DebugMode = args.Contains("--debug"),
+                ServicesToDebug = servicesToDebug,
+                DebugAllServices = servicesToDebug?.Contains("*", StringComparer.OrdinalIgnoreCase) ?? false
             };
         }
     }

@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    // Used to publish a project when using a single-file dockerfile
+    // Used to publish a project when using a single-phase Dockerfile
     public class PublishProjectStep : ServiceExecutor.Step
     {
         public override string DisplayText => "Publishing Project...";
 
-        public override async Task ExecuteAsync(OutputContext output, Application application, ServiceEntry service)
+        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             if (SkipWithoutProject(output, service, out var project))
             {
@@ -30,16 +30,15 @@ namespace Microsoft.Tye
                 return;
             }
 
-            var projectFilePath = Path.Combine(application.RootDirectory, project.RelativeFilePath);
-            var outputDirectory = Path.Combine(Path.GetDirectoryName(projectFilePath)!, "bin", "Release", project.TargetFramework, "publish");
+            var outputDirectory = Path.Combine(project.ProjectFile.DirectoryName, "bin", "Release", project.TargetFramework, "publish");
 
             output.WriteDebugLine("Running 'dotnet publish'.");
-            output.WriteCommandLine("dotnet", $"publish \"{projectFilePath}\" -c Release -o \"{outputDirectory}\"");
+            output.WriteCommandLine("dotnet", $"publish \"{project.ProjectFile.FullName}\" -c Release -o \"{outputDirectory}\"");
             var capture = output.Capture();
             var exitCode = await Process.ExecuteAsync(
                 $"dotnet",
-                $"publish \"{projectFilePath}\" -c Release -o \"{outputDirectory}\"",
-                application.GetProjectDirectory(project),
+                $"publish \"{project.ProjectFile.FullName}\" -c Release -o \"{outputDirectory}\"",
+                project.ProjectFile.DirectoryName,
                 stdOut: capture.StdOut,
                 stdErr: capture.StdErr);
 
