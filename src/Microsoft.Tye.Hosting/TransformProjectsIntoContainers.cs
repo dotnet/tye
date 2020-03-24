@@ -41,16 +41,17 @@ namespace Microsoft.Tye.Hosting
             var serviceDescription = service.Description;
             var serviceName = serviceDescription.Name;
 
-            var expandedProject = Environment.ExpandEnvironmentVariables(project.Project);
-            var fullProjectPath = Path.GetFullPath(Path.Combine(application.ContextDirectory, expandedProject));
-            service.Status.ProjectFilePath = fullProjectPath;
+            service.Status.ProjectFilePath = project.ProjectFile.FullName;
+            var targetFramework = project.TargetFramework;
 
             // Sometimes building can fail because of file locking (like files being open in VS)
             _logger.LogInformation("Publishing project {ProjectFile}", service.Status.ProjectFilePath);
 
-            service.Logs.OnNext($"dotnet publish \"{service.Status.ProjectFilePath}\" /nologo");
+            var publishCommand = $"publish \"{service.Status.ProjectFilePath}\" --framework {targetFramework} /nologo";
 
-            var buildResult = await ProcessUtil.RunAsync("dotnet", $"publish \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false);
+            service.Logs.OnNext($"dotnet {publishCommand}");
+
+            var buildResult = await ProcessUtil.RunAsync("dotnet", publishCommand, throwOnError: false);
 
             service.Logs.OnNext(buildResult.StandardOutput);
 
@@ -63,17 +64,17 @@ namespace Microsoft.Tye.Hosting
                 return;
             }
 
-            var targetFramework = GetTargetFramework(service.Status.ProjectFilePath);
-
             // We transform the project information into the following docker command:
-            // docker run -w /app -v {projectDir}:/app -it {image} dotnet /app/bin/Debug/{tfm}/publish/{outputfile}.dll
+            // docker run -w /app -v {publishDir}:/app -it {image} dotnet {outputfile}.dll
+
+            // We swap the slashes since we're going to run on linux
             var containerImage = DetermineContainerImage(targetFramework);
-            var outputFileName = Path.GetFileNameWithoutExtension(service.Status.ProjectFilePath) + ".dll";
-            var dockerRunInfo = new DockerRunInfo(containerImage, $"dotnet /app/bin/Debug/{targetFramework}/publish/{outputFileName} {project.Args}")
+            var outputFileName = project.AssemblyName + ".dll";
+            var dockerRunInfo = new DockerRunInfo(containerImage, $"dotnet {outputFileName} {project.Args}")
             {
                 WorkingDirectory = "/app"
             };
-            dockerRunInfo.VolumeMappings[Path.GetDirectoryName(service.Status.ProjectFilePath)!] = "/app";
+            dockerRunInfo.VolumeMappings[project.PublishOutputPath] = "/app";
 
             // Make volume mapping works when running as a container
             foreach (var mapping in project.VolumeMappings)
@@ -89,16 +90,6 @@ namespace Microsoft.Tye.Hosting
         {
             // TODO: Determine the base image from the tfm
             return "mcr.microsoft.com/dotnet/core/sdk:3.1-buster";
-        }
-
-        private static string GetTargetFramework(string? projectFilePath)
-        {
-            // TODO: Use msbuild to get the target path
-            var debugOutputPath = Path.Combine(Path.GetDirectoryName(projectFilePath)!, "bin", "Debug");
-
-            var tfms = Directory.Exists(debugOutputPath) ? Directory.GetDirectories(debugOutputPath) : Array.Empty<string>();
-
-            return tfms.Select(tfm => new DirectoryInfo(tfm).Name).FirstOrDefault() ?? "netcoreapp3.1";
         }
 
         public Task StopAsync(Model.Application application)

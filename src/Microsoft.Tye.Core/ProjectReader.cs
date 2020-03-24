@@ -193,6 +193,14 @@ namespace Microsoft.Tye
             project.Version = version;
             output.WriteDebugLine($"Found application version: {version}");
 
+            var targetFrameworks = projectInstance.GetPropertyValue("TargetFrameworks");
+            project.TargetFrameworks = targetFrameworks.Split(';', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+
+            project.RunCommand = projectInstance.GetPropertyValue("RunCommand");
+            project.TargetPath = projectInstance.GetPropertyValue("TargetPath");
+            project.PublishDir = projectInstance.GetPropertyValue("PublishDir");
+            project.AssemblyName = projectInstance.GetPropertyValue("AssemblyName");
+
             var targetFramework = projectInstance.GetPropertyValue("TargetFramework");
             project.TargetFramework = targetFramework;
             output.WriteDebugLine($"Found target framework: {targetFramework}");
