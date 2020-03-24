@@ -261,9 +261,13 @@ Specifies the hostname used by the binding. The protocol is used in [service dis
 
 Specifies the port used by the binding. The port is used in [service discovery](/docs/service_discovery.md) to construct a URL.
 
-#### `internalPort` (string)
+#### `internalPort` (string deprecated, use containerPort instead)
 
-Specifies the internal port used by the binding when running in a docker container.
+Specifies the port used by the binding when running in a docker container.
+
+#### `containerPort` (string)
+
+Specifies the port used by the binding when running in a docker container.
 
 #### `autoAssignPort` (bool)
 

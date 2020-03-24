@@ -83,7 +83,7 @@ namespace Microsoft.Tye.Hosting
 
             var dockerInfo = new DockerInformation(new Task[service.Description.Replicas]);
 
-            async Task RunDockerContainer(IEnumerable<(int Port, int? InternalPort, int BindingPort, string? Protocol)> ports)
+            async Task RunDockerContainer(IEnumerable<(int Port, int? ContainerPort, int BindingPort, string? Protocol)> ports)
             {
                 var hasPorts = ports.Any();
 
@@ -110,10 +110,10 @@ namespace Microsoft.Tye.Hosting
                     // These are the ports that the application should use for binding
 
                     // 1. Tell the docker container what port to bind to
-                    portString = string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.InternalPort ?? p.Port}"));
+                    portString = string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.ContainerPort ?? p.Port}"));
 
                     // 2. Configure ASP.NET Core to bind to those same ports
-                    environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://*:{p.InternalPort ?? p.Port}"));
+                    environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://*:{p.ContainerPort ?? p.Port}"));
 
                     // Set the HTTPS port for the redirect middleware
                     foreach (var p in ports)
@@ -126,7 +126,7 @@ namespace Microsoft.Tye.Hosting
                     }
 
                     // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
-                    environment["PORT"] = string.Join(";", ports.Select(p => $"{p.InternalPort ?? p.Port}"));
+                    environment["PORT"] = string.Join(";", ports.Select(p => $"{p.ContainerPort ?? p.Port}"));
                 }
 
                 // See: https://github.com/docker/for-linux/issues/264
@@ -243,7 +243,7 @@ namespace Microsoft.Tye.Hosting
                             continue;
                         }
 
-                        ports.Add((service.PortMap[binding.Port.Value][i], binding.InternalPort, binding.Port.Value, binding.Protocol));
+                        ports.Add((service.PortMap[binding.Port.Value][i], binding.ContainerPort, binding.Port.Value, binding.Protocol));
                     }
 
                     dockerInfo.Tasks[i] = RunDockerContainer(ports);

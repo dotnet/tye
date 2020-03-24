@@ -85,7 +85,7 @@ namespace Microsoft.Tye.ConfigModel
                         ConnectionString = binding.ConnectionString,
                         Host = binding.Host,
                         AutoAssignPort = binding.AutoAssignPort,
-                        InternalPort = binding.InternalPort,
+                        ContainerPort = binding.ContainerPort,
                         Name = binding.Name,
                         Port = binding.Port,
                         Protocol = binding.Protocol,
