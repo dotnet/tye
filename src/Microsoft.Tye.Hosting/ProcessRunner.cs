@@ -60,7 +60,7 @@ namespace Microsoft.Tye.Hosting
 
             if (serviceDescription.RunInfo is ProjectRunInfo project)
             {
-                path = project.RunCommand;
+                path = string.IsNullOrEmpty(project.RunCommand) ? project.TargetAssemblyPath : project.RunCommand;
                 workingDirectory = project.ProjectFile.Directory.FullName;
                 args = project.Args ?? "";
                 service.Status.ProjectFilePath = project.ProjectFile.FullName;
