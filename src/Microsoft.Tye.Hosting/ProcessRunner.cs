@@ -226,7 +226,14 @@ namespace Microsoft.Tye.Hosting
                     {
                         _logger.LogError(0, ex, "Failed to launch process for service {ServiceName}", replica);
 
-                        Thread.Sleep(5000);
+                        try
+                        {
+                            await Task.Delay(5000, processInfo.StoppedTokenSource.Token);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // Swallow cancellation exceptions and continue
+                        }
                     }
 
                     service.Restarts++;
