@@ -19,6 +19,7 @@ namespace Microsoft.Tye.Hosting.Model
             AssemblyName = project.AssemblyName;
             TargetAssemblyPath = Path.Combine(project.ProjectFile.Directory.Name, project.TargetPath);
             RunCommand = project.RunCommand;
+            RunArguments = project.RunArguments;
             PublishOutputPath = Path.Combine(project.ProjectFile.Directory.Name, project.PublishDir);
         }
 
@@ -37,6 +38,7 @@ namespace Microsoft.Tye.Hosting.Model
         public string PublishOutputPath { get; }
 
         public string RunCommand { get; }
+        public string RunArguments { get; }
 
         // This exists for running projects as containers
         public Dictionary<string, string> VolumeMappings { get; } = new Dictionary<string, string>();

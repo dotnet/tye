@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace Microsoft.Tye
@@ -39,6 +40,9 @@ namespace Microsoft.Tye
 
         // This is always set on the ApplicationFactory codepath.
         public string RunCommand { get; set; } = default!;
+
+        // This is always set on the ApplicationFactory codepath.
+        public string RunArguments { get; set; } = default!;
 
         // This is always set on the ApplicationFactory codepath.
         public string AssemblyName { get; set; } = default!;
