@@ -60,12 +60,10 @@ namespace Microsoft.Tye.Hosting
 
             if (serviceDescription.RunInfo is ProjectRunInfo project)
             {
-                var expandedProject = Environment.ExpandEnvironmentVariables(project.Project);
-                var fullProjectPath = Path.GetFullPath(Path.Combine(application.ContextDirectory, expandedProject));
-                path = GetExePath(fullProjectPath);
-                workingDirectory = Path.GetDirectoryName(fullProjectPath)!;
-                args = project.Args ?? "";
-                service.Status.ProjectFilePath = fullProjectPath;
+                path = string.IsNullOrEmpty(project.RunCommand) ? project.TargetAssemblyPath : project.RunCommand;
+                workingDirectory = project.ProjectFile.Directory.FullName;
+                args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
+                service.Status.ProjectFilePath = project.ProjectFile.FullName;
             }
             else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
             {
@@ -302,32 +300,6 @@ namespace Microsoft.Tye.Hosting
             }
 
             return Task.WhenAll(tasks);
-        }
-
-        private static string GetExePath(string projectFilePath)
-        {
-            // TODO: Use msbuild to get the target path
-
-            var outputFileName = Path.GetFileNameWithoutExtension(projectFilePath) + (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : ".dll");
-
-            var debugOutputPath = Path.Combine(Path.GetDirectoryName(projectFilePath)!, "bin", "Debug");
-
-            var tfms = Directory.Exists(debugOutputPath) ? Directory.GetDirectories(debugOutputPath) : Array.Empty<string>();
-
-            if (tfms.Length > 0)
-            {
-                // Pick the first one
-                var path = Path.Combine(debugOutputPath, tfms[0], outputFileName);
-                if (File.Exists(path))
-                {
-                    return path;
-                }
-
-                // Older versions of .NET Core didn't have TFMs
-                return Path.Combine(debugOutputPath, tfms[0], Path.GetFileNameWithoutExtension(projectFilePath) + ".dll");
-            }
-
-            return Path.Combine(debugOutputPath, "netcoreapp3.1", outputFileName);
         }
 
         private static string? GetDotnetRoot()

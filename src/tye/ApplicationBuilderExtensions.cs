@@ -52,7 +52,17 @@ namespace Microsoft.Tye.ConfigModel
                 }
                 else if (service is ProjectServiceBuilder project)
                 {
-                    var projectInfo = new ProjectRunInfo(project.ProjectFile.FullName, project.Args, project.Build);
+                    if (project.TargetFrameworks.Length > 1)
+                    {
+                        throw new InvalidOperationException($"Unable to run {project.Name}. Multi-targeted projects are not supported.");
+                    }
+
+                    if (project.RunCommand == null)
+                    {
+                        throw new InvalidOperationException($"Unable to run {project.Name}. The project does not have a run command");
+                    }
+
+                    var projectInfo = new ProjectRunInfo(project);
 
                     foreach (var mapping in project.Volumes)
                     {

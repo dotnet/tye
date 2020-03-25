@@ -28,7 +28,7 @@
                 <td>
                     @if (service.Description.RunInfo is ProjectRunInfo project)
                     {
-                        <p>@project.Project</p>
+                        <p>@project.ProjectFile.FullName</p>
                     }
                     else if (service.Description.RunInfo is DockerRunInfo docker)
                     {

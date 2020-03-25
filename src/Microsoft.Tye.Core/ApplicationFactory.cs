@@ -35,7 +35,8 @@ namespace Microsoft.Tye
                 ServiceBuilder service;
                 if (!string.IsNullOrEmpty(configService.Project))
                 {
-                    var projectFile = new FileInfo(Path.Combine(builder.Source.DirectoryName, configService.Project));
+                    var expandedProject = Environment.ExpandEnvironmentVariables(configService.Project);
+                    var projectFile = new FileInfo(Path.Combine(builder.Source.DirectoryName, expandedProject));
                     var project = new ProjectServiceBuilder(configService.Name, projectFile);
                     service = project;
 
