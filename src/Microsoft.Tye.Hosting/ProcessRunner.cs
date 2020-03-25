@@ -68,7 +68,7 @@ namespace Microsoft.Tye.Hosting
             else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
             {
                 path = executable.Executable;
-                workingDirectory = executable.WorkingDirectory;
+                workingDirectory = executable.WorkingDirectory!;
                 args = executable.Args ?? "";
             }
             else
