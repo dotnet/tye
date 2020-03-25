@@ -17,10 +17,10 @@ namespace Microsoft.Tye.Hosting.Model
             TargetFramework = project.TargetFramework;
             Version = project.Version;
             AssemblyName = project.AssemblyName;
-            TargetAssemblyPath = Path.Combine(project.ProjectFile.Directory.Name, project.TargetPath);
+            TargetAssemblyPath = project.TargetPath;
             RunCommand = project.RunCommand;
             RunArguments = project.RunArguments;
-            PublishOutputPath = Path.Combine(project.ProjectFile.Directory.Name, project.PublishDir);
+            PublishOutputPath = project.PublishDir;
         }
 
         public string? Args { get; }

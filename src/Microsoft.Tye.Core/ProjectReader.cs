@@ -201,9 +201,7 @@ namespace Microsoft.Tye
             project.TargetPath = projectInstance.GetPropertyValue("TargetPath");
             project.PublishDir = projectInstance.GetPropertyValue("PublishDir");
             project.AssemblyName = projectInstance.GetPropertyValue("AssemblyName");
-            project.IntermediateOutputPath = projectInstance.GetPropertyValue("AssemblyName");
-
-
+            project.IntermediateOutputPath = projectInstance.GetPropertyValue("IntermediateOutputPath");
 
             output.WriteDebugLine($"RunCommand={project.RunCommand}");
             output.WriteDebugLine($"RunArguments={project.RunArguments}");
@@ -212,10 +210,10 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"AssemblyName={project.AssemblyName}");
             output.WriteDebugLine($"IntermediateOutputPath={project.IntermediateOutputPath}");
 
-            if (!Path.IsPathRooted(project.IntermediateOutputPath))
-            {
-                project.IntermediateOutputPath = Path.Combine(project.ProjectFile.DirectoryName, project.IntermediateOutputPath);
-            }
+            // Normalize directories to their absolute paths
+            project.IntermediateOutputPath = Path.Combine(project.ProjectFile.DirectoryName, project.IntermediateOutputPath);
+            project.TargetPath = Path.Combine(project.ProjectFile.DirectoryName, project.TargetPath);
+            project.PublishDir = Path.Combine(project.ProjectFile.DirectoryName, project.PublishDir);
 
             var targetFramework = projectInstance.GetPropertyValue("TargetFramework");
             project.TargetFramework = targetFramework;
