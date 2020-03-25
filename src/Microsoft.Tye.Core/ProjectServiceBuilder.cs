@@ -50,6 +50,9 @@ namespace Microsoft.Tye
         // This is always set on the ApplicationFactory codepath.
         public string PublishDir { get; set; } = default!;
 
+        // This is always set on the ApplicationFactory codepath.
+        public string IntermediateOutputPath { get; set; } = default!;
+
         // Data used for building containers
         public ContainerInfo? ContainerInfo { get; set; }
 

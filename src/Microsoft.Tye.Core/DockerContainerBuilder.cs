@@ -59,8 +59,8 @@ namespace Microsoft.Tye
                     else
                     {
                         // We need to write the file, let's stick it under obj.
-                        Directory.CreateDirectory(Path.Combine(project.ProjectFile.DirectoryName, "obj"));
-                        dockerFilePath = Path.Combine(project.ProjectFile.DirectoryName, "obj", "Dockerfile");
+                        Directory.CreateDirectory(project.IntermediateOutputPath);
+                        dockerFilePath = Path.Combine(project.IntermediateOutputPath, "Dockerfile");
 
                         // Clean up file when done building image
                         tempFile = new TempFile(dockerFilePath);
@@ -83,7 +83,7 @@ namespace Microsoft.Tye
                     // Clean up directory when done building image
                     tempDirectory = new TempDirectory(publishOutput.Directory);
 
-                    if (File.Exists(dockerFilePath) & container.UseMultiphaseDockerfile == false)
+                    if (File.Exists(dockerFilePath))
                     {
                         output.WriteDebugLine($"Using existing Dockerfile '{dockerFilePath}'.");
                         File.Copy(dockerFilePath, Path.Combine(contextDirectory, "Dockerfile"));

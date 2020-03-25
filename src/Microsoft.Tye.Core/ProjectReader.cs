@@ -201,12 +201,21 @@ namespace Microsoft.Tye
             project.TargetPath = projectInstance.GetPropertyValue("TargetPath");
             project.PublishDir = projectInstance.GetPropertyValue("PublishDir");
             project.AssemblyName = projectInstance.GetPropertyValue("AssemblyName");
+            project.IntermediateOutputPath = projectInstance.GetPropertyValue("AssemblyName");
+
+
 
             output.WriteDebugLine($"RunCommand={project.RunCommand}");
             output.WriteDebugLine($"RunArguments={project.RunArguments}");
             output.WriteDebugLine($"TargetPath={project.TargetPath}");
             output.WriteDebugLine($"PublishDir={project.PublishDir}");
             output.WriteDebugLine($"AssemblyName={project.AssemblyName}");
+            output.WriteDebugLine($"IntermediateOutputPath={project.IntermediateOutputPath}");
+
+            if (!Path.IsPathRooted(project.IntermediateOutputPath))
+            {
+                project.IntermediateOutputPath = Path.Combine(project.ProjectFile.DirectoryName, project.IntermediateOutputPath);
+            }
 
             var targetFramework = projectInstance.GetPropertyValue("TargetFramework");
             project.TargetFramework = targetFramework;
