@@ -20,7 +20,7 @@ namespace E2ETest
     public static class TestHelpers
     {
         private static readonly TimeSpan WaitForServicesTimeout = TimeSpan.FromSeconds(10);
-        
+
         // https://github.com/dotnet/aspnetcore/blob/5a0526dfd991419d5bce0d8ea525b50df2e37b04/src/Testing/src/TestPathUtilities.cs
         // This can get into a bad pattern for having crazy paths in places. Eventually, especially if we use helix,
         // we may want to avoid relying on sln position.
@@ -43,7 +43,7 @@ namespace E2ETest
 
             throw new Exception($"Solution file {solution}.sln could not be found in {applicationBasePath} or its parent directories.");
         }
-        
+
         public static async Task StartHostAndWaitForReplicasToStart(TyeHost host)
         {
             var startedTask = new TaskCompletionSource<bool>();
@@ -60,7 +60,7 @@ namespace E2ETest
                 {
                     Interlocked.Decrement(ref alreadyStarted);
                 }
-                
+
                 if (alreadyStarted == 0)
                 {
                     startedTask.TrySetResult(true);
@@ -96,23 +96,23 @@ namespace E2ETest
         {
             var stoppedTask = new TaskCompletionSource<bool>();
             var alreadyStopped = replicas.Length;
-            
+
             void OnReplicaChange(ReplicaEvent ev)
             {
                 if (replicas.Contains(ev.Replica.Name) && ev.State == ReplicaState.Stopped)
                 {
                     Interlocked.Decrement(ref alreadyStopped);
                 }
-                
+
                 if (alreadyStopped == 0)
                 {
                     stoppedTask.TrySetResult(true);
                 }
             }
-            
+
             var servicesStateObserver = host.Application.Services.Select(srv => srv.Value.ReplicaEvents.Subscribe(OnReplicaChange)).ToList();
             await host.PurgeAsync();
-            
+
             using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);
             try
             {

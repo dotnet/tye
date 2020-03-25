@@ -20,8 +20,6 @@ namespace E2ETest
 {
     public class TyePurgeTests
     {
-        private static readonly int MaxRetries = 5;
-
         private readonly ITestOutputHelper output;
         private readonly TestOutputLogEventSink sink;
 
