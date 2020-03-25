@@ -93,7 +93,8 @@ namespace Microsoft.Tye
                         Protocol = configBinding.Protocol,
                     };
 
-                    if (binding.ConnectionString == null)
+                    // Assume HTTP for projects only (containers may be different)
+                    if (binding.ConnectionString == null && configService.Project != null)
                     {
                         binding.Protocol ??= "http";
                     }
