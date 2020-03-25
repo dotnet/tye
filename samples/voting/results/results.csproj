@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>Results</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ChartJs.Blazor" Version="1.0.3" />
+    <PackageReference Include="dapper" Version="2.0.30" />
+    <PackageReference Include="microsoft.aspnetcore.signalr.client" Version="3.1.2" />
+    <PackageReference Include="npgsql" Version="4.1.3.1" />
+  </ItemGroup>
+
+</Project>

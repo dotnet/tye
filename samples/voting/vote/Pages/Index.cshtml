@@ -1,0 +1,60 @@
+﻿@page
+@model IndexModel
+@using Microsoft.Extensions.Hosting;
+@inject IHostEnvironment env
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @if(!env.IsDevelopment())
+    {
+    <base href="/vote/" >
+    }
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@Model.Configuration["OptionA"] vs @Model.Configuration["OptionB"]</title>
+    <link rel="stylesheet" href="site.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+</head>
+<body>
+    <header>
+    </header>
+
+    <div id="content-container">
+        <div id="content-container-center">
+            <h3>@Model.Configuration["OptionA"] vs @Model.Configuration["OptionB"]!</h3>
+            <form id="choice" name='form' method="POST">
+                <button id="a" type="submit" name="vote" class="a" value="a" disabled=@(Model.Vote == "a" ? "disabled" : null) style=@(Model.Vote == "a" ? "opacity:0.5;" : null)>
+                    @if (Model.Vote == "a")
+                    {
+                        <i class="fa fa-check-circle"></i>
+                    }
+                    @Model.Configuration["OptionA"]
+                </button>
+                <button id="b" type="submit" name="vote" class="b" value="b" disabled=@(Model.Vote == "b" ? "disabled" : null) style=@(Model.Vote == "b" ? "opacity:0.5;" : null)>
+                    @if (Model.Vote == "b")
+                    {
+                        <i class="fa fa-check-circle"></i>
+                    }
+                    @Model.Configuration["OptionB"]
+                </button>
+            </form>
+            <div id="tip">
+                (Tip: you can change your vote)
+            </div>
+            <div id="hostname">
+                Processed by container ID @Environment.MachineName
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container-content-center">
+            <span class="text-nowrap">
+                Like Tye? Please take our <a target="_blank" class="font-weight-bold" href="https://go.microsoft.com/fwlink/?linkid=2116045">brief survey</a> and tell us what you think.
+            </span>
+        </div>
+    </footer>
+
+</body>
+</html>

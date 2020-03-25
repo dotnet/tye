@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Microsoft.Build.Construction;
@@ -92,6 +93,9 @@ namespace Microsoft.Tye.ConfigModel
                 {
                     continue;
                 }
+
+                // Bindings can be null here from deserialization.
+                service.Bindings ??= new List<ConfigServiceBinding>();
 
                 PopulateFromLaunchProfile(service, launchProfile);
             }

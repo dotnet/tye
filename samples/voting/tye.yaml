@@ -1,0 +1,21 @@
+name: VotingSample
+services:
+- name: vote
+  project: vote/vote.csproj
+- name: redis
+  image: redis
+  bindings:
+    - port: 6379
+- name: worker
+  project: worker/worker.csproj
+  bindings:
+    - autoAssignPort: true
+- name: postgres
+  image:  postgres
+  env:
+    - name: POSTGRES_PASSWORD
+      value: "pass@word1"
+  bindings:
+    - port: 5432
+- name: results
+  project: results/results.csproj
