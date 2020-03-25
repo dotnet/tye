@@ -90,12 +90,13 @@ namespace E2ETest
 
                 Assert.True(Directory.Exists(tyeDir.FullName));
                 Assert.True(AllRunning(pids));
-                await DockerAssert.AssertAllContainersExistAsync(output, containers);
+                Assert.Subset(new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(output)), new HashSet<string>(containers));
 
                 await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host, GetAllReplicasNames(host.Application));
 
                 Assert.False(AnyRunning(pids));
-                await DockerAssert.AssertNonContainersExistAsync(output, containers);
+                var runningContainers = new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(output));
+                Assert.True(containers.All(c => !runningContainers.Contains(c)));
             }
             finally
             {

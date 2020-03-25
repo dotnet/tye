@@ -47,16 +47,6 @@ namespace E2ETest
             }
         }
 
-        public static Task AssertAllContainersExistAsync(ITestOutputHelper output, string[] containers)
-            => AssertAboutContainersAsync(output, containers,
-                (existing, given) => given.All(c => existing.Contains(c)),
-                given => $"Not all containers ({string.Join(", ", given)}) exist");
-
-        public static Task AssertNonContainersExistAsync(ITestOutputHelper output, string[] containers)
-            => AssertAboutContainersAsync(output, containers,
-                (existing, given) => given.All(c => !existing.Contains(c)),
-                given => $"Some containers ({string.Join(", ", given)}) exist");
-
         public static async Task DeleteDockerImagesAsync(ITestOutputHelper output, string repository)
         {
             var ids = await ListDockerImagesIdsAsync(output, repository);
@@ -87,7 +77,7 @@ namespace E2ETest
             }
         }
 
-        private static async Task AssertAboutContainersAsync(ITestOutputHelper output, string[] containers, Func<HashSet<string>, string[], bool> predicate, Func<string[], string> errorText)
+        public static async Task<string[]> GetRunningContainersIdsAsync(ITestOutputHelper output)
         {
             var builder = new StringBuilder();
 
@@ -102,13 +92,8 @@ namespace E2ETest
                 throw new XunitException($"Running `docker ps` failed." + Environment.NewLine + builder.ToString());
             }
 
-            var lines = new HashSet<string>(builder.ToString().Split(new[] { '\r', '\n', }, StringSplitOptions.RemoveEmptyEntries));
-            if (predicate(lines, containers))
-            {
-                return;
-            }
-
-            throw new XunitException(errorText(containers));
+            var lines = builder.ToString().Split(new[] { '\r', '\n', }, StringSplitOptions.RemoveEmptyEntries);
+            return lines;
 
             void OnOutput(string text)
             {
