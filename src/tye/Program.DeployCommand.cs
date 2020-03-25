@@ -39,6 +39,12 @@ namespace Microsoft.Tye
 
                 var output = new OutputContext(console, verbosity);
                 var application = await ApplicationFactory.CreateAsync(output, path);
+
+                if (application.Services.Count == 0)
+                {
+                    throw new CommandException($"No services found in \"{application.Source.Name}\"");
+                }
+
                 await ExecuteDeployAsync(new OutputContext(console, verbosity), application, environment: "production", interactive, force);
             });
 
