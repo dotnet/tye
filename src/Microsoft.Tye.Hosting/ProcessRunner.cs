@@ -4,14 +4,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Tye.Hosting.Model;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
+using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
 {
@@ -26,7 +26,7 @@ namespace Microsoft.Tye.Hosting
             _options = options;
         }
 
-        public Task StartAsync(Tye.Hosting.Model.Application application)
+        public Task StartAsync(Application application)
         {
             var tasks = new Task[application.Services.Count];
             var index = 0;
@@ -44,12 +44,12 @@ namespace Microsoft.Tye.Hosting
             return Task.WhenAll(tasks);
         }
 
-        public Task StopAsync(Tye.Hosting.Model.Application application)
+        public Task StopAsync(Application application)
         {
             return KillRunningProcesses(application.Services);
         }
 
-        private async Task LaunchService(Tye.Hosting.Model.Application application, Tye.Hosting.Model.Service service)
+        private async Task LaunchService(Application application, Service service)
         {
             var serviceDescription = service.Description;
             var serviceName = serviceDescription.Name;
@@ -60,20 +60,15 @@ namespace Microsoft.Tye.Hosting
 
             if (serviceDescription.RunInfo is ProjectRunInfo project)
             {
-                path = string.IsNullOrEmpty(project.RunCommand) ? project.TargetAssemblyPath : project.RunCommand;
+                path = project.RunCommand;
                 workingDirectory = project.ProjectFile.Directory.FullName;
                 args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
                 service.Status.ProjectFilePath = project.ProjectFile.FullName;
             }
             else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
             {
-                var expandedExecutable = Environment.ExpandEnvironmentVariables(executable.Executable);
-                path = Path.GetExtension(expandedExecutable) == ".dll" ?
-                    Path.GetFullPath(Path.Combine(application.ContextDirectory, expandedExecutable)) :
-                    expandedExecutable;
-                workingDirectory = executable.WorkingDirectory != null ?
-                    Path.GetFullPath(Path.Combine(application.ContextDirectory, Environment.ExpandEnvironmentVariables(executable.WorkingDirectory))) :
-                    Path.GetDirectoryName(path)!;
+                path = executable.Executable;
+                workingDirectory = executable.WorkingDirectory;
                 args = executable.Args ?? "";
             }
             else
@@ -93,6 +88,7 @@ namespace Microsoft.Tye.Hosting
             service.Status.Args = args;
 
             var processInfo = new ProcessInfo(new Task[service.Description.Replicas]);
+
             if (service.Status.ProjectFilePath != null &&
                 service.Description.RunInfo is ProjectRunInfo project2 &&
                 project2.Build &&
@@ -278,9 +274,9 @@ namespace Microsoft.Tye.Hosting
             service.Items[typeof(ProcessInfo)] = processInfo;
         }
 
-        private Task KillRunningProcesses(IDictionary<string, Tye.Hosting.Model.Service> services)
+        private Task KillRunningProcesses(IDictionary<string, Service> services)
         {
-            static async Task KillProcessAsync(Tye.Hosting.Model.Service service)
+            static async Task KillProcessAsync(Service service)
             {
                 if (service.Items.TryGetValue(typeof(ProcessInfo), out var stateObj) && stateObj is ProcessInfo state)
                 {

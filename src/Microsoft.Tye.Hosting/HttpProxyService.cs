@@ -6,9 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Net.Sockets;
-using System.Reactive.Subjects;
-using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -23,17 +20,17 @@ using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
 {
-    public class IngressService : IApplicationProcessor
+    public partial class HttpProxyService : IApplicationProcessor
     {
         private List<WebApplication> _webApplications = new List<WebApplication>();
         private readonly ILogger _logger;
 
-        public IngressService(ILogger logger)
+        public HttpProxyService(ILogger logger)
         {
             _logger = logger;
         }
 
-        public async Task StartAsync(Model.Application application)
+        public async Task StartAsync(Application application)
         {
             var invoker = new HttpMessageInvoker(new ConnectionRetryHandler(new SocketsHttpHandler
             {
@@ -161,7 +158,7 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        public async Task StopAsync(Model.Application application)
+        public async Task StopAsync(Application application)
         {
             foreach (var webApp in _webApplications)
             {
@@ -176,110 +173,6 @@ namespace Microsoft.Tye.Hosting
                 finally
                 {
                     webApp.Dispose();
-                }
-            }
-        }
-
-        private class ConnectionRetryHandler : DelegatingHandler
-        {
-            private static readonly int MaxRetries = 3;
-            private static readonly TimeSpan InitialRetryDelay = TimeSpan.FromMilliseconds(1000);
-
-            public ConnectionRetryHandler(HttpMessageHandler innerHandler)
-                : base(innerHandler)
-            {
-            }
-
-            protected override async Task<HttpResponseMessage> SendAsync(
-                HttpRequestMessage request,
-                CancellationToken cancellationToken)
-            {
-                HttpResponseMessage? response = null;
-                var delay = InitialRetryDelay;
-                Exception? exception = null;
-
-                for (var i = 0; i < MaxRetries; i++)
-                {
-                    try
-                    {
-                        response = await base.SendAsync(request, cancellationToken);
-                    }
-                    catch (HttpRequestException ex) when (ex.InnerException is SocketException)
-                    {
-                        if (i == MaxRetries - 1)
-                        {
-                            throw;
-                        }
-
-                        exception = ex;
-                    }
-
-                    if (response != null &&
-                       (response.IsSuccessStatusCode || response.StatusCode != HttpStatusCode.ServiceUnavailable))
-                    {
-                        return response;
-                    }
-
-                    await Task.Delay(delay, cancellationToken);
-                    delay *= 2;
-                }
-
-                if (exception != null)
-                {
-                    ExceptionDispatchInfo.Throw(exception);
-                }
-
-                throw new TimeoutException();
-            }
-        }
-
-        private class ServiceLoggerProvider : ILoggerProvider
-        {
-            private readonly Subject<string> _logs;
-
-            public ServiceLoggerProvider(Subject<string> logs)
-            {
-                _logs = logs;
-            }
-
-            public ILogger CreateLogger(string categoryName)
-            {
-                return new ServiceLogger(categoryName, _logs);
-            }
-
-            public void Dispose()
-            {
-            }
-
-            private class ServiceLogger : ILogger
-            {
-                private readonly string _categoryName;
-                private readonly Subject<string> _logs;
-
-                public ServiceLogger(string categoryName, Subject<string> logs)
-                {
-                    _categoryName = categoryName;
-                    _logs = logs;
-                }
-
-                public IDisposable? BeginScope<TState>(TState state)
-                {
-                    return null;
-                }
-
-                public bool IsEnabled(LogLevel logLevel)
-                {
-                    return true;
-                }
-
-                public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-                {
-                    _logs.OnNext($"[{logLevel}]: {formatter(state, exception)}");
-
-                    if (exception != null)
-                    {
-                        _logs.OnNext(exception.ToString());
-                    }
                 }
             }
         }
