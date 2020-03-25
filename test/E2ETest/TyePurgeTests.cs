@@ -47,18 +47,15 @@ namespace E2ETest
                 Sink = sink,
             };
 
-            await host.StartAsync();
+            await TestHelpers.StartHostAndWaitForReplicasToStart(host);
             try
             {
-                await WaitUntilSpawned(host.Application);
-
                 var pids = GetAllPids(host.Application);
 
                 Assert.True(Directory.Exists(tyeDir.FullName));
                 Assert.True(AllRunning(pids));
 
-                await host.PurgeAsync();
-                await Task.Delay(500);
+                await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host, GetAllReplicasNames(host.Application));
 
                 Assert.False(AnyRunning(pids));
             }
@@ -85,11 +82,9 @@ namespace E2ETest
                 Sink = sink,
             };
 
-            await host.StartAsync();
+            await TestHelpers.StartHostAndWaitForReplicasToStart(host);
             try
             {
-                await WaitUntilSpawned(host.Application);
-
                 var pids = GetAllPids(host.Application);
                 var containers = GetAllContainerIds(host.Application);
 
@@ -97,8 +92,7 @@ namespace E2ETest
                 Assert.True(AllRunning(pids));
                 await DockerAssert.AssertAllContainersExistAsync(output, containers);
 
-                await host.PurgeAsync();
-                await Task.Delay(500);
+                await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host, GetAllReplicasNames(host.Application));
 
                 Assert.False(AnyRunning(pids));
                 await DockerAssert.AssertNonContainersExistAsync(output, containers);
@@ -109,9 +103,14 @@ namespace E2ETest
             }
         }
 
+        private string[] GetAllReplicasNames(Microsoft.Tye.Hosting.Model.Application application)
+        {
+            var replicas = application.Services.SelectMany(s => s.Value.Replicas);
+            return replicas.Select(r => r.Value.Name).ToArray();
+        }
+
         private int[] GetAllPids(Microsoft.Tye.Hosting.Model.Application application)
         {
-
             var replicas = application.Services.SelectMany(s => s.Value.Replicas);
             var ids = replicas.Where(r => r.Value is ProcessStatus).Select(r => ((ProcessStatus)r.Value).Pid ?? -1).ToArray();
 
@@ -124,21 +123,6 @@ namespace E2ETest
             var ids = replicas.Where(r => r.Value is DockerStatus).Select(r => ((DockerStatus)r.Value).ContainerId!).ToArray();
 
             return ids;
-        }
-
-        private async Task WaitUntilSpawned(Microsoft.Tye.Hosting.Model.Application application)
-        {
-            int retries = 0;
-            do
-            {
-                if (retries > MaxRetries)
-                {
-                    throw new TimeoutException($"Could not reach response after {MaxRetries} reties");
-                }
-
-                await Task.Delay(500);
-                retries++;
-            } while (application.Services.Any(a => a.Value.Description.Replicas > a.Value.Replicas.Count));
         }
 
         private bool AllRunning(int[] pids)
