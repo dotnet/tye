@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Microsoft.Tye;
+using Xunit;
 
 namespace E2ETest
 {
@@ -32,6 +34,35 @@ namespace E2ETest
             while (directoryInfo.Parent != null);
 
             throw new Exception($"Solution file {solution}.sln could not be found in {applicationBasePath} or its parent directories.");
+        }
+
+        public static DirectoryInfo GetTestAssetsDirectory()
+        {
+            return new DirectoryInfo(Path.Combine(
+                TestHelpers.GetSolutionRootDirectory("tye"),
+                "test",
+                "E2ETest",
+                "testassets"));
+        }
+
+        public static DirectoryInfo GetTestProjectDirectory(string projectName)
+        {
+            var directory = new DirectoryInfo(Path.Combine(
+                TestHelpers.GetSolutionRootDirectory("tye"),
+                "test",
+                "E2ETest",
+                "testassets",
+                "projects",
+                projectName));
+            Assert.True(directory.Exists, $"Project {projectName} not found.");
+            return directory;
+        }
+
+        internal static TempDirectory CopyTestProjectDirectory(string projectName)
+        {
+            var temp = TempDirectory.Create();
+            DirectoryCopy.Copy(GetTestProjectDirectory(projectName).FullName, temp.DirectoryPath);
+            return temp;
         }
     }
 }
