@@ -71,7 +71,7 @@ namespace Microsoft.Tye
                     if (Path.GetExtension(expandedExecutable) == ".dll")
                     {
                         expandedExecutable = Path.GetFullPath(Path.Combine(builder.Source.Directory.FullName, expandedExecutable));
-                        workingDirectory = Path.GetDirectoryName(expandedExecutable);
+                        workingDirectory = Path.GetDirectoryName(expandedExecutable)!;
                     }
 
                     var executable = new ExecutableServiceBuilder(configService.Name, expandedExecutable)
