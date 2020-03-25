@@ -69,7 +69,7 @@ namespace Microsoft.Tye.Hosting
                                         binding.Port = GetNextPort();
                                     }
 
-                                    if (binding.Protocol == "http" || binding.Protocol == null)
+                                    if (binding.Protocol == "http" || (binding.Protocol == null && service.ServiceType == Model.ServiceType.Project))
                                     {
                                         binding.ContainerPort = 80;
                                     }

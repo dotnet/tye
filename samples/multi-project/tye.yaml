@@ -17,4 +17,3 @@ services:
   image: rabbitmq:3-management
   bindings:
     - port: 5672
-      protocol: rabbitmq
