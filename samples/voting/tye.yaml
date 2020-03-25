@@ -1,0 +1,25 @@
+name: VotingSample
+services:
+- name: vote
+  project: vote/vote.csproj
+  bindings:
+    - port: 5007
+- name: redis
+  dockerImage: redis
+  bindings:
+    - port: 6379
+- name: worker
+  project: worker/worker.csproj
+  bindings:
+    - port: 5000
+- name: postgres
+  dockerImage:  postgres
+  env:
+    - name: POSTGRES_PASSWORD
+      value: "pass@word1"
+  bindings:
+    - port: 5432
+- name: results
+  project: results/results.csproj
+  bindings:
+    - port: 5005
