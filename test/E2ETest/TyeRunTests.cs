@@ -226,7 +226,7 @@ namespace E2ETest
             await host.StartAsync();
             try
             {
-                // Make sure we're runningn containers
+                // Make sure we're running containers
                 Assert.True(host.Application.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
 
                 var handler = new HttpClientHandler

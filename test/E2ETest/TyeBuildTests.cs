@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 
 namespace E2ETest
 {
-    public class TyeBuildTests
+    public partial class TyeBuildTests
     {
         private readonly ITestOutputHelper output;
         private readonly TestOutputLogEventSink sink;

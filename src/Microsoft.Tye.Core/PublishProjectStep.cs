@@ -30,14 +30,16 @@ namespace Microsoft.Tye
                 return;
             }
 
-            var outputDirectory = Path.Combine(project.ProjectFile.DirectoryName, "bin", "Release", project.TargetFramework, "publish");
+            // NOTE: we're intentionally not cleaning up here. It's the responsibility of whomever consumes
+            // the publish output to do cleanup.
+            var outputDirectory = TempDirectory.Create();
 
             output.WriteDebugLine("Running 'dotnet publish'.");
-            output.WriteCommandLine("dotnet", $"publish \"{project.ProjectFile.FullName}\" -c Release -o \"{outputDirectory}\"");
+            output.WriteCommandLine("dotnet", $"publish \"{project.ProjectFile.FullName}\" -c Release -o \"{outputDirectory.DirectoryPath}\"");
             var capture = output.Capture();
             var exitCode = await Process.ExecuteAsync(
                 $"dotnet",
-                $"publish \"{project.ProjectFile.FullName}\" -c Release -o \"{outputDirectory}\"",
+                $"publish \"{project.ProjectFile.FullName}\" -c Release -o \"{outputDirectory.DirectoryPath}\"",
                 project.ProjectFile.DirectoryName,
                 stdOut: capture.StdOut,
                 stdErr: capture.StdErr);
@@ -45,11 +47,12 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"Done running 'dotnet publish' exit code: {exitCode}");
             if (exitCode != 0)
             {
+                outputDirectory.Dispose();
                 throw new CommandException("'dotnet publish' failed.");
             }
 
-            output.WriteInfoLine($"Created Publish Output: '{outputDirectory}'");
-            service.Outputs.Add(new ProjectPublishOutput(new DirectoryInfo(outputDirectory)));
+            output.WriteDebugLine($"Created Publish Output: '{outputDirectory}'");
+            service.Outputs.Add(new ProjectPublishOutput(outputDirectory.DirectoryInfo));
         }
     }
 }
