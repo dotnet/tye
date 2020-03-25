@@ -13,9 +13,9 @@ spec:
       paths:
       - backend:
           serviceName: vote
-          servicePort: 5007
+          servicePort: 80
         path: /vote(/|$)(.*)
       - backend:
           serviceName: results
-          servicePort: 5005
+          servicePort: 80
         path: /results(/|$)(.*)
