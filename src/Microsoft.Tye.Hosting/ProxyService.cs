@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
 {
@@ -30,7 +31,7 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
         }
 
-        public async Task StartAsync(Tye.Hosting.Model.Application application)
+        public async Task StartAsync(Application application)
         {
             _host = new HostBuilder()
                     .ConfigureServer(server =>
@@ -41,7 +42,6 @@ namespace Microsoft.Tye.Hosting
                             {
                                 if (service.Description.RunInfo == null)
                                 {
-                                    // We eventually want to proxy everything, this is temporary
                                     continue;
                                 }
 
@@ -195,7 +195,7 @@ namespace Microsoft.Tye.Hosting
             await _host.StartAsync();
         }
 
-        public async Task StopAsync(Tye.Hosting.Model.Application application)
+        public async Task StopAsync(Application application)
         {
             if (_host != null)
             {
