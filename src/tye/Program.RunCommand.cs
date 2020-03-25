@@ -5,6 +5,7 @@
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.CommandLine.IO;
 using System.IO;
 using System.Threading;
 using Microsoft.Tye.ConfigModel;
@@ -75,6 +76,11 @@ namespace Microsoft.Tye
                 var serviceCount = application.Services.Count;
 
                 InitializeThreadPoolSettings(serviceCount);
+
+                if (application.Services.Count == 0)
+                {
+                    throw new CommandException($"No services found in \"{application.Source.Name}\"");
+                }
 
                 using var host = new TyeHost(application.ToHostingApplication(), args, debug);
                 await host.RunAsync();
