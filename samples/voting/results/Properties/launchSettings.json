@@ -15,7 +15,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "results.web": {
+    "results": {
       "commandName": "Project",
       "launchBrowser": true,
       "applicationUrl": "http://localhost:5005",
