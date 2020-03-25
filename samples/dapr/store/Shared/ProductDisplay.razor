@@ -1,0 +1,77 @@
+@inject DaprClient Dapr
+@inject OrdersEventBroker Broker
+@implements IDisposable
+
+<div class="py-4">
+    <hr />
+    <h4>@Product.Name</h4>
+    <p>@Product.Description</p>
+    <p>$@(Product.Price.ToString("0.00"))</p>
+
+    @if (status is object)
+    {
+        <p>@status</p>
+    }
+
+    @if (processing)
+    {
+        <p>Please wait...</p>
+    }
+    else
+    {
+        <button @onclick="@PlaceOrder">BUY!!!</button>
+    }
+</div>
+
+@code {
+    [Parameter] public Product Product { get; set; } = default!;
+
+    bool processing;
+    string? status;
+    private CancellationTokenSource? cts;
+
+    async Task PlaceOrder()
+    {
+        if (processing)
+        {
+            return;
+        }
+
+        try
+        {
+            processing = true;
+
+            var orderId = Guid.NewGuid().ToString();
+            cts = new CancellationTokenSource();
+
+            var task = Broker.GetOrderConfirmationAsync(orderId, cts.Token);
+
+            await Dapr.PublishEventAsync("orderplaced", new Order()
+            {
+                ProductId = Product.Id,
+                OrderId = orderId,
+            });
+
+            var confirmation = await task;
+            if (confirmation.Confirmed)
+            {
+                status = $"Confirmed! Order will arrive by {confirmation.DeliveryDate!.Value.ToString("MM/dd/yyyy")}. {confirmation.RemainingCount} are left.";
+            }
+            else
+            {
+                status = $"Sorry, we're sold out of that. There are {confirmation.BackorderCount} people ahead of you in line.";
+            }
+        }
+        finally
+        {
+            processing = false;
+            cts?.Dispose();
+            cts = null;
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+        cts?.Dispose();
+    }
+}

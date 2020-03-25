@@ -25,11 +25,26 @@ namespace Microsoft.Tye
                 return Task.CompletedTask;
             }
 
-            service.Outputs.Add(KubernetesManifestGenerator.CreateDeployment(output, application, project));
-
-            if (service.Bindings.Count > 0)
+            var deployment = project.ManifestInfo?.Deployment;
+            if (deployment is null)
             {
-                service.Outputs.Add(KubernetesManifestGenerator.CreateService(output, application, project));
+                return Task.CompletedTask;
+            }
+
+            // Initialize defaults for deployment-related settings
+            deployment.Labels.TryAdd("app.kubernetes.io/name", project.Name);
+            deployment.Labels.TryAdd("app.kubernetes.io/part-of", application.Name);
+
+            service.Outputs.Add(KubernetesManifestGenerator.CreateDeployment(output, application, project, deployment));
+
+            if (service.Bindings.Count > 0 &&
+                project.ManifestInfo?.Service is ServiceManifestInfo k8sService)
+            {
+                // Initialize defaults for service-related settings
+                k8sService.Labels.TryAdd("app.kubernetes.io/name", project.Name);
+                k8sService.Labels.TryAdd("app.kubernetes.io/part-of", application.Name);
+
+                service.Outputs.Add(KubernetesManifestGenerator.CreateService(output, application, project, deployment, k8sService));
             }
 
             return Task.CompletedTask;

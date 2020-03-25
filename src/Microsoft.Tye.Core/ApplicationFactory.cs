@@ -30,6 +30,22 @@ namespace Microsoft.Tye
                 builder.Registry = new ContainerRegistry(config.Registry);
             }
 
+            foreach (var configExtension in config.Extensions)
+            {
+                var extension = new ExtensionConfiguration((string)configExtension["name"]);
+                foreach (var kvp in configExtension)
+                {
+                    if (kvp.Key == "name")
+                    {
+                        continue;
+                    }
+
+                    extension.Data.Add(kvp.Key, kvp.Value);
+                }
+
+                builder.Extensions.Add(extension);
+            }
+
             foreach (var configService in config.Services)
             {
                 ServiceBuilder service;
@@ -47,11 +63,14 @@ namespace Microsoft.Tye
                     await ProjectReader.ReadProjectDetailsAsync(output, project);
 
                     // We don't apply more container defaults here because we might need
-                    // to promptly for the registry name.
+                    // to prompt for the registry name.
                     project.ContainerInfo = new ContainerInfo()
                     {
                         UseMultiphaseDockerfile = false,
                     };
+
+                    // Do k8s by default.
+                    project.ManifestInfo = new KubernetesManifestInfo();
                 }
                 else if (!string.IsNullOrEmpty(configService.Image))
                 {
@@ -142,7 +161,10 @@ namespace Microsoft.Tye
 
                 foreach (var configEnvVar in configService.Configuration)
                 {
-                    var envVar = new EnvironmentVariable(configEnvVar.Name, configEnvVar.Value);
+                    var envVar = new EnvironmentVariableBuilder(configEnvVar.Name)
+                    {
+                        Value = configEnvVar.Value,
+                    };
                     if (service is ProjectServiceBuilder project)
                     {
                         project.EnvironmentVariables.Add(envVar);
@@ -234,6 +256,16 @@ namespace Microsoft.Tye
                 throw new CommandException(
                     "Configuration validation failed." + Environment.NewLine +
                     string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
+            }
+
+            foreach (var extension in config.Extensions)
+            {
+                if (!extension.TryGetValue("name", out var name) || string.IsNullOrWhiteSpace(name as string))
+                {
+                    throw new CommandException(
+                        "Configuration validation failed." + Environment.NewLine +
+                        "Extensions must provide a name.");
+                }
             }
 
             foreach (var service in config.Services)

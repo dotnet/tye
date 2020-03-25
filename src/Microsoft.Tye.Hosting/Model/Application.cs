@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Microsoft.Tye.Hosting.Model
 {
@@ -30,8 +31,37 @@ namespace Microsoft.Tye.Hosting.Model
                 // Inject normal configuration
                 foreach (var pair in service.Description.Configuration)
                 {
-                    set(pair.Name, pair.Value);
+                    if (pair.Value is object)
+                    {
+                        set(pair.Name, pair.Value);
+                    }
+                    else if (pair.Source is object)
+                    {
+                        set(pair.Name, GetValueFromBinding(pair.Source));
+                    }
                 }
+            }
+
+            string GetValueFromBinding(EnvironmentVariableSource source)
+            {
+                if (!Services.TryGetValue(source.Service, out var service))
+                {
+                    throw new InvalidOperationException($"Could not find service '{source.Service}'.");
+                }
+
+                var binding = service.Description.Bindings.Where(b => b.Name == source.Binding).FirstOrDefault();
+                if (binding == null)
+                {
+                    throw new InvalidOperationException($"Could not find binding '{source.Binding}' for service '{source.Service}'.");
+                }
+
+                // TODO finish
+                if (source.Kind == EnvironmentVariableSource.SourceKind.Port && binding.Port != null)
+                {
+                    return binding.Port.Value.ToString();
+                }
+
+                throw new InvalidOperationException("LOLNO");
             }
 
             void SetBinding(string serviceName, ServiceBinding b)

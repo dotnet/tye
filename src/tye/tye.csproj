@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Tye.Hosting\Microsoft.Tye.Hosting.csproj" />
     <ProjectReference Include="..\Microsoft.Tye.Core\Microsoft.Tye.Core.csproj" />
+    <ProjectReference Include="..\Microsoft.Tye.Extensions\Microsoft.Tye.Extensions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

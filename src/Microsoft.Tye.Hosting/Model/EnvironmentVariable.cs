@@ -2,18 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.Tye
+namespace Microsoft.Tye.Hosting.Model
 {
-    public sealed class EnvironmentVariable
+    public class EnvironmentVariable
     {
-        public EnvironmentVariable(string name, string value)
+        public EnvironmentVariable(string name)
         {
             Name = name;
-            Value = value;
         }
 
         public string Name { get; }
+        public string? Value { get; set; }
 
-        public string Value { get; }
+        public EnvironmentVariableSource? Source { get; set; }
     }
 }

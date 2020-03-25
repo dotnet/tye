@@ -38,8 +38,8 @@ namespace Microsoft.Tye
                 {
                     var port = binding.Port ?? 80;
                     var urls = $"http://*{(port == 80 ? "" : (":" + port.ToString()))}";
-                    project.EnvironmentVariables.Add(new EnvironmentVariable("ASPNETCORE_URLS", urls));
-                    project.EnvironmentVariables.Add(new EnvironmentVariable("PORT", port.ToString(CultureInfo.InvariantCulture)));
+                    project.EnvironmentVariables.Add(new EnvironmentVariableBuilder("ASPNETCORE_URLS") { Value = urls, });
+                    project.EnvironmentVariables.Add(new EnvironmentVariableBuilder("PORT") { Value = port.ToString(CultureInfo.InvariantCulture), });
                     break;
                 }
             }

@@ -1,0 +1,56 @@
+﻿kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: dapr_test_project
+  annotations:
+    dapr.io/enabled: 'true'
+    dapr.io/id: 'dapr_test_project'
+    dapr.io/port: '80'
+  labels:
+    app.kubernetes.io/name: 'dapr_test_project'
+    app.kubernetes.io/part-of: 'dapr_test_application'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dapr_test_project
+  template:
+    metadata:
+      annotations:
+        dapr.io/enabled: 'true'
+        dapr.io/id: 'dapr_test_project'
+        dapr.io/port: '80'
+      labels:
+        app.kubernetes.io/name: 'dapr_test_project'
+        app.kubernetes.io/part-of: 'dapr_test_application'
+    spec:
+      containers:
+      - name: dapr_test_project
+        image: dapr_test_project:1.0.0
+        imagePullPolicy: Always
+        env:
+        - name: ASPNETCORE_URLS
+          value: 'http://*'
+        - name: PORT
+          value: '80'
+        ports:
+        - containerPort: 80
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: dapr_test_project
+  labels:
+    app.kubernetes.io/name: 'dapr_test_project'
+    app.kubernetes.io/part-of: 'dapr_test_application'
+spec:
+  selector:
+    app.kubernetes.io/name: dapr_test_project
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+...

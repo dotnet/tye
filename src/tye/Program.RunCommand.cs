@@ -9,6 +9,7 @@ using System.CommandLine.IO;
 using System.IO;
 using System.Threading;
 using Microsoft.Tye.ConfigModel;
+using Microsoft.Tye.Extensions;
 using Microsoft.Tye.Hosting;
 
 namespace Microsoft.Tye
@@ -73,9 +74,10 @@ namespace Microsoft.Tye
 
                 var output = new OutputContext(console, Verbosity.Quiet);
                 var application = await ApplicationFactory.CreateAsync(output, path);
-                var serviceCount = application.Services.Count;
 
-                InitializeThreadPoolSettings(serviceCount);
+                await application.ProcessExtensionsAsync(ExtensionContext.OperationKind.LocalRun);
+
+                InitializeThreadPoolSettings(application.Services.Count);
 
                 if (application.Services.Count == 0)
                 {

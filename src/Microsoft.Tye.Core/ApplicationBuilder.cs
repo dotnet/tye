@@ -21,6 +21,8 @@ namespace Microsoft.Tye
 
         public ContainerRegistry? Registry { get; set; }
 
+        public List<ExtensionConfiguration> Extensions { get; } = new List<ExtensionConfiguration>();
+
         public List<ServiceBuilder> Services { get; } = new List<ServiceBuilder>();
 
         public List<IngressBuilder> Ingress { get; } = new List<IngressBuilder>();

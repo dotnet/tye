@@ -65,6 +65,7 @@ services:
                 {
                     // If the input file is a project or solution then use that as the name
                     application.Name = Path.GetFileNameWithoutExtension(path.Name).ToLowerInvariant();
+                    application.Extensions = null!;
                     application.Ingress = null!;
 
                     foreach (var service in application.Services)

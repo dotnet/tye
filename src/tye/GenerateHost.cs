@@ -16,11 +16,18 @@ namespace Microsoft.Tye
         {
             var output = new OutputContext(console, verbosity);
             var application = await ApplicationFactory.CreateAsync(output, path);
+            if (application.Services.Count == 0)
+            {
+                throw new CommandException($"No services found in \"{application.Source.Name}\"");
+            }
+            
             await ExecuteGenerateAsync(output, application, environment: "production", interactive);
         }
 
         public static async Task ExecuteGenerateAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive)
         {
+            await application.ProcessExtensionsAsync(ExtensionContext.OperationKind.Deploy);
+            
             var steps = new List<ServiceExecutor.Step>()
             {
                 new CombineStep() { Environment = environment, },

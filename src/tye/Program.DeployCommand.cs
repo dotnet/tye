@@ -63,6 +63,8 @@ namespace Microsoft.Tye
                 throw new CommandException($"Cannot apply manifests because kubectl is not connected to a cluster.");
             }
 
+            await application.ProcessExtensionsAsync(ExtensionContext.OperationKind.Deploy);
+
             var steps = new List<ServiceExecutor.Step>()
             {
                 new CombineStep() { Environment = environment, },
