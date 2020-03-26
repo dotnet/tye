@@ -1,0 +1,9 @@
+{
+    "tool": "Credential Scanner",
+    "suppressions": [
+      {
+        "placeholder": "pass@word1",
+        "_justification": "This is a fake password used in samples."
+      }
+    ]
+  }
