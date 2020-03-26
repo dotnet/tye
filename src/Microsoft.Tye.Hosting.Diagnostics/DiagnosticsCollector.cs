@@ -375,7 +375,17 @@ namespace Microsoft.Tye.Hosting.Diagnostics
                         var args = new object[formatter.ValueNames.Count];
                         for (var i = 0; i < args.Length; i++)
                         {
-                            args[i] = message.GetProperty(formatter.ValueNames[i]).GetString();
+                            if (!message.TryGetProperty(formatter.ValueNames[i], out var argValue))
+                            {
+                                // We couldn't find the parsed property in the original message, it's likely that this is a JSON object or something else
+                                // being logged, or some other format that just looks like the formatted message. Stop here and log the formatted message
+                                var obj = new LogObject(message, lastFormattedMessage);
+                                logger.Log(logLevel, new EventId(eventId, eventName), obj, exception, LogObject.Callback);
+
+                                break;
+                            }
+
+                            args[i] = argValue.GetString();
                         }
 
                         logger.Log(logLevel, new EventId(eventId, eventName), exception, formatString, args);

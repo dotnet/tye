@@ -5,12 +5,15 @@ html, body {
 }
 
 a, .btn-link {
-    color: #0366d6;
+    color: #2eacf5;
 }
 
+#bg-info-link{
+    background-color: #1a90d4;
+}
 .btn-primary {
     color: #fff;
-    background-color: #3371e3;
+    background-color: #2eacf5;
     border-color: #303030;
 }
 

@@ -15,6 +15,7 @@ namespace Microsoft.Tye.Hosting
 {
     public class DockerRunner : IApplicationProcessor, IReplicaInstantiator
     {
+        private static readonly TimeSpan DockerStopTimeout = TimeSpan.FromSeconds(30);
         private readonly ILogger _logger;
 
         public DockerRunner(ILogger logger)
@@ -160,7 +161,8 @@ namespace Microsoft.Tye.Hosting
                     command,
                     throwOnError: false,
                     cancellationToken: dockerInfo.StoppingTokenSource.Token,
-                    outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"));
+                    outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
+                    errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"));
 
                 if (result.ExitCode != 0)
                 {
@@ -194,23 +196,28 @@ namespace Microsoft.Tye.Hosting
 
                 _logger.LogInformation("Collecting docker logs for {ContainerName}.", replica);
 
-                await ProcessUtil.RunAsync("docker", $"logs -f {containerId}",
-                    outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
-                    onStart: pid =>
-                    {
-                        status.DockerLogsPid = pid;
-                    },
-                    throwOnError: false,
-                    cancellationToken: dockerInfo.StoppingTokenSource.Token);
+                while (!dockerInfo.StoppingTokenSource.Token.IsCancellationRequested)
+                {
+                    await ProcessUtil.RunAsync("docker", $"logs -f {containerId}",
+                        outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
+                        errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
+                        throwOnError: false,
+                        cancellationToken: dockerInfo.StoppingTokenSource.Token);
+                }
 
                 _logger.LogInformation("docker logs collection for {ContainerName} complete with exit code {ExitCode}", replica, result.ExitCode);
 
                 // Docker has a tendency to get stuck so we're going to timeout this shutdown process
-                var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                var timeoutCts = new CancellationTokenSource(DockerStopTimeout);
 
                 _logger.LogInformation("Stopping container {ContainerName} with ID {ContainerId}", replica, shortContainerId);
 
                 result = await ProcessUtil.RunAsync("docker", $"stop {containerId}", throwOnError: false, cancellationToken: timeoutCts.Token);
+
+                if (timeoutCts.IsCancellationRequested)
+                {
+                    _logger.LogWarning($"Failed to stop container after {DockerStopTimeout.Seconds} seconds, container will most likely be running.", replica, shortContainerId);
+                }
 
                 PrintStdOutAndErr(service, replica, result);
 
@@ -219,6 +226,11 @@ namespace Microsoft.Tye.Hosting
                 _logger.LogInformation("Stopped container {ContainerName} with ID {ContainerId} exited with {ExitCode}", replica, shortContainerId, result.ExitCode);
 
                 result = await ProcessUtil.RunAsync("docker", $"rm {containerId}", throwOnError: false, cancellationToken: timeoutCts.Token);
+
+                if (timeoutCts.IsCancellationRequested)
+                {
+                    _logger.LogWarning($"Failed to remove container after {DockerStopTimeout.Seconds} seconds, container will most likely still exist.", replica, shortContainerId);
+                }
 
                 PrintStdOutAndErr(service, replica, result);
 
