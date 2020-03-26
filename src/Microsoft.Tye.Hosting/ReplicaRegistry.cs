@@ -9,24 +9,31 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Tye.Hosting.Model;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Tye.Hosting
 {
     public class ReplicaRegistry : IDisposable
     {
         private readonly IDictionary<ServiceType, IReplicaInstantiator> _replicaInstantiators;
-        private StateStore _store;
+        private readonly StateStore _store;
 
-        public ReplicaRegistry(Model.Application application, IDictionary<ServiceType, IReplicaInstantiator> replicaInstantiators)
+        public ReplicaRegistry(Model.Application application, ILogger logger, IDictionary<ServiceType, IReplicaInstantiator> replicaInstantiators)
         {
             _replicaInstantiators = replicaInstantiators;
-            _store = new StateStore(application);
+            _store = new StateStore(application, logger);
         }
 
         public async Task Reset()
         {
             await PurgeAll();
             _store.Reset(delete: true, create: true);
+        }
+
+        public async Task Delete()
+        {
+            await PurgeAll();
+            _store.Reset(delete: true, create: false);
         }
 
         public void WriteReplicaEvent(ReplicaEvent replicaEvent)
@@ -77,24 +84,34 @@ namespace Microsoft.Tye.Hosting
         {
             //TOOD: Consider Sqlite...
 
+            private ILogger _logger;
+
             private string _tyeFolderPath;
             private string _eventsFile;
 
-            public StateStore(Model.Application application)
+            public StateStore(Model.Application application, ILogger logger)
             {
+                _logger = logger;
                 _tyeFolderPath = Path.Join(Path.GetDirectoryName(application.Source), ".tye");
                 Reset(delete: false, create: true);
 
                 _eventsFile = Path.Join(_tyeFolderPath, "events");
             }
 
-            public void WriteEvent(StoreEvent @event)
+            public bool WriteEvent(StoreEvent @event)
             {
-                var contents = JsonSerializer.Serialize(@event, options: new JsonSerializerOptions
+                try
                 {
-                    WriteIndented = false
-                });
-                File.AppendAllText(_eventsFile, contents + Environment.NewLine);
+                    var contents = JsonSerializer.Serialize(@event, options: new JsonSerializerOptions {WriteIndented = false});
+                    File.AppendAllText(_eventsFile, contents + Environment.NewLine);
+
+                    return true;
+                }
+                catch (DirectoryNotFoundException ex)
+                {
+                    _logger.LogWarning(ex, "tye folder is not found. file: {file}", _eventsFile);
+                    return false;
+                }
             }
 
             public async ValueTask<IList<StoreEvent>> GetEvents()

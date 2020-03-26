@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace E2ETest
@@ -61,7 +62,7 @@ namespace E2ETest
                     Interlocked.Decrement(ref alreadyStarted);
                 }
 
-                if (alreadyStarted == 0)
+                if (alreadyStarted == totalReplicas)
                 {
                     startedTask.TrySetResult(true);
                 }
@@ -92,19 +93,19 @@ namespace E2ETest
             }
         }
 
-        public static async Task PurgeHostAndWaitForGivenReplicasToStop(TyeHost host, string[] replicas)
+        public static async Task PurgeHostAndWaitForGivenReplicasToStop(TyeHost host, string[] replicas, string tyeDir)
         {
             var stoppedTask = new TaskCompletionSource<bool>();
-            var alreadyStopped = replicas.Length;
+            var remaining = replicas.Length;
 
             void OnReplicaChange(ReplicaEvent ev)
             {
                 if (replicas.Contains(ev.Replica.Name) && ev.State == ReplicaState.Stopped)
                 {
-                    Interlocked.Decrement(ref alreadyStopped);
+                    Interlocked.Decrement(ref remaining);
                 }
 
-                if (alreadyStopped == 0)
+                if (remaining == 0)
                 {
                     stoppedTask.TrySetResult(true);
                 }
@@ -112,6 +113,8 @@ namespace E2ETest
 
             var servicesStateObserver = host.Application.Services.Select(srv => srv.Value.ReplicaEvents.Subscribe(OnReplicaChange)).ToList();
             await host.PurgeAsync();
+            
+            Assert.False(Directory.Exists(tyeDir));
 
             using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);
             try

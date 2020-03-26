@@ -21,7 +21,7 @@ namespace Microsoft.Tye.Hosting
         public ReplicaStateRecorder(Model.Application application, ILogger logger, IDictionary<ServiceType, IReplicaInstantiator> replicaInstantiators)
         {
             _logger = logger;
-            _registry = new ReplicaRegistry(application, replicaInstantiators);
+            _registry = new ReplicaRegistry(application, logger, replicaInstantiators);
         }
 
         public async Task StartAsync(Model.Application application)

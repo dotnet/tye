@@ -67,13 +67,23 @@ namespace Microsoft.Tye.Hosting
             await StopAsync();
         }
 
-        public Task PurgeAsync()
+        public async Task PurgeAsync()
         {
-            var app = BuildWebApplication(_application, _args, Sink);
-            var runners = CreateRunners(_application, _args, Array.Empty<string>(), app.Logger, app.Configuration);
+            var app = DashboardWebApplication ?? BuildWebApplication(_application, _args, Sink);
+            try
+            {
+                var runners = CreateRunners(_application, _args, Array.Empty<string>(), app.Logger, app.Configuration);
 
-            using var replicaRegistry = new ReplicaRegistry(_application, runners);
-            return replicaRegistry.Reset();
+                using var replicaRegistry = new ReplicaRegistry(_application, app.Logger, runners);
+                await replicaRegistry.Delete();
+            }
+            finally
+            {
+                if (app != DashboardWebApplication)
+                {
+                    app.Dispose();
+                }
+            }
         }
 
         public async Task<WebApplication> StartAsync()

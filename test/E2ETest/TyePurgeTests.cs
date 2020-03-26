@@ -48,14 +48,15 @@ namespace E2ETest
             await TestHelpers.StartHostAndWaitForReplicasToStart(host);
             try
             {
-                var pids = GetAllPids(host.Application);
+                var pids = GetAllAppPids(host.Application);
 
                 Assert.True(Directory.Exists(tyeDir.FullName));
-                Assert.True(AllRunning(pids));
+                Assert.Subset(new HashSet<int>(GetAllPids()), new HashSet<int>(pids));
 
-                await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host, GetAllReplicasNames(host.Application));
+                await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host, GetAllReplicasNames(host.Application), tyeDir.FullName);
 
-                Assert.False(AnyRunning(pids));
+                var runningPids = new HashSet<int>(GetAllPids());
+                Assert.True(pids.All(pid => !runningPids.Contains(pid)));
             }
             finally
             {
@@ -83,16 +84,17 @@ namespace E2ETest
             await TestHelpers.StartHostAndWaitForReplicasToStart(host);
             try
             {
-                var pids = GetAllPids(host.Application);
+                var pids = GetAllAppPids(host.Application);
                 var containers = GetAllContainerIds(host.Application);
-
+                
                 Assert.True(Directory.Exists(tyeDir.FullName));
-                Assert.True(AllRunning(pids));
+                Assert.Subset(new HashSet<int>(GetAllPids()), new HashSet<int>(pids));
                 Assert.Subset(new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(output)), new HashSet<string>(containers));
+                
+                await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host, GetAllReplicasNames(host.Application), tyeDir.FullName);
 
-                await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host, GetAllReplicasNames(host.Application));
-
-                Assert.False(AnyRunning(pids));
+                var runningPids = new HashSet<int>(GetAllPids());
+                Assert.True(pids.All(pid => !runningPids.Contains(pid)));
                 var runningContainers = new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(output));
                 Assert.True(containers.All(c => !runningContainers.Contains(c)));
             }
@@ -108,7 +110,7 @@ namespace E2ETest
             return replicas.Select(r => r.Value.Name).ToArray();
         }
 
-        private int[] GetAllPids(Microsoft.Tye.Hosting.Model.Application application)
+        private int[] GetAllAppPids(Microsoft.Tye.Hosting.Model.Application application)
         {
             var replicas = application.Services.SelectMany(s => s.Value.Replicas);
             var ids = replicas.Where(r => r.Value is ProcessStatus).Select(r => ((ProcessStatus)r.Value).Pid ?? -1).ToArray();
@@ -124,17 +126,9 @@ namespace E2ETest
             return ids;
         }
 
-        private bool AllRunning(int[] pids)
+        private int[] GetAllPids()
         {
-            var allProcesses = new HashSet<int>(Process.GetProcesses().Select(p => p.Id));
-            return pids.All(p => allProcesses.Contains(p));
-        }
-
-        private bool AnyRunning(int[] pids)
-        {
-            var allProcesses = Process.GetProcesses();
-            var allProcessesId = new HashSet<int>(allProcesses.Select(p => p.Id));
-            return pids.Any(p => allProcessesId.Contains(p));
+            return Process.GetProcesses().Select(p => p.Id).ToArray();
         }
     }
 }
