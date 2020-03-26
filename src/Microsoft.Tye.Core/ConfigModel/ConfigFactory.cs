@@ -2,11 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
-using Microsoft.Build.Construction;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -42,11 +39,13 @@ namespace Microsoft.Tye.ConfigModel
                 Source = file,
             };
 
-            var service = CreateService(file);
-            if (service is object)
+            var service = new ConfigService()
             {
-                application.Services.Add(service);
-            }
+                Name = Path.GetFileNameWithoutExtension(file.Name).ToLowerInvariant(),
+                Project = file.FullName.Replace('\\', '/'),
+            };
+
+            application.Services.Add(service);
 
             return application;
         }
@@ -62,11 +61,13 @@ namespace Microsoft.Tye.ConfigModel
             // throughout the code, because we load them dynamically.
             foreach (var projectFile in ProjectReader.EnumerateProjects(file))
             {
-                var description = CreateService(projectFile);
-                if (description != null)
+                var service = new ConfigService()
                 {
-                    application.Services.Add(description);
-                }
+                    Name = Path.GetFileNameWithoutExtension(projectFile.Name).ToLowerInvariant(),
+                    Project = projectFile.FullName.Replace('\\', '/'),
+                };
+
+                application.Services.Add(service);
             }
 
             return application;
@@ -82,82 +83,22 @@ namespace Microsoft.Tye.ConfigModel
             var application = deserializer.Deserialize<ConfigApplication>(reader);
             application.Source = file;
 
+            // Deserialization makes all collection properties null so make sure they are non-null so
+            // other code doesn't need to react
             foreach (var service in application.Services)
             {
-                if (service.Project == null)
-                {
-                    continue;
-                }
-
-                if (!TryGetLaunchProfile(new FileInfo(Path.Combine(file.DirectoryName, service.Project)), out var launchProfile))
-                {
-                    continue;
-                }
-
-                // Bindings can be null here from deserialization.
                 service.Bindings ??= new List<ConfigServiceBinding>();
+                service.Configuration ??= new List<ConfigConfigurationSource>();
+                service.Volumes ??= new List<ConfigVolume>();
+            }
 
-                PopulateFromLaunchProfile(service, launchProfile);
+            foreach (var ingress in application.Ingress)
+            {
+                ingress.Bindings ??= new List<ConfigIngressBinding>();
+                ingress.Rules ??= new List<ConfigIngressRule>();
             }
 
             return application;
-        }
-
-        private static bool TryGetLaunchProfile(FileInfo file, out JsonElement launchProfile)
-        {
-            var launchSettingsPath = Path.Combine(file.DirectoryName, "Properties", "launchSettings.json");
-            if (!File.Exists(launchSettingsPath))
-            {
-                launchProfile = default;
-                return false;
-            }
-
-            // If there's a launchSettings.json, then use it to get addresses
-            var root = JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(launchSettingsPath));
-            var key = NameSanitizer.SanitizeToIdentifier(Path.GetFileNameWithoutExtension(file.Name));
-            var profiles = root.GetProperty("profiles");
-            return profiles.TryGetProperty(key, out launchProfile);
-        }
-
-        private static ConfigService? CreateService(FileInfo file)
-        {
-            if (!TryGetLaunchProfile(file, out var launchProfile))
-            {
-                return null;
-            }
-
-            var service = new ConfigService()
-            {
-                Name = Path.GetFileNameWithoutExtension(file.Name).ToLowerInvariant(),
-                Project = file.FullName.Replace('\\', '/'),
-            };
-
-            PopulateFromLaunchProfile(service, launchProfile);
-
-            return service;
-        }
-
-        private static void PopulateFromLaunchProfile(ConfigService service, JsonElement launchProfile)
-        {
-            if (service.Bindings.Count == 0 && launchProfile.TryGetProperty("applicationUrl", out var applicationUrls))
-            {
-                var addresses = applicationUrls.GetString().Split(';', StringSplitOptions.RemoveEmptyEntries);
-                foreach (var address in addresses)
-                {
-                    var uri = new Uri(address);
-                    service.Bindings.Add(new ConfigServiceBinding()
-                    {
-                        // Don't use ports from launch profiles. These are very likely to be the same defaults (5000, 5001) 
-                        // that were generated when the project was created, and so they will almost always conflict
-                        // between multiple apps.
-                        AutoAssignPort = true,
-                        Protocol = uri.Scheme
-                    });
-                }
-            }
-
-            // Don't apply environment variables here. We don't want to carry forward settings from
-            // development into production.
         }
     }
 }
