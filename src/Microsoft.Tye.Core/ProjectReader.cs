@@ -101,7 +101,7 @@ namespace Microsoft.Tye
                         // Using the project as the working directory. We're making the assumption that
                         // all of the projects want to use the same SDK version. This library is going
                         // load a single version of the SDK's assemblies into our process, so we can't
-                        // use supprt SDKs at once without getting really tricky.
+                        // use support SDKs at once without getting really tricky.
                         //
                         // The .NET SDK-based discovery uses `dotnet --info` and returns the SDK
                         // in use for the directory.
@@ -188,7 +188,7 @@ namespace Microsoft.Tye
                 AssemblyLoadContext.Default.Resolving -= ResolveAssembly;
             }
 
-            // Reading both InformationalVersion and Version is more resilant in the face of build failures.
+            // Reading both InformationalVersion and Version is more resilient in the face of build failures.
             var version = projectInstance.GetProperty("InformationalVersion")?.EvaluatedValue ?? projectInstance.GetProperty("Version").EvaluatedValue;
             project.Version = version;
             output.WriteDebugLine($"Found application version: {version}");

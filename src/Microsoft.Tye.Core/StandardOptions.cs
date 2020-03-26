@@ -19,7 +19,7 @@ namespace Microsoft.Tye
         {
             get
             {
-                return new Option(new[] { "-e", "--environment" }, "Environemnt")
+                return new Option(new[] { "-e", "--environment" }, "Environment")
                 {
                     Argument = new Argument<string>("environment", () => "production")
                     {

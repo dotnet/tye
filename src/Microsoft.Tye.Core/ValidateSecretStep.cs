@@ -92,7 +92,7 @@ namespace Microsoft.Tye
                             $"kubectl create secret generic {secretInputBinding.Name} --from-literal=connectionstring=<value>");
                     }
 
-                    // If we get here then we should create the sceret.
+                    // If we get here then we should create the secret.
                     var text = output.Prompt($"Enter the connection string to use for service '{secretInputBinding.Service.Name}'", allowEmpty: true);
                     if (string.IsNullOrWhiteSpace(text))
                     {

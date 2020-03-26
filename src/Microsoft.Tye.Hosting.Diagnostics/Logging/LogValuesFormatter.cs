@@ -15,7 +15,7 @@ using System.Text;
 namespace Microsoft.Tye.Hosting.Diagnostics.Logging
 {
     /// <summary>
-    /// Formatter to convert the named format items like {NamedformatItem} to <see cref="M:string.Format"/> format.
+    /// Formatter to convert the named format items like {NamedFormatItem} to <see cref="M:string.Format"/> format.
     /// </summary>
     internal class LogValuesFormatter
     {
