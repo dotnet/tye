@@ -191,6 +191,7 @@ namespace Microsoft.Tye.Hosting
                             environmentVariables: environment,
                             workingDirectory: workingDirectory,
                             outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
+                            errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
                             onStart: pid =>
                             {
                                 if (hasPorts)

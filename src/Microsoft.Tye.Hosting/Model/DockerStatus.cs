@@ -13,7 +13,5 @@ namespace Microsoft.Tye.Hosting.Model
         public string? DockerCommand { get; set; }
 
         public string? ContainerId { get; set; }
-
-        public int? DockerLogsPid { get; set; }
     }
 }
