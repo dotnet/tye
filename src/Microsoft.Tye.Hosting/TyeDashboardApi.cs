@@ -181,7 +181,6 @@ namespace Microsoft.Tye.Hosting
                 else if (replica.Value is DockerStatus dockerStatus)
                 {
                     replicaStatus.DockerCommand = dockerStatus.DockerCommand;
-                    replicaStatus.DockerLogsPid = dockerStatus.DockerLogsPid;
                     replicaStatus.ContainerId = dockerStatus.ContainerId;
                 }
             }

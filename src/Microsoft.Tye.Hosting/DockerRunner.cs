@@ -160,7 +160,8 @@ namespace Microsoft.Tye.Hosting
                     command,
                     throwOnError: false,
                     cancellationToken: dockerInfo.StoppingTokenSource.Token,
-                    outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"));
+                    outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
+                    errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"));
 
                 if (result.ExitCode != 0)
                 {
@@ -194,14 +195,14 @@ namespace Microsoft.Tye.Hosting
 
                 _logger.LogInformation("Collecting docker logs for {ContainerName}.", replica);
 
-                await ProcessUtil.RunAsync("docker", $"logs -f {containerId}",
-                    outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
-                    onStart: pid =>
-                    {
-                        status.DockerLogsPid = pid;
-                    },
-                    throwOnError: false,
-                    cancellationToken: dockerInfo.StoppingTokenSource.Token);
+                while (!dockerInfo.StoppingTokenSource.Token.IsCancellationRequested)
+                {
+                    await ProcessUtil.RunAsync("docker", $"logs -f {containerId}",
+                        outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
+                        errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
+                        throwOnError: false,
+                        cancellationToken: dockerInfo.StoppingTokenSource.Token);
+                }
 
                 _logger.LogInformation("docker logs collection for {ContainerName} complete with exit code {ExitCode}", replica, result.ExitCode);
 

@@ -14,7 +14,6 @@ namespace Microsoft.Tye.Hosting.Model.V1
         public V1ReplicaType Type { get; set; }
         public string? DockerCommand { get; set; }
         public string? ContainerId { get; set; }
-        public int? DockerLogsPid { get; set; }
         public string? Name { get; set; }
         public IEnumerable<int>? Ports { get; set; }
         public int? ExitCode { get; set; }
