@@ -16,14 +16,13 @@ using Microsoft.Tye.Hosting.Model;
 using Xunit;
 using Xunit.Abstractions;
 using Microsoft.Tye;
-using Xunit;
 
 namespace E2ETest
 {
     public static class TestHelpers
     {
-        private static readonly TimeSpan WaitForServicesTimeout = TimeSpan.FromSeconds(10);
-        
+        private static readonly TimeSpan WaitForServicesTimeout = TimeSpan.FromSeconds(20);
+
         // https://github.com/dotnet/aspnetcore/blob/5a0526dfd991419d5bce0d8ea525b50df2e37b04/src/Testing/src/TestPathUtilities.cs
         // This can get into a bad pattern for having crazy paths in places. Eventually, especially if we use helix,
         // we may want to avoid relying on sln position.

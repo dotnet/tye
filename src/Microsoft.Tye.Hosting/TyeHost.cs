@@ -100,7 +100,7 @@ namespace Microsoft.Tye.Hosting
 
             var configuration = app.Configuration;
 
-            _processor = CreateApplicationProcessor(_args, _servicesToDebug, _logger, configuration);
+            _processor = CreateApplicationProcessor(_application, _args, _servicesToDebug, _logger, configuration);
 
             await app.StartAsync();
 
