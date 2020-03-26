@@ -8,8 +8,6 @@ services:
     - port: 6379
 - name: worker
   project: worker/worker.csproj
-  bindings:
-    - autoAssignPort: true
 - name: postgres
   image:  postgres
   env:
