@@ -15,6 +15,7 @@ namespace Microsoft.Tye.Hosting
 {
     public class DockerRunner : IApplicationProcessor
     {
+        private static readonly TimeSpan DockerStopTimeout = TimeSpan.FromSeconds(30);
         private readonly ILogger _logger;
 
         public DockerRunner(ILogger logger)
@@ -207,11 +208,16 @@ namespace Microsoft.Tye.Hosting
                 _logger.LogInformation("docker logs collection for {ContainerName} complete with exit code {ExitCode}", replica, result.ExitCode);
 
                 // Docker has a tendency to get stuck so we're going to timeout this shutdown process
-                var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                var timeoutCts = new CancellationTokenSource(DockerStopTimeout);
 
                 _logger.LogInformation("Stopping container {ContainerName} with ID {ContainerId}", replica, shortContainerId);
 
                 result = await ProcessUtil.RunAsync("docker", $"stop {containerId}", throwOnError: false, cancellationToken: timeoutCts.Token);
+
+                if (timeoutCts.IsCancellationRequested)
+                {
+                    _logger.LogWarning($"Failed to stop container after {DockerStopTimeout.Seconds} seconds, container will most likely be running.", replica, shortContainerId);
+                }
 
                 PrintStdOutAndErr(service, replica, result);
 
@@ -220,6 +226,11 @@ namespace Microsoft.Tye.Hosting
                 _logger.LogInformation("Stopped container {ContainerName} with ID {ContainerId} exited with {ExitCode}", replica, shortContainerId, result.ExitCode);
 
                 result = await ProcessUtil.RunAsync("docker", $"rm {containerId}", throwOnError: false, cancellationToken: timeoutCts.Token);
+
+                if (timeoutCts.IsCancellationRequested)
+                {
+                    _logger.LogWarning($"Failed to remove container after {DockerStopTimeout.Seconds} seconds, container will most likely still exist.", replica, shortContainerId);
+                }
 
                 PrintStdOutAndErr(service, replica, result);
 
