@@ -97,7 +97,7 @@ namespace Microsoft.Tye
                 builder.Services.Add(service);
 
                 // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
-                if (configService.Bindings.Count == 0 && 
+                if (configService.Bindings.Count == 0 &&
                     service is ProjectServiceBuilder project2 &&
                     project2.Frameworks.Any(f => f.Name == "Microsoft.AspNetCore.App"))
                 {
