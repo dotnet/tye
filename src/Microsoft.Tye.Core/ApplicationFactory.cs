@@ -47,7 +47,7 @@ namespace Microsoft.Tye
                     await ProjectReader.ReadProjectDetailsAsync(output, project);
 
                     // We don't apply more container defaults here because we might need
-                    // to prompty for the registry name.
+                    // to promptly for the registry name.
                     project.ContainerInfo = new ContainerInfo()
                     {
                         UseMultiphaseDockerfile = false,
