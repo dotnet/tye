@@ -96,26 +96,51 @@ namespace Microsoft.Tye
 
                 builder.Services.Add(service);
 
-                foreach (var configBinding in configService.Bindings)
+                // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
+                if (configService.Bindings.Count == 0 && 
+                    service is ProjectServiceBuilder project2 &&
+                    project2.Frameworks.Any(f => f.Name == "Microsoft.AspNetCore.App"))
                 {
-                    var binding = new BindingBuilder()
+                    // HTTP is the default binding
+                    var httpBinding = new BindingBuilder()
                     {
-                        Name = configBinding.Name,
-                        AutoAssignPort = configBinding.AutoAssignPort,
-                        ConnectionString = configBinding.ConnectionString,
-                        Host = configBinding.Host,
-                        ContainerPort = configBinding.ContainerPort,
-                        Port = configBinding.Port,
-                        Protocol = configBinding.Protocol,
+                        AutoAssignPort = true,
+                        Protocol = "http"
                     };
 
-                    // Assume HTTP for projects only (containers may be different)
-                    if (binding.ConnectionString == null && configService.Project != null)
+                    var httpsBinding = new BindingBuilder()
                     {
-                        binding.Protocol ??= "http";
-                    }
+                        Name = "https",
+                        AutoAssignPort = true,
+                        Protocol = "https"
+                    };
 
-                    service.Bindings.Add(binding);
+                    service.Bindings.Add(httpBinding);
+                    service.Bindings.Add(httpsBinding);
+                }
+                else
+                {
+                    foreach (var configBinding in configService.Bindings)
+                    {
+                        var binding = new BindingBuilder()
+                        {
+                            Name = configBinding.Name,
+                            AutoAssignPort = configBinding.AutoAssignPort,
+                            ConnectionString = configBinding.ConnectionString,
+                            Host = configBinding.Host,
+                            ContainerPort = configBinding.ContainerPort,
+                            Port = configBinding.Port,
+                            Protocol = configBinding.Protocol,
+                        };
+
+                        // Assume HTTP for projects only (containers may be different)
+                        if (binding.ConnectionString == null && configService.Project != null)
+                        {
+                            binding.Protocol ??= "http";
+                        }
+
+                        service.Bindings.Add(binding);
+                    }
                 }
 
                 foreach (var configEnvVar in configService.Configuration)
