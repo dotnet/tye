@@ -54,7 +54,7 @@ namespace Microsoft.Tye
                     var config = KubernetesClientConfiguration.BuildDefaultConfig();
 
                     // Workaround for https://github.com/kubernetes-client/csharp/issues/372
-                    var store = KubernetesClientConfiguration.LoadKubeConfig();
+                    var store = await KubernetesClientConfiguration.LoadKubeConfigAsync();
                     var context = store.Contexts.Where(c => c.Name == config.CurrentContext).FirstOrDefault();
                     config.Namespace ??= context?.ContextDetails?.Namespace;
 
