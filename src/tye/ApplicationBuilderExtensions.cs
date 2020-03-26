@@ -10,9 +10,9 @@ namespace Microsoft.Tye.ConfigModel
 {
     public static class ApplicationBuilderExtensions
     {
-        public static Tye.Hosting.Model.Application ToHostingApplication(this ApplicationBuilder application)
+        public static Application ToHostingApplication(this ApplicationBuilder application)
         {
-            var services = new Dictionary<string, Tye.Hosting.Model.Service>();
+            var services = new Dictionary<string, Service>();
             foreach (var service in application.Services)
             {
                 RunInfo? runInfo;
@@ -52,7 +52,17 @@ namespace Microsoft.Tye.ConfigModel
                 }
                 else if (service is ProjectServiceBuilder project)
                 {
-                    var projectInfo = new ProjectRunInfo(project.ProjectFile.FullName, project.Args, project.Build);
+                    if (project.TargetFrameworks.Length > 1)
+                    {
+                        throw new InvalidOperationException($"Unable to run {project.Name}. Multi-targeted projects are not supported.");
+                    }
+
+                    if (project.RunCommand == null)
+                    {
+                        throw new InvalidOperationException($"Unable to run {project.Name}. The project does not have a run command");
+                    }
+
+                    var projectInfo = new ProjectRunInfo(project);
 
                     foreach (var mapping in project.Volumes)
                     {
@@ -72,7 +82,7 @@ namespace Microsoft.Tye.ConfigModel
                     throw new InvalidOperationException($"Cannot figure out how to run service '{service.Name}'.");
                 }
 
-                var description = new Tye.Hosting.Model.ServiceDescription(service.Name, runInfo)
+                var description = new ServiceDescription(service.Name, runInfo)
                 {
                     Replicas = replicas,
                 };
@@ -80,7 +90,7 @@ namespace Microsoft.Tye.ConfigModel
 
                 foreach (var binding in service.Bindings)
                 {
-                    description.Bindings.Add(new Tye.Hosting.Model.ServiceBinding()
+                    description.Bindings.Add(new Hosting.Model.ServiceBinding()
                     {
                         ConnectionString = binding.ConnectionString,
                         Host = binding.Host,
@@ -92,29 +102,29 @@ namespace Microsoft.Tye.ConfigModel
                     });
                 }
 
-                services.Add(service.Name, new Tye.Hosting.Model.Service(description));
+                services.Add(service.Name, new Service(description));
             }
 
             // Ingress get turned into services for hosting
             foreach (var ingress in application.Ingress)
             {
-                var rules = new List<Tye.Hosting.Model.IngressRule>();
+                var rules = new List<IngressRule>();
 
                 foreach (var rule in ingress.Rules)
                 {
-                    rules.Add(new Tye.Hosting.Model.IngressRule(rule.Host, rule.Path, rule.Service!));
+                    rules.Add(new IngressRule(rule.Host, rule.Path, rule.Service!));
                 }
 
                 var runInfo = new IngressRunInfo(rules);
 
-                var description = new Tye.Hosting.Model.ServiceDescription(ingress.Name, runInfo)
+                var description = new ServiceDescription(ingress.Name, runInfo)
                 {
                     Replicas = ingress.Replicas,
                 };
 
                 foreach (var binding in ingress.Bindings)
                 {
-                    description.Bindings.Add(new Tye.Hosting.Model.ServiceBinding()
+                    description.Bindings.Add(new Hosting.Model.ServiceBinding()
                     {
                         AutoAssignPort = binding.AutoAssignPort,
                         Name = binding.Name,
@@ -123,10 +133,10 @@ namespace Microsoft.Tye.ConfigModel
                     });
                 }
 
-                services.Add(ingress.Name, new Tye.Hosting.Model.Service(description));
+                services.Add(ingress.Name, new Service(description));
             }
 
-            return new Tye.Hosting.Model.Application(application.Source, services);
+            return new Application(application.Source, services);
         }
     }
 }

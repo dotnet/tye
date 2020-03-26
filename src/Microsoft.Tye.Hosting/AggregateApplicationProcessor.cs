@@ -18,7 +18,7 @@ namespace Microsoft.Tye.Hosting
             _applicationProcessors = applicationProcessors;
         }
 
-        public async Task StartAsync(Tye.Hosting.Model.Application application)
+        public async Task StartAsync(Application application)
         {
             foreach (var processor in _applicationProcessors)
             {
@@ -26,7 +26,7 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        public async Task StopAsync(Tye.Hosting.Model.Application application)
+        public async Task StopAsync(Application application)
         {
             // Shutdown in the opposite order
             foreach (var processor in _applicationProcessors.Reverse())

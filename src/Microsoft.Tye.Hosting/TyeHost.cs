@@ -33,23 +33,23 @@ namespace Microsoft.Tye.Hosting
         private IHostApplicationLifetime? _lifetime;
         private AggregateApplicationProcessor? _processor;
 
-        private readonly Tye.Hosting.Model.Application _application;
+        private readonly Application _application;
         private readonly string[] _args;
         private readonly string[] _servicesToDebug;
 
-        public TyeHost(Tye.Hosting.Model.Application application, string[] args)
+        public TyeHost(Application application, string[] args)
             : this(application, args, new string[0])
         {
         }
 
-        public TyeHost(Tye.Hosting.Model.Application application, string[] args, string[] servicesToDebug)
+        public TyeHost(Application application, string[] args, string[] servicesToDebug)
         {
             _application = application;
             _args = args;
             _servicesToDebug = servicesToDebug;
         }
 
-        public Tye.Hosting.Model.Application Application => _application;
+        public Application Application => _application;
 
         public WebApplication? DashboardWebApplication { get; set; }
 
@@ -100,7 +100,7 @@ namespace Microsoft.Tye.Hosting
 
             var configuration = app.Configuration;
 
-            _processor = CreateApplicationProcessor(_application, _args, _servicesToDebug, _logger, configuration);
+            _processor = CreateApplicationProcessor(_args, _servicesToDebug, _logger, configuration);
 
             await app.StartAsync();
 
@@ -138,7 +138,7 @@ namespace Microsoft.Tye.Hosting
         }
 
         private static WebApplication BuildWebApplication(
-            Tye.Hosting.Model.Application application,
+            Application application,
             string[] args,
             ILogEventSink? sink)
         {
@@ -249,7 +249,7 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        private static bool IsPortInUseByBinding(Model.Application application, int port)
+        private static bool IsPortInUseByBinding(Application application, int port)
         {
             foreach (var service in application.Services)
             {
@@ -265,7 +265,7 @@ namespace Microsoft.Tye.Hosting
             return false;
         }
 
-        private static AggregateApplicationProcessor CreateApplicationProcessor(Model.Application application, string[] args, string[] _servicesToDebug, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
+        private static AggregateApplicationProcessor CreateApplicationProcessor(Application application, string[] args, string[] servicesToDebug, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
         {
             var diagnosticOptions = DiagnosticOptions.FromConfiguration(configuration);
             var diagnosticsCollector = new DiagnosticsCollector(logger, diagnosticOptions);
@@ -273,14 +273,14 @@ namespace Microsoft.Tye.Hosting
             // Print out what providers were selected and their values
             diagnosticOptions.DumpDiagnostics(logger);
 
-            var replicaRunners = CreateRunners(application, args, _servicesToDebug, logger, configuration);
+            var replicaRunners = CreateRunners(application, args, servicesToDebug, logger, configuration);
 
             var processors = new List<IApplicationProcessor>
             {
                 new ReplicaStateRecorder(application, logger, replicaRunners),
                 new EventPipeDiagnosticsRunner(logger, diagnosticsCollector),
                 new ProxyService(logger),
-                new IngressService(logger)
+                new HttpProxyService(logger)
             };
 
             processors.AddRange(replicaRunners.Values.Distinct());
@@ -294,10 +294,10 @@ namespace Microsoft.Tye.Hosting
             return new AggregateApplicationProcessor(processors);
         }
 
-        private static Dictionary<ServiceType, IReplicaInstantiator> CreateRunners(Model.Application application, string[] args, string[] _servicesToDebug, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
+        private static Dictionary<ServiceType, IReplicaInstantiator> CreateRunners(Application application, string[] args, string[] servicesToDebug, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
         {
             var dockerRunner = new DockerRunner(logger);
-            var processRunner = new ProcessRunner(logger, ProcessRunnerOptions.FromArgs(args, _servicesToDebug));
+            var processRunner = new ProcessRunner(logger, ProcessRunnerOptions.FromArgs(args, servicesToDebug));
 
             return new Dictionary<ServiceType, IReplicaInstantiator>()
             {

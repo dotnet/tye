@@ -20,20 +20,21 @@ namespace Microsoft.Tye
 
                 var directoryPath = Path.Combine(baseDirectory, Path.GetRandomFileName());
                 var directoryInfo = Directory.CreateDirectory(directoryPath);
-                return new TempDirectory(directoryPath, directoryInfo);
+                return new TempDirectory(directoryInfo);
             }
             else
             {
                 var directoryPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                 var directoryInfo = Directory.CreateDirectory(directoryPath);
-                return new TempDirectory(directoryPath, directoryInfo);
+                return new TempDirectory(directoryInfo);
             }
         }
 
-        private TempDirectory(string directoryPath, DirectoryInfo directoryInfo)
+        internal TempDirectory(DirectoryInfo directoryInfo)
         {
-            DirectoryPath = directoryPath;
             DirectoryInfo = directoryInfo;
+
+            DirectoryPath = directoryInfo.FullName;
         }
 
         public string DirectoryPath { get; }

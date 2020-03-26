@@ -58,7 +58,7 @@ namespace Microsoft.Tye.Hosting
 
         private async Task Services(HttpContext context)
         {
-            var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
+            var app = context.RequestServices.GetRequiredService<Application>();
 
             context.Response.ContentType = "application/json";
 
@@ -75,7 +75,7 @@ namespace Microsoft.Tye.Hosting
 
         private async Task Service(HttpContext context)
         {
-            var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
+            var app = context.RequestServices.GetRequiredService<Application>();
 
             var name = (string)context.Request.RouteValues["name"];
             context.Response.ContentType = "application/json";
@@ -149,7 +149,7 @@ namespace Microsoft.Tye.Hosting
                 v1RunInfo.Type = V1RunInfoType.Project;
                 v1RunInfo.Args = projectRunInfo.Args;
                 v1RunInfo.Build = projectRunInfo.Build;
-                v1RunInfo.Project = projectRunInfo.Project;
+                v1RunInfo.Project = projectRunInfo.ProjectFile.FullName;
             }
 
             var v1ServiceDescription = new V1ServiceDescription()
@@ -258,7 +258,7 @@ namespace Microsoft.Tye.Hosting
 
         private async Task Metrics(HttpContext context)
         {
-            var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
+            var app = context.RequestServices.GetRequiredService<Application>();
 
             var sb = new StringBuilder();
 

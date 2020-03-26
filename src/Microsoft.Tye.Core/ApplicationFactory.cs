@@ -35,7 +35,8 @@ namespace Microsoft.Tye
                 ServiceBuilder service;
                 if (!string.IsNullOrEmpty(configService.Project))
                 {
-                    var projectFile = new FileInfo(Path.Combine(builder.Source.DirectoryName, configService.Project));
+                    var expandedProject = Environment.ExpandEnvironmentVariables(configService.Project);
+                    var projectFile = new FileInfo(Path.Combine(builder.Source.DirectoryName, expandedProject));
                     var project = new ProjectServiceBuilder(configService.Name, projectFile);
                     service = project;
 
@@ -54,17 +55,33 @@ namespace Microsoft.Tye
                 }
                 else if (!string.IsNullOrEmpty(configService.Image))
                 {
-                    var container = new ContainerServiceBuilder(configService.Name, configService.Image);
-                    container.Args = configService.Args;
-                    container.Replicas = configService.Replicas ?? 1;
+                    var container = new ContainerServiceBuilder(configService.Name, configService.Image)
+                    {
+                        Args = configService.Args,
+                        Replicas = configService.Replicas ?? 1
+                    };
                     service = container;
                 }
                 else if (!string.IsNullOrEmpty(configService.Executable))
                 {
-                    var executable = new ExecutableServiceBuilder(configService.Name, configService.Executable);
-                    executable.Args = configService.Args;
-                    executable.WorkingDirectory = configService.WorkingDirectory;
-                    executable.Replicas = configService.Replicas ?? 1;
+                    var expandedExecutable = Environment.ExpandEnvironmentVariables(configService.Executable);
+                    var workingDirectory = "";
+
+                    // Special handling of .dlls as executables (it will be executed as dotnet {dll})
+                    if (Path.GetExtension(expandedExecutable) == ".dll")
+                    {
+                        expandedExecutable = Path.GetFullPath(Path.Combine(builder.Source.Directory.FullName, expandedExecutable));
+                        workingDirectory = Path.GetDirectoryName(expandedExecutable)!;
+                    }
+
+                    var executable = new ExecutableServiceBuilder(configService.Name, expandedExecutable)
+                    {
+                        Args = configService.Args,
+                        WorkingDirectory = configService.WorkingDirectory != null ?
+                        Path.GetFullPath(Path.Combine(builder.Source.Directory.FullName, Environment.ExpandEnvironmentVariables(configService.WorkingDirectory))) :
+                        workingDirectory,
+                        Replicas = configService.Replicas ?? 1
+                    };
                     service = executable;
                 }
                 else if (configService.External)
@@ -92,7 +109,8 @@ namespace Microsoft.Tye
                         Protocol = configBinding.Protocol,
                     };
 
-                    if (binding.ConnectionString == null)
+                    // Assume HTTP for projects only (containers may be different)
+                    if (binding.ConnectionString == null && configService.Project != null)
                     {
                         binding.Protocol ??= "http";
                     }

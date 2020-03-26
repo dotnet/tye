@@ -1,0 +1,129 @@
+﻿@page "/"
+@implements IDisposable
+@using  System.Threading
+@using Microsoft.Extensions.Configuration
+@using Microsoft.AspNetCore.SignalR.Client
+@using ChartJs.Blazor.Charts
+@using ChartJs.Blazor.ChartJS.Common.Properties
+@using ChartJs.Blazor.Util
+@using ChartJs.Blazor.ChartJS.PieChart
+
+
+@inject IConfiguration Configuration
+
+@* <div id="result">
+    <span>Dog Votes: @DogVotes.Count</span>
+    <span>Cat Votes: @CatVotes.Count</span>
+</div> *@
+
+<div id="result">
+    <ChartJsPieChart @ref="_pieChartJs" Config="@_config" Width="600" Height="300" />
+</div>
+
+@code {
+    private VotingResult DogVotes = new VotingResult { Vote = "a", Count = 0 };
+    private VotingResult CatVotes = new VotingResult { Vote = "b", Count = 0 };
+
+    private PieConfig _config;
+    private ChartJsPieChart _pieChartJs;
+
+    protected override void OnInitialized()
+    {
+        _config = new PieConfig
+        {
+            Options = new PieOptions
+            {
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "Dogs vs Cats"
+                },
+                Responsive = true,
+                Animation = new ArcAnimation
+                {
+                    AnimateRotate = true,
+                    AnimateScale = true
+                }
+            }
+        };
+
+        _config.Data.Labels.AddRange(new[] { "Dogs", "Cats" });
+
+        var pieSet = new PieDataset
+        {
+            BackgroundColor = new[] { ColorUtil.RandomColorString(), ColorUtil.RandomColorString() },
+            BorderWidth = 0,
+            HoverBackgroundColor = ColorUtil.RandomColorString(),
+            HoverBorderColor = ColorUtil.RandomColorString(),
+            HoverBorderWidth = 1,
+            BorderColor = "#ffffff",
+        };
+
+        pieSet.Data.AddRange(new double[] { DogVotes.Count, CatVotes.Count });
+        _config.Data.Datasets.Add(pieSet);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _ = Connect();
+        }
+    }
+
+    async Task Connect()
+    {
+        try
+        {
+            var connection = new HubConnectionBuilder()
+                .WithUrl(Configuration.GetUri("worker")+ "/resultsHub")
+                .WithAutomaticReconnect()
+                .Build();
+            
+            var previousResultDog = -1;
+            var previousResultCat = -1;
+            connection.On<VotingResult[]>("votesRecieved", async (results) =>
+            {
+                //Reset votes because if there are zero votes there will be no entry from the query.
+                DogVotes = new VotingResult { Vote = "a", Count = 0 };
+                CatVotes = new VotingResult { Vote = "b", Count = 0 };
+
+                foreach (var vote in results)
+                {
+                    if (vote.Vote == "a")
+                    {
+                        DogVotes = vote;
+                    }
+                    else
+                    {
+                        CatVotes = vote;
+                    }
+                }
+
+                if (previousResultDog == DogVotes.Count && previousResultCat == CatVotes.Count)
+                {
+                    return;
+                }
+
+                previousResultDog = DogVotes.Count;
+                previousResultCat = CatVotes.Count;
+
+                _config.Data.Datasets[0].Data.Clear();
+                _config.Data.Datasets[0].Data.Add(DogVotes.Count);
+                _config.Data.Datasets[0].Data.Add(CatVotes.Count);
+                await _pieChartJs.Update();
+            });
+
+            await connection.StartAsync();
+    
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+    }
+}

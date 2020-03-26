@@ -22,7 +22,7 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
         }
 
-        public Task StartAsync(Tye.Hosting.Model.Application application)
+        public Task StartAsync(Application application)
         {
             var tasks = new Task[application.Services.Count];
             var index = 0;
@@ -34,7 +34,7 @@ namespace Microsoft.Tye.Hosting
             return Task.WhenAll(tasks);
         }
 
-        public Task StopAsync(Tye.Hosting.Model.Application application)
+        public Task StopAsync(Application application)
         {
             var services = application.Services;
 
@@ -49,7 +49,7 @@ namespace Microsoft.Tye.Hosting
             return Task.WhenAll(tasks);
         }
 
-        private async Task StartContainerAsync(Tye.Hosting.Model.Application application, Tye.Hosting.Model.Service service, DockerRunInfo docker)
+        private async Task StartContainerAsync(Application application, Service service, DockerRunInfo docker)
         {
             if (!await DockerDetector.Instance.IsDockerInstalled.Value)
             {
@@ -260,7 +260,7 @@ namespace Microsoft.Tye.Hosting
             service.Items[typeof(DockerInformation)] = dockerInfo;
         }
 
-        private static void PrintStdOutAndErr(Tye.Hosting.Model.Service service, string replica, ProcessResult result)
+        private static void PrintStdOutAndErr(Service service, string replica, ProcessResult result)
         {
             if (result.ExitCode != 0)
             {
@@ -276,7 +276,7 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        private async Task StopContainerAsync(Tye.Hosting.Model.Service service)
+        private async Task StopContainerAsync(Service service)
         {
             if (service.Items.TryGetValue(typeof(DockerInformation), out var value) && value is DockerInformation di)
             {
