@@ -73,7 +73,7 @@ namespace Microsoft.Tye.Hosting
 
                             var port = service.PortMap[binding.Port.Value][i];
                             ports.Add(port);
-                            var url = $"{binding.Protocol ?? "http"}://localhost:{port}";
+                            var url = $"{binding.Protocol}://localhost:{port}";
                             addresses.Add(url);
                         }
 
@@ -101,7 +101,7 @@ namespace Microsoft.Tye.Hosting
 
                         var uris = new List<Uri>();
 
-                        // HTTP -> HTTPS (this might change once we figure out certs...)
+                        // HTTP before HTTPS (this might change once we figure out certs...)
                         var targetBinding = targetServiceDescription.Bindings.FirstOrDefault(b => b.Protocol == "http") ??
                                             targetServiceDescription.Bindings.FirstOrDefault(b => b.Protocol == "https");
 

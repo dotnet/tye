@@ -102,21 +102,19 @@ namespace Microsoft.Tye
                     project2.Frameworks.Any(f => f.Name == "Microsoft.AspNetCore.App"))
                 {
                     // HTTP is the default binding
-                    var httpBinding = new BindingBuilder()
+                    service.Bindings.Add(new BindingBuilder()
                     {
                         AutoAssignPort = true,
                         Protocol = "http"
-                    };
+                    });
 
-                    var httpsBinding = new BindingBuilder()
-                    {
-                        Name = "https",
-                        AutoAssignPort = true,
-                        Protocol = "https"
-                    };
-
-                    service.Bindings.Add(httpBinding);
-                    service.Bindings.Add(httpsBinding);
+                    // TODO: Uncomment when the CI is unblocked
+                    //service.Bindings.Add(new BindingBuilder()
+                    //{
+                    //    Name = "https",
+                    //    AutoAssignPort = true,
+                    //    Protocol = "https"
+                    //});
                 }
                 else
                 {
