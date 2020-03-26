@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -100,22 +101,26 @@ namespace Microsoft.Tye.Hosting
 
                         var uris = new List<Uri>();
 
+                        // HTTP -> HTTPS (this might change once we figure out certs...)
+                        var targetBinding = targetServiceDescription.Bindings.FirstOrDefault(b => b.Protocol == "http") ??
+                                            targetServiceDescription.Bindings.FirstOrDefault(b => b.Protocol == "https");
+
+                        if (targetBinding == null)
+                        {
+                            _logger.LogInformation("Service {ServiceName} does not have any HTTP or HTTPs bindings", targetServiceDescription.Name);
+                            continue;
+                        }
+
                         // For each of the target service replicas, get the base URL
                         // based on the replica port
                         for (int i = 0; i < targetServiceDescription.Replicas; i++)
                         {
-                            foreach (var binding in targetServiceDescription.Bindings)
-                            {
-                                if (binding.Port == null)
-                                {
-                                    continue;
-                                }
-
-                                var port = target.PortMap[binding.Port.Value][i];
-                                var url = $"{binding.Protocol ?? "http"}://localhost:{port}";
-                                uris.Add(new Uri(url));
-                            }
+                            var port = target.PortMap[targetBinding.Port!.Value][i];
+                            var url = $"{targetBinding.Protocol}://localhost:{port}";
+                            uris.Add(new Uri(url));
                         }
+
+                        _logger.LogInformation("Service {ServiceName} is using {Urls}", targetServiceDescription.Name, string.Join(",", uris.Select(u => u.ToString())));
 
                         // The only load balancing strategy here is round robin
                         long count = 0;
