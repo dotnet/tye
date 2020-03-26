@@ -113,7 +113,7 @@ namespace E2ETest
 
             var servicesStateObserver = host.Application.Services.Select(srv => srv.Value.ReplicaEvents.Subscribe(OnReplicaChange)).ToList();
             await host.PurgeAsync();
-            
+
             Assert.False(Directory.Exists(tyeDir));
 
             using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);

@@ -86,11 +86,11 @@ namespace E2ETest
             {
                 var pids = GetAllAppPids(host.Application);
                 var containers = GetAllContainerIds(host.Application);
-                
+
                 Assert.True(Directory.Exists(tyeDir.FullName));
                 Assert.Subset(new HashSet<int>(GetAllPids()), new HashSet<int>(pids));
                 Assert.Subset(new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(output)), new HashSet<string>(containers));
-                
+
                 await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host, GetAllReplicasNames(host.Application), tyeDir.FullName);
 
                 var runningPids = new HashSet<int>(GetAllPids());

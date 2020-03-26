@@ -102,7 +102,7 @@ namespace Microsoft.Tye.Hosting
             {
                 try
                 {
-                    var contents = JsonSerializer.Serialize(@event, options: new JsonSerializerOptions {WriteIndented = false});
+                    var contents = JsonSerializer.Serialize(@event, options: new JsonSerializerOptions { WriteIndented = false });
                     File.AppendAllText(_eventsFile, contents + Environment.NewLine);
 
                     return true;
