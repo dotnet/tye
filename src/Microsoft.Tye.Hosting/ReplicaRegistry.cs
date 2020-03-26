@@ -60,8 +60,8 @@ namespace Microsoft.Tye.Hosting
             {
                 if (_replicaInstantiators.TryGetValue(@event.ServiceType, out var instantiator))
                 {
-                    var replica = instantiator.DeserializeReplicaEvent(@event.SerializedEvent);
-                    tasks.Add(instantiator.HandleStaleReplica(replica));
+                    var replicaRecord = @event.SerializedEvent;
+                    tasks.Add(instantiator.HandleStaleReplica(replicaRecord));
                 }
             }
 

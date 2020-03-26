@@ -310,16 +310,18 @@ namespace Microsoft.Tye.Hosting
                 : Path.Combine(root, ".microsoft", "usersecrets");
         }
 
-        public async Task HandleStaleReplica(ReplicaEvent replicaEvent)
+        public async Task HandleStaleReplica(IDictionary<string, string?> replicaRecord)
         {
-            var container = replicaEvent.Replica.Name;
+            var container = replicaRecord["id"];
 
-            if (container != "")
+            if (!string.IsNullOrEmpty(container))
             {
-                await ProcessUtil.RunAsync("docker", $"rm -f {container}",
-                    throwOnError: false);
-
-                _logger.LogInformation("removed container {container} from previous run", container);
+                await ProcessUtil.RunAsync("docker", $"rm -f {container}", throwOnError: false);
+                _logger.LogInformation("removed container {container} of service {service} from previous run", container, replicaRecord["serviceName"]);
+            }
+            else
+            {
+                _logger.LogWarning("unable to get container id from previous run events log");
             }
         }
 
@@ -331,15 +333,6 @@ namespace Microsoft.Tye.Hosting
                 ["serviceName"] = replicaEvent.Replica.Service.Description.Name,
                 ["id"] = replicaEvent.Replica.Name
             };
-        }
-
-        public ReplicaEvent DeserializeReplicaEvent(IDictionary<string, string?> serializedEvent)
-        {
-            var state = Enum.Parse<ReplicaState>(serializedEvent["state"]!);
-            var serviceName = serializedEvent["serviceName"]!;
-            var id = serializedEvent["id"]!;
-
-            return new ReplicaEvent(state, new DockerStatus(new Model.Service(new ServiceDescription(serviceName, null)), id));
         }
 
         private class DockerInformation

@@ -340,13 +340,16 @@ namespace Microsoft.Tye.Hosting
             return null;
         }
 
-        public Task HandleStaleReplica(ReplicaEvent replicaEvent)
+        public Task HandleStaleReplica(IDictionary<string, string?> replicaRecord)
         {
-            var processStatus = (ProcessStatus)replicaEvent.Replica;
-            if (processStatus.Pid.HasValue)
+            if (int.TryParse(replicaRecord["pid"], out var pid))
             {
-                ProcessUtil.KillProcess(processStatus.Pid.Value);
-                _logger.LogInformation("removed process {pid} from previous run", processStatus.Pid.Value);
+                ProcessUtil.KillProcess(pid);
+                _logger.LogInformation("removed process {pid} of service {service} from previous run", pid, replicaRecord["serviceName"]);
+            }
+            else
+            {
+                _logger.LogWarning("unable to parse process id from previous run events log");
             }
 
             return Task.CompletedTask;
@@ -361,16 +364,6 @@ namespace Microsoft.Tye.Hosting
                 ["serviceName"] = replicaEvent.Replica.Service.Description.Name,
                 ["pid"] = processStatus.Pid?.ToString()
             };
-        }
-
-        public ReplicaEvent DeserializeReplicaEvent(IDictionary<string, string?> serializedEvent)
-        {
-            var state = Enum.Parse<ReplicaState>(serializedEvent["state"]!);
-            var serviceName = serializedEvent["serviceName"]!;
-            var pid = serializedEvent["pid"] is null ? null : (int?)int.Parse(serializedEvent["pid"]!);
-
-            return new ReplicaEvent(state, new ProcessStatus(new Model.Service(new ServiceDescription(serviceName, null)), serviceName) { Pid = pid });
-
         }
 
         private class ProcessInfo

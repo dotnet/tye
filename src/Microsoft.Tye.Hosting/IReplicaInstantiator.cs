@@ -10,10 +10,8 @@ namespace Microsoft.Tye.Hosting
 {
     public interface IReplicaInstantiator : IApplicationProcessor
     {
-        Task HandleStaleReplica(ReplicaEvent replicaEvent);
+        Task HandleStaleReplica(IDictionary<string, string?> replicaRecord);
 
         IDictionary<string, string?> SerializeReplica(ReplicaEvent replicaEvent);
-
-        ReplicaEvent DeserializeReplicaEvent(IDictionary<string, string?> serializedEvent);
     }
 }
