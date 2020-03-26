@@ -108,13 +108,12 @@ namespace Microsoft.Tye
                         Protocol = "http"
                     });
 
-                    // TODO: Uncomment when the CI is unblocked
-                    //service.Bindings.Add(new BindingBuilder()
-                    //{
-                    //    Name = "https",
-                    //    AutoAssignPort = true,
-                    //    Protocol = "https"
-                    //});
+                    service.Bindings.Add(new BindingBuilder()
+                    {
+                        Name = "https",
+                        AutoAssignPort = true,
+                        Protocol = "https"
+                    });
                 }
                 else
                 {
