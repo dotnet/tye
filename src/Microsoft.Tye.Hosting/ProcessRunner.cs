@@ -110,7 +110,7 @@ namespace Microsoft.Tye.Hosting
                 }
             }
 
-            async Task RunApplicationAsync(IEnumerable<(int Port, int BindingPort, string? Protocol)> ports)
+            async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol)> ports)
             {
                 // Make sure we yield before trying to start the process, this is important so we don't hang startup
                 await Task.Yield();
@@ -153,7 +153,7 @@ namespace Microsoft.Tye.Hosting
                         if (string.Equals(p.Protocol, "https", StringComparison.OrdinalIgnoreCase))
                         {
                             // We need to set the redirect URL to the exposed port so the redirect works cleanly
-                            environment["HTTPS_PORT"] = p.BindingPort.ToString();
+                            environment["HTTPS_PORT"] = p.ExternalPort.ToString();
                         }
                     }
 
@@ -258,7 +258,7 @@ namespace Microsoft.Tye.Hosting
                             continue;
                         }
 
-                        ports.Add((service.PortMap[binding.Port.Value][i], binding.Port.Value, binding.Protocol));
+                        ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.Protocol));
                     }
 
                     processInfo.Tasks[i] = RunApplicationAsync(ports);

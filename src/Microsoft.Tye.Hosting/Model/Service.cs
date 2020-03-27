@@ -62,8 +62,6 @@ namespace Microsoft.Tye.Hosting.Model
 
         public ConcurrentDictionary<string, ReplicaStatus> Replicas { get; set; } = new ConcurrentDictionary<string, ReplicaStatus>();
 
-        public Dictionary<int, List<int>> PortMap { get; set; } = new Dictionary<int, List<int>>();
-
         public Dictionary<object, object> Items { get; } = new Dictionary<object, object>();
 
         public Queue<string> CachedLogs { get; } = new Queue<string>();
