@@ -229,7 +229,7 @@ namespace Microsoft.Tye
 
             project.IsAspNet = project.Frameworks.Any(f => f.Name == "Microsoft.AspNetCore.App") ||
                                projectInstance.GetPropertyValue("MicrosoftNETPlatformLibrary") == "Microsoft.AspNetCore.App" ||
-                               projectInstance.GetPropertyValue("_AspNetCoreAppSharedFxIsEnabled") is string s && s != null && bool.Parse(s);
+                               projectInstance.GetPropertyValue("_AspNetCoreAppSharedFxIsEnabled") is string s && !string.IsNullOrEmpty(s) && bool.Parse(s);
 
             output.WriteDebugLine($"Evaluation Took: {sw.Elapsed.TotalMilliseconds}ms");
 
