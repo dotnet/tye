@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>Microsoft.Tye.E2ETest</AssemblyName>
+    <IsTestProject>true</IsTestProject>
+    <IsUnitTestProject>true</IsUnitTestProject>
+    <IsPackable>false</IsPackable>
+    <TestRunnerName>XUnit</TestRunnerName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Microsoft.Tye.Hosting\Microsoft.Tye.Hosting.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Tye.Core\Microsoft.Tye.Core.csproj" />
+    <ProjectReference Include="..\..\src\tye\tye.csproj" />
+  </ItemGroup>
+</Project>
