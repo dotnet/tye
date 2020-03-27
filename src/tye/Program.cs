@@ -28,7 +28,6 @@ namespace Microsoft.Tye
             command.AddCommand(CreateRunCommand(args));
             command.AddCommand(CreateBuildCommand());
             command.AddCommand(CreateDeployCommand());
-            command.AddCommand(CreatePurgeCommand(args));
 
             // Show commandline help unless a subcommand was used.
             command.Handler = CommandHandler.Create<IHelpBuilder>(help =>
