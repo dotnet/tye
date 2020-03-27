@@ -136,8 +136,8 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"Writing output to '{tempFile.FilePath}'.");
 
             {
-                using var stream = File.OpenWrite(tempFile.FilePath);
-                using var writer = new StreamWriter(stream, Encoding.UTF8, bufferSize: -1, leaveOpen: true);
+                await using var stream = File.OpenWrite(tempFile.FilePath);
+                await using var writer = new StreamWriter(stream, Encoding.UTF8, bufferSize: -1, leaveOpen: true);
                 var yamlStream = new YamlStream(yaml.Select(y => y.Yaml));
                 yamlStream.Save(writer, assignAnchors: false);
             }
