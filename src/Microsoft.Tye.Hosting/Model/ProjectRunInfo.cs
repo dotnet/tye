@@ -15,6 +15,8 @@ namespace Microsoft.Tye.Hosting.Model
             Args = project.Args;
             Build = project.Build;
             TargetFramework = project.TargetFramework;
+            TargetFrameworkName = project.TargetFrameworkName;
+            TargetFrameworkVersion = project.TargetFrameworkVersion;
             Version = project.Version;
             AssemblyName = project.AssemblyName;
             TargetAssemblyPath = project.TargetPath;
@@ -26,7 +28,8 @@ namespace Microsoft.Tye.Hosting.Model
         public string? Args { get; }
         public bool Build { get; }
         public FileInfo ProjectFile { get; }
-
+        public string TargetFrameworkName { get; set; } = default!;
+        public string TargetFrameworkVersion { get; set; } = default!;
         public string TargetFramework { get; }
 
         public string Version { get; }

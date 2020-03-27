@@ -92,8 +92,7 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(container));
             }
 
-            if (container.BaseImageName == null &&
-                project.Frameworks.Any(f => f.Name == "Microsoft.AspNetCore.App"))
+            if (container.BaseImageName == null && project.IsAspNet)
             {
                 container.BaseImageName = "mcr.microsoft.com/dotnet/core/aspnet";
             }
@@ -102,15 +101,9 @@ namespace Microsoft.Tye
                 container.BaseImageName = "mcr.microsoft.com/dotnet/core/runtime";
             }
 
-            if (container.BaseImageTag == null &&
-                project.TargetFramework == "netcoreapp3.1")
+            if (container.BaseImageTag == null && project.TargetFrameworkName == "netcoreapp")
             {
-                container.BaseImageTag = "3.1";
-            }
-            else if (container.BaseImageTag == null &&
-                project.TargetFramework == "netcoreapp3.0")
-            {
-                container.BaseImageTag = "3.0";
+                container.BaseImageTag = project.TargetFrameworkVersion;
             }
 
             if (container.BaseImageTag == null)

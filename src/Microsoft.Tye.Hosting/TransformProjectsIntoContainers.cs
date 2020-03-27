@@ -64,7 +64,7 @@ namespace Microsoft.Tye.Hosting
             // We transform the project information into the following docker command:
             // docker run -w /app -v {publishDir}:/app -it {image} dotnet {outputfile}.dll
 
-            var containerImage = DetermineContainerImage(targetFramework);
+            var containerImage = DetermineContainerImage(project);
             var outputFileName = project.AssemblyName + ".dll";
             var dockerRunInfo = new DockerRunInfo(containerImage, $"dotnet {outputFileName} {project.Args}")
             {
@@ -83,10 +83,9 @@ namespace Microsoft.Tye.Hosting
             serviceDescription.RunInfo = dockerRunInfo;
         }
 
-        private static string DetermineContainerImage(string targetFramework)
+        private static string DetermineContainerImage(ProjectRunInfo project)
         {
-            // TODO: Determine the base image from the tfm
-            return "mcr.microsoft.com/dotnet/core/sdk:3.1-buster";
+            return $"mcr.microsoft.com/dotnet/core/sdk:{project.TargetFrameworkVersion}";
         }
 
         public Task StopAsync(Application application)

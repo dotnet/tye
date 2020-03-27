@@ -219,9 +219,17 @@ namespace Microsoft.Tye
             project.TargetFramework = targetFramework;
             output.WriteDebugLine($"Found target framework: {targetFramework}");
 
+            // TODO: Parse the name and version manually out of the TargetFramework field if it's non-null
+            project.TargetFrameworkName = projectInstance.GetPropertyValue("_ShortFrameworkIdentifier");
+            project.TargetFrameworkVersion = projectInstance.GetPropertyValue("_ShortFrameworkVersion") ?? projectInstance.GetPropertyValue("_TargetFrameworkVersionWithoutV");
+
             var sharedFrameworks = projectInstance.GetItems("FrameworkReference").Select(i => i.EvaluatedInclude).ToList();
             project.Frameworks.AddRange(sharedFrameworks.Select(s => new Framework(s)));
             output.WriteDebugLine($"Found shared frameworks: {string.Join(", ", sharedFrameworks)}");
+
+            project.IsAspNet = project.Frameworks.Any(f => f.Name == "Microsoft.AspNetCore.App") ||
+                               projectInstance.GetPropertyValue("MicrosoftNETPlatformLibrary") == "Microsoft.AspNetCore.App" ||
+                               projectInstance.GetPropertyValue("_AspNetCoreAppSharedFxIsEnabled") is string s && s != null && bool.Parse(s);
 
             output.WriteDebugLine($"Evaluation Took: {sw.Elapsed.TotalMilliseconds}ms");
 
