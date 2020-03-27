@@ -16,9 +16,9 @@ namespace Microsoft.Tye
             IsKubectlConnectedToCluster = new Lazy<Task<bool>>(() => DetectKubectlConnectedToCluster(cancellationToken));
         }
 
-        public static Lazy<Task<bool>> IsKubectlInstalled { get; private set; }
+        public static Lazy<Task<bool>> IsKubectlInstalled { get; private set; } = null!;
 
-        public static Lazy<Task<bool>> IsKubectlConnectedToCluster { get; private set; }
+        public static Lazy<Task<bool>> IsKubectlConnectedToCluster { get; private set; } = null!;
 
         private static async Task<bool> DetectKubectlInstalled(CancellationToken cancellationToken)
         {
