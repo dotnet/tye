@@ -99,7 +99,7 @@ namespace Microsoft.Tye
                 // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
                 if (configService.Bindings.Count == 0 &&
                     service is ProjectServiceBuilder project2 &&
-                    project2.Frameworks.Any(f => f.Name == "Microsoft.AspNetCore.App"))
+                    project2.IsAspNet)
                 {
                     // HTTP is the default binding
                     service.Bindings.Add(new BindingBuilder()

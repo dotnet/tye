@@ -99,7 +99,8 @@ namespace Microsoft.Tye.Hosting
                     // Default to development environment
                     ["DOTNET_ENVIRONMENT"] = "Development",
                     // Remove the color codes from the console output
-                    ["DOTNET_LOGGING__CONSOLE__DISABLECOLORS"] = "true"
+                    ["DOTNET_LOGGING__CONSOLE__DISABLECOLORS"] = "true",
+                    ["ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS"] = "true"
                 };
 
                 var portString = "";
@@ -203,6 +204,19 @@ namespace Microsoft.Tye.Hosting
                         errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
                         throwOnError: false,
                         cancellationToken: dockerInfo.StoppingTokenSource.Token);
+
+                    if (!dockerInfo.StoppingTokenSource.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            // Avoid spamming logs if restarts are happening
+                            await Task.Delay(5000, dockerInfo.StoppingTokenSource.Token);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            break;
+                        }
+                    }
                 }
 
                 _logger.LogInformation("docker logs collection for {ContainerName} complete with exit code {ExitCode}", replica, result.ExitCode);
