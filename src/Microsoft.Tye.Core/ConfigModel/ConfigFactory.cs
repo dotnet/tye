@@ -4,8 +4,7 @@
 
 using System.Collections.Generic;
 using System.IO;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
+using Microsoft.Tye.Serialization;
 
 namespace Microsoft.Tye.ConfigModel
 {
@@ -75,9 +74,7 @@ namespace Microsoft.Tye.ConfigModel
 
         private static ConfigApplication FromYaml(FileInfo file)
         {
-            var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
+            var deserializer = YamlSerializer.CreateDeserializer();
 
             using var reader = file.OpenText();
             var application = deserializer.Deserialize<ConfigApplication>(reader);
