@@ -2,10 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Tye;
-using Microsoft.Tye.ConfigModel;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -51,7 +51,7 @@ namespace E2ETest
                 var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
                 var expectedContent = File.ReadAllText($"testassets/generate/{projectName}.yaml");
 
-                Assert.Equal(expectedContent, content);
+                Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
                 await DockerAssert.AssertImageExistsAsync(output, "test/test-project");
             }
             finally
@@ -90,7 +90,7 @@ namespace E2ETest
                 var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
                 var expectedContent = File.ReadAllText($"testassets/generate/{projectName}.yaml");
 
-                Assert.Equal(expectedContent, content);
+                Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
 
                 await DockerAssert.AssertImageExistsAsync(output, "test/backend");
                 await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
@@ -133,7 +133,7 @@ namespace E2ETest
                 var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
                 var expectedContent = File.ReadAllText($"testassets/generate/{projectName}.yaml");
 
-                Assert.Equal(expectedContent, content);
+                Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
 
                 await DockerAssert.AssertImageExistsAsync(output, "test/backend");
                 await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
@@ -173,7 +173,7 @@ namespace E2ETest
                 var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
                 var expectedContent = File.ReadAllText($"testassets/generate/{projectName}-noregistry.yaml");
 
-                Assert.Equal(expectedContent, content);
+                Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
 
                 await DockerAssert.AssertImageExistsAsync(output, "test-project");
             }
