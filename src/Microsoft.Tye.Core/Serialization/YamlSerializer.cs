@@ -20,7 +20,7 @@ namespace Microsoft.Tye.Serialization
 
         public static IDeserializer CreateDeserializer()
         {
-            return  new DeserializerBuilder()
+            return new DeserializerBuilder()
                 .WithNamingConvention(CamelCaseNamingConvention.Instance)
                 .Build();
         }
