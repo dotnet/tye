@@ -198,11 +198,16 @@ namespace Microsoft.Tye.Hosting
 
                 while (!dockerInfo.StoppingTokenSource.Token.IsCancellationRequested)
                 {
-                    await ProcessUtil.RunAsync("docker", $"logs -f {containerId}",
+                    var logsRes = await ProcessUtil.RunAsync("docker", $"logs -f {containerId}",
                         outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
                         errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
                         throwOnError: false,
                         cancellationToken: dockerInfo.StoppingTokenSource.Token);
+
+                    if (logsRes.ExitCode != 0)
+                    {
+                        break;
+                    }
                 }
 
                 _logger.LogInformation("docker logs collection for {ContainerName} complete with exit code {ExitCode}", replica, result.ExitCode);
