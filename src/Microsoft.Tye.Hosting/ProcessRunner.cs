@@ -26,7 +26,7 @@ namespace Microsoft.Tye.Hosting
             _options = options;
         }
 
-        public Task StartAsync(Application application)
+        public Task StartAsync(Application application, CancellationToken cancellationToken = default)
         {
             var tasks = new Task[application.Services.Count];
             var index = 0;
@@ -44,7 +44,7 @@ namespace Microsoft.Tye.Hosting
             return Task.WhenAll(tasks);
         }
 
-        public Task StopAsync(Application application)
+        public Task StopAsync(Application application, CancellationToken cancellationToken = default)
         {
             return KillRunningProcesses(application.Services);
         }

@@ -14,7 +14,7 @@ namespace E2ETest
 {
     public static class DockerAssert
     {
-        // Repository is the "registry/image" format. Yeah Docker uses that term for it, and it's 
+        // Repository is the "registry/image" format. Yeah Docker uses that term for it, and it's
         // weird and confusing.
         public static async Task AssertImageExistsAsync(ITestOutputHelper output, string repository)
         {

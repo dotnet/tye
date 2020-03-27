@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
@@ -13,7 +14,7 @@ namespace Microsoft.Tye
 
         public bool Force { get; set; }
 
-        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
+        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service, CancellationToken cancellationToken = default)
         {
             if (SkipWithoutProject(output, service, out var project))
             {
@@ -42,7 +43,8 @@ namespace Microsoft.Tye
                 project,
                 container,
                 chart,
-                new DirectoryInfo(chartDirectory));
+                new DirectoryInfo(chartDirectory),
+                cancellationToken);
             output.WriteInfoLine($"Generated Helm Chart at '{Path.Combine(chartDirectory, chart.ChartName)}'.");
 
         }

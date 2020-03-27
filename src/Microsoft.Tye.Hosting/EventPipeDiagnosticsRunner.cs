@@ -23,7 +23,7 @@ namespace Microsoft.Tye.Hosting
             _diagnosticsCollector = diagnosticsCollector;
         }
 
-        public Task StartAsync(Application application)
+        public Task StartAsync(Application application, CancellationToken cancellationToken = default)
         {
             foreach (var service in application.Services.Values)
             {
@@ -38,7 +38,7 @@ namespace Microsoft.Tye.Hosting
             return Task.CompletedTask;
         }
 
-        public Task StopAsync(Application application)
+        public Task StopAsync(Application application, CancellationToken cancellationToken = default)
         {
             foreach (var service in application.Services.Values)
             {

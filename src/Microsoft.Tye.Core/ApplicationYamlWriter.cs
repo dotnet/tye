@@ -4,6 +4,7 @@
 
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using YamlDotNet.RepresentationModel;
 
@@ -11,7 +12,7 @@ namespace Microsoft.Tye
 {
     public sealed class ApplicationYamlWriter
     {
-        public static Task WriteAsync(OutputContext output, StreamWriter writer, ApplicationBuilder application)
+        public static Task WriteAsync(OutputContext output, StreamWriter writer, ApplicationBuilder application, CancellationToken cancellationToken = default)
         {
             var yaml = application.Services.SelectMany(s => s.Outputs.OfType<IYamlManifestOutput>()).ToArray();
             if (yaml.Length == 0)

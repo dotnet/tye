@@ -6,6 +6,7 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using YamlDotNet.RepresentationModel;
 
@@ -17,7 +18,7 @@ namespace Microsoft.Tye
 
         public string Environment { get; set; } = "production";
 
-        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
+        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service, CancellationToken cancellationToken = default)
         {
             var yaml = service.Outputs.OfType<IYamlManifestOutput>().ToArray();
             if (yaml.Length == 0)
@@ -26,12 +27,12 @@ namespace Microsoft.Tye
                 return;
             }
 
-            if (!await KubectlDetector.Instance.IsKubectlInstalled.Value)
+            if (!await KubectlDetector.IsKubectlInstalled.Value)
             {
                 throw new CommandException($"Cannot apply manifests for '{service.Name}' because kubectl is not installed.");
             }
 
-            if (!await KubectlDetector.Instance.IsKubectlConnectedToCluster.Value)
+            if (!await KubectlDetector.IsKubectlConnectedToCluster.Value)
             {
                 throw new CommandException($"Cannot apply manifests for '{service.Name}' because kubectl is not connected to a cluster.");
             }

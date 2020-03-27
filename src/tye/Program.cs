@@ -10,14 +10,23 @@ using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
     static partial class Program
     {
+        static CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
         public static async Task<int> Main(string[] args)
         {
+            Console.TreatControlCAsInput = true;
+            Console.CancelKeyPress += delegate(object sender, ConsoleCancelEventArgs e)
+            {
+                cancellationTokenSource.Cancel();
+                e.Cancel = true;
+            };
             var command = new RootCommand()
             {
                 Description = "Developer tools and publishing for microservices.",
@@ -26,8 +35,8 @@ namespace Microsoft.Tye
             command.AddCommand(CreateInitCommand());
             command.AddCommand(CreateGenerateCommand());
             command.AddCommand(CreateRunCommand(args));
-            command.AddCommand(CreateBuildCommand());
-            command.AddCommand(CreateDeployCommand());
+            command.AddCommand(CreateBuildCommand(cancellationTokenSource.Token));
+            command.AddCommand(CreateDeployCommand(cancellationTokenSource.Token));
 
             // Show commandline help unless a subcommand was used.
             command.Handler = CommandHandler.Create<IHelpBuilder>(help =>

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
@@ -38,7 +39,7 @@ namespace Microsoft.Tye
             this.steps = steps.ToArray();
         }
 
-        public async Task ExecuteAsync(ServiceBuilder service)
+        public async Task ExecuteAsync(ServiceBuilder service, CancellationToken cancellationToken = default)
         {
             using var tracker = output.BeginStep($"Processing Service '{service.Name}'...");
             for (var i = 0; i < steps.Length; i++)
@@ -46,7 +47,8 @@ namespace Microsoft.Tye
                 var step = steps[i];
 
                 using var stepTracker = output.BeginStep(step.DisplayText);
-                await step.ExecuteAsync(output, application, service);
+                await step.ExecuteAsync(output, application, service, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
                 stepTracker.MarkComplete();
             }
             tracker.MarkComplete();
@@ -56,7 +58,7 @@ namespace Microsoft.Tye
         {
             public abstract string DisplayText { get; }
 
-            public abstract Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service);
+            public abstract Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service, CancellationToken cancellationToken = default);
 
             protected bool SkipWithoutProject(OutputContext output, ServiceBuilder service, [MaybeNullWhen(returnValue: true)] out ProjectServiceBuilder project)
             {

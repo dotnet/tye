@@ -93,7 +93,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
             int processId,
             string replicaName,
             IDictionary<string, string> metrics,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken = default)
         {
             var hasEventPipe = false;
 
@@ -800,12 +800,12 @@ namespace Microsoft.Tye.Hosting.Diagnostics
 
         public class NullExporter : SpanExporter
         {
-            public override Task<ExportResult> ExportAsync(IEnumerable<SpanData> batch, CancellationToken cancellationToken)
+            public override Task<ExportResult> ExportAsync(IEnumerable<SpanData> batch, CancellationToken cancellationToken = default)
             {
                 return Task.FromResult(ExportResult.Success);
             }
 
-            public override Task ShutdownAsync(CancellationToken cancellationToken)
+            public override Task ShutdownAsync(CancellationToken cancellationToken = default)
             {
                 return Task.CompletedTask;
             }

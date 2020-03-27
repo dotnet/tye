@@ -29,7 +29,7 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
         }
 
-        public async Task StartAsync(Application application)
+        public async Task StartAsync(Application application, CancellationToken cancellationToken = default)
         {
             _host = new HostBuilder()
                     .ConfigureServer(server =>
@@ -107,10 +107,10 @@ namespace Microsoft.Tye.Hosting
                                                 _logger.LogDebug("Proxying traffic to {ServiceName} {ExternalPort}:{InternalPort}", service.Description.Name, binding.Port, ports[next]);
 
                                                 // external -> internal
-                                                var reading = Task.Run(() => connection.Transport.Input.CopyToAsync(targetStream, notificationFeature.ConnectionClosedRequested));
+                                                var reading = Task.Run(() => connection.Transport.Input.CopyToAsync(targetStream, notificationFeature.ConnectionClosedRequested), cancellationToken);
 
                                                 // internal -> external
-                                                var writing = Task.Run(() => targetStream.CopyToAsync(connection.Transport.Output, notificationFeature.ConnectionClosedRequested));
+                                                var writing = Task.Run(() => targetStream.CopyToAsync(connection.Transport.Output, notificationFeature.ConnectionClosedRequested), cancellationToken);
 
                                                 await Task.WhenAll(reading, writing);
                                             }
@@ -148,14 +148,14 @@ namespace Microsoft.Tye.Hosting
                     })
                     .Build();
 
-            await _host.StartAsync();
+            await _host.StartAsync(cancellationToken);
         }
 
-        public async Task StopAsync(Application application)
+        public async Task StopAsync(Application application, CancellationToken cancellationToken = default)
         {
             if (_host != null)
             {
-                await _host.StopAsync();
+                await _host.StopAsync(cancellationToken);
 
                 if (_host is IAsyncDisposable disposable)
                 {

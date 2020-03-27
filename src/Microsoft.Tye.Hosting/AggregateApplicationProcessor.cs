@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Tye.Hosting.Model;
 
@@ -18,20 +19,20 @@ namespace Microsoft.Tye.Hosting
             _applicationProcessors = applicationProcessors;
         }
 
-        public async Task StartAsync(Application application)
+        public async Task StartAsync(Application application, CancellationToken cancellationToken = default)
         {
             foreach (var processor in _applicationProcessors)
             {
-                await processor.StartAsync(application);
+                await processor.StartAsync(application, cancellationToken);
             }
         }
 
-        public async Task StopAsync(Application application)
+        public async Task StopAsync(Application application, CancellationToken cancellationToken = default)
         {
             // Shutdown in the opposite order
             foreach (var processor in _applicationProcessors.Reverse())
             {
-                await processor.StopAsync(application);
+                await processor.StopAsync(application, cancellationToken);
             }
         }
     }

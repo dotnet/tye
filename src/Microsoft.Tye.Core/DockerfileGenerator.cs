@@ -6,13 +6,14 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
     public static class DockerfileGenerator
     {
-        public static async Task WriteDockerfileAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container, string filePath)
+        public static async Task WriteDockerfileAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container, string filePath, CancellationToken cancellationToken = default)
         {
             if (output is null)
             {

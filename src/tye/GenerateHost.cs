@@ -6,20 +6,21 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
     public static class GenerateHost
     {
-        public static async Task GenerateAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive)
+        public static async Task GenerateAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive, CancellationToken cancellationToken = default)
         {
             var output = new OutputContext(console, verbosity);
-            var application = await ApplicationFactory.CreateAsync(output, path);
-            await ExecuteGenerateAsync(output, application, environment: "production", interactive);
+            var application = await ApplicationFactory.CreateAsync(output, path, cancellationToken);
+            await ExecuteGenerateAsync(output, application, environment: "production", interactive, cancellationToken);
         }
 
-        public static async Task ExecuteGenerateAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive)
+        public static async Task ExecuteGenerateAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive, CancellationToken cancellationToken = default)
         {
             var steps = new List<ServiceExecutor.Step>()
             {
@@ -35,13 +36,13 @@ namespace Microsoft.Tye
             var executor = new ServiceExecutor(output, application, steps);
             foreach (var service in application.Services)
             {
-                await executor.ExecuteAsync(service);
+                await executor.ExecuteAsync(service, cancellationToken);
             }
 
-            await GenerateApplicationManifestAsync(output, application, environment);
+            await GenerateApplicationManifestAsync(output, application, environment, cancellationToken);
         }
 
-        private static async Task GenerateApplicationManifestAsync(OutputContext output, ApplicationBuilder application, string environment)
+        private static async Task GenerateApplicationManifestAsync(OutputContext output, ApplicationBuilder application, string environment, CancellationToken cancellationToken)
         {
             using var step = output.BeginStep("Generating Application Manifests...");
 
@@ -53,7 +54,7 @@ namespace Microsoft.Tye
                 await using var stream = File.OpenWrite(outputFilePath);
                 await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
 
-                await ApplicationYamlWriter.WriteAsync(output, writer, application);
+                await ApplicationYamlWriter.WriteAsync(output, writer, application, cancellationToken);
             }
 
             step.MarkComplete();

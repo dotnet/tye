@@ -5,6 +5,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using YamlDotNet.RepresentationModel;
 
@@ -18,7 +19,7 @@ namespace Microsoft.Tye
 
         public DirectoryInfo OutputDirectory { get; set; } = default!;
 
-        public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
+        public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service, CancellationToken cancellationToken = default)
         {
             var yaml = service.Outputs.OfType<IYamlManifestOutput>().ToArray();
             if (yaml.Length == 0)

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Tye.Hosting.Model;
@@ -18,7 +19,7 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
         }
 
-        public Task StartAsync(Application application)
+        public Task StartAsync(Application application, CancellationToken cancellationToken = default)
         {
             // This transforms a ProjectRunInfo into a container
             var tasks = new List<Task>();
@@ -26,14 +27,14 @@ namespace Microsoft.Tye.Hosting
             {
                 if (s.Description.RunInfo is ProjectRunInfo project)
                 {
-                    tasks.Add(TransformProjectToContainer(s, project));
+                    tasks.Add(TransformProjectToContainer(s, project, cancellationToken));
                 }
             }
 
             return Task.WhenAll(tasks);
         }
 
-        private async Task TransformProjectToContainer(Service service, ProjectRunInfo project)
+        private async Task TransformProjectToContainer(Service service, ProjectRunInfo project, CancellationToken cancellationToken)
         {
             var serviceDescription = service.Description;
             var serviceName = serviceDescription.Name;
@@ -48,7 +49,7 @@ namespace Microsoft.Tye.Hosting
 
             service.Logs.OnNext($"dotnet {publishCommand}");
 
-            var buildResult = await ProcessUtil.RunAsync("dotnet", publishCommand, throwOnError: false);
+            var buildResult = await ProcessUtil.RunAsync("dotnet", publishCommand, throwOnError: false, cancellationToken: cancellationToken);
 
             service.Logs.OnNext(buildResult.StandardOutput);
 
@@ -89,7 +90,7 @@ namespace Microsoft.Tye.Hosting
             return "mcr.microsoft.com/dotnet/core/sdk:3.1-buster";
         }
 
-        public Task StopAsync(Application application)
+        public Task StopAsync(Application application, CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
         }

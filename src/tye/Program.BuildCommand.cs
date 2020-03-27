@@ -7,6 +7,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Tye.ConfigModel;
 
@@ -14,7 +15,7 @@ namespace Microsoft.Tye
 {
     static partial class Program
     {
-        public static Command CreateBuildCommand()
+        public static Command CreateBuildCommand(CancellationToken cancellationToken)
         {
             var command = new Command("build", "build containers for the application")
             {
@@ -31,7 +32,7 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                return BuildHost.BuildAsync(console, path, verbosity, interactive);
+                return BuildHost.BuildAsync(console, path, verbosity, interactive, cancellationToken);
             });
 
             return command;

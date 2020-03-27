@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Definition;
@@ -59,7 +60,7 @@ namespace Microsoft.Tye
             }
         }
 
-        public static Task ReadProjectDetailsAsync(OutputContext output, ProjectServiceBuilder project)
+        public static Task ReadProjectDetailsAsync(OutputContext output, ProjectServiceBuilder project, CancellationToken cancellationToken = default)
         {
             if (output is null)
             {

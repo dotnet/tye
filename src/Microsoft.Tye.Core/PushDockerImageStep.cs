@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
@@ -13,7 +14,7 @@ namespace Microsoft.Tye
 
         public string Environment { get; set; } = "production";
 
-        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
+        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service, CancellationToken cancellationToken = default)
         {
             if (SkipWithoutProject(output, service, out var _))
             {
@@ -27,7 +28,7 @@ namespace Microsoft.Tye
 
             foreach (var image in service.Outputs.OfType<DockerImageOutput>())
             {
-                await DockerPush.ExecuteAsync(output, image.ImageName, image.ImageTag);
+                await DockerPush.ExecuteAsync(output, image.ImageName, image.ImageTag, cancellationToken);
                 output.WriteInfoLine($"Pushed docker image: '{image.ImageName}:{image.ImageTag}'");
             }
         }

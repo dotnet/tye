@@ -17,7 +17,7 @@ namespace Microsoft.AspNetCore.Proxy
         private const int DefaultWebSocketBufferSize = 4096;
         private const int StreamCopyBufferSize = 81920;
 
-        public static async Task ProxyRequest(this HttpContext context, HttpMessageInvoker invoker, Uri destinationUri)
+        public static async Task ProxyRequest(this HttpContext context, HttpMessageInvoker invoker, Uri destinationUri, CancellationToken cancellationToken)
         {
             if (context == null)
             {
@@ -30,15 +30,15 @@ namespace Microsoft.AspNetCore.Proxy
 
             if (context.WebSockets.IsWebSocketRequest)
             {
-                await context.AcceptProxyWebSocketRequest(destinationUri.ToWebSocketScheme());
+                await context.AcceptProxyWebSocketRequest(destinationUri.ToWebSocketScheme(), cancellationToken);
             }
             else
             {
                 using (var requestMessage = context.CreateProxyHttpRequest(destinationUri))
                 {
-                    using (var responseMessage = await context.SendProxyHttpRequest(invoker, requestMessage))
+                    using (var responseMessage = await context.SendProxyHttpRequest(invoker, requestMessage, cancellationToken))
                     {
-                        await context.CopyProxyHttpResponse(responseMessage);
+                        await context.CopyProxyHttpResponse(responseMessage, cancellationToken);
                     }
                 }
             }
@@ -95,7 +95,7 @@ namespace Microsoft.AspNetCore.Proxy
             return requestMessage;
         }
 
-        public static async Task<bool> AcceptProxyWebSocketRequest(this HttpContext context, Uri destinationUri)
+        public static async Task<bool> AcceptProxyWebSocketRequest(this HttpContext context, Uri destinationUri, CancellationToken cancellationToken)
         {
             if (context == null)
             {
@@ -171,7 +171,7 @@ namespace Microsoft.AspNetCore.Proxy
             }
         }
 
-        public static Task<HttpResponseMessage> SendProxyHttpRequest(this HttpContext context, HttpMessageInvoker invoker, HttpRequestMessage requestMessage)
+        public static Task<HttpResponseMessage> SendProxyHttpRequest(this HttpContext context, HttpMessageInvoker invoker, HttpRequestMessage requestMessage, CancellationToken cancellationToken)
         {
             if (requestMessage == null)
             {
@@ -181,7 +181,7 @@ namespace Microsoft.AspNetCore.Proxy
             return invoker.SendAsync(requestMessage, context.RequestAborted);
         }
 
-        public static async Task CopyProxyHttpResponse(this HttpContext context, HttpResponseMessage responseMessage)
+        public static async Task CopyProxyHttpResponse(this HttpContext context, HttpResponseMessage responseMessage, CancellationToken cancellationToken)
         {
             if (responseMessage == null)
             {

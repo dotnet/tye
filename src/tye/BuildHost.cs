@@ -5,26 +5,27 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
     public static class BuildHost
     {
-        public static async Task BuildAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive)
+        public static async Task BuildAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive, CancellationToken cancellationToken = default)
         {
             var output = new OutputContext(console, verbosity);
-            var application = await ApplicationFactory.CreateAsync(output, path);
+            var application = await ApplicationFactory.CreateAsync(output, path, cancellationToken);
 
             if (application.Services.Count == 0)
             {
                 throw new CommandException($"No services found in \"{application.Source.Name}\"");
             }
 
-            await ExecuteBuildAsync(output, application, environment: "production", interactive);
+            await ExecuteBuildAsync(output, application, environment: "production", interactive, cancellationToken);
         }
 
-        public static async Task ExecuteBuildAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive)
+        public static async Task ExecuteBuildAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive, CancellationToken cancellationToken = default)
         {
             var steps = new List<ServiceExecutor.Step>()
             {
@@ -38,7 +39,7 @@ namespace Microsoft.Tye
             var executor = new ServiceExecutor(output, application, steps);
             foreach (var service in application.Services)
             {
-                await executor.ExecuteAsync(service);
+                await executor.ExecuteAsync(service, cancellationToken);
             }
         }
     }

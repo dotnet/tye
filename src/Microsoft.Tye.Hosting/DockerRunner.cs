@@ -23,19 +23,19 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
         }
 
-        public Task StartAsync(Application application)
+        public Task StartAsync(Application application, CancellationToken cancellationToken = default)
         {
             var tasks = new Task[application.Services.Count];
             var index = 0;
             foreach (var s in application.Services)
             {
-                tasks[index++] = s.Value.Description.RunInfo is DockerRunInfo docker ? StartContainerAsync(application, s.Value, docker) : Task.CompletedTask;
+                tasks[index++] = s.Value.Description.RunInfo is DockerRunInfo docker ? StartContainerAsync(application, s.Value, docker, cancellationToken) : Task.CompletedTask;
             }
 
             return Task.WhenAll(tasks);
         }
 
-        public Task StopAsync(Application application)
+        public Task StopAsync(Application application, CancellationToken cancellationToken = default)
         {
             var services = application.Services;
 
@@ -50,7 +50,7 @@ namespace Microsoft.Tye.Hosting
             return Task.WhenAll(tasks);
         }
 
-        private async Task StartContainerAsync(Application application, Service service, DockerRunInfo docker)
+        private async Task StartContainerAsync(Application application, Service service, DockerRunInfo docker, CancellationToken cancellationToken)
         {
             if (!await DockerDetector.Instance.IsDockerInstalled.Value)
             {
@@ -84,7 +84,7 @@ namespace Microsoft.Tye.Hosting
 
             var dockerInfo = new DockerInformation(new Task[service.Description.Replicas]);
 
-            async Task RunDockerContainer(IEnumerable<(int ExternalPort, int Port, int? ContainerPort, string? Protocol)> ports)
+            async Task RunDockerContainer(IEnumerable<(int ExternalPort, int Port, int? ContainerPort, string? Protocol)> ports, CancellationToken cancellationToken)
             {
                 var hasPorts = ports.Any();
 
@@ -181,7 +181,7 @@ namespace Microsoft.Tye.Hosting
                 while (string.IsNullOrEmpty(containerId))
                 {
                     // Try to get the ID of the container
-                    result = await ProcessUtil.RunAsync("docker", $"ps --no-trunc -f name={replica} --format " + "{{.ID}}");
+                    result = await ProcessUtil.RunAsync("docker", $"ps --no-trunc -f name={replica} --format " + "{{.ID}}", cancellationToken: cancellationToken);
 
                     containerId = result.ExitCode == 0 ? result.StandardOutput.Trim() : null;
                 }
@@ -258,14 +258,14 @@ namespace Microsoft.Tye.Hosting
                         ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.ContainerPort, binding.Protocol));
                     }
 
-                    dockerInfo.Tasks[i] = RunDockerContainer(ports);
+                    dockerInfo.Tasks[i] = RunDockerContainer(ports, cancellationToken);
                 }
             }
             else
             {
                 for (var i = 0; i < service.Description.Replicas; i++)
                 {
-                    dockerInfo.Tasks[i] = RunDockerContainer(Enumerable.Empty<(int, int, int?, string?)>());
+                    dockerInfo.Tasks[i] = RunDockerContainer(Enumerable.Empty<(int, int, int?, string?)>(), cancellationToken);
                 }
             }
 

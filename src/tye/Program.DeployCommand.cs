@@ -7,6 +7,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Tye.ConfigModel;
 
@@ -14,7 +15,7 @@ namespace Microsoft.Tye
 {
     static partial class Program
     {
-        public static Command CreateDeployCommand()
+        public static Command CreateDeployCommand(CancellationToken cancellationToken)
         {
             var command = new Command("deploy", "deploy the application")
             {
@@ -28,7 +29,7 @@ namespace Microsoft.Tye
                 Description = "Override validation and force deployment.",
                 Required = false
             });
-
+            KubectlDetector.Initialize(cancellationTokenSource.Token);
             command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool>(async (console, path, verbosity, interactive, force) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
@@ -38,27 +39,27 @@ namespace Microsoft.Tye
                 }
 
                 var output = new OutputContext(console, verbosity);
-                var application = await ApplicationFactory.CreateAsync(output, path);
+                var application = await ApplicationFactory.CreateAsync(output, path, cancellationToken);
 
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
                 }
 
-                await ExecuteDeployAsync(new OutputContext(console, verbosity), application, environment: "production", interactive, force);
+                await ExecuteDeployAsync(new OutputContext(console, verbosity), application, environment: "production", interactive, force, cancellationToken);
             });
 
             return command;
         }
 
-        private static async Task ExecuteDeployAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive, bool force)
+        private static async Task ExecuteDeployAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive, bool force, CancellationToken cancellationToken)
         {
-            if (!await KubectlDetector.Instance.IsKubectlInstalled.Value)
+            if (!await KubectlDetector.IsKubectlInstalled.Value)
             {
                 throw new CommandException($"Cannot apply manifests because kubectl is not installed.");
             }
 
-            if (!await KubectlDetector.Instance.IsKubectlConnectedToCluster.Value)
+            if (!await KubectlDetector.IsKubectlConnectedToCluster.Value)
             {
                 throw new CommandException($"Cannot apply manifests because kubectl is not connected to a cluster.");
             }
@@ -80,13 +81,13 @@ namespace Microsoft.Tye
             var executor = new ServiceExecutor(output, application, steps);
             foreach (var service in application.Services)
             {
-                await executor.ExecuteAsync(service);
+                await executor.ExecuteAsync(service, cancellationToken);
             }
 
-            await DeployApplicationManifestAsync(output, application, application.Source.Directory.Name);
+            await DeployApplicationManifestAsync(output, application, application.Source.Directory.Name, cancellationToken);
         }
 
-        private static async Task DeployApplicationManifestAsync(OutputContext output, ApplicationBuilder application, string applicationName)
+        private static async Task DeployApplicationManifestAsync(OutputContext output, ApplicationBuilder application, string applicationName, CancellationToken cancellationToken)
         {
             using var step = output.BeginStep("Deploying Application Manifests...");
 
@@ -97,7 +98,7 @@ namespace Microsoft.Tye
                 await using var stream = File.OpenWrite(tempFile.FilePath);
                 await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
 
-                await ApplicationYamlWriter.WriteAsync(output, writer, application);
+                await ApplicationYamlWriter.WriteAsync(output, writer, application, cancellationToken);
             }
 
             output.WriteDebugLine("Running 'kubectl apply'.");

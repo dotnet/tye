@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
@@ -13,7 +14,7 @@ namespace Microsoft.Tye
         public string Environment { get; set; } = "production";
 
 
-        public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
+        public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service, CancellationToken cancellationToken = default)
         {
             if (SkipWithoutContainerOutput(output, service))
             {

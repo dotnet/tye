@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Tye.ConfigModel;
 
@@ -14,7 +15,7 @@ namespace Microsoft.Tye
 {
     public static class ApplicationFactory
     {
-        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source)
+        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, CancellationToken cancellationToken = default)
         {
             if (source is null)
             {
@@ -44,8 +45,8 @@ namespace Microsoft.Tye
                     project.Args = configService.Args;
                     project.Replicas = configService.Replicas ?? 1;
 
-                    await ProjectReader.ReadProjectDetailsAsync(output, project);
-
+                    await ProjectReader.ReadProjectDetailsAsync(output, project, cancellationToken);
+                    cancellationToken.ThrowIfCancellationRequested();
                     // We don't apply more container defaults here because we might need
                     // to promptly for the registry name.
                     project.ContainerInfo = new ContainerInfo()
@@ -222,6 +223,7 @@ namespace Microsoft.Tye
                 }
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             return builder;
         }
 

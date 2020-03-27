@@ -4,13 +4,14 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
     internal static class HelmChartGenerator
     {
-        public static async Task GenerateAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container, HelmChartStep chart, DirectoryInfo outputDirectory)
+        public static async Task GenerateAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container, HelmChartStep chart, DirectoryInfo outputDirectory, CancellationToken cancellationToken)
         {
             if (output is null)
             {
@@ -69,7 +70,7 @@ namespace Microsoft.Tye
                 $"# tye will override these values when packaging the chart",
                 $"version: {project.Version.Replace('+', '-')}",
                 $"appVersion: {project.Version.Replace('+', '-')}"
-            });
+            }, cancellationToken);
 
             // Write values.yaml
             //
@@ -79,7 +80,7 @@ namespace Microsoft.Tye
             {
                 $"image:",
                 $"  repository: {container.ImageName}",
-            });
+            }, cancellationToken);
         }
 
         public static void ApplyHelmChartDefaults(ApplicationBuilder application, ServiceBuilder service, ContainerInfo container, HelmChartStep chart)

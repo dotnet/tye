@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Tye.Hosting.Model;
 using Microsoft.Extensions.Logging;
@@ -21,7 +22,7 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
         }
 
-        public Task StartAsync(Application application)
+        public Task StartAsync(Application application, CancellationToken cancellationToken = default)
         {
             foreach (var service in application.Services.Values)
             {
@@ -96,7 +97,7 @@ namespace Microsoft.Tye.Hosting
             return Task.CompletedTask;
         }
 
-        public Task StopAsync(Application application)
+        public Task StopAsync(Application application, CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;
         }

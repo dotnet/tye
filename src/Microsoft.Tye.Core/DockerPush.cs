@@ -4,13 +4,14 @@
 
 using System;
 using System.CommandLine.Invocation;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
     internal static class DockerPush
     {
-        public static async Task ExecuteAsync(OutputContext output, string imageName, string imageTag)
+        public static async Task ExecuteAsync(OutputContext output, string imageName, string imageTag, CancellationToken cancellationToken)
         {
             if (output is null)
             {

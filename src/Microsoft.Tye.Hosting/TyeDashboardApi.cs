@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
+using System.Threading;
 using Microsoft.Tye.Hosting.Model.V1;
 
 namespace Microsoft.Tye.Hosting
@@ -33,17 +34,17 @@ namespace Microsoft.Tye.Hosting
             _options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         }
 
-        public void MapRoutes(IEndpointRouteBuilder endpoints)
+        public void MapRoutes(IEndpointRouteBuilder endpoints, CancellationToken cancellationToken = default)
         {
-            endpoints.MapGet("/api/v1", ServiceIndex);
-            endpoints.MapGet("/api/v1/services", Services);
-            endpoints.MapGet("/api/v1/services/{name}", Service);
-            endpoints.MapGet("/api/v1/logs/{name}", Logs);
-            endpoints.MapGet("/api/v1/metrics", AllMetrics);
-            endpoints.MapGet("/api/v1/metrics/{name}", Metrics);
+            endpoints.MapGet("/api/v1", context => ServiceIndex(context, cancellationToken));
+            endpoints.MapGet("/api/v1/services", context => Services(context, cancellationToken));
+            endpoints.MapGet("/api/v1/services/{name}", context => Service(context, cancellationToken));
+            endpoints.MapGet("/api/v1/logs/{name}", context => Logs(context, cancellationToken));
+            endpoints.MapGet("/api/v1/metrics", context => AllMetrics(context, cancellationToken));
+            endpoints.MapGet("/api/v1/metrics/{name}", context => Metrics(context, cancellationToken));
         }
 
-        private Task ServiceIndex(HttpContext context)
+        private Task ServiceIndex(HttpContext context, CancellationToken cancellationToken)
         {
             context.Response.ContentType = "application/json";
             return JsonSerializer.SerializeAsync(context.Response.Body, new[]
@@ -53,10 +54,10 @@ namespace Microsoft.Tye.Hosting
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/metrics",
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/metrics/{{service}}",
             },
-            _options);
+            _options, cancellationToken);
         }
 
-        private async Task Services(HttpContext context)
+        private async Task Services(HttpContext context, CancellationToken cancellationToken)
         {
             var app = context.RequestServices.GetRequiredService<Application>();
 
@@ -70,10 +71,10 @@ namespace Microsoft.Tye.Hosting
                 list.Add(CreateServiceJson(service));
             }
 
-            await JsonSerializer.SerializeAsync(context.Response.Body, list, _options);
+            await JsonSerializer.SerializeAsync(context.Response.Body, list, _options, cancellationToken);
         }
 
-        private async Task Service(HttpContext context)
+        private async Task Service(HttpContext context, CancellationToken cancellationToken)
         {
             var app = context.RequestServices.GetRequiredService<Application>();
 
@@ -87,14 +88,14 @@ namespace Microsoft.Tye.Hosting
                 {
                     message = $"Unknown service {name}"
                 },
-                _options);
+                _options, cancellationToken);
 
                 return;
             }
 
             var serviceJson = CreateServiceJson(service);
 
-            await JsonSerializer.SerializeAsync(context.Response.Body, serviceJson, _options);
+            await JsonSerializer.SerializeAsync(context.Response.Body, serviceJson, _options, cancellationToken);
         }
 
         private static V1Service CreateServiceJson(Model.Service service)
@@ -205,7 +206,7 @@ namespace Microsoft.Tye.Hosting
             return serviceJson;
         }
 
-        private async Task Logs(HttpContext context)
+        private async Task Logs(HttpContext context, CancellationToken cancellationToken)
         {
             var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
 
@@ -219,15 +220,15 @@ namespace Microsoft.Tye.Hosting
                 {
                     message = $"Unknown service {name}"
                 },
-                _options);
+                _options, cancellationToken);
 
                 return;
             }
 
-            await JsonSerializer.SerializeAsync(context.Response.Body, service.CachedLogs, _options);
+            await JsonSerializer.SerializeAsync(context.Response.Body, service.CachedLogs, _options, cancellationToken);
         }
 
-        private async Task AllMetrics(HttpContext context)
+        private async Task AllMetrics(HttpContext context, CancellationToken cancellationToken)
         {
             var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
 
@@ -252,10 +253,10 @@ namespace Microsoft.Tye.Hosting
                 sb.AppendLine();
             }
 
-            await context.Response.WriteAsync(sb.ToString());
+            await context.Response.WriteAsync(sb.ToString(), cancellationToken: cancellationToken);
         }
 
-        private async Task Metrics(HttpContext context)
+        private async Task Metrics(HttpContext context, CancellationToken cancellationToken)
         {
             var app = context.RequestServices.GetRequiredService<Application>();
 
@@ -271,7 +272,7 @@ namespace Microsoft.Tye.Hosting
                 {
                     message = $"Unknown service {name}"
                 },
-                _options);
+                _options, cancellationToken);
 
                 return;
             }
@@ -290,7 +291,7 @@ namespace Microsoft.Tye.Hosting
                 }
             }
 
-            await context.Response.WriteAsync(sb.ToString());
+            await context.Response.WriteAsync(sb.ToString(), cancellationToken: cancellationToken);
         }
     }
 }

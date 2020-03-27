@@ -31,7 +31,7 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
         }
 
-        public async Task StartAsync(Application application)
+        public async Task StartAsync(Application application, CancellationToken cancellationToken = default)
         {
             var invoker = new HttpMessageInvoker(new ConnectionRetryHandler(new SocketsHttpHandler
             {
@@ -133,7 +133,7 @@ namespace Microsoft.Tye.Hosting
                                 Path = (string)context.Request.RouteValues["path"]
                             };
 
-                            return context.ProxyRequest(invoker, uri.Uri);
+                            return context.ProxyRequest(invoker, uri.Uri, cancellationToken);
                         };
 
                         IEndpointConventionBuilder conventions = null!;
@@ -163,13 +163,13 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        public async Task StopAsync(Application application)
+        public async Task StopAsync(Application application, CancellationToken cancellationToken = default)
         {
             foreach (var webApp in _webApplications)
             {
                 try
                 {
-                    await webApp.StopAsync();
+                    await webApp.StopAsync(cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {

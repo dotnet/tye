@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -56,18 +57,18 @@ namespace Microsoft.Tye.Hosting
         // An additional sink that output will be piped to. Useful for testing.
         public ILogEventSink? Sink { get; set; }
 
-        public async Task RunAsync()
+        public async Task RunAsync(CancellationToken cancellationToken = default)
         {
-            await StartAsync();
+            await StartAsync(cancellationToken);
 
             var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
             _lifetime?.ApplicationStopping.Register(obj => waitForStop.TrySetResult(null), null);
             await waitForStop.Task;
 
-            await StopAsync();
+            await StopAsync(cancellationToken);
         }
 
-        public async Task<WebApplication> StartAsync()
+        public async Task<WebApplication> StartAsync(CancellationToken cancellationToken = default)
         {
             var app = BuildWebApplication(_application, _args, Sink);
             DashboardWebApplication = app;
@@ -77,35 +78,35 @@ namespace Microsoft.Tye.Hosting
 
             _logger.LogInformation("Executing application from {Source}", _application.Source);
 
-            ConfigureApplication(app);
+            ConfigureApplication(app, cancellationToken);
 
             var configuration = app.Configuration;
 
             _processor = CreateApplicationProcessor(_args, _servicesToDebug, _logger, configuration);
 
-            await app.StartAsync();
+            await app.StartAsync(cancellationToken);
 
             _logger.LogInformation("Dashboard running on {Address}", app.Addresses.First());
 
             try
             {
-                await _processor.StartAsync(_application);
+                await _processor.StartAsync(_application, cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(0, ex, "Failed to launch application");
             }
-
+            cancellationToken.ThrowIfCancellationRequested();
             return app;
         }
 
-        public async Task StopAsync()
+        public async Task StopAsync(CancellationToken cancellationToken = default)
         {
             try
             {
                 if (_processor != null)
                 {
-                    await _processor.StopAsync(_application);
+                    await _processor.StopAsync(_application, cancellationToken);
                 }
             }
             finally
@@ -113,7 +114,7 @@ namespace Microsoft.Tye.Hosting
                 if (DashboardWebApplication != null)
                 {
                     // Stop the host after everything else has been shutdown
-                    await DashboardWebApplication.StopAsync();
+                    await DashboardWebApplication.StopAsync(cancellationToken);
                 }
             }
         }
@@ -176,7 +177,7 @@ namespace Microsoft.Tye.Hosting
             return app;
         }
 
-        private void ConfigureApplication(WebApplication app)
+        private void ConfigureApplication(WebApplication app, CancellationToken cancellationToken)
         {
             var port = ComputePort(app);
 
@@ -192,7 +193,7 @@ namespace Microsoft.Tye.Hosting
 
             var api = new TyeDashboardApi();
 
-            api.MapRoutes(app);
+            api.MapRoutes(app, cancellationToken);
 
             app.MapBlazorHub();
             app.MapFallbackToPage("/_Host");

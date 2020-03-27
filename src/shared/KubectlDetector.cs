@@ -3,31 +3,30 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    internal class KubectlDetector
+    internal static class KubectlDetector
     {
-        public static KubectlDetector Instance { get; } = new KubectlDetector();
-
-        private KubectlDetector()
+        public static void Initialize(CancellationToken cancellationToken)
         {
-            IsKubectlInstalled = new Lazy<Task<bool>>(DetectKubectlInstalled);
-            IsKubectlConnectedToCluster = new Lazy<Task<bool>>(DetectKubectlConnectedToCluster);
+            IsKubectlInstalled = new Lazy<Task<bool>>(() => DetectKubectlInstalled(cancellationToken));
+            IsKubectlConnectedToCluster = new Lazy<Task<bool>>(() => DetectKubectlConnectedToCluster(cancellationToken));
         }
 
-        public Lazy<Task<bool>> IsKubectlInstalled { get; }
+        public static Lazy<Task<bool>> IsKubectlInstalled { get; private set; }
 
-        public Lazy<Task<bool>> IsKubectlConnectedToCluster { get; }
+        public static Lazy<Task<bool>> IsKubectlConnectedToCluster { get; private set; }
 
-        private static async Task<bool> DetectKubectlInstalled()
+        private static async Task<bool> DetectKubectlInstalled(CancellationToken cancellationToken)
         {
             try
             {
                 // Ignoring the exit code and relying on Process to throw if kubectl is not found
                 // kubectl version will return non-zero if you're not connected to a cluster.
-                await ProcessUtil.RunAsync("kubectl", "version", throwOnError: false);
+                await ProcessUtil.RunAsync("kubectl", "version", throwOnError: false, cancellationToken: cancellationToken);
                 return true;
             }
             catch (Exception)
@@ -37,11 +36,11 @@ namespace Microsoft.Tye
             }
         }
 
-        private static async Task<bool> DetectKubectlConnectedToCluster()
+        private static async Task<bool> DetectKubectlConnectedToCluster(CancellationToken cancellationToken)
         {
             try
             {
-                var result = await ProcessUtil.RunAsync("kubectl", "cluster-info", throwOnError: false);
+                var result = await ProcessUtil.RunAsync("kubectl", "cluster-info", throwOnError: false, cancellationToken: cancellationToken);
                 return result.ExitCode == 0;
             }
             catch (Exception)

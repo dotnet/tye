@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
@@ -31,7 +32,7 @@ namespace Microsoft.Tye
         // Keep track of secrets we've seen so we don't validate them twice.
         public HashSet<string> Secrets { get; } = new HashSet<string>();
 
-        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
+        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service, CancellationToken cancellationToken = default)
         {
             var bindings = service.Outputs.OfType<ComputedBindings>().FirstOrDefault();
             if (bindings is null)
@@ -41,6 +42,10 @@ namespace Microsoft.Tye
 
             foreach (var binding in bindings.Bindings)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
                 if (binding is SecretInputBinding secretInputBinding)
                 {
                     if (!Secrets.Add(secretInputBinding.Name))
@@ -62,7 +67,7 @@ namespace Microsoft.Tye
 
                     try
                     {
-                        var result = await kubernetes.ReadNamespacedSecretWithHttpMessagesAsync(secretInputBinding.Name, config.Namespace ?? "default");
+                        var result = await kubernetes.ReadNamespacedSecretWithHttpMessagesAsync(secretInputBinding.Name, config.Namespace ?? "default", cancellationToken: cancellationToken);
                         output.WriteInfoLine($"Found existing secret '{secretInputBinding.Name}'.");
                         continue;
                     }
@@ -113,7 +118,7 @@ namespace Microsoft.Tye
 
                     try
                     {
-                        await kubernetes.CreateNamespacedSecretWithHttpMessagesAsync(secret, config.Namespace ?? "default");
+                        await kubernetes.CreateNamespacedSecretWithHttpMessagesAsync(secret, config.Namespace ?? "default", cancellationToken: cancellationToken);
                         output.WriteInfoLine($"Created secret '{secret.Metadata.Name}'.");
                     }
                     catch (Exception ex)

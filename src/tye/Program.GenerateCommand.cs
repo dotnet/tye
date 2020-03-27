@@ -23,7 +23,7 @@ namespace Microsoft.Tye
                 StandardOptions.Verbosity,
             };
 
-            // This is a super-secret VIP-only command! It's useful for testing, but we're 
+            // This is a super-secret VIP-only command! It's useful for testing, but we're
             // not documenting it right now.
             command.IsHidden = true;
 
@@ -35,7 +35,7 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                return GenerateHost.GenerateAsync(console, path, verbosity, interactive);
+                return GenerateHost.GenerateAsync(console, path, verbosity, interactive, cancellationTokenSource.Token);
             });
 
             return command;

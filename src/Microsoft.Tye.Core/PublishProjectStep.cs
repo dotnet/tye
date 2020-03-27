@@ -4,6 +4,7 @@
 
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
@@ -13,7 +14,7 @@ namespace Microsoft.Tye
     {
         public override string DisplayText => "Publishing Project...";
 
-        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
+        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service, CancellationToken cancellationToken = default)
         {
             if (SkipWithoutProject(output, service, out var project))
             {

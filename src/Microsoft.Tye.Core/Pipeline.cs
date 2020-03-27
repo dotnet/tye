@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
@@ -28,7 +29,7 @@ namespace Microsoft.Tye
             delegates.Add(callback);
         }
 
-        public static Task<object?> ExecuteAsync(Pipeline pipeline)
+        public static Task<object?> ExecuteAsync(Pipeline pipeline, CancellationToken cancellationToken = default)
         {
             if (pipeline is null)
             {
@@ -47,11 +48,11 @@ namespace Microsoft.Tye
                 }
             }
 
-            return pipeline.ExecuteAsync();
+            return pipeline.ExecuteAsync(cancellationToken);
         }
 
         public abstract void Register<TApplication>(Action<TApplication> callback);
 
-        public abstract Task<object?> ExecuteAsync();
+        public abstract Task<object?> ExecuteAsync(CancellationToken cancellationToken = default);
     }
 }

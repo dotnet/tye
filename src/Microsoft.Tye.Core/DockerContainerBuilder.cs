@@ -6,13 +6,14 @@ using System;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
     internal static class DockerContainerBuilder
     {
-        public static async Task BuildContainerImageAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container)
+        public static async Task BuildContainerImageAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container, CancellationToken cancellationToken)
         {
             if (output is null)
             {
@@ -65,7 +66,7 @@ namespace Microsoft.Tye
                         // Clean up file when done building image
                         tempFile = new TempFile(dockerFilePath);
 
-                        await DockerfileGenerator.WriteDockerfileAsync(output, application, project, container, tempFile.FilePath);
+                        await DockerfileGenerator.WriteDockerfileAsync(output, application, project, container, tempFile.FilePath, cancellationToken);
                     }
                 }
                 else
@@ -93,7 +94,7 @@ namespace Microsoft.Tye
                     {
                         // No need to clean up, it's in a directory we're already cleaning up.
                         dockerFilePath = Path.Combine(contextDirectory, "Dockerfile");
-                        await DockerfileGenerator.WriteDockerfileAsync(output, application, project, container, dockerFilePath);
+                        await DockerfileGenerator.WriteDockerfileAsync(output, application, project, container, dockerFilePath, cancellationToken);
                     }
                 }
 

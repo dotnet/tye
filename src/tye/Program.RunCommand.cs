@@ -72,7 +72,7 @@ namespace Microsoft.Tye
                 }
 
                 var output = new OutputContext(console, Verbosity.Quiet);
-                var application = await ApplicationFactory.CreateAsync(output, path);
+                var application = await ApplicationFactory.CreateAsync(output, path, cancellationTokenSource.Token);
                 var serviceCount = application.Services.Count;
 
                 InitializeThreadPoolSettings(serviceCount);
@@ -83,7 +83,7 @@ namespace Microsoft.Tye
                 }
 
                 using var host = new TyeHost(application.ToHostingApplication(), args, debug);
-                await host.RunAsync();
+                await host.RunAsync(cancellationTokenSource.Token);
             });
 
             return command;

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Globalization;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
@@ -13,7 +14,7 @@ namespace Microsoft.Tye
 
         public string Environment { get; set; } = "production";
 
-        public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
+        public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service, CancellationToken cancellationToken = default)
         {
             // No need to do this computation for a non-project since we're not deploying it.
             if (!(service is ProjectServiceBuilder project))
