@@ -39,8 +39,8 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(filePath));
             }
 
-            using var stream = File.OpenWrite(filePath);
-            using var writer = new StreamWriter(stream, encoding: Encoding.UTF8, bufferSize: -1, leaveOpen: true);
+            await using var stream = File.OpenWrite(filePath);
+            await using var writer = new StreamWriter(stream, encoding: Encoding.UTF8, bufferSize: -1, leaveOpen: true);
 
             var entryPoint = Path.GetFileNameWithoutExtension(project.ProjectFile.Name);
             output.WriteDebugLine($"Writing Dockerfile to '{filePath}'.");

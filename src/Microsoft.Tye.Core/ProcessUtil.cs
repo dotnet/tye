@@ -109,7 +109,7 @@ namespace Microsoft.Tye
             process.BeginErrorReadLine();
 
             var cancelledTcs = new TaskCompletionSource<object?>();
-            using var _ = cancellationToken.Register(() => cancelledTcs.TrySetResult(null));
+            await using var _ = cancellationToken.Register(() => cancelledTcs.TrySetResult(null));
 
             var result = await Task.WhenAny(processLifetimeTask.Task, cancelledTcs.Task);
 

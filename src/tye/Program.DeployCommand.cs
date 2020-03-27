@@ -94,8 +94,8 @@ namespace Microsoft.Tye
             output.WriteInfoLine($"Writing output to '{tempFile.FilePath}'.");
 
             {
-                using var stream = File.OpenWrite(tempFile.FilePath);
-                using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
+                await using var stream = File.OpenWrite(tempFile.FilePath);
+                await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
 
                 await ApplicationYamlWriter.WriteAsync(output, writer, application);
             }
