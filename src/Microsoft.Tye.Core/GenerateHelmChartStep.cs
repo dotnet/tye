@@ -13,16 +13,16 @@ namespace Microsoft.Tye
 
         public bool Force { get; set; }
 
-        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
+        public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             if (SkipWithoutProject(output, service, out var project))
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (SkipWithoutContainerInfo(output, service, out var container))
             {
-                return;
+                return Task.CompletedTask;
             }
 
             var chartDirectory = Path.Combine(project.ProjectFile.DirectoryName, "charts");
@@ -36,14 +36,14 @@ namespace Microsoft.Tye
             }
 
             var chart = new HelmChartStep();
-            await HelmChartGenerator.GenerateAsync(
+            output.WriteInfoLine($"Generating Helm Chart at '{Path.Combine(chartDirectory, chart.ChartName)}'.");
+            return HelmChartGenerator.GenerateAsync(
                 output,
                 application,
                 project,
                 container,
                 chart,
                 new DirectoryInfo(chartDirectory));
-            output.WriteInfoLine($"Generated Helm Chart at '{Path.Combine(chartDirectory, chart.ChartName)}'.");
 
         }
     }

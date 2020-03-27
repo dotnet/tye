@@ -288,14 +288,16 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        private async Task StopContainerAsync(Service service)
+        private Task StopContainerAsync(Service service)
         {
             if (service.Items.TryGetValue(typeof(DockerInformation), out var value) && value is DockerInformation di)
             {
                 di.StoppingTokenSource.Cancel();
 
-                await Task.WhenAll(di.Tasks);
+                return Task.WhenAll(di.Tasks);
             }
+
+            return Task.CompletedTask;
         }
 
         private static string? GetUserSecretsPathFromSecrets()

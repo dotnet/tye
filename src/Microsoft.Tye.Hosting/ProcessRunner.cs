@@ -277,15 +277,16 @@ namespace Microsoft.Tye.Hosting
 
         private Task KillRunningProcesses(IDictionary<string, Service> services)
         {
-            static async Task KillProcessAsync(Service service)
+            static Task KillProcessAsync(Service service)
             {
                 if (service.Items.TryGetValue(typeof(ProcessInfo), out var stateObj) && stateObj is ProcessInfo state)
                 {
                     // Cancel the token before stopping the process
                     state.StoppedTokenSource.Cancel();
 
-                    await Task.WhenAll(state.Tasks);
+                    return Task.WhenAll(state.Tasks);
                 }
+                return Task.CompletedTask;
             }
 
             var index = 0;
