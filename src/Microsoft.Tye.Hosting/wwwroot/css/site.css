@@ -119,6 +119,7 @@ button.navbar-toggler:hover {
     text-decoration: none;
     border: 1px solid #a2a2a2;
     border-radius: .25rem;
+    color: white;
 }
 
 .content {
