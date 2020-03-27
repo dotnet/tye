@@ -83,10 +83,10 @@ namespace Microsoft.Tye
                 await executor.ExecuteAsync(service);
             }
 
-            await DeployApplicationManifestAsync(output, application, application.Source.Directory.Name, environment);
+            await DeployApplicationManifestAsync(output, application, application.Source.Directory.Name);
         }
 
-        private static async Task DeployApplicationManifestAsync(OutputContext output, ApplicationBuilder application, string applicationName, string environment)
+        private static async Task DeployApplicationManifestAsync(OutputContext output, ApplicationBuilder application, string applicationName)
         {
             using var step = output.BeginStep("Deploying Application Manifests...");
 
