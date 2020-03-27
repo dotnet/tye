@@ -39,7 +39,7 @@ namespace Microsoft.Tye.Serialization
                 : GetDefault(key.Type);
 
             return !Equals(value.Value, defaultValue)
-                   && !IsEmptyArray(value.Type,value.Value)
+                   && !IsEmptyArray(value.Type, value.Value)
                    && base.EnterMapping(key, value, context);
         }
     }
