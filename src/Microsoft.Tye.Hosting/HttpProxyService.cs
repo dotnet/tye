@@ -71,7 +71,7 @@ namespace Microsoft.Tye.Hosting
                                 continue;
                             }
 
-                            var port = service.PortMap[binding.Port.Value][i];
+                            var port = binding.ReplicaPorts[i];
                             ports.Add(port);
                             var url = $"{binding.Protocol}://localhost:{port}";
                             addresses.Add(url);
@@ -115,7 +115,7 @@ namespace Microsoft.Tye.Hosting
                         // based on the replica port
                         for (int i = 0; i < targetServiceDescription.Replicas; i++)
                         {
-                            var port = target.PortMap[targetBinding.Port!.Value][i];
+                            var port = targetBinding.ReplicaPorts[i];
                             var url = $"{targetBinding.Protocol}://localhost:{port}";
                             uris.Add(new Uri(url));
                         }

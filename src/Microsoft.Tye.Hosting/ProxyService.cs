@@ -57,7 +57,7 @@ namespace Microsoft.Tye.Hosting
                                         continue;
                                     }
 
-                                    var ports = service.PortMap[binding.Port.Value];
+                                    var ports = binding.ReplicaPorts;
 
                                     sockets.Listen(IPAddress.Loopback, binding.Port.Value, o =>
                                     {

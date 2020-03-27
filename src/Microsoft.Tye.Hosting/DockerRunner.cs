@@ -84,7 +84,7 @@ namespace Microsoft.Tye.Hosting
 
             var dockerInfo = new DockerInformation(new Task[service.Description.Replicas]);
 
-            async Task RunDockerContainer(IEnumerable<(int Port, int? ContainerPort, int BindingPort, string? Protocol)> ports)
+            async Task RunDockerContainer(IEnumerable<(int ExternalPort, int Port, int? ContainerPort, string? Protocol)> ports)
             {
                 var hasPorts = ports.Any();
 
@@ -122,7 +122,7 @@ namespace Microsoft.Tye.Hosting
                         if (string.Equals(p.Protocol, "https", StringComparison.OrdinalIgnoreCase))
                         {
                             // We need to set the redirect URL to the exposed port so the redirect works cleanly
-                            environment["HTTPS_PORT"] = p.BindingPort.ToString();
+                            environment["HTTPS_PORT"] = p.ExternalPort.ToString();
                         }
                     }
 
@@ -247,7 +247,7 @@ namespace Microsoft.Tye.Hosting
                 // port
                 for (var i = 0; i < serviceDescription.Replicas; i++)
                 {
-                    var ports = new List<(int, int?, int, string?)>();
+                    var ports = new List<(int, int, int?, string?)>();
                     foreach (var binding in serviceDescription.Bindings)
                     {
                         if (binding.Port == null)
@@ -255,7 +255,7 @@ namespace Microsoft.Tye.Hosting
                             continue;
                         }
 
-                        ports.Add((service.PortMap[binding.Port.Value][i], binding.ContainerPort, binding.Port.Value, binding.Protocol));
+                        ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.ContainerPort, binding.Protocol));
                     }
 
                     dockerInfo.Tasks[i] = RunDockerContainer(ports);
@@ -265,7 +265,7 @@ namespace Microsoft.Tye.Hosting
             {
                 for (var i = 0; i < service.Description.Replicas; i++)
                 {
-                    dockerInfo.Tasks[i] = RunDockerContainer(Enumerable.Empty<(int, int?, int, string?)>());
+                    dockerInfo.Tasks[i] = RunDockerContainer(Enumerable.Empty<(int, int, int?, string?)>());
                 }
             }
 

@@ -58,27 +58,23 @@ namespace Microsoft.Tye.Hosting
                     if (service.Description.Replicas == 1)
                     {
                         // No need to proxy, the port maps to itself
-                        service.PortMap[binding.Port.Value] = new List<int> { binding.Port.Value };
+                        binding.ReplicaPorts.Add(binding.Port.Value);
                         continue;
                     }
-
-                    var ports = new List<int>();
 
                     for (var i = 0; i < service.Description.Replicas; i++)
                     {
                         // Reserve a port for each replica
                         var port = GetNextPort();
-                        ports.Add(port);
+                        binding.ReplicaPorts.Add(port);
                     }
 
                     _logger.LogInformation(
                         "Mapping external port {ExternalPort} to internal port(s) {InternalPorts} for {ServiceName} binding {BindingName}",
                         binding.Port,
-                        string.Join(", ", ports.Select(p => p.ToString())),
+                        string.Join(", ", binding.ReplicaPorts.Select(p => p.ToString())),
                         service.Description.Name,
                         binding.Name ?? binding.Protocol);
-
-                    service.PortMap[binding.Port.Value] = ports;
                 }
 
                 var httpBinding = service.Description.Bindings.FirstOrDefault(b => b.Protocol == "http");
