@@ -82,13 +82,13 @@ app {
 }
 
 .sidebar .nav-item a, .top-nav-item a {
-    color: #d7d7d7;
+    color: white;
     border-radius: 4px;
     height: 3rem;
     display: flex;
     align-items: center;
     line-height: 3rem;
-    background-color: #3371e3;
+    background-color: #3d699b;
 }
 
 .sidebar .nav-item a.active, .top-nav-item a.active {
