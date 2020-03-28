@@ -47,7 +47,7 @@ namespace Microsoft.Tye
                     await ProjectReader.ReadProjectDetailsAsync(output, project);
 
                     // We don't apply more container defaults here because we might need
-                    // to prompty for the registry name.
+                    // to promptly for the registry name.
                     project.ContainerInfo = new ContainerInfo()
                     {
                         UseMultiphaseDockerfile = false,
@@ -99,7 +99,7 @@ namespace Microsoft.Tye
                 // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
                 if (configService.Bindings.Count == 0 &&
                     service is ProjectServiceBuilder project2 &&
-                    project2.Frameworks.Any(f => f.Name == "Microsoft.AspNetCore.App"))
+                    project2.IsAspNet)
                 {
                     // HTTP is the default binding
                     service.Bindings.Add(new BindingBuilder()

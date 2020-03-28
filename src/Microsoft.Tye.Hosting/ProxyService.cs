@@ -3,10 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipelines;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -45,63 +43,21 @@ namespace Microsoft.Tye.Hosting
                                     continue;
                                 }
 
-                                static int GetNextPort()
-                                {
-                                    // Let the OS assign the next available port. Unless we cycle through all ports
-                                    // on a test run, the OS will always increment the port number when making these calls.
-                                    // This prevents races in parallel test runs where a test is already bound to
-                                    // a given port, and a new test is able to bind to the same port due to port
-                                    // reuse being enabled by default by the OS.
-                                    using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                                    socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-                                    return ((IPEndPoint)socket.LocalEndPoint).Port;
-                                }
-
                                 foreach (var binding in service.Description.Bindings)
                                 {
-                                    if (binding.Port == null && !binding.AutoAssignPort)
-                                    {
-                                        continue;
-                                    }
-
                                     if (binding.Port == null)
                                     {
-                                        binding.Port = GetNextPort();
-                                    }
-
-                                    if (binding.Protocol == "http" || (binding.Protocol == null && service.ServiceType == Model.ServiceType.Project))
-                                    {
-                                        binding.ContainerPort = 80;
-                                    }
-                                    else if (binding.Protocol == "https")
-                                    {
-                                        binding.ContainerPort = 443;
+                                        // There's no port so nothing to proxy
+                                        continue;
                                     }
 
                                     if (service.Description.Replicas == 1)
                                     {
-                                        // No need to proxy
-                                        service.PortMap[binding.Port.Value] = new List<int> { binding.Port.Value };
+                                        // No need to proxy for a single replica, we may want to do this later but right now we skip it
                                         continue;
                                     }
 
-                                    var ports = new List<int>();
-
-                                    for (var i = 0; i < service.Description.Replicas; i++)
-                                    {
-                                        // Reserve a port for each replica
-                                        var port = GetNextPort();
-                                        ports.Add(port);
-                                    }
-
-                                    _logger.LogInformation(
-                                        "Mapping external port {ExternalPort} to internal port(s) {InternalPorts} for {ServiceName} binding {BindingName}",
-                                        binding.Port,
-                                        string.Join(", ", ports.Select(p => p.ToString())),
-                                        service.Description.Name,
-                                        binding.Name ?? binding.Protocol);
-
-                                    service.PortMap[binding.Port.Value] = ports;
+                                    var ports = binding.ReplicaPorts;
 
                                     sockets.Listen(IPAddress.Loopback, binding.Port.Value, o =>
                                     {

@@ -54,7 +54,7 @@ namespace Microsoft.Tye
                     var config = KubernetesClientConfiguration.BuildDefaultConfig();
 
                     // Workaround for https://github.com/kubernetes-client/csharp/issues/372
-                    var store = KubernetesClientConfiguration.LoadKubeConfig();
+                    var store = await KubernetesClientConfiguration.LoadKubeConfigAsync();
                     var context = store.Contexts.Where(c => c.Name == config.CurrentContext).FirstOrDefault();
                     config.Namespace ??= context?.ContextDetails?.Namespace;
 
@@ -92,7 +92,7 @@ namespace Microsoft.Tye
                             $"kubectl create secret generic {secretInputBinding.Name} --from-literal=connectionstring=<value>");
                     }
 
-                    // If we get here then we should create the sceret.
+                    // If we get here then we should create the secret.
                     var text = output.Prompt($"Enter the connection string to use for service '{secretInputBinding.Service.Name}'", allowEmpty: true);
                     if (string.IsNullOrWhiteSpace(text))
                     {
@@ -136,8 +136,8 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"Writing output to '{tempFile.FilePath}'.");
 
             {
-                using var stream = File.OpenWrite(tempFile.FilePath);
-                using var writer = new StreamWriter(stream, Encoding.UTF8, bufferSize: -1, leaveOpen: true);
+                await using var stream = File.OpenWrite(tempFile.FilePath);
+                await using var writer = new StreamWriter(stream, Encoding.UTF8, bufferSize: -1, leaveOpen: true);
                 var yamlStream = new YamlStream(yaml.Select(y => y.Yaml));
                 yamlStream.Save(writer, assignAnchors: false);
             }

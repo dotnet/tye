@@ -41,7 +41,7 @@ namespace Microsoft.Tye
         public string Name { get; }
         public string? Value { get; }
 
-        // Used to map the secret to a key that ASP.NET Core understandes
+        // Used to map the secret to a key that ASP.NET Core understands
         public string Filename { get; }
 
         // Used for informational purposes

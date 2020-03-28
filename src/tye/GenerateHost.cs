@@ -50,8 +50,8 @@ namespace Microsoft.Tye
             {
                 File.Delete(outputFilePath);
 
-                using var stream = File.OpenWrite(outputFilePath);
-                using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
+                await using var stream = File.OpenWrite(outputFilePath);
+                await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
 
                 await ApplicationYamlWriter.WriteAsync(output, writer, application);
             }

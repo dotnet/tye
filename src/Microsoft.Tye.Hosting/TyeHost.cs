@@ -176,6 +176,20 @@ namespace Microsoft.Tye.Hosting
                     o.FileProvider = new CompositeFileProvider(o.FileProvider, fileProvider);
                 });
 
+            builder.Services.AddCors(
+                options =>
+                {
+                    options.AddPolicy(
+                        "default",
+                        policy =>
+                        {
+                            policy
+                                .AllowAnyOrigin()
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+                        });
+                });
+
             builder.Services.AddSingleton(application);
             var app = builder.Build();
             return app;
@@ -188,6 +202,8 @@ namespace Microsoft.Tye.Hosting
             app.Listen($"http://127.0.0.1:{port}");
 
             app.UseDeveloperExceptionPage();
+
+            app.UseCors("default");
 
             app.UseStaticFiles();
 
@@ -279,6 +295,7 @@ namespace Microsoft.Tye.Hosting
             {
                 new ReplicaStateRecorder(application, logger, replicaRunners),
                 new EventPipeDiagnosticsRunner(logger, diagnosticsCollector),
+                new PortAssigner(logger),
                 new ProxyService(logger),
                 new HttpProxyService(logger)
             };

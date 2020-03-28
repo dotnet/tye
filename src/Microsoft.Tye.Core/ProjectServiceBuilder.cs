@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 
 namespace Microsoft.Tye
@@ -26,32 +25,19 @@ namespace Microsoft.Tye
 
         public FrameworkCollection Frameworks { get; } = new FrameworkCollection();
 
-        // This is always set on the ApplicationFactory codepath.
+        // These is always set on the ApplicationFactory codepath.
+        public string TargetFrameworkName { get; set; } = default!;
+        public string TargetFrameworkVersion { get; set; } = default!;
         public string TargetFramework { get; set; } = default!;
-
-        // This is always set on the ApplicationFactory codepath.
         public string[] TargetFrameworks { get; set; } = default!;
-
-        // This is always set on the ApplicationFactory codepath.
         public string Version { get; set; } = default!;
-
-        // This is always set on the ApplicationFactory codepath.
         public string TargetPath { get; set; } = default!;
-
-        // This is always set on the ApplicationFactory codepath.
         public string RunCommand { get; set; } = default!;
-
-        // This is always set on the ApplicationFactory codepath.
         public string RunArguments { get; set; } = default!;
-
-        // This is always set on the ApplicationFactory codepath.
         public string AssemblyName { get; set; } = default!;
-
-        // This is always set on the ApplicationFactory codepath.
         public string PublishDir { get; set; } = default!;
-
-        // This is always set on the ApplicationFactory codepath.
         public string IntermediateOutputPath { get; set; } = default!;
+        public bool IsAspNet { get; set; }
 
         // Data used for building containers
         public ContainerInfo? ContainerInfo { get; set; }

@@ -12,7 +12,7 @@ namespace Microsoft.Tye.ConfigModel
 {
     // General design note re: nullability - we use [Required] to validate for non-null
     // so we use = default! to reflect that. Code that creates a ConfigApplication should
-    // validate it before deferencing the properties.
+    // validate it before dereferencing the properties.
     public class ConfigApplication
     {
         // This gets set by all of the code paths that read the application

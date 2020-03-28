@@ -124,7 +124,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
             // Create the logger factory for this replica
             using var loggerFactory = LoggerFactory.Create(builder => ConfigureLogging(serviceName, replicaName, builder));
 
-            var processor = new SimpleSpanProcessor(CreateSpanExporter(serviceName, replicaName));
+            var processor = new SimpleSpanProcessor(CreateSpanExporter(serviceName));
 
             var providers = new List<EventPipeProvider>()
             {
@@ -252,7 +252,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
                 {
                     var source = new EventPipeEventSource(session.EventStream);
 
-                    // Distribued Tracing
+                    // Distributed Tracing
                     HandleDistributedTracingEvents(source, processor);
 
                     // Metrics
@@ -778,7 +778,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
         }
 
 
-        private SpanExporter CreateSpanExporter(string serviceName, string replicaName)
+        private SpanExporter CreateSpanExporter(string serviceName)
         {
             if (string.Equals(_options.DistributedTraceProvider.Key, "zipkin", StringComparison.OrdinalIgnoreCase) &&
                 !string.IsNullOrEmpty(_options.DistributedTraceProvider.Value))
@@ -851,7 +851,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
         internal sealed class LoggingEventSource
         {
             /// <summary>
-            /// This is public from an EventSource consumer point of view, but since these defintions
+            /// This is public from an EventSource consumer point of view, but since these definitions
             /// are not needed outside this class
             /// </summary>
             public static class Keywords
