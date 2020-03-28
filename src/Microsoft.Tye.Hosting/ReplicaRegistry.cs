@@ -3,56 +3,52 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.Tye.Hosting.Model;
 using Microsoft.Extensions.Logging;
-using System.Threading;
-using System.Collections.Concurrent;
 
 namespace Microsoft.Tye.Hosting
 {
     public class ReplicaRegistry : IDisposable
     {
         private readonly ILogger _logger;
-        private readonly ConcurrentDictionary<string, SemaphoreSlim> _fileWriteSemaphores;
+        private readonly ConcurrentDictionary<string, object> _fileWriteLocks;
         private readonly string _tyeFolderPath;
 
-        public ReplicaRegistry(Model.Application application, ILogger logger)
+        public ReplicaRegistry(string directory, ILogger logger)
         {
             _logger = logger;
-            _fileWriteSemaphores = new ConcurrentDictionary<string, SemaphoreSlim>();
-            _tyeFolderPath = Path.Join(Path.GetDirectoryName(application.Source), ".tye");
-
-            if (!Directory.Exists(_tyeFolderPath))
-            {
-                Directory.CreateDirectory(_tyeFolderPath);
-            }
+            _fileWriteLocks = new ConcurrentDictionary<string, object>();
+            _tyeFolderPath = Path.Join(directory, ".tye");
         }
 
         public bool WriteReplicaEvent(string storeName, IDictionary<string, string> replicaRecord)
         {
+            if (!Directory.Exists(_tyeFolderPath))
+            {
+                Directory.CreateDirectory(_tyeFolderPath);
+            }
+
             var filePath = Path.Join(_tyeFolderPath, GetStoreFile(storeName));
             var contents = JsonSerializer.Serialize(replicaRecord, new JsonSerializerOptions { WriteIndented = false });
-            var semaphore = GetSempahoreForStore(storeName);
+            var lockObj = GetLockForStore(storeName);
 
-            semaphore.Wait();
-            try
+            lock (lockObj)
             {
-                File.AppendAllText(filePath, contents + Environment.NewLine);
-                return true;
-            }
-            catch (DirectoryNotFoundException ex)
-            {
-                _logger.LogWarning(ex, "tye folder is not found. file: {file}", filePath);
-                return false;
-            }
-            finally
-            {
-                semaphore.Release();
+                try
+                {
+                    File.AppendAllText(filePath, contents + Environment.NewLine);
+                    return true;
+                }
+                catch (DirectoryNotFoundException ex)
+                {
+                    _logger.LogWarning(ex, "tye folder is not found. file: {file}", filePath);
+                    return false;
+                }
             }
         }
 
@@ -75,7 +71,7 @@ namespace Microsoft.Tye.Hosting
         public async ValueTask<IList<IDictionary<string, string>>> GetEvents(string storeName)
         {
             var filePath = Path.Join(_tyeFolderPath, GetStoreFile(storeName));
-            
+
             if (!File.Exists(filePath))
             {
                 return Array.Empty<IDictionary<string, string>>();
@@ -89,9 +85,9 @@ namespace Microsoft.Tye.Hosting
                 .ToList();
         }
 
-        private SemaphoreSlim GetSempahoreForStore(string storeName)
+        private object GetLockForStore(string storeName)
         {
-            return _fileWriteSemaphores.GetOrAdd(storeName, _ => new SemaphoreSlim(1, 1));
+            return _fileWriteLocks.GetOrAdd(storeName, _ => new object());
         }
 
         private string GetStoreFile(string storeName) => $"{storeName}_store";

@@ -21,13 +21,13 @@ namespace E2ETest
 {
     public class TyePurgeTests
     {
-        private readonly ITestOutputHelper output;
-        private readonly TestOutputLogEventSink sink;
+        private readonly ITestOutputHelper _output;
+        private readonly TestOutputLogEventSink _sink;
 
         public TyePurgeTests(ITestOutputHelper output)
         {
-            this.output = output;
-            sink = new TestOutputLogEventSink(output);
+            _output = output;
+            _sink = new TestOutputLogEventSink(output);
         }
 
         [Fact]
@@ -39,11 +39,11 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
             var tyeDir = new DirectoryInfo(Path.Combine(tempDirectory.DirectoryPath, ".tye"));
-            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
             var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
             {
-                Sink = sink,
+                Sink = _sink,
             };
 
             try
@@ -84,11 +84,11 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
             var tyeDir = new DirectoryInfo(Path.Combine(tempDirectory.DirectoryPath, ".tye"));
-            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
             var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
             {
-                Sink = sink,
+                Sink = _sink,
             };
 
             try
@@ -101,7 +101,7 @@ namespace E2ETest
 
                     Assert.True(Directory.Exists(tyeDir.FullName));
                     Assert.Subset(new HashSet<int>(GetAllPids()), new HashSet<int>(pids));
-                    Assert.Subset(new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(output)),
+                    Assert.Subset(new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(_output)),
                         new HashSet<string>(containers));
 
                     await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host,
@@ -110,7 +110,7 @@ namespace E2ETest
                     var runningPids = new HashSet<int>(GetAllPids());
                     Assert.True(pids.All(pid => !runningPids.Contains(pid)));
                     var runningContainers =
-                        new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(output));
+                        new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(_output));
                     Assert.True(containers.All(c => !runningContainers.Contains(c)));
                 }
                 finally
