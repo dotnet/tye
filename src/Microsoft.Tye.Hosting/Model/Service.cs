@@ -17,12 +17,15 @@ namespace Microsoft.Tye.Hosting.Model
 
             Logs.Subscribe(entry =>
             {
-                if (CachedLogs.Count > 5000)
+                lock (CachedLogs)
                 {
-                    CachedLogs.Dequeue();
-                }
+                    if (CachedLogs.Count > 5000)
+                    {
+                        CachedLogs.Dequeue();
+                    }
 
-                CachedLogs.Enqueue(entry);
+                    CachedLogs.Enqueue(entry);
+                }
             });
         }
 
