@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Tye;
 using Microsoft.Tye.ConfigModel;
 using Microsoft.Tye.Hosting;
@@ -40,27 +41,36 @@ namespace E2ETest
             var tyeDir = new DirectoryInfo(Path.Combine(tempDirectory.DirectoryPath, ".tye"));
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
-            using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
+            var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
             {
                 Sink = sink,
             };
 
-            await TestHelpers.StartHostAndWaitForReplicasToStart(host);
             try
             {
-                var pids = GetAllAppPids(host.Application);
+                await TestHelpers.StartHostAndWaitForReplicasToStart(host);
+                try
+                {
+                    var pids = GetAllAppPids(host.Application);
 
-                Assert.True(Directory.Exists(tyeDir.FullName));
-                Assert.Subset(new HashSet<int>(GetAllPids()), new HashSet<int>(pids));
+                    Assert.True(Directory.Exists(tyeDir.FullName));
+                    Assert.Subset(new HashSet<int>(GetAllPids()), new HashSet<int>(pids));
 
-                await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host, GetAllReplicasNames(host.Application), tyeDir.FullName);
+                    await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host,
+                        GetAllReplicasNames(host.Application), tyeDir.FullName);
 
-                var runningPids = new HashSet<int>(GetAllPids());
-                Assert.True(pids.All(pid => !runningPids.Contains(pid)));
+                    var runningPids = new HashSet<int>(GetAllPids());
+                    Assert.True(pids.All(pid => !runningPids.Contains(pid)));
+                }
+                finally
+                {
+                    await host.StopAsync();
+                }
             }
             finally
             {
-                await host.StopAsync();
+                host.Dispose();
+                Assert.False(Directory.Exists(tyeDir.FullName));
             }
         }
 
@@ -76,31 +86,42 @@ namespace E2ETest
             var tyeDir = new DirectoryInfo(Path.Combine(tempDirectory.DirectoryPath, ".tye"));
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
-            using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
+            var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
             {
                 Sink = sink,
             };
 
-            await TestHelpers.StartHostAndWaitForReplicasToStart(host);
             try
             {
-                var pids = GetAllAppPids(host.Application);
-                var containers = GetAllContainerIds(host.Application);
+                await TestHelpers.StartHostAndWaitForReplicasToStart(host);
+                try
+                {
+                    var pids = GetAllAppPids(host.Application);
+                    var containers = GetAllContainerIds(host.Application);
 
-                Assert.True(Directory.Exists(tyeDir.FullName));
-                Assert.Subset(new HashSet<int>(GetAllPids()), new HashSet<int>(pids));
-                Assert.Subset(new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(output)), new HashSet<string>(containers));
+                    Assert.True(Directory.Exists(tyeDir.FullName));
+                    Assert.Subset(new HashSet<int>(GetAllPids()), new HashSet<int>(pids));
+                    Assert.Subset(new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(output)),
+                        new HashSet<string>(containers));
 
-                await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host, GetAllReplicasNames(host.Application), tyeDir.FullName);
+                    await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host,
+                        GetAllReplicasNames(host.Application), tyeDir.FullName);
 
-                var runningPids = new HashSet<int>(GetAllPids());
-                Assert.True(pids.All(pid => !runningPids.Contains(pid)));
-                var runningContainers = new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(output));
-                Assert.True(containers.All(c => !runningContainers.Contains(c)));
+                    var runningPids = new HashSet<int>(GetAllPids());
+                    Assert.True(pids.All(pid => !runningPids.Contains(pid)));
+                    var runningContainers =
+                        new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(output));
+                    Assert.True(containers.All(c => !runningContainers.Contains(c)));
+                }
+                finally
+                {
+                    await host.StopAsync();
+                }
             }
             finally
             {
-                await host.StopAsync();
+                host.Dispose();
+                Assert.False(Directory.Exists(tyeDir.FullName));
             }
         }
 

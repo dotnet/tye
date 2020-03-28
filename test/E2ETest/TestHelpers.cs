@@ -125,6 +125,17 @@ namespace E2ETest
 
         public static async Task PurgeHostAndWaitForGivenReplicasToStop(TyeHost host, string[] replicas, string tyeDir)
         {
+            static async Task Purge(TyeHost host)
+            {
+                var logger = host.DashboardWebApplication!.Logger;
+                var replicaRegistry = new ReplicaRegistry(host.Application, logger);
+                var processRunner = new ProcessRunner(logger, replicaRegistry, new ProcessRunnerOptions());
+                var dockerRunner = new DockerRunner(logger, replicaRegistry);
+
+                await processRunner.StartAsync(new Application(new FileInfo(host.Application.Source), new Dictionary<string, Service>()));
+                await dockerRunner.StartAsync(new Application(new FileInfo(host.Application.Source), new Dictionary<string, Service>()));
+            }
+
             var stoppedTask = new TaskCompletionSource<bool>();
             var remaining = replicas.Length;
 
@@ -142,9 +153,9 @@ namespace E2ETest
             }
 
             var servicesStateObserver = host.Application.Services.Select(srv => srv.Value.ReplicaEvents.Subscribe(OnReplicaChange)).ToList();
-            await host.PurgeAsync();
 
-            Assert.False(Directory.Exists(tyeDir));
+            // We purge existing replicas by restarting the host which will initiate the purging process
+            await Purge(host);
 
             using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);
             try

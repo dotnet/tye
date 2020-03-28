@@ -13,18 +13,25 @@ using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
 {
-    public class DockerRunner : IApplicationProcessor, IReplicaInstantiator
+    public class DockerRunner : IApplicationProcessor
     {
+        private const string DOCKER_REPLICA_STORE = "docker";
+
         private static readonly TimeSpan DockerStopTimeout = TimeSpan.FromSeconds(30);
         private readonly ILogger _logger;
 
-        public DockerRunner(ILogger logger)
+        private readonly ReplicaRegistry _replicaRegistry;
+
+        public DockerRunner(ILogger logger, ReplicaRegistry replicaRegistry)
         {
             _logger = logger;
+            _replicaRegistry = replicaRegistry;
         }
 
-        public Task StartAsync(Application application)
+        public async Task StartAsync(Application application)
         {
+            await PurgeFromPreviousRun();
+
             var tasks = new Task[application.Services.Count];
             var index = 0;
             foreach (var s in application.Services)
@@ -32,7 +39,7 @@ namespace Microsoft.Tye.Hosting
                 tasks[index++] = s.Value.Description.RunInfo is DockerRunInfo docker ? StartContainerAsync(application, s.Value, docker) : Task.CompletedTask;
             }
 
-            return Task.WhenAll(tasks);
+            await Task.WhenAll(tasks);
         }
 
         public Task StopAsync(Application application)
@@ -157,6 +164,7 @@ namespace Microsoft.Tye.Hosting
 
                 status.DockerCommand = command;
 
+                WriteReplicaToStore(replica);
                 var result = await ProcessUtil.RunAsync(
                     "docker",
                     command,
@@ -291,6 +299,27 @@ namespace Microsoft.Tye.Hosting
             service.Items[typeof(DockerInformation)] = dockerInfo;
         }
 
+        private async Task PurgeFromPreviousRun()
+        {
+            var dockerReplicas = await _replicaRegistry.GetEvents(DOCKER_REPLICA_STORE);
+            foreach (var replica in dockerReplicas)
+            {
+                var container = replica["container"];
+                await ProcessUtil.RunAsync("docker", $"rm -f {container}", throwOnError: false);
+                _logger.LogInformation("removed contaienr {container} from previous run", container);
+            }
+
+            _replicaRegistry.DeleteStore(DOCKER_REPLICA_STORE);
+        }
+
+        private void WriteReplicaToStore(string container)
+        {
+            _replicaRegistry.WriteReplicaEvent(DOCKER_REPLICA_STORE, new Dictionary<string, string>()
+            {
+                ["container"] = container
+            });
+        }
+
         private static void PrintStdOutAndErr(Service service, string replica, ProcessResult result)
         {
             if (result.ExitCode != 0)
@@ -339,31 +368,6 @@ namespace Microsoft.Tye.Hosting
             return !string.IsNullOrEmpty(appData)
                 ? Path.Combine(root, "Microsoft", "UserSecrets")
                 : Path.Combine(root, ".microsoft", "usersecrets");
-        }
-
-        public async Task HandleStaleReplica(IDictionary<string, string?> replicaRecord)
-        {
-            var container = replicaRecord["id"];
-
-            if (!string.IsNullOrEmpty(container))
-            {
-                await ProcessUtil.RunAsync("docker", $"rm -f {container}", throwOnError: false);
-                _logger.LogInformation("removed container {container} of service {service} from previous run", container, replicaRecord["serviceName"]);
-            }
-            else
-            {
-                _logger.LogWarning("unable to get container id from previous run events log");
-            }
-        }
-
-        public IDictionary<string, string?> SerializeReplica(ReplicaEvent replicaEvent)
-        {
-            return new Dictionary<string, string?>()
-            {
-                ["state"] = replicaEvent.State.ToString(),
-                ["serviceName"] = replicaEvent.Replica.Service.Description.Name,
-                ["id"] = replicaEvent.Replica.Name
-            };
         }
 
         private class DockerInformation

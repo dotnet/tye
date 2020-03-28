@@ -37,6 +37,8 @@ namespace Microsoft.Tye.Hosting
         private readonly string[] _args;
         private readonly string[] _servicesToDebug;
 
+        private ReplicaRegistry? _replicaRegistry;
+
         public TyeHost(Application application, string[] args)
             : this(application, args, new string[0])
         {
@@ -67,25 +69,6 @@ namespace Microsoft.Tye.Hosting
             await StopAsync();
         }
 
-        public async Task PurgeAsync()
-        {
-            var app = DashboardWebApplication ?? BuildWebApplication(_application, _args, Sink);
-            try
-            {
-                var runners = CreateRunners(_application, _args, Array.Empty<string>(), app.Logger, app.Configuration);
-
-                using var replicaRegistry = new ReplicaRegistry(_application, app.Logger, runners);
-                await replicaRegistry.Delete();
-            }
-            finally
-            {
-                if (app != DashboardWebApplication)
-                {
-                    app.Dispose();
-                }
-            }
-        }
-
         public async Task<WebApplication> StartAsync()
         {
             var app = BuildWebApplication(_application, _args, Sink);
@@ -100,7 +83,9 @@ namespace Microsoft.Tye.Hosting
 
             var configuration = app.Configuration;
 
-            _processor = CreateApplicationProcessor(_application, _args, _servicesToDebug, _logger, configuration);
+            _replicaRegistry = new ReplicaRegistry(_application, _logger);
+
+            _processor = CreateApplicationProcessor(_replicaRegistry, _args, _servicesToDebug, _logger, configuration);
 
             await app.StartAsync();
 
@@ -281,7 +266,7 @@ namespace Microsoft.Tye.Hosting
             return false;
         }
 
-        private static AggregateApplicationProcessor CreateApplicationProcessor(Application application, string[] args, string[] servicesToDebug, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
+        private static AggregateApplicationProcessor CreateApplicationProcessor(ReplicaRegistry replicaRegistry, string[] args, string[] servicesToDebug, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
         {
             var diagnosticOptions = DiagnosticOptions.FromConfiguration(configuration);
             var diagnosticsCollector = new DiagnosticsCollector(logger, diagnosticOptions);
@@ -289,43 +274,28 @@ namespace Microsoft.Tye.Hosting
             // Print out what providers were selected and their values
             diagnosticOptions.DumpDiagnostics(logger);
 
-            var replicaRunners = CreateRunners(application, args, servicesToDebug, logger, configuration);
-
             var processors = new List<IApplicationProcessor>
             {
-                new ReplicaStateRecorder(application, logger, replicaRunners),
                 new EventPipeDiagnosticsRunner(logger, diagnosticsCollector),
                 new PortAssigner(logger),
                 new ProxyService(logger),
-                new HttpProxyService(logger)
+                new HttpProxyService(logger),
+                new DockerRunner(logger, replicaRegistry),
+                new ProcessRunner(logger, replicaRegistry, ProcessRunnerOptions.FromArgs(args, servicesToDebug))
             };
-
-            processors.AddRange(replicaRunners.Values.Distinct());
 
             // If the docker command is specified then transform the ProjectRunInfo into DockerRunInfo
             if (args.Contains("--docker"))
             {
-                processors.Insert(1, new TransformProjectsIntoContainers(logger));
+                processors.Insert(0, new TransformProjectsIntoContainers(logger));
             }
 
             return new AggregateApplicationProcessor(processors);
         }
 
-        private static Dictionary<ServiceType, IReplicaInstantiator> CreateRunners(Application application, string[] args, string[] servicesToDebug, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
-        {
-            var dockerRunner = new DockerRunner(logger);
-            var processRunner = new ProcessRunner(logger, ProcessRunnerOptions.FromArgs(args, servicesToDebug));
-
-            return new Dictionary<ServiceType, IReplicaInstantiator>()
-            {
-                [ServiceType.Container] = dockerRunner,
-                [ServiceType.Executable] = processRunner,
-                [ServiceType.Project] = processRunner
-            };
-        }
-
         public void Dispose()
         {
+            _replicaRegistry?.Dispose();
             DashboardWebApplication?.Dispose();
         }
     }

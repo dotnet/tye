@@ -10,142 +10,95 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Tye.Hosting.Model;
 using Microsoft.Extensions.Logging;
+using System.Threading;
+using System.Collections.Concurrent;
 
 namespace Microsoft.Tye.Hosting
 {
     public class ReplicaRegistry : IDisposable
     {
-        private readonly IDictionary<ServiceType, IReplicaInstantiator> _replicaInstantiators;
-        private readonly StateStore _store;
+        private readonly ILogger _logger;
+        private readonly ConcurrentDictionary<string, SemaphoreSlim> _fileWriteSemaphores;
+        private readonly string _tyeFolderPath;
 
-        public ReplicaRegistry(Model.Application application, ILogger logger, IDictionary<ServiceType, IReplicaInstantiator> replicaInstantiators)
+        public ReplicaRegistry(Model.Application application, ILogger logger)
         {
-            _replicaInstantiators = replicaInstantiators;
-            _store = new StateStore(application, logger);
-        }
+            _logger = logger;
+            _fileWriteSemaphores = new ConcurrentDictionary<string, SemaphoreSlim>();
+            _tyeFolderPath = Path.Join(Path.GetDirectoryName(application.Source), ".tye");
 
-        public async Task Reset()
-        {
-            await PurgeAll();
-            _store.Reset(delete: true, create: true);
-        }
-
-        public async Task Delete()
-        {
-            await PurgeAll();
-            _store.Reset(delete: true, create: false);
-        }
-
-        public void WriteReplicaEvent(ReplicaEvent replicaEvent)
-        {
-            var serviceType = replicaEvent.Replica.Service.ServiceType;
-            if (_replicaInstantiators.TryGetValue(serviceType, out var instantiator))
+            if (!Directory.Exists(_tyeFolderPath))
             {
-                var serialized = instantiator.SerializeReplica(replicaEvent);
-                _store.WriteEvent(new StoreEvent
-                {
-                    ServiceType = serviceType,
-                    State = replicaEvent.State,
-                    SerializedEvent = serialized
-                });
+                Directory.CreateDirectory(_tyeFolderPath);
             }
         }
 
-        private async Task PurgeAll()
+        public bool WriteReplicaEvent(string storeName, IDictionary<string, string> replicaRecord)
         {
-            var events = await _store.GetEvents();
-            var tasks = new List<Task>(events.Count);
+            var filePath = Path.Join(_tyeFolderPath, GetStoreFile(storeName));
+            var contents = JsonSerializer.Serialize(replicaRecord, new JsonSerializerOptions { WriteIndented = false });
+            var semaphore = GetSempahoreForStore(storeName);
 
-            foreach (var @event in events)
+            semaphore.Wait();
+            try
             {
-                if (_replicaInstantiators.TryGetValue(@event.ServiceType, out var instantiator))
-                {
-                    var replicaRecord = @event.SerializedEvent;
-                    tasks.Add(instantiator.HandleStaleReplica(replicaRecord));
-                }
+                File.AppendAllText(filePath, contents + Environment.NewLine);
+                return true;
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                _logger.LogWarning(ex, "tye folder is not found. file: {file}", filePath);
+                return false;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
+        public bool DeleteStore(string storeName)
+        {
+            var filePath = Path.Join(_tyeFolderPath, GetStoreFile(storeName));
+
+            try
+            {
+                File.Delete(storeName);
+                return true;
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                _logger.LogWarning(ex, "tye folder is not found. file: {file}", filePath);
+                return false;
+            }
+        }
+
+        public async ValueTask<IList<IDictionary<string, string>>> GetEvents(string storeName)
+        {
+            var filePath = Path.Join(_tyeFolderPath, GetStoreFile(storeName));
+            
+            if (!File.Exists(filePath))
+            {
+                return Array.Empty<IDictionary<string, string>>();
             }
 
-            await Task.WhenAll(tasks);
+            var contents = await File.ReadAllTextAsync(filePath);
+            var events = contents.Split(Environment.NewLine);
+
+            return events.Where(e => !string.IsNullOrEmpty(e.Trim()))
+                .Select(e => JsonSerializer.Deserialize<IDictionary<string, string>>(e))
+                .ToList();
         }
+
+        private SemaphoreSlim GetSempahoreForStore(string storeName)
+        {
+            return _fileWriteSemaphores.GetOrAdd(storeName, _ => new SemaphoreSlim(1, 1));
+        }
+
+        private string GetStoreFile(string storeName) => $"{storeName}_store";
 
         public void Dispose()
         {
-            _store.Dispose();
-        }
-
-        private struct StoreEvent
-        {
-            public ServiceType ServiceType { get; set; }
-            public ReplicaState State { get; set; }
-            public IDictionary<string, string?> SerializedEvent { get; set; }
-        }
-
-        private class StateStore : IDisposable
-        {
-            //TOOD: Consider Sqlite...
-
-            private ILogger _logger;
-
-            private string _tyeFolderPath;
-            private string _eventsFile;
-
-            public StateStore(Model.Application application, ILogger logger)
-            {
-                _logger = logger;
-                _tyeFolderPath = Path.Join(Path.GetDirectoryName(application.Source), ".tye");
-                Reset(delete: false, create: true);
-
-                _eventsFile = Path.Join(_tyeFolderPath, "events");
-            }
-
-            public bool WriteEvent(StoreEvent @event)
-            {
-                try
-                {
-                    var contents = JsonSerializer.Serialize(@event, options: new JsonSerializerOptions { WriteIndented = false });
-                    File.AppendAllText(_eventsFile, contents + Environment.NewLine);
-
-                    return true;
-                }
-                catch (DirectoryNotFoundException ex)
-                {
-                    _logger.LogWarning(ex, "tye folder is not found. file: {file}", _eventsFile);
-                    return false;
-                }
-            }
-
-            public async ValueTask<IList<StoreEvent>> GetEvents()
-            {
-                if (!File.Exists(_eventsFile))
-                {
-                    return Array.Empty<StoreEvent>();
-                }
-
-                var contents = await File.ReadAllTextAsync(_eventsFile);
-                var events = contents.Split(Environment.NewLine);
-
-                return events.Where(e => !string.IsNullOrEmpty(e.Trim()))
-                    .Select(e => JsonSerializer.Deserialize<StoreEvent>(e))
-                    .ToList();
-            }
-
-            public void Reset(bool delete, bool create)
-            {
-                if (delete && Directory.Exists(_tyeFolderPath))
-                {
-                    Directory.Delete(_tyeFolderPath, true);
-                }
-
-                if (create)
-                {
-                    Directory.CreateDirectory(_tyeFolderPath);
-                }
-            }
-
-            public void Dispose()
-            {
-                Reset(delete: true, create: false);
-            }
+            Directory.Delete(_tyeFolderPath, true);
         }
     }
 }
