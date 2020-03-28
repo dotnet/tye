@@ -17,7 +17,7 @@ namespace Microsoft.Tye.Hosting
 {
     public class ProcessRunner : IApplicationProcessor
     {
-        private const string PROCESS_REPLICA_STORE = "process";
+        private const string ProcessReplicaStore = "process";
 
         private readonly ILogger _logger;
         private readonly ProcessRunnerOptions _options;
@@ -309,7 +309,7 @@ namespace Microsoft.Tye.Hosting
 
         private async Task PurgeFromPreviousRun()
         {
-            var processReplicas = await _replicaRegistry.GetEvents(PROCESS_REPLICA_STORE);
+            var processReplicas = await _replicaRegistry.GetEvents(ProcessReplicaStore);
             foreach (var replica in processReplicas)
             {
                 if (int.TryParse(replica["pid"], out var pid))
@@ -319,12 +319,12 @@ namespace Microsoft.Tye.Hosting
                 }
             }
 
-            _replicaRegistry.DeleteStore(PROCESS_REPLICA_STORE);
+            _replicaRegistry.DeleteStore(ProcessReplicaStore);
         }
 
         private void WriteReplicaToStore(string pid)
         {
-            _replicaRegistry.WriteReplicaEvent(PROCESS_REPLICA_STORE, new Dictionary<string, string>()
+            _replicaRegistry.WriteReplicaEvent(ProcessReplicaStore, new Dictionary<string, string>()
             {
                 ["pid"] = pid
             });

@@ -83,7 +83,7 @@ namespace Microsoft.Tye.Hosting
 
             var configuration = app.Configuration;
 
-            _replicaRegistry = new ReplicaRegistry(_application, _logger);
+            _replicaRegistry = new ReplicaRegistry(_application.ContextDirectory, _logger);
 
             _processor = CreateApplicationProcessor(_replicaRegistry, _args, _servicesToDebug, _logger, configuration);
 

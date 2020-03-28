@@ -22,14 +22,14 @@ namespace E2ETest
 {
     public class TyeRunTests
     {
-        private readonly ITestOutputHelper output;
-        private readonly TestOutputLogEventSink sink;
+        private readonly ITestOutputHelper _output;
+        private readonly TestOutputLogEventSink _sink;
         private readonly JsonSerializerOptions _options;
 
         public TyeRunTests(ITestOutputHelper output)
         {
-            this.output = output;
-            sink = new TestOutputLogEventSink(output);
+            _output = output;
+            _sink = new TestOutputLogEventSink(output);
 
             _options = new JsonSerializerOptions()
             {
@@ -49,11 +49,11 @@ namespace E2ETest
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "test-project.csproj"));
-            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
             using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
             {
-                Sink = sink,
+                Sink = _sink,
             };
 
             await host.StartAsync();
@@ -91,8 +91,8 @@ namespace E2ETest
                     var response = await client.SendAsync(request);
                     var text = await response.Content.ReadAsStringAsync();
 
-                    output.WriteLine($"Logs for service: {service.Description.Name}");
-                    output.WriteLine(text);
+                    _output.WriteLine($"Logs for service: {service.Description.Name}");
+                    _output.WriteLine(text);
                 }
             }
             finally
@@ -109,11 +109,11 @@ namespace E2ETest
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
-            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
             using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
             {
-                Sink = sink,
+                Sink = _sink,
             };
 
             await host.StartAsync();
@@ -146,11 +146,11 @@ namespace E2ETest
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
-            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
             using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
             {
-                Sink = sink,
+                Sink = _sink,
             };
 
             var handler = new HttpClientHandler
@@ -198,8 +198,8 @@ namespace E2ETest
                     var response = await client.SendAsync(request);
                     var text = await response.Content.ReadAsStringAsync();
 
-                    output.WriteLine($"Logs for service: {s.Description.Name}");
-                    output.WriteLine(text);
+                    _output.WriteLine($"Logs for service: {s.Description.Name}");
+                    _output.WriteLine(text);
                 }
 
                 await host.StopAsync();
@@ -216,11 +216,11 @@ namespace E2ETest
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
-            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
             using var host = new TyeHost(application.ToHostingApplication(), new[] { "--docker" })
             {
-                Sink = sink,
+                Sink = _sink,
             };
 
             await host.StartAsync();
@@ -258,11 +258,11 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "test-project.csproj"));
 
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
-            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
             using var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
             {
-                Sink = sink,
+                Sink = _sink,
             };
 
             await host.StartAsync();
@@ -299,7 +299,7 @@ namespace E2ETest
 
                 var appResponse = await client.GetAsync(uriBackendProcess);
                 var content = await appResponse.Content.ReadAsStringAsync();
-                output.WriteLine(content);
+                _output.WriteLine(content);
                 Assert.Equal(HttpStatusCode.OK, appResponse.StatusCode);
                 if (serviceName == "frontend")
                 {
@@ -317,8 +317,8 @@ namespace E2ETest
                     var response = await client.SendAsync(request);
                     var text = await response.Content.ReadAsStringAsync();
 
-                    output.WriteLine($"Logs for service: {s.Description.Name}");
-                    output.WriteLine(text);
+                    _output.WriteLine($"Logs for service: {s.Description.Name}");
+                    _output.WriteLine(text);
                 }
             }
         }

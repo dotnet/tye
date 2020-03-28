@@ -15,7 +15,7 @@ namespace Microsoft.Tye.Hosting
 {
     public class DockerRunner : IApplicationProcessor
     {
-        private const string DOCKER_REPLICA_STORE = "docker";
+        private const string DockerReplicaStore = "docker";
 
         private static readonly TimeSpan DockerStopTimeout = TimeSpan.FromSeconds(30);
         private readonly ILogger _logger;
@@ -301,7 +301,7 @@ namespace Microsoft.Tye.Hosting
 
         private async Task PurgeFromPreviousRun()
         {
-            var dockerReplicas = await _replicaRegistry.GetEvents(DOCKER_REPLICA_STORE);
+            var dockerReplicas = await _replicaRegistry.GetEvents(DockerReplicaStore);
             foreach (var replica in dockerReplicas)
             {
                 var container = replica["container"];
@@ -309,12 +309,12 @@ namespace Microsoft.Tye.Hosting
                 _logger.LogInformation("removed contaienr {container} from previous run", container);
             }
 
-            _replicaRegistry.DeleteStore(DOCKER_REPLICA_STORE);
+            _replicaRegistry.DeleteStore(DockerReplicaStore);
         }
 
         private void WriteReplicaToStore(string container)
         {
-            _replicaRegistry.WriteReplicaEvent(DOCKER_REPLICA_STORE, new Dictionary<string, string>()
+            _replicaRegistry.WriteReplicaEvent(DockerReplicaStore, new Dictionary<string, string>()
             {
                 ["container"] = container
             });
