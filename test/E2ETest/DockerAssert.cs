@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine.Invocation;
 using System.Linq;
 using System.Text;
@@ -68,6 +69,31 @@ namespace E2ETest
 
                 builder.Clear();
             }
+
+            void OnOutput(string text)
+            {
+                builder.AppendLine(text);
+                output.WriteLine(text);
+            }
+        }
+
+        public static async Task<string[]> GetRunningContainersIdsAsync(ITestOutputHelper output)
+        {
+            var builder = new StringBuilder();
+
+            output.WriteLine($"> docker ps --format \"{{{{.ID}}}}\"");
+            var exitCode = await Process.ExecuteAsync(
+                "docker",
+                $"ps --format \"{{{{.ID}}}}\"",
+                stdOut: OnOutput,
+                stdErr: OnOutput);
+            if (exitCode != 0)
+            {
+                throw new XunitException($"Running `docker ps` failed." + Environment.NewLine + builder.ToString());
+            }
+
+            var lines = builder.ToString().Split(new[] { '\r', '\n', }, StringSplitOptions.RemoveEmptyEntries);
+            return lines;
 
             void OnOutput(string text)
             {

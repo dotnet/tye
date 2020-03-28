@@ -17,17 +17,24 @@ namespace Microsoft.Tye.Hosting
 {
     public class ProcessRunner : IApplicationProcessor
     {
+        private const string PROCESS_REPLICA_STORE = "process";
+
         private readonly ILogger _logger;
         private readonly ProcessRunnerOptions _options;
 
-        public ProcessRunner(ILogger logger, ProcessRunnerOptions options)
+        private readonly ReplicaRegistry _replicaRegistry;
+
+        public ProcessRunner(ILogger logger, ReplicaRegistry replicaRegistry, ProcessRunnerOptions options)
         {
             _logger = logger;
+            _replicaRegistry = replicaRegistry;
             _options = options;
         }
 
-        public Task StartAsync(Application application)
+        public async Task StartAsync(Application application)
         {
+            await PurgeFromPreviousRun();
+
             var tasks = new Task[application.Services.Count];
             var index = 0;
             foreach (var s in application.Services)
@@ -41,7 +48,7 @@ namespace Microsoft.Tye.Hosting
                 };
             }
 
-            return Task.WhenAll(tasks);
+            await Task.WhenAll(tasks);
         }
 
         public Task StopAsync(Application application)
@@ -205,6 +212,7 @@ namespace Microsoft.Tye.Hosting
 
                                 status.Pid = pid;
 
+                                WriteReplicaToStore(pid.ToString());
                                 service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
                             },
                             throwOnError: false,
@@ -297,6 +305,29 @@ namespace Microsoft.Tye.Hosting
             }
 
             return Task.WhenAll(tasks);
+        }
+
+        private async Task PurgeFromPreviousRun()
+        {
+            var processReplicas = await _replicaRegistry.GetEvents(PROCESS_REPLICA_STORE);
+            foreach (var replica in processReplicas)
+            {
+                if (int.TryParse(replica["pid"], out var pid))
+                {
+                    ProcessUtil.KillProcess(pid);
+                    _logger.LogInformation("removed process {pid} from previous run", pid);
+                }
+            }
+
+            _replicaRegistry.DeleteStore(PROCESS_REPLICA_STORE);
+        }
+
+        private void WriteReplicaToStore(string pid)
+        {
+            _replicaRegistry.WriteReplicaEvent(PROCESS_REPLICA_STORE, new Dictionary<string, string>()
+            {
+                ["pid"] = pid
+            });
         }
 
         private static string? GetDotnetRoot()

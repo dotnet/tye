@@ -15,16 +15,23 @@ namespace Microsoft.Tye.Hosting
 {
     public class DockerRunner : IApplicationProcessor
     {
+        private const string DOCKER_REPLICA_STORE = "docker";
+
         private static readonly TimeSpan DockerStopTimeout = TimeSpan.FromSeconds(30);
         private readonly ILogger _logger;
 
-        public DockerRunner(ILogger logger)
+        private readonly ReplicaRegistry _replicaRegistry;
+
+        public DockerRunner(ILogger logger, ReplicaRegistry replicaRegistry)
         {
             _logger = logger;
+            _replicaRegistry = replicaRegistry;
         }
 
-        public Task StartAsync(Application application)
+        public async Task StartAsync(Application application)
         {
+            await PurgeFromPreviousRun();
+
             var tasks = new Task[application.Services.Count];
             var index = 0;
             foreach (var s in application.Services)
@@ -32,7 +39,7 @@ namespace Microsoft.Tye.Hosting
                 tasks[index++] = s.Value.Description.RunInfo is DockerRunInfo docker ? StartContainerAsync(application, s.Value, docker) : Task.CompletedTask;
             }
 
-            return Task.WhenAll(tasks);
+            await Task.WhenAll(tasks);
         }
 
         public Task StopAsync(Application application)
@@ -157,6 +164,7 @@ namespace Microsoft.Tye.Hosting
 
                 status.DockerCommand = command;
 
+                WriteReplicaToStore(replica);
                 var result = await ProcessUtil.RunAsync(
                     "docker",
                     command,
@@ -199,11 +207,16 @@ namespace Microsoft.Tye.Hosting
 
                 while (!dockerInfo.StoppingTokenSource.Token.IsCancellationRequested)
                 {
-                    await ProcessUtil.RunAsync("docker", $"logs -f {containerId}",
+                    var logsRes = await ProcessUtil.RunAsync("docker", $"logs -f {containerId}",
                         outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
                         errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
                         throwOnError: false,
                         cancellationToken: dockerInfo.StoppingTokenSource.Token);
+
+                    if (logsRes.ExitCode != 0)
+                    {
+                        break;
+                    }
 
                     if (!dockerInfo.StoppingTokenSource.IsCancellationRequested)
                     {
@@ -284,6 +297,27 @@ namespace Microsoft.Tye.Hosting
             }
 
             service.Items[typeof(DockerInformation)] = dockerInfo;
+        }
+
+        private async Task PurgeFromPreviousRun()
+        {
+            var dockerReplicas = await _replicaRegistry.GetEvents(DOCKER_REPLICA_STORE);
+            foreach (var replica in dockerReplicas)
+            {
+                var container = replica["container"];
+                await ProcessUtil.RunAsync("docker", $"rm -f {container}", throwOnError: false);
+                _logger.LogInformation("removed contaienr {container} from previous run", container);
+            }
+
+            _replicaRegistry.DeleteStore(DOCKER_REPLICA_STORE);
+        }
+
+        private void WriteReplicaToStore(string container)
+        {
+            _replicaRegistry.WriteReplicaEvent(DOCKER_REPLICA_STORE, new Dictionary<string, string>()
+            {
+                ["container"] = container
+            });
         }
 
         private static void PrintStdOutAndErr(Service service, string replica, ProcessResult result)
