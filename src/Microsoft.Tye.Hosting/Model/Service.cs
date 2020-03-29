@@ -19,7 +19,7 @@ namespace Microsoft.Tye.Hosting.Model
             {
                 if (CachedLogs.Count > 5000)
                 {
-                    CachedLogs.Dequeue();
+                    CachedLogs.TryDequeue(out _);
                 }
 
                 CachedLogs.Enqueue(entry);
@@ -64,7 +64,7 @@ namespace Microsoft.Tye.Hosting.Model
 
         public Dictionary<object, object> Items { get; } = new Dictionary<object, object>();
 
-        public Queue<string> CachedLogs { get; } = new Queue<string>();
+        public ConcurrentQueue<string> CachedLogs { get; } = new ConcurrentQueue<string>();
 
         public Subject<string> Logs { get; } = new Subject<string>();
 
