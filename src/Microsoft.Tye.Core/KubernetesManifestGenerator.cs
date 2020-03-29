@@ -12,8 +12,8 @@ namespace Microsoft.Tye
     internal static class KubernetesManifestGenerator
     {
         public static ServiceOutput CreateService(
-            OutputContext output, 
-            ApplicationBuilder application, 
+            OutputContext output,
+            ApplicationBuilder application,
             ProjectServiceBuilder project,
             DeploymentManifestInfo deployment,
             ServiceManifestInfo service)
@@ -39,7 +39,7 @@ namespace Microsoft.Tye
             }
 
             var labels = new YamlMappingNode();
-            metadata.Add("labels", labels);      
+            metadata.Add("labels", labels);
             foreach (var label in service.Labels)
             {
                 labels.Add(label.Key, new YamlScalarNode(label.Value) { Style = ScalarStyle.SingleQuoted, });
@@ -89,8 +89,8 @@ namespace Microsoft.Tye
         }
 
         public static ServiceOutput CreateDeployment(
-            OutputContext output, 
-            ApplicationBuilder application, 
+            OutputContext output,
+            ApplicationBuilder application,
             ProjectServiceBuilder project,
             DeploymentManifestInfo deployment)
         {

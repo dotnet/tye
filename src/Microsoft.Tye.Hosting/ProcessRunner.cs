@@ -201,7 +201,7 @@ namespace Microsoft.Tye.Hosting
                         service.Logs.OnNext($"[{replica}]:{path} {args}");
 
                         var result = await ProcessUtil.RunAsync(
-                            path, 
+                            path,
                             args,
                             environmentVariables: environment,
                             workingDirectory: workingDirectory,

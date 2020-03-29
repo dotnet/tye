@@ -13,8 +13,8 @@ namespace Microsoft.Tye.Hosting.Model
         }
 
         public string Service { get; }
-        
-        public string? Binding { get; } 
+
+        public string? Binding { get; }
 
         public SourceKind Kind { get; set; }
 

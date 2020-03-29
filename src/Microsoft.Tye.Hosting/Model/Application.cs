@@ -60,8 +60,20 @@ namespace Microsoft.Tye.Hosting.Model
                 {
                     return binding.Port.Value.ToString();
                 }
+                else if (source.Kind == EnvironmentVariableSource.SourceKind.Host)
+                {
+                    return binding.Host ?? defaultHost;
+                }
+                else if (source.Kind == EnvironmentVariableSource.SourceKind.Url)
+                {
+                    return $"{binding.Protocol ?? "http"}://{binding.Host ?? defaultHost}" + (binding.Port.HasValue ? (":" + binding.Port) : string.Empty);
+                }
+                else if (source.Kind == EnvironmentVariableSource.SourceKind.ConnectionString && binding.ConnectionString != null)
+                {
+                    return binding.ConnectionString;
+                }
 
-                throw new InvalidOperationException("LOLNO");
+                throw new InvalidOperationException($"Unable to resolve the desired value '{source.Kind}' from binding '{source.Binding}' for service '{source.Service}'.");
             }
 
             void SetBinding(string serviceName, ServiceBinding b)
