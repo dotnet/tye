@@ -21,208 +21,229 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(source));
             }
 
-            var config = ConfigFactory.FromFile(source);
-            ValidateConfigApplication(config);
+            var queue = new Queue<ConfigApplication>();
 
-            var builder = new ApplicationBuilder(source, config.Name ?? source.Directory.Name.ToLowerInvariant());
-            if (!string.IsNullOrEmpty(config.Registry))
+            var rootConfig = ConfigFactory.FromFile(source);
+            ValidateConfigApplication(rootConfig);
+            var root = new ApplicationBuilder(source, rootConfig.Name ?? source.Directory.Name.ToLowerInvariant());
+
+            queue.Enqueue(rootConfig);
+
+            while (queue.Count > 0)
             {
-                builder.Registry = new ContainerRegistry(config.Registry);
-            }
+                var config = queue.Dequeue();
 
-            foreach (var configService in config.Services)
-            {
-                ServiceBuilder service;
-                if (!string.IsNullOrEmpty(configService.Project))
+                if (config == rootConfig && !string.IsNullOrEmpty(config.Registry))
                 {
-                    var expandedProject = Environment.ExpandEnvironmentVariables(configService.Project);
-                    var projectFile = new FileInfo(Path.Combine(builder.Source.DirectoryName, expandedProject));
-                    var project = new ProjectServiceBuilder(configService.Name, projectFile);
-                    service = project;
-
-                    project.Build = configService.Build ?? true;
-                    project.Args = configService.Args;
-                    project.Replicas = configService.Replicas ?? 1;
-
-                    await ProjectReader.ReadProjectDetailsAsync(output, project);
-
-                    // We don't apply more container defaults here because we might need
-                    // to promptly for the registry name.
-                    project.ContainerInfo = new ContainerInfo()
-                    {
-                        UseMultiphaseDockerfile = false,
-                    };
-                }
-                else if (!string.IsNullOrEmpty(configService.Image))
-                {
-                    var container = new ContainerServiceBuilder(configService.Name, configService.Image)
-                    {
-                        Args = configService.Args,
-                        Replicas = configService.Replicas ?? 1
-                    };
-                    service = container;
-                }
-                else if (!string.IsNullOrEmpty(configService.Executable))
-                {
-                    var expandedExecutable = Environment.ExpandEnvironmentVariables(configService.Executable);
-                    var workingDirectory = "";
-
-                    // Special handling of .dlls as executables (it will be executed as dotnet {dll})
-                    if (Path.GetExtension(expandedExecutable) == ".dll")
-                    {
-                        expandedExecutable = Path.GetFullPath(Path.Combine(builder.Source.Directory.FullName, expandedExecutable));
-                        workingDirectory = Path.GetDirectoryName(expandedExecutable)!;
-                    }
-
-                    var executable = new ExecutableServiceBuilder(configService.Name, expandedExecutable)
-                    {
-                        Args = configService.Args,
-                        WorkingDirectory = configService.WorkingDirectory != null ?
-                        Path.GetFullPath(Path.Combine(builder.Source.Directory.FullName, Environment.ExpandEnvironmentVariables(configService.WorkingDirectory))) :
-                        workingDirectory,
-                        Replicas = configService.Replicas ?? 1
-                    };
-                    service = executable;
-                }
-                else if (configService.External)
-                {
-                    var external = new ExternalServiceBuilder(configService.Name);
-                    service = external;
-                }
-                else
-                {
-                    throw new CommandException("Unable to determine service type.");
+                    root.Registry = new ContainerRegistry(config.Registry);
                 }
 
-                builder.Services.Add(service);
-
-                // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
-                if (configService.Bindings.Count == 0 &&
-                    service is ProjectServiceBuilder project2 &&
-                    project2.IsAspNet)
+                foreach (var configService in config.Services)
                 {
-                    // HTTP is the default binding
-                    service.Bindings.Add(new BindingBuilder()
+                    ServiceBuilder service;
+                    if (!string.IsNullOrEmpty(configService.Project))
                     {
-                        AutoAssignPort = true,
-                        Protocol = "http"
-                    });
+                        var expandedProject = Environment.ExpandEnvironmentVariables(configService.Project);
+                        var projectFile = new FileInfo(Path.Combine(config.Source.DirectoryName, expandedProject));
 
-                    service.Bindings.Add(new BindingBuilder()
-                    {
-                        Name = "https",
-                        AutoAssignPort = true,
-                        Protocol = "https"
-                    });
-                }
-                else
-                {
-                    foreach (var configBinding in configService.Bindings)
-                    {
-                        var binding = new BindingBuilder()
+                        var project = new ProjectServiceBuilder(configService.Name, projectFile);
+                        service = project;
+
+                        project.Build = configService.Build ?? true;
+                        project.Args = configService.Args;
+                        project.Replicas = configService.Replicas ?? 1;
+
+                        await ProjectReader.ReadProjectDetailsAsync(output, project);
+
+                        // We don't apply more container defaults here because we might need
+                        // to promptly for the registry name.
+                        project.ContainerInfo = new ContainerInfo()
                         {
-                            Name = configBinding.Name,
-                            AutoAssignPort = configBinding.AutoAssignPort,
-                            ConnectionString = configBinding.ConnectionString,
-                            Host = configBinding.Host,
-                            ContainerPort = configBinding.ContainerPort,
-                            Port = configBinding.Port,
-                            Protocol = configBinding.Protocol,
+                            UseMultiphaseDockerfile = false,
                         };
-
-                        // Assume HTTP for projects only (containers may be different)
-                        if (binding.ConnectionString == null && configService.Project != null)
+                    }
+                    else if (!string.IsNullOrEmpty(configService.Image))
+                    {
+                        var container = new ContainerServiceBuilder(configService.Name, configService.Image)
                         {
-                            binding.Protocol ??= "http";
+                            Args = configService.Args,
+                            Replicas = configService.Replicas ?? 1
+                        };
+                        service = container;
+                    }
+                    else if (!string.IsNullOrEmpty(configService.Executable))
+                    {
+                        var expandedExecutable = Environment.ExpandEnvironmentVariables(configService.Executable);
+                        var workingDirectory = "";
+
+                        // Special handling of .dlls as executables (it will be executed as dotnet {dll})
+                        if (Path.GetExtension(expandedExecutable) == ".dll")
+                        {
+                            expandedExecutable = Path.GetFullPath(Path.Combine(config.Source.Directory.FullName, expandedExecutable));
+                            workingDirectory = Path.GetDirectoryName(expandedExecutable)!;
                         }
 
-                        service.Bindings.Add(binding);
+                        var executable = new ExecutableServiceBuilder(configService.Name, expandedExecutable)
+                        {
+                            Args = configService.Args,
+                            WorkingDirectory = configService.WorkingDirectory != null ?
+                            Path.GetFullPath(Path.Combine(config.Source.Directory.FullName, Environment.ExpandEnvironmentVariables(configService.WorkingDirectory))) :
+                            workingDirectory,
+                            Replicas = configService.Replicas ?? 1
+                        };
+                        service = executable;
                     }
-                }
-
-                foreach (var configEnvVar in configService.Configuration)
-                {
-                    var envVar = new EnvironmentVariable(configEnvVar.Name, configEnvVar.Value);
-                    if (service is ProjectServiceBuilder project)
+                    else if (configService.External)
                     {
-                        project.EnvironmentVariables.Add(envVar);
-                    }
-                    else if (service is ContainerServiceBuilder container)
-                    {
-                        container.EnvironmentVariables.Add(envVar);
-                    }
-                    else if (service is ExecutableServiceBuilder executable)
-                    {
-                        executable.EnvironmentVariables.Add(envVar);
-                    }
-                    else if (service is ExternalServiceBuilder)
-                    {
-                        throw new CommandException("External services do not support environment variables.");
+                        var external = new ExternalServiceBuilder(configService.Name);
+                        service = external;
                     }
                     else
                     {
                         throw new CommandException("Unable to determine service type.");
                     }
-                }
 
-                foreach (var configVolume in configService.Volumes)
-                {
-                    var volume = new VolumeBuilder(configVolume.Source, configVolume.Target);
-                    if (service is ProjectServiceBuilder project)
+                    // There's no hierarchy, just add it to the list of services.
+                    root.Services.Add(service);
+
+                    // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
+                    if (configService.Bindings.Count == 0 &&
+                        service is ProjectServiceBuilder project2 &&
+                        project2.IsAspNet)
                     {
-                        project.Volumes.Add(volume);
-                    }
-                    else if (service is ContainerServiceBuilder container)
-                    {
-                        container.Volumes.Add(volume);
-                    }
-                    else if (service is ExecutableServiceBuilder executable)
-                    {
-                        throw new CommandException("Executable services do not support volumes.");
-                    }
-                    else if (service is ExternalServiceBuilder)
-                    {
-                        throw new CommandException("External services do not support volumes.");
+                        // HTTP is the default binding
+                        service.Bindings.Add(new BindingBuilder()
+                        {
+                            AutoAssignPort = true,
+                            Protocol = "http"
+                        });
+
+                        service.Bindings.Add(new BindingBuilder()
+                        {
+                            Name = "https",
+                            AutoAssignPort = true,
+                            Protocol = "https"
+                        });
                     }
                     else
                     {
-                        throw new CommandException("Unable to determine service type.");
+                        foreach (var configBinding in configService.Bindings)
+                        {
+                            var binding = new BindingBuilder()
+                            {
+                                Name = configBinding.Name,
+                                AutoAssignPort = configBinding.AutoAssignPort,
+                                ConnectionString = configBinding.ConnectionString,
+                                Host = configBinding.Host,
+                                ContainerPort = configBinding.ContainerPort,
+                                Port = configBinding.Port,
+                                Protocol = configBinding.Protocol,
+                            };
+
+                            // Assume HTTP for projects only (containers may be different)
+                            if (binding.ConnectionString == null && configService.Project != null)
+                            {
+                                binding.Protocol ??= "http";
+                            }
+
+                            service.Bindings.Add(binding);
+                        }
+                    }
+
+                    foreach (var configEnvVar in configService.Configuration)
+                    {
+                        var envVar = new EnvironmentVariable(configEnvVar.Name, configEnvVar.Value);
+                        if (service is ProjectServiceBuilder project)
+                        {
+                            project.EnvironmentVariables.Add(envVar);
+                        }
+                        else if (service is ContainerServiceBuilder container)
+                        {
+                            container.EnvironmentVariables.Add(envVar);
+                        }
+                        else if (service is ExecutableServiceBuilder executable)
+                        {
+                            executable.EnvironmentVariables.Add(envVar);
+                        }
+                        else if (service is ExternalServiceBuilder)
+                        {
+                            throw new CommandException("External services do not support environment variables.");
+                        }
+                        else
+                        {
+                            throw new CommandException("Unable to determine service type.");
+                        }
+                    }
+
+                    foreach (var configVolume in configService.Volumes)
+                    {
+                        var volume = new VolumeBuilder(configVolume.Source, configVolume.Target);
+                        if (service is ProjectServiceBuilder project)
+                        {
+                            project.Volumes.Add(volume);
+                        }
+                        else if (service is ContainerServiceBuilder container)
+                        {
+                            container.Volumes.Add(volume);
+                        }
+                        else if (service is ExecutableServiceBuilder executable)
+                        {
+                            throw new CommandException("Executable services do not support volumes.");
+                        }
+                        else if (service is ExternalServiceBuilder)
+                        {
+                            throw new CommandException("External services do not support volumes.");
+                        }
+                        else
+                        {
+                            throw new CommandException("Unable to determine service type.");
+                        }
                     }
                 }
-            }
 
-            foreach (var configIngress in config.Ingress)
-            {
-                var ingress = new IngressBuilder(configIngress.Name);
-                ingress.Replicas = configIngress.Replicas ?? 1;
-
-                builder.Ingress.Add(ingress);
-
-                foreach (var configBinding in configIngress.Bindings)
+                foreach (var configIngress in config.Ingress)
                 {
-                    var binding = new IngressBindingBuilder()
+                    var ingress = new IngressBuilder(configIngress.Name);
+                    ingress.Replicas = configIngress.Replicas ?? 1;
+
+                    root.Ingress.Add(ingress);
+
+                    foreach (var configBinding in configIngress.Bindings)
                     {
-                        AutoAssignPort = configBinding.AutoAssignPort,
-                        Name = configBinding.Name,
-                        Port = configBinding.Port,
-                        Protocol = configBinding.Protocol ?? "http",
-                    };
-                    ingress.Bindings.Add(binding);
+                        var binding = new IngressBindingBuilder()
+                        {
+                            AutoAssignPort = configBinding.AutoAssignPort,
+                            Name = configBinding.Name,
+                            Port = configBinding.Port,
+                            Protocol = configBinding.Protocol ?? "http",
+                        };
+                        ingress.Bindings.Add(binding);
+                    }
+
+                    foreach (var configRule in configIngress.Rules)
+                    {
+                        var rule = new IngressRuleBuilder()
+                        {
+                            Host = configRule.Host,
+                            Path = configRule.Path,
+                            Service = configRule.Service,
+                        };
+                        ingress.Rules.Add(rule);
+                    }
                 }
 
-                foreach (var configRule in configIngress.Rules)
+                foreach (var configDependency in config.Dependencies)
                 {
-                    var rule = new IngressRuleBuilder()
-                    {
-                        Host = configRule.Host,
-                        Path = configRule.Path,
-                        Service = configRule.Service,
-                    };
-                    ingress.Rules.Add(rule);
+                    // TODO: Validate the extension is yaml
+                    var expandedPath = Environment.ExpandEnvironmentVariables(configDependency.Path);
+                    var dependencyFile = new FileInfo(Path.Combine(config.Source.DirectoryName, expandedPath));
+                    var dependencyConfig = ConfigFactory.FromFile(dependencyFile);
+                    ValidateConfigApplication(dependencyConfig);
+                    queue.Enqueue(dependencyConfig);
                 }
             }
 
-            return builder;
+            return root;
         }
 
         private static void ValidateConfigApplication(ConfigApplication config)

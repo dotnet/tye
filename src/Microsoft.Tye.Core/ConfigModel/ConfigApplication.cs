@@ -26,5 +26,7 @@ namespace Microsoft.Tye.ConfigModel
         public List<ConfigService> Services { get; set; } = new List<ConfigService>();
 
         public List<ConfigIngress> Ingress { get; set; } = new List<ConfigIngress>();
+
+        public List<ConfigDependency> Dependencies { get; set; } = new List<ConfigDependency>();
     }
 }

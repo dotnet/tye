@@ -4,16 +4,14 @@ name: multi-project
 services:
 - name: backend
   project: backend/backend.csproj
-  bindings:
-  - port: 7000
 - name: frontend
   project: frontend/frontend.csproj
   replicas: 2
-  bindings:
-  - port: 8000
 - name: worker
   project: worker/worker.csproj
 - name: rabbit
   image: rabbitmq:3-management
   bindings:
     - port: 5672
+dependencies:
+  - path: ../single-project/tye.yaml
