@@ -1,12 +1,7 @@
-# tye application configuration file
-# read all about it at https://github.com/dotnet/tye
-name: multi-project
+name: multi-tye
 services:
 - name: backend
   project: backend/backend.csproj
-- name: frontend
-  project: frontend/frontend.csproj
-  replicas: 2
 - name: worker
   project: worker/worker.csproj
 - name: rabbit

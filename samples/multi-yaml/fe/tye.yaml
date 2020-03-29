@@ -1,0 +1,7 @@
+name: multi-tye
+services:
+- name: frontend
+  project: frontend/frontend.csproj
+  replicas: 2
+dependencies:
+- path: ../be/tye.yaml

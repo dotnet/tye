@@ -22,7 +22,7 @@ namespace Microsoft.Tye
             }
 
             var queue = new Queue<ConfigApplication>();
-
+            var visited = new HashSet<string>();
             var rootConfig = ConfigFactory.FromFile(source);
             ValidateConfigApplication(rootConfig);
             var root = new ApplicationBuilder(source, rootConfig.Name ?? source.Directory.Name.ToLowerInvariant());
@@ -32,6 +32,13 @@ namespace Microsoft.Tye
             while (queue.Count > 0)
             {
                 var config = queue.Dequeue();
+
+                if (visited.Contains(config.Source.FullName))
+                {
+                    continue;
+                }
+
+                visited.Add(config.Source.FullName);
 
                 if (config == rootConfig && !string.IsNullOrEmpty(config.Registry))
                 {
@@ -235,7 +242,7 @@ namespace Microsoft.Tye
                 foreach (var configDependency in config.Dependencies)
                 {
                     // TODO: Validate the extension is yaml
-                    var expandedPath = Environment.ExpandEnvironmentVariables(configDependency.Path);
+                    var expandedPath = Environment.ExpandEnvironmentVariables(configDependency.Path!);
                     var dependencyFile = new FileInfo(Path.Combine(config.Source.DirectoryName, expandedPath));
                     var dependencyConfig = ConfigFactory.FromFile(dependencyFile);
                     ValidateConfigApplication(dependencyConfig);
@@ -310,6 +317,19 @@ namespace Microsoft.Tye
                 {
                     throw new CommandException(
                         $"Ingress '{ingress.Name}' validation failed." + Environment.NewLine +
+                        string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
+                }
+            }
+
+            foreach (var dependency in config.Dependencies)
+            {
+                // We don't currently recurse into ingress rules or ingress bindings right now.
+                // There's nothing to validate there.
+                context = new ValidationContext(dependency);
+                if (!Validator.TryValidateObject(dependency, context, results, validateAllProperties: true))
+                {
+                    throw new CommandException(
+                        $"Dependency '{dependency.Path}' validation failed." + Environment.NewLine +
                         string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
                 }
             }

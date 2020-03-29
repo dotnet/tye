@@ -1,0 +1,6 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: multi-tye
+dependencies:
+- path: be/tye.yaml
+- path: fe/tye.yaml
