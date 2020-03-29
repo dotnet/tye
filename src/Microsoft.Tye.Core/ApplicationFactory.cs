@@ -26,6 +26,7 @@ namespace Microsoft.Tye
             var rootConfig = ConfigFactory.FromFile(source);
             ValidateConfigApplication(rootConfig);
             var root = new ApplicationBuilder(source, rootConfig.Name ?? source.Directory.Name.ToLowerInvariant());
+            root.Application ??= rootConfig.Application;
 
             queue.Enqueue(rootConfig);
 

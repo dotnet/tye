@@ -13,11 +13,14 @@ namespace Microsoft.Tye
         {
             Source = source;
             Name = name;
+            Application = name;
         }
 
         public FileInfo Source { get; set; }
 
         public string Name { get; set; }
+
+        public string? Application { get; set; }
 
         public ContainerRegistry? Registry { get; set; }
 

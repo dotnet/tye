@@ -21,6 +21,9 @@ namespace Microsoft.Tye.ConfigModel
 
         public string? Name { get; set; }
 
+        [YamlMember(Alias = "app")]
+        public string? Application { get; set; }
+
         public string? Registry { get; set; }
 
         public List<ConfigService> Services { get; set; } = new List<ConfigService>();

@@ -1,4 +1,5 @@
-name: multi-tye
+app: multi-tye # name of the bigger application
+name: backend # name of this application
 services:
 - name: backend
   project: backend/backend.csproj
