@@ -169,27 +169,9 @@ namespace Microsoft.Tye
                     }
                     else if (service is ContainerServiceBuilder container)
                     {
-                        // if the value starts with $, treat this as a secret.
-                        // TODO?: add type: secret instead of some magic $ prefix
-                        /*
-                         *   env:
-                         *     - name: POSTGRES_PASSWORD
-                         *       source: Postgres_Password
-                         *       type: secret
-                         */
-                        // then at the top service config provide the secret id                        
-                        /*
-                         * - name: postgres
-                         * - image: postgres
-                         * - secrets: <dotnet user-secrets guid>
-                         *   env:
-                         *     - name: POSTGRES_PASSWORD
-                         *       source: Postgres_Password
-                         *       type: secret
-                         */
-                        if (envVar.Value.StartsWith('$'))
-                        {                            
-                            var value = UserSecretsBuilder.GetSecretValue(configEnvVar.Value);
+                        if (configEnvVar.Value is null)
+                        {
+                            var value = UserSecretsBuilder.GetSecretValue(configEnvVar.SecretStoreId, configEnvVar.SecretName);
                             container.EnvironmentVariables.Add(new EnvironmentVariable(configEnvVar.Name, value));
                         }
                         else

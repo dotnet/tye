@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>Microsoft.Tye</RootNamespace>
-    <AssemblyName>tye</AssemblyName>
+    <AssemblyName>stye</AssemblyName>
     <PackageId>Microsoft.Tye</PackageId>
     <ToolCommandName>tye</ToolCommandName>
     <PackAsTool>true</PackAsTool>
