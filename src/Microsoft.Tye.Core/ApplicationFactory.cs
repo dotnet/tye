@@ -123,14 +123,12 @@ namespace Microsoft.Tye
                     // HTTP is the default binding
                     service.Bindings.Add(new BindingBuilder()
                     {
-                        AutoAssignPort = true,
                         Protocol = "http"
                     });
 
                     service.Bindings.Add(new BindingBuilder()
                     {
                         Name = "https",
-                        AutoAssignPort = true,
                         Protocol = "https"
                     });
                 }
@@ -141,7 +139,6 @@ namespace Microsoft.Tye
                         var binding = new BindingBuilder()
                         {
                             Name = configBinding.Name,
-                            AutoAssignPort = configBinding.AutoAssignPort,
                             ConnectionString = configBinding.ConnectionString,
                             Host = configBinding.Host,
                             ContainerPort = configBinding.ContainerPort,
@@ -224,7 +221,6 @@ namespace Microsoft.Tye
                 {
                     var binding = new IngressBindingBuilder()
                     {
-                        AutoAssignPort = configBinding.AutoAssignPort,
                         Name = configBinding.Name,
                         Port = configBinding.Port,
                         Protocol = configBinding.Protocol ?? "http",

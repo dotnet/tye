@@ -44,7 +44,6 @@ namespace Microsoft.Tye.Extensions.Dapr
                     // Listen for grpc on an auto-assigned port
                     var grpc = new BindingBuilder()
                     {
-                        AutoAssignPort = true,
                         Name = "grpc",
                         Protocol = "https",
                     };
@@ -53,7 +52,6 @@ namespace Microsoft.Tye.Extensions.Dapr
                     // Listen for http on an auto-assigned port
                     var http = new BindingBuilder()
                     {
-                        AutoAssignPort = true,
                         Name = "http",
                         Protocol = "http",
                     };
@@ -62,7 +60,6 @@ namespace Microsoft.Tye.Extensions.Dapr
                     // Listen for metrics on an auto-assigned port
                     var metrics = new BindingBuilder()
                     {
-                        AutoAssignPort = true,
                         Name = "metrics",
                         Protocol = "http",
                     };

@@ -29,7 +29,7 @@ namespace Microsoft.Tye
                     binding.Protocol = "http";
                 }
 
-                if (binding.AutoAssignPort && binding.Port == null && binding.Protocol == "http")
+                if (binding.Port == null && binding.Protocol == "http")
                 {
                     binding.Port = 80;
                 }
@@ -87,7 +87,7 @@ namespace Microsoft.Tye
                             binding.Protocol = "http";
                         }
 
-                        if (binding.AutoAssignPort && binding.Port == null && binding.Protocol == "http")
+                        if (binding.Port == null && binding.Protocol == "http")
                         {
                             binding.Port = 80;
                         }
