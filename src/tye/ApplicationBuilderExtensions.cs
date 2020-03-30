@@ -108,11 +108,10 @@ namespace Microsoft.Tye
 
                 foreach (var binding in service.Bindings)
                 {
-                    description.Bindings.Add(new Hosting.Model.ServiceBinding()
+                    description.Bindings.Add(new ServiceBinding()
                     {
                         ConnectionString = binding.ConnectionString,
                         Host = binding.Host,
-                        AutoAssignPort = binding.AutoAssignPort,
                         ContainerPort = binding.ContainerPort,
                         Name = binding.Name,
                         Port = binding.Port,
@@ -142,9 +141,8 @@ namespace Microsoft.Tye
 
                 foreach (var binding in ingress.Bindings)
                 {
-                    description.Bindings.Add(new Hosting.Model.ServiceBinding()
+                    description.Bindings.Add(new ServiceBinding()
                     {
-                        AutoAssignPort = binding.AutoAssignPort,
                         Name = binding.Name,
                         Port = binding.Port,
                         Protocol = binding.Protocol,

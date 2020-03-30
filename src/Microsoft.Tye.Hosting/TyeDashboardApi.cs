@@ -2,17 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Microsoft.Tye.Hosting.Model;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using System.Text.Json.Serialization;
-using System.Collections.Generic;
+using Microsoft.Tye.Hosting.Model;
 using Microsoft.Tye.Hosting.Model.V1;
 
 namespace Microsoft.Tye.Hosting
@@ -97,7 +97,7 @@ namespace Microsoft.Tye.Hosting
             await JsonSerializer.SerializeAsync(context.Response.Body, serviceJson, _options);
         }
 
-        private static V1Service CreateServiceJson(Model.Service service)
+        private static V1Service CreateServiceJson(Service service)
         {
             var description = service.Description;
             var bindings = description.Bindings;
@@ -110,7 +110,6 @@ namespace Microsoft.Tye.Hosting
                 {
                     Name = binding.Name,
                     ConnectionString = binding.ConnectionString,
-                    AutoAssignPort = binding.AutoAssignPort,
                     Port = binding.Port,
                     ContainerPort = binding.ContainerPort,
                     Host = binding.Host,
