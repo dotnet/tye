@@ -144,7 +144,8 @@ namespace Microsoft.Tye
         {
             try
             {
-                Process.GetProcessById(pid)?.Kill();
+                using var process = Process.GetProcessById(pid);
+                process?.Kill();
             }
             catch (ArgumentException) { }
             catch (InvalidOperationException) { }

@@ -332,8 +332,8 @@ namespace Microsoft.Tye.Hosting
 
         private static string? GetDotnetRoot()
         {
-            var process = Process.GetCurrentProcess();
-            var entryPointFilePath = process.MainModule.FileName;
+            var entryPointFilePath = GetEntryPointFilePath();
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
                 Path.GetFileNameWithoutExtension(entryPointFilePath) == "dotnet")
             {
@@ -345,6 +345,12 @@ namespace Microsoft.Tye.Hosting
             }
 
             return null;
+        }
+
+        private static string GetEntryPointFilePath()
+        {
+            using var process = Process.GetCurrentProcess();
+            return process.MainModule.FileName;
         }
 
         private class ProcessInfo
