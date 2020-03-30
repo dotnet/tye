@@ -167,7 +167,7 @@ namespace Microsoft.Tye
 
                 foreach (var configVolume in configService.Volumes)
                 {
-                    var volume = new VolumeBuilder(configVolume.Source, configVolume.Target);
+                    var volume = new VolumeBuilder(configVolume.Source, configVolume.Name, configVolume.Target);
                     if (service is ProjectServiceBuilder project)
                     {
                         project.Volumes.Add(volume);

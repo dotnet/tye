@@ -86,7 +86,7 @@ namespace Microsoft.Tye.Hosting
             if (!string.IsNullOrEmpty(userSecretStore))
             {
                 // Map the user secrets on this drive to user secrets
-                docker.VolumeMappings[userSecretStore] = "/root/.microsoft/usersecrets:ro";
+                docker.VolumeMappings.Add(new DockerVolume(source: userSecretStore, name: null, target: "/root/.microsoft/usersecrets:ro"));
             }
 
             var dockerInfo = new DockerInformation(new Task[service.Description.Replicas]);
@@ -151,10 +151,17 @@ namespace Microsoft.Tye.Hosting
                     environmentArguments += $"-e {pair.Key}={pair.Value} ";
                 }
 
-                foreach (var pair in docker.VolumeMappings)
+                foreach (var volumeMapping in docker.VolumeMappings)
                 {
-                    var sourcePath = Path.GetFullPath(Path.Combine(application.ContextDirectory, pair.Key.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)));
-                    volumes += $"-v {sourcePath}:{pair.Value} ";
+                    if (volumeMapping.Source != null)
+                    {
+                        var sourcePath = Path.GetFullPath(Path.Combine(application.ContextDirectory, volumeMapping.Source.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)));
+                        volumes += $"-v {sourcePath}:{volumeMapping.Target} ";
+                    }
+                    else if (volumeMapping.Name != null)
+                    {
+                        volumes += $"-v {volumeMapping.Name}:{volumeMapping.Target} ";
+                    }
                 }
 
                 var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {docker.Image} {docker.Args ?? ""}";

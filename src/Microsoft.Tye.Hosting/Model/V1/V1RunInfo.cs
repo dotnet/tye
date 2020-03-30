@@ -13,7 +13,7 @@ namespace Microsoft.Tye.Hosting.Model.V1
         public bool Build { get; set; }
         public string? Project { get; set; }
         public string? WorkingDirectory { get; set; }
-        public Dictionary<string, string>? VolumeMappings { get; set; }
+        public List<V1DockerVolume>? VolumeMappings { get; set; }
         public string? Image { get; set; }
         public string? Executable { get; set; }
     }

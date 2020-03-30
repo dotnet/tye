@@ -16,7 +16,7 @@ namespace Microsoft.Tye.Hosting.Model
 
         public string? WorkingDirectory { get; set; }
 
-        public Dictionary<string, string> VolumeMappings { get; } = new Dictionary<string, string>();
+        public List<DockerVolume> VolumeMappings { get; } = new List<DockerVolume>();
 
         public string? Args { get; }
 

@@ -71,13 +71,10 @@ namespace Microsoft.Tye.Hosting
                 WorkingDirectory = "/app"
             };
 
-            dockerRunInfo.VolumeMappings[project.PublishOutputPath] = "/app";
+            dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: project.PublishOutputPath, name: null, target: "/app"));
 
             // Make volume mapping works when running as a container
-            foreach (var mapping in project.VolumeMappings)
-            {
-                dockerRunInfo.VolumeMappings[mapping.Key] = mapping.Value;
-            }
+            dockerRunInfo.VolumeMappings.AddRange(project.VolumeMappings);
 
             // Change the project into a container info
             serviceDescription.RunInfo = dockerRunInfo;
