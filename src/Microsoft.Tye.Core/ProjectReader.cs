@@ -211,9 +211,9 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"IntermediateOutputPath={project.IntermediateOutputPath}");
 
             // Normalize directories to their absolute paths
-            project.IntermediateOutputPath = Path.Combine(project.ProjectFile.DirectoryName, project.IntermediateOutputPath);
-            project.TargetPath = Path.Combine(project.ProjectFile.DirectoryName, project.TargetPath);
-            project.PublishDir = Path.Combine(project.ProjectFile.DirectoryName, project.PublishDir);
+            project.IntermediateOutputPath = Path.Combine(project.ProjectFile.DirectoryName, project.IntermediateOutputPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar));
+            project.TargetPath = Path.Combine(project.ProjectFile.DirectoryName, project.TargetPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar));
+            project.PublishDir = Path.Combine(project.ProjectFile.DirectoryName, project.PublishDir.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar));
 
             var targetFramework = projectInstance.GetPropertyValue("TargetFramework");
             project.TargetFramework = targetFramework;

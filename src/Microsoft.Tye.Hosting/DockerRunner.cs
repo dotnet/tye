@@ -155,7 +155,7 @@ namespace Microsoft.Tye.Hosting
                 {
                     if (volumeMapping.Source != null)
                     {
-                        var sourcePath = Path.GetFullPath(Path.Combine(application.ContextDirectory, volumeMapping.Source.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)));
+                        var sourcePath = Path.GetFullPath(Path.Combine(application.ContextDirectory, volumeMapping.Source));
                         volumes += $"-v {sourcePath}:{volumeMapping.Target} ";
                     }
                     else if (volumeMapping.Name != null)
