@@ -44,9 +44,9 @@ namespace Microsoft.Tye.Hosting
 
                 foreach (var binding in service.Description.Bindings)
                 {
-                    // Auto assign ports if there's no connection string and no port
-                    if (binding.Port != null || binding.ConnectionString == null)
+                    if (binding.Port != null || binding.ConnectionString != null)
                     {
+                        // Skip if there is a port or if there is a connection string
                         continue;
                     }
 
