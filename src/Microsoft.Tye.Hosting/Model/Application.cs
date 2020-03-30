@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Microsoft.Tye.Hosting.Model
 {
@@ -30,8 +31,49 @@ namespace Microsoft.Tye.Hosting.Model
                 // Inject normal configuration
                 foreach (var pair in service.Description.Configuration)
                 {
-                    set(pair.Name, pair.Value);
+                    if (pair.Value is object)
+                    {
+                        set(pair.Name, pair.Value);
+                    }
+                    else if (pair.Source is object)
+                    {
+                        set(pair.Name, GetValueFromBinding(pair.Source));
+                    }
                 }
+            }
+
+            string GetValueFromBinding(EnvironmentVariableSource source)
+            {
+                if (!Services.TryGetValue(source.Service, out var service))
+                {
+                    throw new InvalidOperationException($"Could not find service '{source.Service}'.");
+                }
+
+                var binding = service.Description.Bindings.Where(b => b.Name == source.Binding).FirstOrDefault();
+                if (binding == null)
+                {
+                    throw new InvalidOperationException($"Could not find binding '{source.Binding}' for service '{source.Service}'.");
+                }
+
+                // TODO finish
+                if (source.Kind == EnvironmentVariableSource.SourceKind.Port && binding.Port != null)
+                {
+                    return binding.Port.Value.ToString();
+                }
+                else if (source.Kind == EnvironmentVariableSource.SourceKind.Host)
+                {
+                    return binding.Host ?? defaultHost;
+                }
+                else if (source.Kind == EnvironmentVariableSource.SourceKind.Url)
+                {
+                    return $"{binding.Protocol ?? "http"}://{binding.Host ?? defaultHost}" + (binding.Port.HasValue ? (":" + binding.Port) : string.Empty);
+                }
+                else if (source.Kind == EnvironmentVariableSource.SourceKind.ConnectionString && binding.ConnectionString != null)
+                {
+                    return binding.ConnectionString;
+                }
+
+                throw new InvalidOperationException($"Unable to resolve the desired value '{source.Kind}' from binding '{source.Binding}' for service '{source.Service}'.");
             }
 
             void SetBinding(string serviceName, ServiceBinding b)

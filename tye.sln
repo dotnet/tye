@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Hosting.Runtime", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tye.Core", "src\Microsoft.Tye.Core\Microsoft.Tye.Core.csproj", "{D0359C69-6EA9-4B03-9455-90E8E04F1CB0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Tye.Extensions", "src\Microsoft.Tye.Extensions\Microsoft.Tye.Extensions.csproj", "{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -101,6 +103,18 @@ Global
 		{D0359C69-6EA9-4B03-9455-90E8E04F1CB0}.Release|x64.Build.0 = Release|Any CPU
 		{D0359C69-6EA9-4B03-9455-90E8E04F1CB0}.Release|x86.ActiveCfg = Release|Any CPU
 		{D0359C69-6EA9-4B03-9455-90E8E04F1CB0}.Release|x86.Build.0 = Release|Any CPU
+		{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C}.Debug|x64.Build.0 = Debug|Any CPU
+		{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C}.Debug|x86.Build.0 = Debug|Any CPU
+		{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C}.Release|x64.ActiveCfg = Release|Any CPU
+		{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C}.Release|x64.Build.0 = Release|Any CPU
+		{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C}.Release|x86.ActiveCfg = Release|Any CPU
+		{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -112,6 +126,7 @@ Global
 		{CEBFC149-8162-4A0A-9AD4-40498B9172CD} = {8C662D59-A3CB-466F-8E85-A8E6BA5E7601}
 		{34719884-1338-4965-BA2A-F98DB03733C2} = {8C662D59-A3CB-466F-8E85-A8E6BA5E7601}
 		{D0359C69-6EA9-4B03-9455-90E8E04F1CB0} = {8C662D59-A3CB-466F-8E85-A8E6BA5E7601}
+		{AAF0CE0B-E53A-4E10-AA82-BF7200AB2B0C} = {8C662D59-A3CB-466F-8E85-A8E6BA5E7601}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D8002603-BB27-4500-BF86-274A8E72D302}

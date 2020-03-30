@@ -188,13 +188,21 @@ namespace Microsoft.Tye.Hosting
                         status.Ports = ports.Select(p => p.Port);
                     }
 
+                    // TODO clean this up.
+                    foreach (var env in environment)
+                    {
+                        args = args.Replace($"%{env.Key}%", env.Value);
+                    }
+
                     _logger.LogInformation("Launching service {ServiceName}: {ExePath} {args}", replica, path, args);
 
                     try
                     {
                         service.Logs.OnNext($"[{replica}]:{path} {args}");
 
-                        var result = await ProcessUtil.RunAsync(path, args,
+                        var result = await ProcessUtil.RunAsync(
+                            path,
+                            args,
                             environmentVariables: environment,
                             workingDirectory: workingDirectory,
                             outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),

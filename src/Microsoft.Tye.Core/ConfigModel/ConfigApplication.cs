@@ -2,9 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using YamlDotNet.Serialization;
 
@@ -22,6 +20,8 @@ namespace Microsoft.Tye.ConfigModel
         public string? Name { get; set; }
 
         public string? Registry { get; set; }
+
+        public List<Dictionary<string, object>> Extensions { get; set; } = new List<Dictionary<string, object>>();
 
         public List<ConfigService> Services { get; set; } = new List<ConfigService>();
 

@@ -1,0 +1,18 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
+#
+name: dapr
+extensions:
+- name: dapr
+services:
+- name: orders
+  project: orders/orders.csproj
+- name: products
+  project: products/products.csproj
+- name: store
+  project: store/store.csproj
+- name: redis
+  image: redis

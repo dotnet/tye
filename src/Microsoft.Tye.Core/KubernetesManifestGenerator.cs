@@ -11,23 +11,13 @@ namespace Microsoft.Tye
 {
     internal static class KubernetesManifestGenerator
     {
-        public static ServiceOutput CreateService(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
+        public static ServiceOutput CreateService(
+            OutputContext output,
+            ApplicationBuilder application,
+            ProjectServiceBuilder project,
+            DeploymentManifestInfo deployment,
+            ServiceManifestInfo service)
         {
-            if (output is null)
-            {
-                throw new ArgumentNullException(nameof(output));
-            }
-
-            if (application is null)
-            {
-                throw new ArgumentNullException(nameof(application));
-            }
-
-            if (service is null)
-            {
-                throw new ArgumentNullException(nameof(service));
-            }
-
             var root = new YamlMappingNode();
 
             root.Add("kind", "Service");
@@ -35,20 +25,38 @@ namespace Microsoft.Tye
 
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
-            metadata.Add("name", service.Name);
+            metadata.Add("name", project.Name);
+
+            if (service.Annotations.Count > 0)
+            {
+                var annotations = new YamlMappingNode();
+                metadata.Add("annotations", annotations);
+
+                foreach (var annotation in service.Annotations)
+                {
+                    annotations.Add(annotation.Key, new YamlScalarNode(annotation.Value) { Style = ScalarStyle.SingleQuoted, });
+                }
+            }
 
             var labels = new YamlMappingNode();
             metadata.Add("labels", labels);
-            labels.Add("app.kubernetes.io/name", service.Name);
-
-            labels.Add("app.kubernetes.io/part-of", application.Name);
+            foreach (var label in service.Labels)
+            {
+                labels.Add(label.Key, new YamlScalarNode(label.Value) { Style = ScalarStyle.SingleQuoted, });
+            }
 
             var spec = new YamlMappingNode();
             root.Add("spec", spec);
 
             var selector = new YamlMappingNode();
             spec.Add("selector", selector);
-            selector.Add("app.kubernetes.io/name", service.Name);
+
+            // We need the name so we can use it with selector.
+            if (!deployment.Labels.TryGetValue("app.kubernetes.io/name", out var selectorLabelValue))
+            {
+                throw new InvalidOperationException("The label 'app.kubernetes.io/name` is required.");
+            }
+            selector.Add("app.kubernetes.io/name", selectorLabelValue);
 
             spec.Add("type", "ClusterIP");
 
@@ -56,7 +64,7 @@ namespace Microsoft.Tye
             spec.Add("ports", ports);
 
             // We figure out the port based on bindings
-            foreach (var binding in service.Bindings)
+            foreach (var binding in project.Bindings)
             {
                 if (binding.Protocol == "https")
                 {
@@ -77,26 +85,15 @@ namespace Microsoft.Tye
                 }
             }
 
-            return new KubernetesServiceOutput(service.Name, new YamlDocument(root));
+            return new KubernetesServiceOutput(project.Name, new YamlDocument(root));
         }
 
-        public static ServiceOutput CreateDeployment(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project)
+        public static ServiceOutput CreateDeployment(
+            OutputContext output,
+            ApplicationBuilder application,
+            ProjectServiceBuilder project,
+            DeploymentManifestInfo deployment)
         {
-            if (output is null)
-            {
-                throw new ArgumentNullException(nameof(output));
-            }
-
-            if (application is null)
-            {
-                throw new ArgumentNullException(nameof(application));
-            }
-
-            if (project is null)
-            {
-                throw new ArgumentNullException(nameof(project));
-            }
-
             var bindings = project.Outputs.OfType<ComputedBindings>().FirstOrDefault();
 
             var root = new YamlMappingNode();
@@ -108,10 +105,23 @@ namespace Microsoft.Tye
             root.Add("metadata", metadata);
             metadata.Add("name", project.Name);
 
+            if (deployment.Annotations.Count > 0)
+            {
+                var annotations = new YamlMappingNode();
+                metadata.Add("annotations", annotations);
+
+                foreach (var annotation in deployment.Annotations)
+                {
+                    annotations.Add(annotation.Key, new YamlScalarNode(annotation.Value) { Style = ScalarStyle.SingleQuoted, });
+                }
+            }
+
             var labels = new YamlMappingNode();
             metadata.Add("labels", labels);
-            labels.Add("app.kubernetes.io/name", project.Name);
-            labels.Add("app.kubernetes.io/part-of", application.Name);
+            foreach (var label in deployment.Labels)
+            {
+                labels.Add(label.Key, new YamlScalarNode(label.Value) { Style = ScalarStyle.SingleQuoted, });
+            }
 
             var spec = new YamlMappingNode();
             root.Add("spec", spec);
@@ -123,7 +133,13 @@ namespace Microsoft.Tye
 
             var matchLabels = new YamlMappingNode();
             selector.Add("matchLabels", matchLabels);
-            matchLabels.Add("app.kubernetes.io/name", project.Name);
+
+            // We need the name so we can use it with matchLabels.
+            if (!deployment.Labels.TryGetValue("app.kubernetes.io/name", out var matchLabelsLabelValue))
+            {
+                throw new InvalidOperationException("The label 'app.kubernetes.io/name` is required.");
+            }
+            matchLabels.Add("app.kubernetes.io/name", matchLabelsLabelValue);
 
             var template = new YamlMappingNode();
             spec.Add("template", template);
@@ -131,10 +147,23 @@ namespace Microsoft.Tye
             metadata = new YamlMappingNode();
             template.Add("metadata", metadata);
 
+            if (deployment.Annotations.Count > 0)
+            {
+                var annotations = new YamlMappingNode();
+                metadata.Add("annotations", annotations);
+
+                foreach (var annotation in deployment.Annotations)
+                {
+                    annotations.Add(annotation.Key, new YamlScalarNode(annotation.Value) { Style = ScalarStyle.SingleQuoted, });
+                }
+            }
+
             labels = new YamlMappingNode();
             metadata.Add("labels", labels);
-            labels.Add("app.kubernetes.io/name", project.Name);
-            labels.Add("app.kubernetes.io/part-of", application.Name);
+            foreach (var label in deployment.Labels)
+            {
+                labels.Add(label.Key, new YamlScalarNode(label.Value) { Style = ScalarStyle.SingleQuoted, });
+            }
 
             spec = new YamlMappingNode();
             template.Add("spec", spec);

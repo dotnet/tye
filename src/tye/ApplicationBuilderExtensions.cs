@@ -4,12 +4,30 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.Tye.Extensions;
 using Microsoft.Tye.Hosting.Model;
 
-namespace Microsoft.Tye.ConfigModel
+namespace Microsoft.Tye
 {
     public static class ApplicationBuilderExtensions
     {
+        // For layering reasons this has to live in the `tye` project. We don't want to leak
+        // the extensions themselves into Tye.Core.
+        public static async Task ProcessExtensionsAsync(this ApplicationBuilder application, ExtensionContext.OperationKind operation)
+        {
+            foreach (var extensionConfig in application.Extensions)
+            {
+                if (!WellKnownExtensions.Extensions.TryGetValue(extensionConfig.Name, out var extension))
+                {
+                    throw new CommandException($"Could not find the extension '{extensionConfig.Name}'.");
+                }
+
+                var context = new ExtensionContext(application, operation);
+                await extension.ProcessAsync(context, extensionConfig);
+            }
+        }
+
         public static Application ToHostingApplication(this ApplicationBuilder application)
         {
             var services = new Dictionary<string, Service>();
@@ -17,7 +35,7 @@ namespace Microsoft.Tye.ConfigModel
             {
                 RunInfo? runInfo;
                 int replicas;
-                var env = new List<ConfigurationSource>();
+                var env = new List<EnvironmentVariable>();
                 if (service is ExternalServiceBuilder)
                 {
                     runInfo = null;
@@ -37,7 +55,7 @@ namespace Microsoft.Tye.ConfigModel
 
                     foreach (var entry in container.EnvironmentVariables)
                     {
-                        env.Add(new ConfigurationSource(entry.Name, entry.Value));
+                        env.Add(entry.ToHostingEnvironmentVariable());
                     }
                 }
                 else if (service is ExecutableServiceBuilder executable)
@@ -47,7 +65,7 @@ namespace Microsoft.Tye.ConfigModel
 
                     foreach (var entry in executable.EnvironmentVariables)
                     {
-                        env.Add(new ConfigurationSource(entry.Name, entry.Value));
+                        env.Add(entry.ToHostingEnvironmentVariable());
                     }
                 }
                 else if (service is ProjectServiceBuilder project)
@@ -74,7 +92,7 @@ namespace Microsoft.Tye.ConfigModel
 
                     foreach (var entry in project.EnvironmentVariables)
                     {
-                        env.Add(new ConfigurationSource(entry.Name, entry.Value));
+                        env.Add(entry.ToHostingEnvironmentVariable());
                     }
                 }
                 else
@@ -137,6 +155,19 @@ namespace Microsoft.Tye.ConfigModel
             }
 
             return new Application(application.Source, services);
+        }
+
+        public static Tye.Hosting.Model.EnvironmentVariable ToHostingEnvironmentVariable(this EnvironmentVariableBuilder builder)
+        {
+            var env = new Tye.Hosting.Model.EnvironmentVariable(builder.Name);
+            env.Value = builder.Value;
+            if (builder.Source != null)
+            {
+                env.Source = new Tye.Hosting.Model.EnvironmentVariableSource(builder.Source.Service, builder.Source.Binding);
+                env.Source.Kind = (Tye.Hosting.Model.EnvironmentVariableSource.SourceKind)(int)builder.Source.Kind;
+            }
+
+            return env;
         }
     }
 }
