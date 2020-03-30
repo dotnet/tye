@@ -133,7 +133,13 @@ namespace Microsoft.Tye.Hosting
             {
                 v1RunInfo.Type = V1RunInfoType.Docker;
                 v1RunInfo.Image = dockerRunInfo.Image;
-                v1RunInfo.VolumeMappings = dockerRunInfo.VolumeMappings;
+                v1RunInfo.VolumeMappings = dockerRunInfo.VolumeMappings.Select(v => new V1DockerVolume
+                {
+                    Name = v.Name,
+                    Source = v.Source,
+                    Target = v.Target
+                }).ToList();
+
                 v1RunInfo.WorkingDirectory = dockerRunInfo.WorkingDirectory;
                 v1RunInfo.Args = dockerRunInfo.Args;
             }

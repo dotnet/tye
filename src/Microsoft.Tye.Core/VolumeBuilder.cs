@@ -6,13 +6,16 @@ namespace Microsoft.Tye
 {
     public sealed class VolumeBuilder
     {
-        public VolumeBuilder(string source, string target)
+        public VolumeBuilder(string? source, string? name, string target)
         {
             Source = source;
+            Name = name;
             Target = target;
         }
 
-        public string Source { get; set; }
+        public string? Source { get; set; }
+
+        public string? Name { get; set; }
 
         public string Target { get; set; }
     }

@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
 using Microsoft.Build.Construction;
@@ -211,9 +212,9 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"IntermediateOutputPath={project.IntermediateOutputPath}");
 
             // Normalize directories to their absolute paths
-            project.IntermediateOutputPath = Path.Combine(project.ProjectFile.DirectoryName, project.IntermediateOutputPath);
-            project.TargetPath = Path.Combine(project.ProjectFile.DirectoryName, project.TargetPath);
-            project.PublishDir = Path.Combine(project.ProjectFile.DirectoryName, project.PublishDir);
+            project.IntermediateOutputPath = Path.Combine(project.ProjectFile.DirectoryName, NormalizePath(project.IntermediateOutputPath));
+            project.TargetPath = Path.Combine(project.ProjectFile.DirectoryName, NormalizePath(project.TargetPath));
+            project.PublishDir = Path.Combine(project.ProjectFile.DirectoryName, NormalizePath(project.PublishDir));
 
             var targetFramework = projectInstance.GetPropertyValue("TargetFramework");
             project.TargetFramework = targetFramework;
@@ -257,6 +258,15 @@ namespace Microsoft.Tye
 
                 return default;
             }
+        }
+
+        private static string NormalizePath(string path)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return path.Replace('/', '\\');
+            }
+            return path.Replace('\\', '/');
         }
     }
 }

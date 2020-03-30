@@ -8,8 +8,9 @@ namespace Microsoft.Tye.ConfigModel
 {
     public class ConfigVolume
     {
-        [Required]
         public string Source { get; set; } = default!;
+
+        public string Name { get; set; } = default!;
 
         [Required]
         public string Target { get; set; } = default!;

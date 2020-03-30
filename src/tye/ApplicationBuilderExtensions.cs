@@ -29,7 +29,7 @@ namespace Microsoft.Tye.ConfigModel
 
                     foreach (var mapping in container.Volumes)
                     {
-                        dockerRunInfo.VolumeMappings[mapping.Source!] = mapping.Target!;
+                        dockerRunInfo.VolumeMappings.Add(new DockerVolume(mapping.Source, mapping.Name, mapping.Target));
                     }
 
                     runInfo = dockerRunInfo;
@@ -66,7 +66,7 @@ namespace Microsoft.Tye.ConfigModel
 
                     foreach (var mapping in project.Volumes)
                     {
-                        projectInfo.VolumeMappings[mapping.Source!] = mapping.Target!;
+                        projectInfo.VolumeMappings.Add(new DockerVolume(mapping.Source, mapping.Name, mapping.Target));
                     }
 
                     runInfo = projectInfo;

@@ -17,6 +17,7 @@ using Microsoft.Tye.Hosting.Model;
 using Microsoft.Tye.Hosting.Model.V1;
 using Xunit;
 using Xunit.Abstractions;
+using static E2ETest.TestHelpers;
 
 namespace E2ETest
 {
@@ -138,6 +139,101 @@ namespace E2ETest
             }
         }
 
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task DockerNamedVolumeTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("volume-test");
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            // Add a volume
+            var project = ((ProjectServiceBuilder)application.Services[0]);
+            // Remove the existing volume so we can generate a random one for this test to avoid conflicts
+            var volumeName = "tye_docker_volumes_test" + Guid.NewGuid().ToString().Substring(0, 10);
+            project.Volumes.Clear();
+            project.Volumes.Add(new VolumeBuilder(source: null, name: volumeName, "/data"));
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+            var args = new[] { "--docker" };
+
+            await RunHostingApplication(application, args, _sink, async serviceApi =>
+            {
+                var serviceUri = await GetServiceUrl(client, serviceApi, "volume-test");
+
+                Assert.NotNull(serviceUri);
+
+                var response = await client.GetAsync(serviceUri);
+
+                Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+                await client.PostAsync(serviceUri, new StringContent("Things saved to the volume!"));
+
+                Assert.Equal("Things saved to the volume!", await client.GetStringAsync(serviceUri));
+            });
+
+            await RunHostingApplication(application, args, _sink, async serviceApi =>
+            {
+                var serviceUri = await GetServiceUrl(client, serviceApi, "volume-test");
+
+                Assert.NotNull(serviceUri);
+
+                // The volume has data persisted
+                Assert.Equal("Things saved to the volume!", await client.GetStringAsync(serviceUri));
+            });
+
+            // Delete the volume
+            await ProcessUtil.RunAsync("docker", $"volume rm {volumeName}");
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task DockerHostVolumeTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("volume-test");
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            // Add a volume
+            var project = ((ProjectServiceBuilder)application.Services[0]);
+
+            using var tempDir = TempDirectory.Create();
+
+            project.Volumes.Clear();
+            project.Volumes.Add(new VolumeBuilder(source: tempDir.DirectoryPath, name: null, target: "/data"));
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            File.WriteAllText(Path.Combine(tempDir.DirectoryPath, "file.txt"), "This content came from the host");
+
+            var client = new HttpClient(new RetryHandler(handler));
+            var args = new[] { "--docker" };
+
+            await RunHostingApplication(application, args, _sink, async serviceApi =>
+            {
+                var serviceUri = await GetServiceUrl(client, serviceApi, "volume-test");
+
+                Assert.NotNull(serviceUri);
+
+                // The volume has data the host mapped data
+                Assert.Equal("This content came from the host", await client.GetStringAsync(serviceUri));
+            });
+        }
+
         [Fact]
         public async Task IngressRunTest()
         {
@@ -165,11 +261,7 @@ namespace E2ETest
 
             try
             {
-                var ingressService = await client.GetStringAsync($"{serviceApi}api/v1/services/ingress");
-
-                var service = JsonSerializer.Deserialize<V1Service>(ingressService, _options);
-                var binding = service.Description!.Bindings.Single();
-                var ingressUri = $"http://localhost:{binding.Port}";
+                var ingressUri = await GetServiceUrl(client, serviceApi, "ingress");
 
                 var responseA = await client.GetAsync(ingressUri + "/A");
                 var responseB = await client.GetAsync(ingressUri + "/B");
@@ -270,7 +362,51 @@ namespace E2ETest
             await host.StopAsync();
         }
 
-        private async Task CheckServiceIsUp(Microsoft.Tye.Hosting.Model.Application application, HttpClient client, string serviceName, Uri dashboardUri, TimeSpan? timeout = default)
+        private async Task<string> GetServiceUrl(HttpClient client, Uri serviceApi, string serviceName)
+        {
+            var serviceResult = await client.GetStringAsync($"{serviceApi}api/v1/services/{serviceName}");
+            var service = JsonSerializer.Deserialize<V1Service>(serviceResult, _options);
+            var binding = service.Description!.Bindings.Where(b => b.Protocol == "http").Single();
+            return $"{binding.Protocol ?? "http"}://localhost:{binding.Port}";
+        }
+
+        private async Task RunHostingApplication(ApplicationBuilder application, string[] args, TestOutputLogEventSink sink, Func<Uri, Task> execute)
+        {
+            using var host = new TyeHost(application.ToHostingApplication(), args)
+            {
+                Sink = sink,
+            };
+
+            await StartHostAndWaitForReplicasToStart(host);
+
+            var serviceApi = new Uri(host.DashboardWebApplication!.Addresses.First());
+
+            try
+            {
+                await execute(serviceApi!);
+            }
+            finally
+            {
+                using (var client = new HttpClient())
+                {
+                    // If we failed, there's a good chance the service isn't running. Let's get the logs either way and put
+                    // them in the output.
+                    foreach (var s in host.Application.Services.Values)
+                    {
+                        var request = new HttpRequestMessage(HttpMethod.Get, new Uri(serviceApi, $"/api/v1/logs/{s.Description.Name}"));
+                        var response = await client.SendAsync(request);
+                        var text = await response.Content.ReadAsStringAsync();
+
+                        _output.WriteLine($"Logs for service: {s.Description.Name}");
+                        _output.WriteLine(text);
+                    }
+                }
+
+                await host.StopAsync();
+            }
+        }
+
+        private async Task CheckServiceIsUp(Application application, HttpClient client, string serviceName, Uri dashboardUri, TimeSpan? timeout = default)
         {
             // make sure backend is up before frontend
             var dashboardString = await client.GetStringAsync($"{dashboardUri}api/v1/services/{serviceName}");
