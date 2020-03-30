@@ -23,11 +23,9 @@ namespace Microsoft.Tye.Serialization
             return type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
         }
 
-        private static bool IsEmptyArray(Type type, object? value)
+        private static bool IsEmptyArray(object? value)
         {
-            return value is object
-                && value is ICollection
-                && ((ICollection)value).Count == 0;
+            return value is ICollection collection && collection.Count == 0;
         }
 
         public override bool EnterMapping(IPropertyDescriptor key, IObjectDescriptor value, IEmitter context)
@@ -39,7 +37,7 @@ namespace Microsoft.Tye.Serialization
                 : GetDefault(key.Type);
 
             return !Equals(value.Value, defaultValue)
-                   && !IsEmptyArray(value.Type, value.Value)
+                   && !IsEmptyArray(value.Value)
                    && base.EnterMapping(key, value, context);
         }
     }
