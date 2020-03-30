@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using Microsoft.Tye;
 using Microsoft.Tye.ConfigModel;
 using Microsoft.Tye.Hosting;
-using Microsoft.Tye.Hosting.Dashboard;
 using Microsoft.Tye.Hosting.Model;
 using Microsoft.Tye.Hosting.Model.V1;
 using Xunit;
@@ -387,6 +386,21 @@ namespace E2ETest
             }
             finally
             {
+                using (var client = new HttpClient())
+                {
+                    // If we failed, there's a good chance the service isn't running. Let's get the logs either way and put
+                    // them in the output.
+                    foreach (var s in host.Application.Services.Values)
+                    {
+                        var request = new HttpRequestMessage(HttpMethod.Get, new Uri(serviceApi, $"/api/v1/logs/{s.Description.Name}"));
+                        var response = await client.SendAsync(request);
+                        var text = await response.Content.ReadAsStringAsync();
+
+                        _output.WriteLine($"Logs for service: {s.Description.Name}");
+                        _output.WriteLine(text);
+                    }
+                }
+
                 await host.StopAsync();
             }
         }
