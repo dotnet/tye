@@ -218,7 +218,7 @@ namespace E2ETest
                 AllowAutoRedirect = false
             };
 
-            File.WriteAllText(Path.Combine(tempDir.DirectoryPath, "file.txt"), "This content came from the host");
+            await File.WriteAllTextAsync(Path.Combine(tempDir.DirectoryPath, "file.txt"), "This content came from the host");
 
             var client = new HttpClient(new RetryHandler(handler));
             var args = new[] { "--docker" };
