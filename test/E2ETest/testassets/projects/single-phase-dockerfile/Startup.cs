@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,9 +30,9 @@ namespace single_phase_dockerfile
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("/", async context =>
+                endpoints.MapGet("/", context =>
                 {
-                    await context.Response.WriteAsync("Hello World!");
+                    return context.Response.WriteAsync("Hello World!");
                 });
             });
         }

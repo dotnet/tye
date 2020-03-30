@@ -16,7 +16,7 @@ namespace Microsoft.Tye
 {
     static partial class Program
     {
-        public static async Task<int> Main(string[] args)
+        public static Task<int> Main(string[] args)
         {
             var command = new RootCommand()
             {
@@ -47,7 +47,7 @@ namespace Microsoft.Tye
             builder.UseExceptionHandler(HandleException);
 
             var parser = builder.Build();
-            return await parser.InvokeAsync(args);
+            return parser.InvokeAsync(args);
         }
 
         private static void HandleException(Exception exception, InvocationContext context)

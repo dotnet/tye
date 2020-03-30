@@ -13,16 +13,16 @@ namespace Microsoft.Tye
 
         public bool Force { get; set; }
 
-        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
+        public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             if (SkipWithoutProject(output, service, out var project))
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (SkipWithoutContainerInfo(output, service, out var container))
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (container.UseMultiphaseDockerfile == false)
@@ -40,8 +40,8 @@ namespace Microsoft.Tye
 
             File.Delete(dockerFilePath);
 
-            await DockerfileGenerator.WriteDockerfileAsync(output, application, project, container, dockerFilePath);
-            output.WriteInfoLine($"Generated Dockerfile at '{dockerFilePath}'.");
+            output.WriteInfoLine($"Generating Dockerfile at '{dockerFilePath}'.");
+            return DockerfileGenerator.WriteDockerfileAsync(output, application, project, container, dockerFilePath);
         }
     }
 }

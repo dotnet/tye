@@ -29,7 +29,7 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
         }
 
-        public async Task StartAsync(Application application)
+        public Task StartAsync(Application application)
         {
             _host = new HostBuilder()
                     .ConfigureServer(server =>
@@ -148,7 +148,7 @@ namespace Microsoft.Tye.Hosting
                     })
                     .Build();
 
-            await _host.StartAsync();
+            return _host.StartAsync();
         }
 
         public async Task StopAsync(Application application)

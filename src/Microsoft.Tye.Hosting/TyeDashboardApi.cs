@@ -56,7 +56,7 @@ namespace Microsoft.Tye.Hosting
             _options);
         }
 
-        private async Task Services(HttpContext context)
+        private Task Services(HttpContext context)
         {
             var app = context.RequestServices.GetRequiredService<Application>();
 
@@ -70,10 +70,10 @@ namespace Microsoft.Tye.Hosting
                 list.Add(CreateServiceJson(service));
             }
 
-            await JsonSerializer.SerializeAsync(context.Response.Body, list, _options);
+            return JsonSerializer.SerializeAsync(context.Response.Body, list, _options);
         }
 
-        private async Task Service(HttpContext context)
+        private Task Service(HttpContext context)
         {
             var app = context.RequestServices.GetRequiredService<Application>();
 
@@ -83,18 +83,16 @@ namespace Microsoft.Tye.Hosting
             if (!app.Services.TryGetValue(name, out var service))
             {
                 context.Response.StatusCode = 404;
-                await JsonSerializer.SerializeAsync(context.Response.Body, new
+                return JsonSerializer.SerializeAsync(context.Response.Body, new
                 {
                     message = $"Unknown service {name}"
                 },
                 _options);
-
-                return;
             }
 
             var serviceJson = CreateServiceJson(service);
 
-            await JsonSerializer.SerializeAsync(context.Response.Body, serviceJson, _options);
+            return JsonSerializer.SerializeAsync(context.Response.Body, serviceJson, _options);
         }
 
         private static V1Service CreateServiceJson(Model.Service service)
@@ -211,7 +209,7 @@ namespace Microsoft.Tye.Hosting
             return serviceJson;
         }
 
-        private async Task Logs(HttpContext context)
+        private Task Logs(HttpContext context)
         {
             var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
 
@@ -221,19 +219,17 @@ namespace Microsoft.Tye.Hosting
             if (!app.Services.TryGetValue(name, out var service))
             {
                 context.Response.StatusCode = 404;
-                await JsonSerializer.SerializeAsync(context.Response.Body, new
+                return JsonSerializer.SerializeAsync(context.Response.Body, new
                 {
                     message = $"Unknown service {name}"
                 },
                 _options);
-
-                return;
             }
 
-            await JsonSerializer.SerializeAsync(context.Response.Body, service.CachedLogs, _options);
+            return JsonSerializer.SerializeAsync(context.Response.Body, service.CachedLogs, _options);
         }
 
-        private async Task AllMetrics(HttpContext context)
+        private Task AllMetrics(HttpContext context)
         {
             var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
 
@@ -258,10 +254,10 @@ namespace Microsoft.Tye.Hosting
                 sb.AppendLine();
             }
 
-            await context.Response.WriteAsync(sb.ToString());
+            return context.Response.WriteAsync(sb.ToString());
         }
 
-        private async Task Metrics(HttpContext context)
+        private Task Metrics(HttpContext context)
         {
             var app = context.RequestServices.GetRequiredService<Application>();
 
@@ -273,13 +269,11 @@ namespace Microsoft.Tye.Hosting
             if (!app.Services.TryGetValue(name, out var service))
             {
                 context.Response.StatusCode = 404;
-                await JsonSerializer.SerializeAsync(context.Response.Body, new
+                return JsonSerializer.SerializeAsync(context.Response.Body, new
                 {
                     message = $"Unknown service {name}"
                 },
                 _options);
-
-                return;
             }
 
             foreach (var replica in service.Replicas)
@@ -296,7 +290,7 @@ namespace Microsoft.Tye.Hosting
                 }
             }
 
-            await context.Response.WriteAsync(sb.ToString());
+            return context.Response.WriteAsync(sb.ToString());
         }
     }
 }
