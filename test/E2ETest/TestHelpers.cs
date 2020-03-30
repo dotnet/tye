@@ -123,7 +123,7 @@ namespace E2ETest
             }
         }
 
-        public static async Task PurgeHostAndWaitForGivenReplicasToStop(TyeHost host, string[] replicas, string tyeDir)
+        public static async Task PurgeHostAndWaitForGivenReplicasToStop(TyeHost host, string[] replicas)
         {
             static async Task Purge(TyeHost host)
             {

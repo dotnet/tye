@@ -57,7 +57,7 @@ namespace E2ETest
                     Assert.Subset(new HashSet<int>(GetAllPids()), new HashSet<int>(pids));
 
                     await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host,
-                        GetAllReplicasNames(host.Application), tyeDir.FullName);
+                        GetAllReplicasNames(host.Application));
 
                     var runningPids = new HashSet<int>(GetAllPids());
                     Assert.True(pids.All(pid => !runningPids.Contains(pid)));
@@ -105,7 +105,7 @@ namespace E2ETest
                         new HashSet<string>(containers));
 
                     await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host,
-                        GetAllReplicasNames(host.Application), tyeDir.FullName);
+                        GetAllReplicasNames(host.Application));
 
                     var runningPids = new HashSet<int>(GetAllPids());
                     Assert.True(pids.All(pid => !runningPids.Contains(pid)));
