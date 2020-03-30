@@ -127,7 +127,8 @@ namespace Microsoft.Tye.Hosting
                 var environment = new Dictionary<string, string>
                 {
                     // Default to development environment
-                    ["DOTNET_ENVIRONMENT"] = "Development"
+                    ["DOTNET_ENVIRONMENT"] = "Development",
+                    ["ASPNETCORE_ENVIRONMENT"] = "Development",
                 };
 
                 // Set up environment variables to use the version of dotnet we're using to run
