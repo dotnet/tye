@@ -9,7 +9,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: 'test-project'
+      app.kubernetes.io/name: test-project
   template:
     metadata:
       labels:

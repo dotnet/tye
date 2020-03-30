@@ -9,7 +9,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: 'backend'
+      app.kubernetes.io/name: backend
   template:
     metadata:
       labels:
@@ -55,7 +55,7 @@ metadata:
     app.kubernetes.io/part-of: 'multi-project'
 spec:
   selector:
-    app.kubernetes.io/name: 'backend'
+    app.kubernetes.io/name: backend
   type: ClusterIP
   ports:
   - name: http
@@ -75,7 +75,7 @@ spec:
   replicas: 2
   selector:
     matchLabels:
-      app.kubernetes.io/name: 'frontend'
+      app.kubernetes.io/name: frontend
   template:
     metadata:
       labels:
@@ -121,7 +121,7 @@ metadata:
     app.kubernetes.io/part-of: 'multi-project'
 spec:
   selector:
-    app.kubernetes.io/name: 'frontend'
+    app.kubernetes.io/name: frontend
   type: ClusterIP
   ports:
   - name: http
