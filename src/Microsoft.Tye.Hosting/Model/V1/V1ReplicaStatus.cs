@@ -4,14 +4,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Microsoft.Tye.Hosting.Model.V1
 {
     public class V1ReplicaStatus
     {
-        public V1ReplicaType Type { get; set; }
         public string? DockerCommand { get; set; }
         public string? ContainerId { get; set; }
         public string? Name { get; set; }

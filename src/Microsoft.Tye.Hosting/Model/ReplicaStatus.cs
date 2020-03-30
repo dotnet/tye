@@ -23,5 +23,7 @@ namespace Microsoft.Tye.Hosting.Model
         public Dictionary<object, object> Items { get; } = new Dictionary<object, object>();
 
         public Dictionary<string, string> Metrics { get; set; } = new Dictionary<string, string>();
+
+        public IDictionary<string, string>? Environment { get; set; }
     }
 }

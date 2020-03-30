@@ -174,6 +174,7 @@ namespace Microsoft.Tye.Hosting
                 {
                     Name = replica.Value.Name,
                     Ports = replica.Value.Ports,
+                    Environment = replica.Value.Environment
                 };
 
                 replicateDictionary[replica.Key] = replicaStatus;
@@ -182,7 +183,6 @@ namespace Microsoft.Tye.Hosting
                 {
                     replicaStatus.Pid = processStatus.Pid;
                     replicaStatus.ExitCode = processStatus.ExitCode;
-                    replicaStatus.Environment = processStatus.Environment;
                 }
                 else if (replica.Value is DockerStatus dockerStatus)
                 {

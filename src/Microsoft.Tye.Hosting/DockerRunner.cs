@@ -159,6 +159,8 @@ namespace Microsoft.Tye.Hosting
 
                 environment["APP_INSTANCE"] = replica;
 
+                status.Environment = environment;
+
                 foreach (var pair in environment)
                 {
                     environmentArguments += $"-e {pair.Key}={pair.Value} ";
