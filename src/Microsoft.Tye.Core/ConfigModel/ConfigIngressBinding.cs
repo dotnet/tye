@@ -7,7 +7,7 @@ namespace Microsoft.Tye.ConfigModel
     public class ConfigIngressBinding
     {
         public string? Name { get; set; }
-        public bool AutoAssignPort { get; set; }
+        public bool? AutoAssignPort { get; set; }
         public int? Port { get; set; }
         public string? Protocol { get; set; } // HTTP or HTTPS
     }

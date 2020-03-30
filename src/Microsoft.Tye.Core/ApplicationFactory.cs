@@ -141,7 +141,7 @@ namespace Microsoft.Tye
                         var binding = new BindingBuilder()
                         {
                             Name = configBinding.Name,
-                            AutoAssignPort = configBinding.AutoAssignPort,
+                            AutoAssignPort = configBinding.AutoAssignPort.HasValue ? configBinding.AutoAssignPort.Value : configBinding.ConnectionString == null,
                             ConnectionString = configBinding.ConnectionString,
                             Host = configBinding.Host,
                             ContainerPort = configBinding.ContainerPort,
@@ -224,7 +224,7 @@ namespace Microsoft.Tye
                 {
                     var binding = new IngressBindingBuilder()
                     {
-                        AutoAssignPort = configBinding.AutoAssignPort,
+                        AutoAssignPort = configBinding.AutoAssignPort ?? true,
                         Name = configBinding.Name,
                         Port = configBinding.Port,
                         Protocol = configBinding.Protocol ?? "http",
