@@ -48,8 +48,8 @@ namespace E2ETest
                 await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
 
                 // name of application is the folder
-                var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-                var expectedContent = File.ReadAllText($"testassets/generate/{projectName}.yaml");
+                var content = await File.ReadAllTextAsync(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}.yaml");
 
                 Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
                 await DockerAssert.AssertImageExistsAsync(output, "test/test-project");
@@ -87,8 +87,8 @@ namespace E2ETest
                 await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
 
                 // name of application is the folder
-                var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-                var expectedContent = File.ReadAllText($"testassets/generate/{projectName}.yaml");
+                var content = await File.ReadAllTextAsync(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}.yaml");
 
                 Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
 
@@ -130,8 +130,8 @@ namespace E2ETest
                 await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
 
                 // name of application is the folder
-                var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-                var expectedContent = File.ReadAllText($"testassets/generate/{projectName}.yaml");
+                var content = await File.ReadAllTextAsync(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}.yaml");
 
                 Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
 
@@ -170,8 +170,8 @@ namespace E2ETest
                 await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
 
                 // name of application is the folder
-                var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-                var expectedContent = File.ReadAllText($"testassets/generate/{projectName}-noregistry.yaml");
+                var content = await File.ReadAllTextAsync(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}-noregistry.yaml");
 
                 Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
 
@@ -205,8 +205,8 @@ namespace E2ETest
                 await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
 
                 // name of application is the folder
-                var content = File.ReadAllText(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
-                var expectedContent = File.ReadAllText($"testassets/generate/dapr.yaml");
+                var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/dapr.yaml");
 
                 Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
 
