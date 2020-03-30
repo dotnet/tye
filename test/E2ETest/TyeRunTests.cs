@@ -361,6 +361,7 @@ namespace E2ETest
 
             await host.StopAsync();
         }
+
         private async Task<string> GetServiceUrl(HttpClient client, Uri serviceApi, string serviceName)
         {
             var serviceResult = await client.GetStringAsync($"{serviceApi}api/v1/services/{serviceName}");
