@@ -69,11 +69,6 @@ namespace Microsoft.Tye.Extensions.Dapr
                     proxy.Bindings.Add(metrics);
 
                     // Set APP_PORT based on the project's assigned port for http
-                    if (httpBinding == null)
-                    {
-                        throw new InvalidOperationException($"Cannot find an HTTP binding for service '{project.Name}'.");
-                    }
-
                     var appPort = new EnvironmentVariableBuilder("APP_PORT")
                     {
                         Source = new EnvironmentVariableSourceBuilder(project.Name, binding: httpBinding.Name)
