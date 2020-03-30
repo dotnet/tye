@@ -300,7 +300,6 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        [SkipOnLinux]
         public async Task FrontendBackendRunTestWithDocker()
         {
             var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));

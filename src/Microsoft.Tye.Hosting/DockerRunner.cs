@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -79,6 +81,17 @@ namespace Microsoft.Tye.Hosting
             var environmentArguments = "";
             var volumes = "";
             var workingDirectory = docker.WorkingDirectory != null ? $"-w {docker.WorkingDirectory}" : "";
+            var hostname = "host.docker.internal";
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // See: https://github.com/docker/for-linux/issues/264
+                //
+                // host.docker.internal is making it's way into linux docker but doesn't work yet
+                // instead we use the machine IP
+                var addresses = await Dns.GetHostAddressesAsync(Dns.GetHostName());
+                hostname = addresses[0].ToString();
+            }
 
             // This is .NET specific
             var userSecretStore = GetUserSecretsPathFromSecrets();
@@ -142,7 +155,7 @@ namespace Microsoft.Tye.Hosting
                 //
                 // The way we do proxying here doesn't really work for multi-container scenarios on linux
                 // without some more setup.
-                application.PopulateEnvironment(service, (key, value) => environment[key] = value, "host.docker.internal");
+                application.PopulateEnvironment(service, (key, value) => environment[key] = value, hostname);
 
                 environment["APP_INSTANCE"] = replica;
 
