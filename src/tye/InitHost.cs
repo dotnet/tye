@@ -4,7 +4,7 @@ using Microsoft.Tye.Serialization;
 
 namespace Microsoft.Tye
 {
-    public class InitHost
+    public static class InitHost
     {
         public static string CreateTyeFile(FileInfo? path, bool force)
         {

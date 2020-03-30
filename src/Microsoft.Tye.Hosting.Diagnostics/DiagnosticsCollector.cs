@@ -848,7 +848,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
             public static readonly string HttpFlavorKey = "http.flavor";
         }
 
-        internal sealed class LoggingEventSource
+        internal static class LoggingEventSource
         {
             /// <summary>
             /// This is public from an EventSource consumer point of view, but since these definitions

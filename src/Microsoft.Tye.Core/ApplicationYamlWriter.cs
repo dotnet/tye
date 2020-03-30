@@ -9,7 +9,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Microsoft.Tye
 {
-    public sealed class ApplicationYamlWriter
+    public static class ApplicationYamlWriter
     {
         public static Task WriteAsync(OutputContext output, StreamWriter writer, ApplicationBuilder application)
         {
