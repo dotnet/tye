@@ -104,7 +104,7 @@ namespace E2ETest
             using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);
             try
             {
-                using (cancellation.Token.Register(() => startedTask.TrySetCanceled()))
+                await using (cancellation.Token.Register(() => startedTask.TrySetCanceled()))
                 {
                     await startedTask.Task;
                 }
@@ -160,7 +160,7 @@ namespace E2ETest
             using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);
             try
             {
-                using (cancellation.Token.Register(() => stoppedTask.TrySetCanceled()))
+                await using (cancellation.Token.Register(() => stoppedTask.TrySetCanceled()))
                 {
                     await stoppedTask.Task;
                 }
