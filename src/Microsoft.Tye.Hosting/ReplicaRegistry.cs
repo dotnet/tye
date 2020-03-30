@@ -94,7 +94,10 @@ namespace Microsoft.Tye.Hosting
 
         public void Dispose()
         {
-            Directory.Delete(_tyeFolderPath, true);
+            if (Directory.Exists(_tyeFolderPath))
+            {
+                Directory.Delete(_tyeFolderPath, true);
+            }
         }
     }
 }
