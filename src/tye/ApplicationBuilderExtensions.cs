@@ -50,6 +50,8 @@ namespace Microsoft.Tye
                         dockerRunInfo.VolumeMappings.Add(new DockerVolume(mapping.Source, mapping.Name, mapping.Target));
                     }
 
+                    dockerRunInfo.Network = container.Network;
+
                     runInfo = dockerRunInfo;
                     replicas = container.Replicas;
 

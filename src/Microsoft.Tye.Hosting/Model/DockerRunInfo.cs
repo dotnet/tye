@@ -21,5 +21,7 @@ namespace Microsoft.Tye.Hosting.Model
         public string? Args { get; }
 
         public string Image { get; }
+
+        public string Network { get; set; }
     }
 }

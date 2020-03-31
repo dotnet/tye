@@ -77,7 +77,8 @@ namespace Microsoft.Tye
                     var container = new ContainerServiceBuilder(configService.Name, configService.Image)
                     {
                         Args = configService.Args,
-                        Replicas = configService.Replicas ?? 1
+                        Replicas = configService.Replicas ?? 1,
+                        Network = configService.Network
                     };
                     service = container;
                 }
