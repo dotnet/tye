@@ -61,22 +61,6 @@ namespace Microsoft.Tye.Hosting
 
         private async Task StartContainerAsync(Application application, Service service, DockerRunInfo docker)
         {
-            if (!await DockerDetector.Instance.IsDockerInstalled.Value)
-            {
-                _logger.LogError("Unable to start docker container for service {ServiceName}, Docker is not installed.", service.Description.Name);
-
-                service.Logs.OnNext($"Unable to start docker container for service {service.Description.Name}, Docker is not installed.");
-                return;
-            }
-
-            if (!await DockerDetector.Instance.IsDockerConnectedToDaemon.Value)
-            {
-                _logger.LogError("Unable to start docker container for service {ServiceName}, Docker is not running.", service.Description.Name);
-
-                service.Logs.OnNext($"Unable to start docker container for service {service.Description.Name}, Docker is not running.");
-                return;
-            }
-
             var serviceDescription = service.Description;
             var environmentArguments = "";
             var volumes = "";
