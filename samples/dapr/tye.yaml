@@ -14,5 +14,12 @@ services:
   project: products/products.csproj
 - name: store
   project: store/store.csproj
+
+# This may conflict with the redis instance that dapr manages.
+#
+# Doing a `docker ps` can show if its already running. If that's the case
+# then comment out out when running locally. 
 - name: redis
   image: redis
+  bindings: 
+  - port: 6379

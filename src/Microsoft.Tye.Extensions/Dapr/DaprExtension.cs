@@ -31,6 +31,18 @@ namespace Microsoft.Tye.Extensions.Dapr
                         continue;
                     }
 
+                    // See https://github.com/dotnet/tye/issues/260
+                    // 
+                    // Currently the pub-sub pattern does not work when you have multiple replicas. Each
+                    // daprd instance expects that it has a single application to talk to. So if you're using
+                    // pub-sub this means that you'll won't get some messages.
+                    //
+                    // We have no way to know if an app is using pub-sub or not, so just block it.
+                    if (project.Replicas > 1)
+                    {
+                        throw new CommandException("Dapr support does not support multiple replicas yet for development.");
+                    }
+
                     var proxy = new ExecutableServiceBuilder($"{project.Name}-dapr", "daprd")
                     {
                         WorkingDirectory = context.Application.Source.DirectoryName,
