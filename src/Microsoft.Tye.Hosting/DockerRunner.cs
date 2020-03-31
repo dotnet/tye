@@ -164,7 +164,13 @@ namespace Microsoft.Tye.Hosting
                     }
                 }
 
-                var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {docker.Image} {docker.Args ?? ""}";
+                var network = string.Empty;
+                if (!string.IsNullOrWhiteSpace(docker.Network))
+                {
+                    network = $"--net {docker.Network}";
+                }
+
+                var command = $"run -d {workingDirectory} {network} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {docker.Image} {docker.Args ?? ""}";
                 _logger.LogInformation("Running docker command {Command}", command);
 
                 service.Logs.OnNext($"[{replica}]: {command}");
