@@ -70,14 +70,7 @@ namespace Microsoft.Tye.Hosting
             }
             finally
             {
-                try
-                {
-                    await StopAsync();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error while shutting down");
-                }
+                await StopAsync();
             }
         }
 
@@ -289,6 +282,10 @@ namespace Microsoft.Tye.Hosting
                     await _processor.StopAsync(_application);
                 }
                 _processor = null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while shutting down");
             }
             finally
             {
