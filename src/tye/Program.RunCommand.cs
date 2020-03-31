@@ -84,7 +84,7 @@ namespace Microsoft.Tye
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
                 }
 
-                using var host = new TyeHost(application.ToHostingApplication(), args, debug);
+                await using var host = new TyeHost(application.ToHostingApplication(), args, debug);
                 await host.RunAsync();
             });
 

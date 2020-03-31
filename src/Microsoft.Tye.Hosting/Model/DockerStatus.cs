@@ -12,6 +12,10 @@ namespace Microsoft.Tye.Hosting.Model
 
         public string? DockerCommand { get; set; }
 
+        public string? DockerNetwork { get; set; }
+
+        public string? DockerNetworkAlias { get; set; }
+
         public string? ContainerId { get; set; }
     }
 }

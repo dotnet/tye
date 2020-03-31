@@ -24,7 +24,7 @@ using Serilog.Filters;
 
 namespace Microsoft.Tye.Hosting
 {
-    public class TyeHost : IDisposable
+    public class TyeHost : IAsyncDisposable
     {
         private const int DefaultPort = 8000;
         private const int AutodetectPort = 0;
@@ -70,7 +70,14 @@ namespace Microsoft.Tye.Hosting
             }
             finally
             {
-                await StopAsync();
+                try
+                {
+                    await StopAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error while shutting down");
+                }
             }
         }
 
@@ -99,25 +106,6 @@ namespace Microsoft.Tye.Hosting
             await _processor.StartAsync(_application);
 
             return app;
-        }
-
-        public async Task StopAsync()
-        {
-            try
-            {
-                if (_processor != null)
-                {
-                    await _processor.StopAsync(_application);
-                }
-            }
-            finally
-            {
-                if (DashboardWebApplication != null)
-                {
-                    // Stop the host after everything else has been shutdown
-                    await DashboardWebApplication.StopAsync();
-                }
-            }
         }
 
         private static WebApplication BuildWebApplication(
@@ -292,8 +280,30 @@ namespace Microsoft.Tye.Hosting
             return new AggregateApplicationProcessor(processors);
         }
 
-        public void Dispose()
+        private async Task StopAsync()
         {
+            try
+            {
+                if (_processor != null)
+                {
+                    await _processor.StopAsync(_application);
+                }
+                _processor = null;
+            }
+            finally
+            {
+                if (DashboardWebApplication != null)
+                {
+                    // Stop the host after everything else has been shutdown
+                    await DashboardWebApplication.StopAsync();
+                }
+            }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await StopAsync();
+
             _replicaRegistry?.Dispose();
             DashboardWebApplication?.Dispose();
         }

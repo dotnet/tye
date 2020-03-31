@@ -34,17 +34,53 @@ namespace Microsoft.Tye.Hosting
         {
             await PurgeFromPreviousRun();
 
-            var tasks = new Task[application.Services.Count];
-            var index = 0;
+            var containers = new List<Service>();
+
             foreach (var s in application.Services)
             {
-                tasks[index++] = s.Value.Description.RunInfo is DockerRunInfo docker ? StartContainerAsync(application, s.Value, docker) : Task.CompletedTask;
+                if (s.Value.Description.RunInfo is DockerRunInfo)
+                {
+                    containers.Add(s.Value);
+                }
+            }
+
+            if (containers.Count == 0)
+            {
+                return;
+            }
+
+            string? dockerNetwork = null;
+
+            // We're going to be making containers, only make a network if we have more than one (we assume they'll need to talk)
+            if (containers.Count > 1)
+            {
+                dockerNetwork = "tye_network_" + Guid.NewGuid().ToString().Substring(0, 10);
+
+                application.Items["dockerNetwork"] = dockerNetwork;
+
+                _logger.LogInformation("Creating docker network {Network}", dockerNetwork);
+
+                var command = $"network create --driver bridge {dockerNetwork}";
+
+                _logger.LogInformation("Running docker command {Command}", command);
+
+                await ProcessUtil.RunAsync("docker", command);
+            }
+
+            var tasks = new Task[containers.Count];
+            var index = 0;
+
+            foreach (var s in containers)
+            {
+                var docker = (DockerRunInfo)s.Description.RunInfo!;
+
+                tasks[index++] = StartContainerAsync(application, s, docker, dockerNetwork);
             }
 
             await Task.WhenAll(tasks);
         }
 
-        public Task StopAsync(Application application)
+        public async Task StopAsync(Application application)
         {
             var services = application.Services;
 
@@ -56,10 +92,22 @@ namespace Microsoft.Tye.Hosting
                 tasks[index++] = StopContainerAsync(state);
             }
 
-            return Task.WhenAll(tasks);
+            await Task.WhenAll(tasks);
+
+            if (application.Items.TryGetValue("dockerNetwork", out var dockerNetwork))
+            {
+                _logger.LogInformation("Removing docker network {Network}", dockerNetwork);
+
+                var command = $"network rm {dockerNetwork}";
+
+                _logger.LogInformation("Running docker command {Command}", command);
+
+                // Clean up the network we created
+                await ProcessUtil.RunAsync("docker", command, throwOnError: false);
+            }
         }
 
-        private async Task StartContainerAsync(Application application, Service service, DockerRunInfo docker)
+        private async Task StartContainerAsync(Application application, Service service, DockerRunInfo docker, string? dockerNetwork)
         {
             var serviceDescription = service.Description;
             var environmentArguments = "";
@@ -167,9 +215,10 @@ namespace Microsoft.Tye.Hosting
                 var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {docker.Image} {docker.Args ?? ""}";
                 _logger.LogInformation("Running docker command {Command}", command);
 
-                service.Logs.OnNext($"[{replica}]: {command}");
+                service.Logs.OnNext($"[{replica}]: docker {command}");
 
                 status.DockerCommand = command;
+                status.DockerNetwork = dockerNetwork;
 
                 WriteReplicaToStore(replica);
                 var result = await ProcessUtil.RunAsync(
@@ -207,6 +256,24 @@ namespace Microsoft.Tye.Hosting
                 status.ContainerId = shortContainerId;
 
                 _logger.LogInformation("Running container {ContainerName} with ID {ContainerId}", replica, shortContainerId);
+
+                if (!string.IsNullOrEmpty(dockerNetwork))
+                {
+                    // If this is the only replica then the network alias is the service name
+                    var alias = serviceDescription.Replicas == 1 ? serviceDescription.Name : replica;
+
+                    status.DockerNetworkAlias = alias;
+
+                    var networkCommand = $"network connect {dockerNetwork} {replica} --alias {alias}";
+
+                    service.Logs.OnNext($"[{replica}]: docker {networkCommand}");
+
+                    _logger.LogInformation("Running docker command {Command}", networkCommand);
+
+                    result = await ProcessUtil.RunAsync("docker", networkCommand);
+
+                    PrintStdOutAndErr(service, replica, result);
+                }
 
                 service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
 

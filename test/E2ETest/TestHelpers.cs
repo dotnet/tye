@@ -109,11 +109,6 @@ namespace E2ETest
                     await startedTask.Task;
                 }
             }
-            catch (TaskCanceledException)
-            {
-                await host.StopAsync();
-                throw;
-            }
             finally
             {
                 foreach (var observer in servicesStateObserver)

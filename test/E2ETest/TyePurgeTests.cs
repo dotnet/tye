@@ -49,27 +49,22 @@ namespace E2ETest
             try
             {
                 await TestHelpers.StartHostAndWaitForReplicasToStart(host);
-                try
-                {
-                    var pids = GetAllAppPids(host.Application);
 
-                    Assert.True(Directory.Exists(tyeDir.FullName));
-                    Assert.Subset(new HashSet<int>(GetAllPids()), new HashSet<int>(pids));
+                var pids = GetAllAppPids(host.Application);
 
-                    await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host,
-                        GetAllReplicasNames(host.Application));
+                Assert.True(Directory.Exists(tyeDir.FullName));
+                Assert.Subset(new HashSet<int>(GetAllPids()), new HashSet<int>(pids));
 
-                    var runningPids = new HashSet<int>(GetAllPids());
-                    Assert.True(pids.All(pid => !runningPids.Contains(pid)));
-                }
-                finally
-                {
-                    await host.StopAsync();
-                }
+                await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host,
+                    GetAllReplicasNames(host.Application));
+
+                var runningPids = new HashSet<int>(GetAllPids());
+                Assert.True(pids.All(pid => !runningPids.Contains(pid)));
+
             }
             finally
             {
-                host.Dispose();
+                await host.DisposeAsync();
                 Assert.False(Directory.Exists(tyeDir.FullName));
             }
         }
@@ -94,33 +89,28 @@ namespace E2ETest
             try
             {
                 await TestHelpers.StartHostAndWaitForReplicasToStart(host);
-                try
-                {
-                    var pids = GetAllAppPids(host.Application);
-                    var containers = GetAllContainerIds(host.Application);
 
-                    Assert.True(Directory.Exists(tyeDir.FullName));
-                    Assert.Subset(new HashSet<int>(GetAllPids()), new HashSet<int>(pids));
-                    Assert.Subset(new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(_output)),
-                        new HashSet<string>(containers));
+                var pids = GetAllAppPids(host.Application);
+                var containers = GetAllContainerIds(host.Application);
 
-                    await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host,
-                        GetAllReplicasNames(host.Application));
+                Assert.True(Directory.Exists(tyeDir.FullName));
+                Assert.Subset(new HashSet<int>(GetAllPids()), new HashSet<int>(pids));
+                Assert.Subset(new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(_output)),
+                    new HashSet<string>(containers));
 
-                    var runningPids = new HashSet<int>(GetAllPids());
-                    Assert.True(pids.All(pid => !runningPids.Contains(pid)));
-                    var runningContainers =
-                        new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(_output));
-                    Assert.True(containers.All(c => !runningContainers.Contains(c)));
-                }
-                finally
-                {
-                    await host.StopAsync();
-                }
+                await TestHelpers.PurgeHostAndWaitForGivenReplicasToStop(host,
+                    GetAllReplicasNames(host.Application));
+
+                var runningPids = new HashSet<int>(GetAllPids());
+                Assert.True(pids.All(pid => !runningPids.Contains(pid)));
+                var runningContainers =
+                    new HashSet<string>(await DockerAssert.GetRunningContainersIdsAsync(_output));
+                Assert.True(containers.All(c => !runningContainers.Contains(c)));
+
             }
             finally
             {
-                host.Dispose();
+                await host.DisposeAsync();
                 Assert.False(Directory.Exists(tyeDir.FullName));
             }
         }
