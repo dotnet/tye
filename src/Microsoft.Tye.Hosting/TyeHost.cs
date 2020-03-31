@@ -60,13 +60,18 @@ namespace Microsoft.Tye.Hosting
 
         public async Task RunAsync()
         {
-            await StartAsync();
+            try
+            {
+                await StartAsync();
 
-            var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _lifetime?.ApplicationStopping.Register(obj => waitForStop.TrySetResult(null), null);
-            await waitForStop.Task;
-
-            await StopAsync();
+                var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+                _lifetime?.ApplicationStopping.Register(obj => waitForStop.TrySetResult(null), null);
+                await waitForStop.Task;
+            }
+            finally
+            {
+                await StopAsync();
+            }
         }
 
         public async Task<WebApplication> StartAsync()
@@ -91,14 +96,7 @@ namespace Microsoft.Tye.Hosting
 
             _logger.LogInformation("Dashboard running on {Address}", app.Addresses.First());
 
-            try
-            {
-                await _processor.StartAsync(_application);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(0, ex, "Failed to launch application");
-            }
+            await _processor.StartAsync(_application);
 
             return app;
         }
@@ -280,6 +278,7 @@ namespace Microsoft.Tye.Hosting
                 new PortAssigner(logger),
                 new ProxyService(logger),
                 new HttpProxyService(logger),
+                new DockerImagePuller(logger),
                 new DockerRunner(logger, replicaRegistry),
                 new ProcessRunner(logger, replicaRegistry, ProcessRunnerOptions.FromArgs(args, servicesToDebug))
             };
