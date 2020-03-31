@@ -272,7 +272,7 @@ Specifies that the port should be assigned randomly. Defaults to `false`. This i
 ```yaml
 name: myapplication
 - name: nginx
-  dockerImage: nginx
+  image: nginx
 
   # volumes appear here
   volumes:
