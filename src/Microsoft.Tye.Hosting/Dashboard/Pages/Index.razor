@@ -88,8 +88,6 @@
         {
             _subscriptions.Add(a.ReplicaEvents.Subscribe(OnReplicaChanged));
         }
-
-        base.OnInitialized();
     }
 
     private void OnReplicaChanged(ReplicaEvent replicaEvent)

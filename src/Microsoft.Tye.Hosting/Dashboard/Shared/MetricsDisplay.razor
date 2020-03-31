@@ -1,0 +1,74 @@
+@implements IDisposable
+@using System.Threading;
+
+<h4>Metrics</h4>
+<ReplicaSelector Service="@Service" ReplicaChanged="OnReplicaChanged" />
+
+<div class="px-4 py-2">
+<table class="table table-striped table-bordered">
+    <colgroup>
+       <col span="1" style="width: 75%;">
+       <col span="1" style="width: 25%;">
+    </colgroup>
+    <thead class="thead-light">
+        <tr>
+            <th scope="col">Metric</th>
+            <th scope="col">Value</th>
+        </tr>
+    </thead>
+    @if (replica is object)
+    {
+        <tbody>
+            @foreach (var metric in replica.Metrics.OrderBy(kvp => kvp.Key))
+            {
+                <tr>
+                    <td>@metric.Key</td>
+                    <td>@metric.Value</td>
+                </tr>
+            }
+        </tbody>
+    }
+    else
+    {
+        <tbody></tbody>
+    }
+</table>
+</div>
+
+@code {
+    ReplicaStatus? replica;
+    Timer? timer;
+
+    [Parameter] public Service Service { get; set; } = default!;
+
+    protected override void OnParametersSet()
+    {
+        replica = Service?.Replicas.FirstOrDefault().Value;
+        OnReplicaChanged(replica);
+    }
+
+    void OnReplicaChanged(ReplicaStatus? replica)
+    {
+        this.replica = replica;
+        if (this.replica == null && timer is object)
+        {
+            timer.Dispose();
+            timer = null;
+        }
+
+        if (this.replica != null)
+        {
+            timer ??= new Timer(Timer_Tick, state: null, 1000, 1000);
+        }
+    }
+
+    void Timer_Tick(object? _)
+    {
+        _ = InvokeAsync(() => StateHasChanged());
+    }
+
+    void IDisposable.Dispose()
+    {
+        timer?.Dispose();
+    }
+}
