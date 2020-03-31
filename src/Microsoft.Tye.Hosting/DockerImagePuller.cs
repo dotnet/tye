@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Tye.Hosting.Model;
@@ -66,16 +67,39 @@ namespace Microsoft.Tye.Hosting
         {
             await Task.Yield();
 
+            string name = image;
+            string version = "latest";
+            var idx = image.LastIndexOf(":");
+            if (image.IndexOf("/") < idx)
+            {
+                name = image.Substring(0, idx);
+                version = image.Substring(idx + 1);
+            }
+
+            string output = string.Empty;
+            await ProcessUtil.RunAsync(
+                             "docker",
+                             "images",
+                             outputDataReceived: data => output += data + '\n',
+                             throwOnError: false);
+
+            var matchCollection = Regex.Matches(output, @"([^\s]+)\s+([^\s]+).+");
+            if (matchCollection.Any(match => match.Groups[1].Value == name && match.Groups[2].Value == version))
+            {
+                _logger.LogInformation("Docker image {image} already installed", image);
+                return;
+            }
+
             var command = $"pull {image}";
 
             _logger.LogInformation("Running docker command {command}", command);
 
             var result = await ProcessUtil.RunAsync(
-                           "docker",
-                           command,
-                           outputDataReceived: data => _logger.LogInformation("{Image}: " + data, image),
-                           errorDataReceived: data => _logger.LogInformation("{Image}: " + data, image),
-                           throwOnError: false);
+                             "docker",
+                             command,
+                             outputDataReceived: data => _logger.LogInformation("{Image}: " + data, image),
+                             errorDataReceived: data => _logger.LogInformation("{Image}: " + data, image),
+                             throwOnError: false);
 
             if (result.ExitCode != 0)
             {
