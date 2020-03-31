@@ -1,0 +1,55 @@
+@implements IDisposable
+
+<label>Replica:</label>
+<select value="@selected" @onchange="ReplicaSelected">
+    @foreach (var replica in Service.Replicas)
+    {
+        <option value="@replica.Key">@replica.Key</option>
+    }
+</select>
+
+@code {
+    IDisposable? subscription;
+    string? selected;
+
+    [Parameter] public Service Service { get; set; } = default!;
+
+    [Parameter] public EventCallback<ReplicaStatus?> ReplicaChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        subscription?.Dispose();
+        subscription = Service.ReplicaEvents.Subscribe(OnReplicasChanged);
+    }
+
+    void OnReplicasChanged(ReplicaEvent @event)
+    {
+        _ = InvokeAsync(() =>
+        {
+            if (@event.State == ReplicaState.Stopped && @event.Replica.Name == selected)
+            {
+                selected = null;
+            }
+
+            StateHasChanged();
+        });
+    }
+
+    async Task ReplicaSelected(ChangeEventArgs e)
+    {
+        selected = (string?)e.Value;
+        ReplicaStatus? replica = null;
+        if (selected is string)
+        {
+            Service.Replicas.TryGetValue(selected, out replica);
+        }
+
+        await ReplicaChanged.InvokeAsync(replica);
+    }
+
+    void IDisposable.Dispose()
+    {
+        subscription?.Dispose();
+    }
+}
+

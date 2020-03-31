@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Microsoft.Tye.Hosting.Model
@@ -22,7 +23,7 @@ namespace Microsoft.Tye.Hosting.Model
 
         public Dictionary<object, object> Items { get; } = new Dictionary<object, object>();
 
-        public Dictionary<string, string> Metrics { get; set; } = new Dictionary<string, string>();
+        public ConcurrentDictionary<string, string> Metrics { get; set; } = new ConcurrentDictionary<string, string>();
 
         public IDictionary<string, string>? Environment { get; set; }
     }
