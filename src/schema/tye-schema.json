@@ -179,7 +179,7 @@
                     "description": "The service name. Must be unique per-application.",
                     "type": "string"
                 },
-                "dockerImage": {
+                "image": {
                     "description": "The name of a Docker image.",
                     "type": "string"
                 },
@@ -208,7 +208,7 @@
             },
             "required": [
                 "name",
-                "dockerImage"
+                "image"
             ]
         },
         "project": {

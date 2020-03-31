@@ -29,7 +29,7 @@ namespace Microsoft.Tye
 
     public sealed class SecretInputBinding : InputBinding
     {
-        public SecretInputBinding(string name, string filename, ServiceEntry service, ServiceBinding binding)
+        public SecretInputBinding(string name, string filename, ServiceBuilder service, BindingBuilder binding)
         {
             Name = name;
             Filename = filename;
@@ -41,11 +41,11 @@ namespace Microsoft.Tye
         public string Name { get; }
         public string? Value { get; }
 
-        // Used to map the secret to a key that ASP.NET Core understandes
+        // Used to map the secret to a key that ASP.NET Core understands
         public string Filename { get; }
 
         // Used for informational purposes
-        public ServiceEntry Service { get; }
-        public ServiceBinding Binding { get; }
+        public ServiceBuilder Service { get; }
+        public BindingBuilder Binding { get; }
     }
 }

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
+
 namespace Microsoft.Tye.Hosting.Model
 {
     public class DockerRunInfo : RunInfo
@@ -11,6 +13,10 @@ namespace Microsoft.Tye.Hosting.Model
             Image = image;
             Args = args;
         }
+
+        public string? WorkingDirectory { get; set; }
+
+        public List<DockerVolume> VolumeMappings { get; } = new List<DockerVolume>();
 
         public string? Args { get; }
 

@@ -12,6 +12,7 @@ Before we deploy, make sure you have the following ready...
 
 3. A Kubernetes Cluster. There are many different options here, including:
     - [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-deploy-cluster)
+    - [K3s](https://k3s.io), a lightweight single-binary certified Kubernetes distribution from Rancher.
     - [Kubernetes in Docker Desktop](https://www.docker.com/blog/docker-windows-desktop-now-kubernetes/), however it does take up quite a bit of memory on your machine, so use with caution.
     - [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
     - Another Kubernetes provider of your choice.
@@ -20,7 +21,7 @@ Before we deploy, make sure you have the following ready...
 
 ## Deploying the application
 
-Now that we have our application running locally with multiple containers, let's deploy the application. In this example, we will deploy to Kubernetes by using `tye deploy`.
+Now that we have our application running locally, let's deploy the application. In this example, we will deploy to Kubernetes by using `tye deploy`.
 
 1. Deploy to Kubernetes
 

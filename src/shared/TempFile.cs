@@ -19,7 +19,7 @@ namespace Microsoft.Tye
             File.Delete(FilePath);
         }
 
-        private TempFile(string filePath)
+        public TempFile(string filePath)
         {
             FilePath = filePath;
         }

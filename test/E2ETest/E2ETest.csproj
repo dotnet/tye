@@ -14,6 +14,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      The Microsoft.Build.Locator package takes care of dynamically loading these assemblies
+      at runtime. We don't need/want to ship them, just to have them as references.
+    -->
+    <PackageReference Include="Microsoft.Build" Version="16.3.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="16.3.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.2.6" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Tye.Hosting\Microsoft.Tye.Hosting.csproj" />
     <ProjectReference Include="..\..\src\Microsoft.Tye.Core\Microsoft.Tye.Core.csproj" />
     <ProjectReference Include="..\..\src\tye\tye.csproj" />
@@ -21,6 +31,7 @@
 
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Remove="testassets\**\*" />
   </ItemGroup>
 
   <ItemGroup>

@@ -9,9 +9,9 @@ using YamlDotNet.RepresentationModel;
 
 namespace Microsoft.Tye
 {
-    public sealed class ApplicationYamlWriter
+    public static class ApplicationYamlWriter
     {
-        public static Task WriteAsync(OutputContext output, StreamWriter writer, Application application)
+        public static Task WriteAsync(OutputContext output, StreamWriter writer, ApplicationBuilder application)
         {
             var yaml = application.Services.SelectMany(s => s.Outputs.OfType<IYamlManifestOutput>()).ToArray();
             if (yaml.Length == 0)

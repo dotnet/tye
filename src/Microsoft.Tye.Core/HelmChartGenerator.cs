@@ -10,7 +10,7 @@ namespace Microsoft.Tye
 {
     internal static class HelmChartGenerator
     {
-        public static async Task GenerateAsync(OutputContext output, Application application, ServiceEntry service, Project project, ContainerInfo container, HelmChartStep chart, DirectoryInfo outputDirectory)
+        public static async Task GenerateAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container, HelmChartStep chart, DirectoryInfo outputDirectory)
         {
             if (output is null)
             {
@@ -20,11 +20,6 @@ namespace Microsoft.Tye
             if (application is null)
             {
                 throw new ArgumentNullException(nameof(application));
-            }
-
-            if (service is null)
-            {
-                throw new ArgumentNullException(nameof(service));
             }
 
             if (project is null)
@@ -47,7 +42,7 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(outputDirectory));
             }
 
-            ApplyHelmChartDefaults(application, service, container, chart);
+            ApplyHelmChartDefaults(application, project, container, chart);
 
             // The directory with the charts needs to be the same as the chart name
             var chartDirectoryPath = Path.Combine(outputDirectory.FullName, chart.ChartName);
@@ -87,7 +82,7 @@ namespace Microsoft.Tye
             });
         }
 
-        public static void ApplyHelmChartDefaults(Application application, ServiceEntry service, ContainerInfo container, HelmChartStep chart)
+        public static void ApplyHelmChartDefaults(ApplicationBuilder application, ServiceBuilder service, ContainerInfo container, HelmChartStep chart)
         {
             if (application is null)
             {
@@ -109,7 +104,7 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(chart));
             }
 
-            chart.ChartName ??= service.Service.Name.ToLowerInvariant();
+            chart.ChartName ??= service.Name.ToLowerInvariant();
         }
     }
 }

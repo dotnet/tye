@@ -29,7 +29,7 @@ namespace Microsoft.Tye
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool>((console, path, verbosity, interactive, force) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool>(async (console, path, verbosity, interactive, force) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -37,14 +37,21 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                var application = ConfigFactory.FromFile(path);
-                return ExecuteDeployAsync(new OutputContext(console, verbosity), application, environment: "production", interactive, force);
+                var output = new OutputContext(console, verbosity);
+                var application = await ApplicationFactory.CreateAsync(output, path);
+
+                if (application.Services.Count == 0)
+                {
+                    throw new CommandException($"No services found in \"{application.Source.Name}\"");
+                }
+
+                await ExecuteDeployAsync(new OutputContext(console, verbosity), application, environment: "production", interactive, force);
             });
 
             return command;
         }
 
-        private static async Task ExecuteDeployAsync(OutputContext output, ConfigApplication application, string environment, bool interactive, bool force)
+        private static async Task ExecuteDeployAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive, bool force)
         {
             if (!await KubectlDetector.Instance.IsKubectlInstalled.Value)
             {
@@ -56,7 +63,8 @@ namespace Microsoft.Tye
                 throw new CommandException($"Cannot apply manifests because kubectl is not connected to a cluster.");
             }
 
-            var temporaryApplication = await CreateApplicationAdapterAsync(output, application, interactive, requireRegistry: true);
+            await application.ProcessExtensionsAsync(ExtensionContext.OperationKind.Deploy);
+
             var steps = new List<ServiceExecutor.Step>()
             {
                 new CombineStep() { Environment = environment, },
@@ -69,125 +77,18 @@ namespace Microsoft.Tye
             steps.Add(new GenerateKubernetesManifestStep() { Environment = environment, });
             steps.Add(new DeployServiceYamlStep() { Environment = environment, });
 
-            var executor = new ServiceExecutor(output, temporaryApplication, steps);
-            foreach (var service in temporaryApplication.Services)
+            ApplyRegistryAndDefaults(output, application, interactive, requireRegistry: true);
+
+            var executor = new ServiceExecutor(output, application, steps);
+            foreach (var service in application.Services)
             {
                 await executor.ExecuteAsync(service);
             }
 
-            await DeployApplicationManifestAsync(output, temporaryApplication, application.Source.Directory.Name, environment);
+            await DeployApplicationManifestAsync(output, application, application.Source.Directory.Name);
         }
 
-        internal static async Task<TemporaryApplicationAdapter> CreateApplicationAdapterAsync(OutputContext output, ConfigApplication application, bool interactive, bool requireRegistry)
-        {
-            var globals = new ApplicationGlobals()
-            {
-                Name = application.Name,
-                Registry = application.Registry is null ? null : new ContainerRegistry(application.Registry),
-            };
-
-            var services = new List<Tye.ServiceEntry>();
-            foreach (var configService in application.Services)
-            {
-                if (configService.Project is string projectFile)
-                {
-                    var fullPathProjectFile = Path.Combine(application.Source.DirectoryName, projectFile);
-                    var project = new Project(fullPathProjectFile);
-                    var service = new Service(configService.Name)
-                    {
-                        Source = project,
-                    };
-
-                    service.Replicas = configService.Replicas ?? 1;
-
-                    foreach (var configBinding in configService.Bindings)
-                    {
-                        var binding = new ServiceBinding(configBinding.Name ?? service.Name)
-                        {
-                            ConnectionString = configBinding.ConnectionString,
-                            Host = configBinding.Host,
-                            Port = configBinding.Port,
-                            Protocol = configBinding.Protocol,
-                        };
-
-                        binding.Protocol ??= "http";
-
-                        if (binding.Port == null && configBinding.AutoAssignPort)
-                        {
-                            if (binding.Protocol == "http" || binding.Protocol == null)
-                            {
-                                binding.Port = 80;
-                            }
-                            else if (binding.Protocol == "https")
-                            {
-                                binding.Port = 443;
-                            }
-                        }
-
-                        service.Bindings.Add(binding);
-                    }
-
-                    var serviceEntry = new ServiceEntry(service, configService.Name);
-
-                    await ProjectReader.ReadProjectDetailsAsync(output, new FileInfo(fullPathProjectFile), project);
-
-                    var container = new ContainerInfo()
-                    {
-                        UseMultiphaseDockerfile = false,
-                    };
-                    service.GeneratedAssets.Container = container;
-                    services.Add(serviceEntry);
-                }
-                else
-                {
-                    // For a non-project, we don't really need much info about it, just the name and bindings
-                    var service = new Service(configService.Name);
-                    foreach (var configBinding in configService.Bindings)
-                    {
-                        service.Bindings.Add(new ServiceBinding(configBinding.Name ?? service.Name)
-                        {
-                            ConnectionString = configBinding.ConnectionString,
-                            Host = configBinding.Host,
-                            Port = configBinding.Port,
-                            Protocol = configBinding.Protocol,
-                        });
-                    }
-
-                    var serviceEntry = new ServiceEntry(service, configService.Name);
-                    services.Add(serviceEntry);
-                }
-            }
-
-            var temporaryApplication = new TemporaryApplicationAdapter(application, globals, services);
-            if (temporaryApplication.Globals.Registry?.Hostname == null && interactive)
-            {
-                var registry = output.Prompt("Enter the Container Registry (ex: 'example.azurecr.io' for Azure or 'example' for dockerhub)", allowEmpty: !requireRegistry);
-                if (!string.IsNullOrWhiteSpace(registry))
-                {
-                    temporaryApplication.Globals.Registry = new ContainerRegistry(registry.Trim());
-                }
-            }
-            else if (temporaryApplication.Globals.Registry?.Hostname == null && requireRegistry)
-            {
-                throw new CommandException("A registry is required for deploy operations. Add the registry to 'tye.yaml' or use '-i' for interactive mode.");
-            }
-            else
-            {
-                // No registry specified, and that's OK!
-            }
-
-            foreach (var service in temporaryApplication.Services)
-            {
-                if (service.Service.Source is Project project && service.Service.GeneratedAssets.Container is ContainerInfo container)
-                {
-                    DockerfileGenerator.ApplyContainerDefaults(temporaryApplication, service, project, container);
-                }
-            }
-
-            return temporaryApplication;
-        }
-
-        private static async Task DeployApplicationManifestAsync(OutputContext output, Tye.Application application, string applicationName, string environment)
+        private static async Task DeployApplicationManifestAsync(OutputContext output, ApplicationBuilder application, string applicationName)
         {
             using var step = output.BeginStep("Deploying Application Manifests...");
 
@@ -195,8 +96,8 @@ namespace Microsoft.Tye
             output.WriteInfoLine($"Writing output to '{tempFile.FilePath}'.");
 
             {
-                using var stream = File.OpenWrite(tempFile.FilePath);
-                using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
+                await using var stream = File.OpenWrite(tempFile.FilePath);
+                await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
 
                 await ApplicationYamlWriter.WriteAsync(output, writer, application);
             }
@@ -220,6 +121,34 @@ namespace Microsoft.Tye
             output.WriteInfoLine($"Deployed application '{applicationName}'.");
 
             step.MarkComplete();
+        }
+
+        internal static void ApplyRegistryAndDefaults(OutputContext output, ApplicationBuilder application, bool interactive, bool requireRegistry)
+        {
+            if (application.Registry is null && interactive)
+            {
+                var registry = output.Prompt("Enter the Container Registry (ex: 'example.azurecr.io' for Azure or 'example' for dockerhub)", allowEmpty: !requireRegistry);
+                if (!string.IsNullOrWhiteSpace(registry))
+                {
+                    application.Registry = new ContainerRegistry(registry.Trim());
+                }
+            }
+            else if (application.Registry is null && requireRegistry)
+            {
+                throw new CommandException("A registry is required for deploy operations. Add the registry to 'tye.yaml' or use '-i' for interactive mode.");
+            }
+            else
+            {
+                // No registry specified, and that's OK!
+            }
+
+            foreach (var service in application.Services)
+            {
+                if (service is ProjectServiceBuilder project && project.ContainerInfo is ContainerInfo container)
+                {
+                    DockerfileGenerator.ApplyContainerDefaults(application, project, container);
+                }
+            }
         }
     }
 }

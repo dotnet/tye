@@ -2,10 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Tye;
-using Microsoft.Tye.ConfigModel;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -37,20 +37,21 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
 
-            var application = ConfigFactory.FromFile(projectFile);
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Need to add docker registry for generate
-            application.Registry = "test";
+            application.Registry = new ContainerRegistry("test");
 
             try
             {
-                await GenerateHost.ExecuteGenerateAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+                await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
 
                 // name of application is the folder
                 var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
                 var expectedContent = File.ReadAllText($"testassets/generate/{projectName}.yaml");
 
-                Assert.Equal(expectedContent, content);
+                Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
                 await DockerAssert.AssertImageExistsAsync(output, "test/test-project");
             }
             finally
@@ -75,22 +76,21 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
 
-            var application = ConfigFactory.FromFile(projectFile);
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Need to add docker registry for generate
-            application.Registry = "test";
+            application.Registry = new ContainerRegistry("test");
 
             try
             {
-                await GenerateHost.ExecuteGenerateAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+                await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
 
                 // name of application is the folder
                 var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
                 var expectedContent = File.ReadAllText($"testassets/generate/{projectName}.yaml");
 
-                Assert.Equal(expectedContent, content);
-
-                await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+                Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
 
                 await DockerAssert.AssertImageExistsAsync(output, "test/backend");
                 await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
@@ -119,20 +119,21 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
 
-            var application = ConfigFactory.FromFile(projectFile);
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Need to add docker registry for generate
-            application.Registry = "test";
+            application.Registry = new ContainerRegistry("test");
 
             try
             {
-                await GenerateHost.ExecuteGenerateAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+                await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
 
                 // name of application is the folder
                 var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
                 var expectedContent = File.ReadAllText($"testassets/generate/{projectName}.yaml");
 
-                Assert.Equal(expectedContent, content);
+                Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
 
                 await DockerAssert.AssertImageExistsAsync(output, "test/backend");
                 await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
@@ -161,25 +162,59 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
 
-            var application = ConfigFactory.FromFile(projectFile);
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             try
             {
-                await GenerateHost.ExecuteGenerateAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+                await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
 
                 // name of application is the folder
                 var content = File.ReadAllText(Path.Combine(tempDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
                 var expectedContent = File.ReadAllText($"testassets/generate/{projectName}-noregistry.yaml");
 
-                Assert.Equal(expectedContent, content);
-
-                await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+                Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
 
                 await DockerAssert.AssertImageExistsAsync(output, "test-project");
             }
             finally
             {
                 await DockerAssert.DeleteDockerImagesAsync(output, "test-project");
+            }
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task Generate_DaprApplication()
+        {
+            var applicationName = "dapr_test_application";
+            var projectName = "dapr_test_project";
+            var environment = "production";
+
+            await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory("dapr");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            try
+            {
+                await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
+
+                // name of application is the folder
+                var content = File.ReadAllText(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
+                var expectedContent = File.ReadAllText($"testassets/generate/dapr.yaml");
+
+                Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
+
+                await DockerAssert.AssertImageExistsAsync(output, projectName);
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, projectName);
             }
         }
     }

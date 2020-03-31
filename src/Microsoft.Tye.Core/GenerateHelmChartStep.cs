@@ -13,19 +13,19 @@ namespace Microsoft.Tye
 
         public bool Force { get; set; }
 
-        public override async Task ExecuteAsync(OutputContext output, Application application, ServiceEntry service)
+        public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             if (SkipWithoutProject(output, service, out var project))
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (SkipWithoutContainerInfo(output, service, out var container))
             {
-                return;
+                return Task.CompletedTask;
             }
 
-            var chartDirectory = Path.Combine(application.GetProjectDirectory(project), "charts");
+            var chartDirectory = Path.Combine(project.ProjectFile.DirectoryName, "charts");
             if (Directory.Exists(chartDirectory) && !Force)
             {
                 throw new CommandException("'charts' directory already exists for project. use '--force' to overwrite.");
@@ -36,15 +36,14 @@ namespace Microsoft.Tye
             }
 
             var chart = new HelmChartStep();
-            await HelmChartGenerator.GenerateAsync(
+            output.WriteInfoLine($"Generating Helm Chart at '{Path.Combine(chartDirectory, chart.ChartName)}'.");
+            return HelmChartGenerator.GenerateAsync(
                 output,
                 application,
-                service,
                 project,
                 container,
                 chart,
                 new DirectoryInfo(chartDirectory));
-            output.WriteInfoLine($"Generated Helm Chart at '{Path.Combine(chartDirectory, chart.ChartName)}'.");
 
         }
     }

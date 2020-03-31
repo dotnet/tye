@@ -4,57 +4,59 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Tye.Hosting.Model;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
+using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
 {
     public class ProcessRunner : IApplicationProcessor
     {
-        private readonly ILogger _logger;
-        private readonly bool _debugMode;
-        private readonly bool _buildProjects;
+        private const string ProcessReplicaStore = "process";
 
-        public ProcessRunner(ILogger logger, ProcessRunnerOptions options)
+        private readonly ILogger _logger;
+        private readonly ProcessRunnerOptions _options;
+
+        private readonly ReplicaRegistry _replicaRegistry;
+
+        public ProcessRunner(ILogger logger, ReplicaRegistry replicaRegistry, ProcessRunnerOptions options)
         {
             _logger = logger;
-            _debugMode = options.DebugMode;
-            _buildProjects = options.BuildProjects;
+            _replicaRegistry = replicaRegistry;
+            _options = options;
         }
 
-        public Task StartAsync(Tye.Hosting.Model.Application application)
+        public async Task StartAsync(Application application)
         {
+            await PurgeFromPreviousRun();
+
             var tasks = new Task[application.Services.Count];
             var index = 0;
             foreach (var s in application.Services)
             {
                 tasks[index++] = s.Value.ServiceType switch
                 {
-                    ServiceType.Container => Task.CompletedTask,
-                    ServiceType.External => Task.CompletedTask,
-
                     ServiceType.Executable => LaunchService(application, s.Value),
                     ServiceType.Project => LaunchService(application, s.Value),
 
-                    _ => throw new InvalidOperationException("Unknown ServiceType."),
+                    _ => Task.CompletedTask,
                 };
             }
 
-            return Task.WhenAll(tasks);
+            await Task.WhenAll(tasks);
         }
 
-        public Task StopAsync(Tye.Hosting.Model.Application application)
+        public Task StopAsync(Application application)
         {
             return KillRunningProcesses(application.Services);
         }
 
-        private async Task LaunchService(Tye.Hosting.Model.Application application, Tye.Hosting.Model.Service service)
+        private async Task LaunchService(Application application, Service service)
         {
             var serviceDescription = service.Description;
             var serviceName = serviceDescription.Name;
@@ -65,20 +67,15 @@ namespace Microsoft.Tye.Hosting
 
             if (serviceDescription.RunInfo is ProjectRunInfo project)
             {
-                var expandedProject = Environment.ExpandEnvironmentVariables(project.Project);
-                var fullProjectPath = Path.GetFullPath(Path.Combine(application.ContextDirectory, expandedProject));
-                path = GetExePath(fullProjectPath);
-                workingDirectory = Path.GetDirectoryName(fullProjectPath)!;
-                args = project.Args ?? "";
-                service.Status.ProjectFilePath = fullProjectPath;
+                path = project.RunCommand;
+                workingDirectory = project.ProjectFile.Directory.FullName;
+                args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
+                service.Status.ProjectFilePath = project.ProjectFile.FullName;
             }
             else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
             {
-                var expandedExecutable = Environment.ExpandEnvironmentVariables(executable.Executable);
-                path = Path.GetFullPath(Path.Combine(application.ContextDirectory, expandedExecutable));
-                workingDirectory = executable.WorkingDirectory != null ?
-                    Path.GetFullPath(Path.Combine(application.ContextDirectory, Environment.ExpandEnvironmentVariables(executable.WorkingDirectory))) :
-                    Path.GetDirectoryName(path)!;
+                path = executable.Executable;
+                workingDirectory = executable.WorkingDirectory!;
                 args = executable.Args ?? "";
             }
             else
@@ -98,35 +95,40 @@ namespace Microsoft.Tye.Hosting
             service.Status.Args = args;
 
             var processInfo = new ProcessInfo(new Task[service.Description.Replicas]);
+
             if (service.Status.ProjectFilePath != null &&
                 service.Description.RunInfo is ProjectRunInfo project2 &&
                 project2.Build &&
-                _buildProjects)
+                _options.BuildProjects)
             {
                 // Sometimes building can fail because of file locking (like files being open in VS)
                 _logger.LogInformation("Building project {ProjectFile}", service.Status.ProjectFilePath);
 
                 service.Logs.OnNext($"dotnet build \"{service.Status.ProjectFilePath}\" /nologo");
 
-                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo",
-                                                            outputDataReceived: data => service.Logs.OnNext(data),
-                                                            throwOnError: false);
+                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false);
+
+                service.Logs.OnNext(buildResult.StandardOutput);
 
                 if (buildResult.ExitCode != 0)
                 {
-                    _logger.LogInformation("Building {ProjectFile} failed with exit code {ExitCode}: " + buildResult.StandardOutput + buildResult.StandardError, service.Status.ProjectFilePath, buildResult.ExitCode);
+                    _logger.LogInformation("Building {ProjectFile} failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, service.Status.ProjectFilePath, buildResult.ExitCode);
                     return;
                 }
             }
 
-            async Task RunApplicationAsync(IEnumerable<(int Port, int BindingPort, string? Protocol)> ports)
+            async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol)> ports)
             {
+                // Make sure we yield before trying to start the process, this is important so we don't block startup
+                await Task.Yield();
+
                 var hasPorts = ports.Any();
 
                 var environment = new Dictionary<string, string>
                 {
                     // Default to development environment
-                    ["DOTNET_ENVIRONMENT"] = "Development"
+                    ["DOTNET_ENVIRONMENT"] = "Development",
+                    ["ASPNETCORE_ENVIRONMENT"] = "Development",
                 };
 
                 // Set up environment variables to use the version of dotnet we're using to run
@@ -141,20 +143,30 @@ namespace Microsoft.Tye.Hosting
 
                 application.PopulateEnvironment(service, (k, v) => environment[k] = v);
 
-                if (_debugMode)
+                if (_options.DebugMode && (_options.DebugAllServices || _options.ServicesToDebug.Contains(serviceName, StringComparer.OrdinalIgnoreCase)))
                 {
                     environment["DOTNET_STARTUP_HOOKS"] = typeof(Hosting.Runtime.HostingRuntimeHelpers).Assembly.Location;
                 }
 
                 if (hasPorts)
                 {
-                    // These ports should also be passed in not assuming ASP.NET Core
+                    // These are the ports that the application should use for binding
+
+                    // 1. Configure ASP.NET Core to bind to those same ports
                     environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://localhost:{p.Port}"));
 
+                    // Set the HTTPS port for the redirect middleware
                     foreach (var p in ports)
                     {
-                        environment[$"{p.Protocol?.ToUpper() ?? "HTTP"}_PORT"] = p.BindingPort.ToString();
+                        if (string.Equals(p.Protocol, "https", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // We need to set the redirect URL to the exposed port so the redirect works cleanly
+                            environment["HTTPS_PORT"] = p.ExternalPort.ToString();
+                        }
                     }
+
+                    // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
+                    environment["PORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
                 }
 
                 while (!processInfo.StoppedTokenSource.IsCancellationRequested)
@@ -177,16 +189,25 @@ namespace Microsoft.Tye.Hosting
                         status.Ports = ports.Select(p => p.Port);
                     }
 
+                    // TODO clean this up.
+                    foreach (var env in environment)
+                    {
+                        args = args.Replace($"%{env.Key}%", env.Value);
+                    }
+
                     _logger.LogInformation("Launching service {ServiceName}: {ExePath} {args}", replica, path, args);
 
                     try
                     {
                         service.Logs.OnNext($"[{replica}]:{path} {args}");
 
-                        var result = await ProcessUtil.RunAsync(path, args,
+                        var result = await ProcessUtil.RunAsync(
+                            path,
+                            args,
                             environmentVariables: environment,
                             workingDirectory: workingDirectory,
                             outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
+                            errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
                             onStart: pid =>
                             {
                                 if (hasPorts)
@@ -200,6 +221,7 @@ namespace Microsoft.Tye.Hosting
 
                                 status.Pid = pid;
 
+                                WriteReplicaToStore(pid.ToString());
                                 service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
                             },
                             throwOnError: false,
@@ -216,7 +238,14 @@ namespace Microsoft.Tye.Hosting
                     {
                         _logger.LogError(0, ex, "Failed to launch process for service {ServiceName}", replica);
 
-                        Thread.Sleep(5000);
+                        try
+                        {
+                            await Task.Delay(5000, processInfo.StoppedTokenSource.Token);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // Swallow cancellation exceptions and continue
+                        }
                     }
 
                     service.Restarts++;
@@ -246,7 +275,7 @@ namespace Microsoft.Tye.Hosting
                             continue;
                         }
 
-                        ports.Add((service.PortMap[binding.Port.Value][i], binding.Port.Value, binding.Protocol));
+                        ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.Protocol));
                     }
 
                     processInfo.Tasks[i] = RunApplicationAsync(ports);
@@ -263,17 +292,18 @@ namespace Microsoft.Tye.Hosting
             service.Items[typeof(ProcessInfo)] = processInfo;
         }
 
-        private Task KillRunningProcesses(IDictionary<string, Tye.Hosting.Model.Service> services)
+        private Task KillRunningProcesses(IDictionary<string, Service> services)
         {
-            static async Task KillProcessAsync(Tye.Hosting.Model.Service service)
+            static Task KillProcessAsync(Service service)
             {
                 if (service.Items.TryGetValue(typeof(ProcessInfo), out var stateObj) && stateObj is ProcessInfo state)
                 {
                     // Cancel the token before stopping the process
                     state.StoppedTokenSource.Cancel();
 
-                    await Task.WhenAll(state.Tasks);
+                    return Task.WhenAll(state.Tasks);
                 }
+                return Task.CompletedTask;
             }
 
             var index = 0;
@@ -287,36 +317,33 @@ namespace Microsoft.Tye.Hosting
             return Task.WhenAll(tasks);
         }
 
-        private static string GetExePath(string projectFilePath)
+        private async Task PurgeFromPreviousRun()
         {
-            // TODO: Use msbuild to get the target path
-
-            var outputFileName = Path.GetFileNameWithoutExtension(projectFilePath) + (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : ".dll");
-
-            var debugOutputPath = Path.Combine(Path.GetDirectoryName(projectFilePath)!, "bin", "Debug");
-
-            var tfms = Directory.Exists(debugOutputPath) ? Directory.GetDirectories(debugOutputPath) : Array.Empty<string>();
-
-            if (tfms.Length > 0)
+            var processReplicas = await _replicaRegistry.GetEvents(ProcessReplicaStore);
+            foreach (var replica in processReplicas)
             {
-                // Pick the first one
-                var path = Path.Combine(debugOutputPath, tfms[0], outputFileName);
-                if (File.Exists(path))
+                if (int.TryParse(replica["pid"], out var pid))
                 {
-                    return path;
+                    ProcessUtil.KillProcess(pid);
+                    _logger.LogInformation("removed process {pid} from previous run", pid);
                 }
-
-                // Older versions of .NET Core didn't have TFMs
-                return Path.Combine(debugOutputPath, tfms[0], Path.GetFileNameWithoutExtension(projectFilePath) + ".dll");
             }
 
-            return Path.Combine(debugOutputPath, "netcoreapp3.1", outputFileName);
+            _replicaRegistry.DeleteStore(ProcessReplicaStore);
+        }
+
+        private void WriteReplicaToStore(string pid)
+        {
+            _replicaRegistry.WriteReplicaEvent(ProcessReplicaStore, new Dictionary<string, string>()
+            {
+                ["pid"] = pid
+            });
         }
 
         private static string? GetDotnetRoot()
         {
-            var process = Process.GetCurrentProcess();
-            var entryPointFilePath = process.MainModule.FileName;
+            var entryPointFilePath = GetEntryPointFilePath();
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
                 Path.GetFileNameWithoutExtension(entryPointFilePath) == "dotnet")
             {
@@ -328,6 +355,12 @@ namespace Microsoft.Tye.Hosting
             }
 
             return null;
+        }
+
+        private static string GetEntryPointFilePath()
+        {
+            using var process = Process.GetCurrentProcess();
+            return process.MainModule.FileName;
         }
 
         private class ProcessInfo

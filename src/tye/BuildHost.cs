@@ -5,23 +5,28 @@
 using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Tye.ConfigModel;
 
 namespace Microsoft.Tye
 {
     public static class BuildHost
     {
-        public static Task BuildAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive)
+        public static async Task BuildAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive)
         {
-            var application = ConfigFactory.FromFile(path);
-            return ExecuteBuildAsync(new OutputContext(console, verbosity), application, environment: "production", interactive);
+            var output = new OutputContext(console, verbosity);
+            var application = await ApplicationFactory.CreateAsync(output, path);
+            if (application.Services.Count == 0)
+            {
+                throw new CommandException($"No services found in \"{application.Source.Name}\"");
+            }
+
+            await ExecuteBuildAsync(output, application, environment: "production", interactive);
         }
 
-        public static async Task ExecuteBuildAsync(OutputContext output, ConfigApplication application, string environment, bool interactive)
+        public static async Task ExecuteBuildAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive)
         {
-            var temporaryApplication = await Program.CreateApplicationAdapterAsync(output, application, interactive, requireRegistry: false);
+            await application.ProcessExtensionsAsync(ExtensionContext.OperationKind.Deploy);
+
             var steps = new List<ServiceExecutor.Step>()
             {
                 new CombineStep() { Environment = environment, },
@@ -29,8 +34,10 @@ namespace Microsoft.Tye
                 new BuildDockerImageStep() { Environment = environment, },
             };
 
-            var executor = new ServiceExecutor(output, temporaryApplication, steps);
-            foreach (var service in temporaryApplication.Services)
+            Program.ApplyRegistryAndDefaults(output, application, interactive, requireRegistry: false);
+
+            var executor = new ServiceExecutor(output, application, steps);
+            foreach (var service in application.Services)
             {
                 await executor.ExecuteAsync(service);
             }

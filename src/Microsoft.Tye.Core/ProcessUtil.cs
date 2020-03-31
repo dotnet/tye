@@ -81,10 +81,6 @@ namespace Microsoft.Tye
                     {
                         errorDataReceived.Invoke(e.Data);
                     }
-                    else if (outputDataReceived != null)
-                    {
-                        outputDataReceived.Invoke(e.Data);
-                    }
                     else
                     {
                         errorBuilder.AppendLine(e.Data);
@@ -113,7 +109,7 @@ namespace Microsoft.Tye
             process.BeginErrorReadLine();
 
             var cancelledTcs = new TaskCompletionSource<object?>();
-            using var _ = cancellationToken.Register(() => cancelledTcs.TrySetResult(null));
+            await using var _ = cancellationToken.Register(() => cancelledTcs.TrySetResult(null));
 
             var result = await Task.WhenAny(processLifetimeTask.Task, cancelledTcs.Task);
 
@@ -142,6 +138,17 @@ namespace Microsoft.Tye
             }
 
             return await processLifetimeTask.Task;
+        }
+
+        public static void KillProcess(int pid)
+        {
+            try
+            {
+                using var process = Process.GetProcessById(pid);
+                process?.Kill();
+            }
+            catch (ArgumentException) { }
+            catch (InvalidOperationException) { }
         }
     }
 }

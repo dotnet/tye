@@ -1,13 +1,11 @@
 ﻿using System.IO;
 using Microsoft.Tye.ConfigModel;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
+using Microsoft.Tye.Serialization;
 
 namespace Microsoft.Tye
 {
-    public class InitHost
+    public static class InitHost
     {
-
         public static string CreateTyeFile(FileInfo? path, bool force)
         {
             var (content, outputFilePath) = CreateTyeFileContent(path, force);
@@ -57,10 +55,7 @@ services:
             if (path is FileInfo && path.Exists)
             {
                 var application = ConfigFactory.FromFile(path);
-                var serializer = new SerializerBuilder()
-                    .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                    .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults)
-                    .Build();
+                var serializer = YamlSerializer.CreateSerializer();
 
                 var extension = path.Extension.ToLowerInvariant();
                 var directory = path.Directory;
@@ -70,11 +65,14 @@ services:
                 {
                     // If the input file is a project or solution then use that as the name
                     application.Name = Path.GetFileNameWithoutExtension(path.Name).ToLowerInvariant();
+                    application.Extensions = null!;
+                    application.Ingress = null!;
 
                     foreach (var service in application.Services)
                     {
                         service.Bindings = null!;
                         service.Configuration = null!;
+                        service.Volumes = null!;
                         service.Project = service.Project!.Substring(directory.FullName.Length).TrimStart('/');
                     }
 
@@ -102,7 +100,6 @@ services:
 
             return (template, outputFilePath);
         }
-
 
         private static void ThrowIfTyeFilePresent(FileInfo? path, string yml)
         {

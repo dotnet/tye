@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.IO;
 using Microsoft.Tye;
 using Xunit;
@@ -36,7 +37,7 @@ namespace E2ETest
 
             output.WriteLine(content);
 
-            Assert.Equal(expectedContent, content);
+            Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
         }
 
         [Fact]
@@ -56,7 +57,7 @@ namespace E2ETest
 
             output.WriteLine(content);
 
-            Assert.Equal(expectedContent, content);
+            Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
         }
 
         [Fact]
@@ -76,7 +77,7 @@ namespace E2ETest
 
             output.WriteLine(content);
 
-            Assert.Equal(expectedContent, content);
+            Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
         }
     }
 }

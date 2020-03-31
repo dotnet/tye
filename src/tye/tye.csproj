@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>Tye</RootNamespace>
+    <RootNamespace>Microsoft.Tye</RootNamespace>
     <AssemblyName>tye</AssemblyName>
     <PackageId>Microsoft.Tye</PackageId>
     <ToolCommandName>tye</ToolCommandName>
@@ -13,13 +13,13 @@
 
   <ItemGroup>
     <Compile Include="..\shared\KubectlDetector.cs" Link="KubectlDetector.cs" />
-    <Compile Include="..\shared\TempDirectory.cs" Link="TempDirectory.cs" />
     <Compile Include="..\shared\TempFile.cs" Link="TempFile.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Tye.Hosting\Microsoft.Tye.Hosting.csproj" />
     <ProjectReference Include="..\Microsoft.Tye.Core\Microsoft.Tye.Core.csproj" />
+    <ProjectReference Include="..\Microsoft.Tye.Extensions\Microsoft.Tye.Extensions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

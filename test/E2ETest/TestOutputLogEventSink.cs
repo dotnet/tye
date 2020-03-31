@@ -8,11 +8,11 @@ namespace E2ETest
 {
     public class TestOutputLogEventSink : ILogEventSink, IConsole, IStandardStreamWriter
     {
-        private readonly ITestOutputHelper output;
+        private readonly ITestOutputHelper _output;
 
         public TestOutputLogEventSink(ITestOutputHelper output)
         {
-            this.output = output;
+            _output = output;
         }
 
         public IStandardStreamWriter Out => this;
@@ -27,12 +27,13 @@ namespace E2ETest
 
         public void Emit(LogEvent logEvent)
         {
-            output.WriteLine(logEvent.RenderMessage());
+            _output.WriteLine(logEvent.RenderMessage());
         }
 
         public void Write(string value)
         {
-            output.WriteLine(value);
+            // our usage of IConsole includes newlines, so strip them out.
+            _output.WriteLine(value.TrimEnd('\r', '\n'));
         }
     }
 }

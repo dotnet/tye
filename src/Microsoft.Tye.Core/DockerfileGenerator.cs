@@ -12,7 +12,7 @@ namespace Microsoft.Tye
 {
     public static class DockerfileGenerator
     {
-        public static async Task WriteDockerfileAsync(OutputContext output, Application application, ServiceEntry service, Project project, ContainerInfo container, string filePath)
+        public static async Task WriteDockerfileAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container, string filePath)
         {
             if (output is null)
             {
@@ -22,11 +22,6 @@ namespace Microsoft.Tye
             if (application is null)
             {
                 throw new ArgumentNullException(nameof(application));
-            }
-
-            if (service is null)
-            {
-                throw new ArgumentNullException(nameof(service));
             }
 
             if (project is null)
@@ -44,11 +39,11 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(filePath));
             }
 
-            using var stream = File.OpenWrite(filePath);
-            using var writer = new StreamWriter(stream, encoding: Encoding.UTF8, bufferSize: -1, leaveOpen: true);
+            await using var stream = File.OpenWrite(filePath);
+            await using var writer = new StreamWriter(stream, encoding: Encoding.UTF8, bufferSize: -1, leaveOpen: true);
 
-            var entryPoint = Path.GetFileNameWithoutExtension(project.RelativeFilePath);
-            output.WriteDebugLine($"Writing dockerfile to '{filePath}'.");
+            var entryPoint = Path.GetFileNameWithoutExtension(project.ProjectFile.Name);
+            output.WriteDebugLine($"Writing Dockerfile to '{filePath}'.");
             if (container.UseMultiphaseDockerfile ?? true)
             {
                 await WriteMultiphaseDockerfileAsync(writer, entryPoint, container);
@@ -57,7 +52,7 @@ namespace Microsoft.Tye
             {
                 await WriteLocalPublishDockerfileAsync(writer, entryPoint, container);
             }
-            output.WriteDebugLine("Done writing dockerfile.");
+            output.WriteDebugLine("Done writing Dockerfile.");
         }
 
         private static async Task WriteMultiphaseDockerfileAsync(StreamWriter writer, string applicationEntryPoint, ContainerInfo container)
@@ -80,16 +75,11 @@ namespace Microsoft.Tye
             await writer.WriteLineAsync($"ENTRYPOINT [\"dotnet\", \"{applicationEntryPoint}.dll\"]");
         }
 
-        public static void ApplyContainerDefaults(Application application, ServiceEntry service, Project project, ContainerInfo container)
+        public static void ApplyContainerDefaults(ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container)
         {
             if (application is null)
             {
                 throw new ArgumentNullException(nameof(application));
-            }
-
-            if (service is null)
-            {
-                throw new ArgumentNullException(nameof(service));
             }
 
             if (project is null)
@@ -102,8 +92,7 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(container));
             }
 
-            if (container.BaseImageName == null &&
-                project.Frameworks.Any(f => f.Name == "Microsoft.AspNetCore.App"))
+            if (container.BaseImageName == null && project.IsAspNet)
             {
                 container.BaseImageName = "mcr.microsoft.com/dotnet/core/aspnet";
             }
@@ -112,15 +101,9 @@ namespace Microsoft.Tye
                 container.BaseImageName = "mcr.microsoft.com/dotnet/core/runtime";
             }
 
-            if (container.BaseImageTag == null &&
-                project.TargetFramework == "netcoreapp3.1")
+            if (container.BaseImageTag == null && project.TargetFrameworkName == "netcoreapp")
             {
-                container.BaseImageTag = "3.1";
-            }
-            else if (container.BaseImageTag == null &&
-                project.TargetFramework == "netcoreapp3.0")
-            {
-                container.BaseImageTag = "3.0";
+                container.BaseImageTag = project.TargetFrameworkVersion;
             }
 
             if (container.BaseImageTag == null)
@@ -131,16 +114,16 @@ namespace Microsoft.Tye
             container.BuildImageName ??= "mcr.microsoft.com/dotnet/core/sdk";
             container.BuildImageTag ??= "3.1";
 
-            if (container.ImageName == null && application.Globals.Registry?.Hostname == null)
+            if (container.ImageName == null && application.Registry?.Hostname == null)
             {
-                container.ImageName ??= service.Service.Name.ToLowerInvariant();
+                container.ImageName ??= project.Name.ToLowerInvariant();
             }
-            else if (container.ImageName == null && application.Globals.Registry?.Hostname != null)
+            else if (container.ImageName == null && application.Registry?.Hostname != null)
             {
-                container.ImageName ??= $"{application.Globals.Registry?.Hostname}/{service.Service.Name.ToLowerInvariant()}";
+                container.ImageName ??= $"{application.Registry?.Hostname}/{project.Name.ToLowerInvariant()}";
             }
 
-            container.ImageTag ??= project.Version.Replace("+", "-");
+            container.ImageTag ??= project.Version?.Replace("+", "-") ?? "latest";
         }
     }
 }

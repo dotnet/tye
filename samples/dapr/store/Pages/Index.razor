@@ -1,0 +1,26 @@
+﻿@page "/"
+@inject DaprClient Dapr
+
+<h1>Welcome to our awesome store!</h1>
+<p>Please browse the products at your leisure.</p>
+
+@if (products == null)
+{
+    <h3>Loading...</h3>
+}
+else
+{
+    foreach (var product in products)
+    {
+        <ProductDisplay Product="product" />
+    }
+}
+
+@code {
+    Product[]? products;
+
+    protected async override Task OnInitializedAsync()
+    {
+        products = await Dapr.InvokeMethodAsync<Product[]>("products", "list");
+    }
+}

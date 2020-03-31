@@ -90,11 +90,11 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
     - name: frontend
       project: frontend\frontend.csproj
     - name: redis
-      dockerImage: redis
+      image: redis
       bindings:
       - port: 6379
     - name: redis-cli
-      dockerImage: redis
+      image: redis
       args: "redis-cli -h host.docker.internal MONITOR"
    ```
 

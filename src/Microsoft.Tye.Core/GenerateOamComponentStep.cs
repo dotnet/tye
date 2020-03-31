@@ -13,19 +13,19 @@ namespace Microsoft.Tye
         public string Environment { get; set; } = "production";
 
 
-        public override Task ExecuteAsync(OutputContext output, Application application, ServiceEntry service)
+        public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             if (SkipWithoutContainerOutput(output, service))
             {
                 return Task.CompletedTask;
             }
 
-            if (SkipForEnvironment(output, service, Environment))
+            if (SkipWithoutProject(output, service, out var project))
             {
                 return Task.CompletedTask;
             }
 
-            var component = OamComponentGenerator.CreateOamComponent(output, application, service);
+            var component = OamComponentGenerator.CreateOamComponent(output, application, project);
             service.Outputs.Add(component);
             return Task.CompletedTask;
         }

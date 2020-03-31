@@ -3,8 +3,8 @@ apiVersion: apps/v1
 metadata:
   name: backend
   labels:
-    app.kubernetes.io/name: backend
-    app.kubernetes.io/part-of: frontend-backend
+    app.kubernetes.io/name: 'backend'
+    app.kubernetes.io/part-of: 'frontend-backend'
 spec:
   replicas: 1
   selector:
@@ -13,8 +13,8 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: backend
-        app.kubernetes.io/part-of: frontend-backend
+        app.kubernetes.io/name: 'backend'
+        app.kubernetes.io/part-of: 'frontend-backend'
     spec:
       containers:
       - name: backend
@@ -23,6 +23,8 @@ spec:
         env:
         - name: ASPNETCORE_URLS
           value: 'http://*'
+        - name: PORT
+          value: '80'
         - name: SERVICE__FRONTEND__PROTOCOL
           value: 'http'
         - name: SERVICE__FRONTEND__PORT
@@ -38,14 +40,14 @@ apiVersion: v1
 metadata:
   name: backend
   labels:
-    app.kubernetes.io/name: backend
-    app.kubernetes.io/part-of: frontend-backend
+    app.kubernetes.io/name: 'backend'
+    app.kubernetes.io/part-of: 'frontend-backend'
 spec:
   selector:
     app.kubernetes.io/name: backend
   type: ClusterIP
   ports:
-  - name: backend
+  - name: http
     protocol: TCP
     port: 80
     targetPort: 80
@@ -56,8 +58,8 @@ apiVersion: apps/v1
 metadata:
   name: frontend
   labels:
-    app.kubernetes.io/name: frontend
-    app.kubernetes.io/part-of: frontend-backend
+    app.kubernetes.io/name: 'frontend'
+    app.kubernetes.io/part-of: 'frontend-backend'
 spec:
   replicas: 1
   selector:
@@ -66,8 +68,8 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: frontend
-        app.kubernetes.io/part-of: frontend-backend
+        app.kubernetes.io/name: 'frontend'
+        app.kubernetes.io/part-of: 'frontend-backend'
     spec:
       containers:
       - name: frontend
@@ -76,6 +78,8 @@ spec:
         env:
         - name: ASPNETCORE_URLS
           value: 'http://*'
+        - name: PORT
+          value: '80'
         - name: SERVICE__BACKEND__PROTOCOL
           value: 'http'
         - name: SERVICE__BACKEND__PORT
@@ -91,14 +95,14 @@ apiVersion: v1
 metadata:
   name: frontend
   labels:
-    app.kubernetes.io/name: frontend
-    app.kubernetes.io/part-of: frontend-backend
+    app.kubernetes.io/name: 'frontend'
+    app.kubernetes.io/part-of: 'frontend-backend'
 spec:
   selector:
     app.kubernetes.io/name: frontend
   type: ClusterIP
   ports:
-  - name: frontend
+  - name: http
     protocol: TCP
     port: 80
     targetPort: 80

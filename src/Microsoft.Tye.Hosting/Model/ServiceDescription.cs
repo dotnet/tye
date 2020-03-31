@@ -15,23 +15,9 @@ namespace Microsoft.Tye.Hosting.Model
         }
 
         public string Name { get; }
-
-        public RunInfo? RunInfo { get; }
-
+        public RunInfo? RunInfo { get; set; }
         public int Replicas { get; set; } = 1;
         public List<ServiceBinding> Bindings { get; } = new List<ServiceBinding>();
-        public List<ConfigurationSource> Configuration { get; } = new List<ConfigurationSource>();
-    }
-
-    public class ConfigurationSource
-    {
-        public ConfigurationSource(string name, string value)
-        {
-            Name = name;
-            Value = value;
-        }
-
-        public string Name { get; }
-        public string Value { get; }
+        public List<EnvironmentVariable> Configuration { get; } = new List<EnvironmentVariable>();
     }
 }

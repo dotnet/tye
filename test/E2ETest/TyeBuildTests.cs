@@ -5,13 +5,11 @@
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Tye;
-using Microsoft.Tye.ConfigModel;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace E2ETest
 {
-    public class TyeBuildTests
+    public partial class TyeBuildTests
     {
         private readonly ITestOutputHelper output;
         private readonly TestOutputLogEventSink sink;
@@ -37,13 +35,14 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
 
-            var application = ConfigFactory.FromFile(projectFile);
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            application.Registry = "test";
+            application.Registry = new ContainerRegistry("test");
 
             try
             {
-                await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+                await BuildHost.ExecuteBuildAsync(outputContext, application, environment, interactive: false);
 
                 await DockerAssert.AssertImageExistsAsync(output, "test/test-project");
             }
@@ -69,13 +68,14 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
 
-            var application = ConfigFactory.FromFile(projectFile);
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            application.Registry = "test";
+            application.Registry = new ContainerRegistry("test");
 
             try
             {
-                await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+                await BuildHost.ExecuteBuildAsync(outputContext, application, environment, interactive: false);
 
                 await DockerAssert.AssertImageExistsAsync(output, "test/backend");
                 await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
@@ -104,13 +104,14 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
 
-            var application = ConfigFactory.FromFile(projectFile);
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            application.Registry = "test";
+            application.Registry = new ContainerRegistry("test");
 
             try
             {
-                await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+                await BuildHost.ExecuteBuildAsync(outputContext, application, environment, interactive: false);
 
                 await DockerAssert.AssertImageExistsAsync(output, "test/backend");
                 await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
@@ -138,12 +139,12 @@ namespace E2ETest
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
-
-            var application = ConfigFactory.FromFile(projectFile);
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             try
             {
-                await BuildHost.ExecuteBuildAsync(new OutputContext(sink, Verbosity.Debug), application, environment, interactive: false);
+                await BuildHost.ExecuteBuildAsync(outputContext, application, environment, interactive: false);
 
                 await DockerAssert.AssertImageExistsAsync(output, "test-project");
             }

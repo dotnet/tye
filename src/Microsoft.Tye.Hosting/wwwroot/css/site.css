@@ -5,12 +5,15 @@ html, body {
 }
 
 a, .btn-link {
-    color: #0366d6;
+    color: #2eacf5;
 }
 
+#bg-info-link{
+    background-color: #3d699b;
+}
 .btn-primary {
     color: #fff;
-    background-color: #3371e3;
+    background-color: #2eacf5;
     border-color: #303030;
 }
 
@@ -30,93 +33,93 @@ app {
     flex: 1;
 }
 
-    .main .top-row {
-        background-color: #303030;
-        border-bottom: 1px solid #d6d5d5;
-        justify-content: flex-end;
-    }
-
-        .main .top-row > a, .main .top-row .btn-link {
-            white-space: nowrap;
-            margin-left: 1.5rem;
-        }
-
-        .main .top-row a:first-child {
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-.sidebar {
-    background-image: linear-gradient(180deg, #000 0%, #333 50%);
+.main .top-row {
+     background-color:#6b7c8c;
+     border-bottom: 1px solid #d6d5d5;
+    justify-content: flex-end;
 }
 
-    .sidebar .top-row {
-        background-color: #303030;
-    }
+.main .top-row > a, .main .top-row .btn-link {
+    white-space: nowrap;
+    margin-left: 1.5rem;
+}
 
-    .sidebar .navbar-brand {
-        font-size: 1.1rem;
-    }
+.main .top-row a:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-    .sidebar .oi {
-        width: 2rem;
-        font-size: 1.1rem;
-        vertical-align: text-top;
-        top: -2px;
-    }
+.sidebar {
+    background-color: #f8f9fa;
+}
 
-    .sidebar .nav-item, top-nav-item {
-        font-size: 0.9rem;
-        padding-bottom: 0.5rem;
-    }
+.sidebar .top-row {
+     background-color: #6b7c8c;
+}
 
-        .sidebar .nav-item:first-of-type {
-            padding-top: 1rem;
-        }
+.sidebar .navbar-brand {
+    font-size: 1.1rem;
+}
 
-        .sidebar .nav-item:last-of-type {
-            padding-bottom: 1rem;
-        }
+.sidebar .oi {
+    width: 2rem;
+    font-size: 1.1rem;
+    vertical-align: text-top;
+    top: -2px;
+}
 
-        .sidebar .nav-item a, .top-nav-item a {
-            color: #d7d7d7;
-            border-radius: 4px;
-            height: 3rem;
-            display: flex;
-            align-items: center;
-            line-height: 3rem;
-            background-color: #3371e3;
-        }
+.sidebar .nav-item, top-nav-item {
+    font-size: 0.9rem;
+    padding-bottom: 0.5rem;
+}
 
-            .sidebar .nav-item a.active, .top-nav-item a.active {
-                background-color: #0366d6;
-                color: white;
-            }
+.sidebar .nav-item:first-of-type {
+     padding-top: 1rem;
+}
 
-            .sidebar .nav-item a:hover, .top-nav-item a:hover {
-                background-color: rgba(255,255,255,0.1);
-                transition: 0.3s;
-                color: white;
-            }
+.sidebar .nav-item:last-of-type {
+    padding-bottom: 1rem;
+}
+
+.sidebar .nav-item a, .top-nav-item a {
+    color: white;
+    border-radius: 4px;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    line-height: 3rem;
+    background-color: #3d699b;
+}
+
+.sidebar .nav-item a.active, .top-nav-item a.active {
+    background-color: #3d699b;
+    color: white;
+}
+
+.sidebar .nav-item a:hover, .top-nav-item a:hover {
+    background-color: rgb(156, 158, 160);
+    transition: 0.3s;
+    color: white;
+}
 
 button.navbar-toggler {
     color: white;
     background-color: #303030;
 }
 
-     button.navbar-toggler:hover {
-        color: #3371e3;
-        background-color: #3371e3;
-        transition: 0.3s;
-    }
+button.navbar-toggler:hover {
+    color: #3371e3;
+    background-color: #3371e3;
+    transition: 0.3s;
+}
 
 .top-nav-item a {
     padding-left: 2rem;
     padding-right: 2rem;
     text-decoration: none;
-    background-color: #303030;
-    border: 1px solid rgba(255,255,255,.1);
+    border: 1px solid #a2a2a2;
     border-radius: .25rem;
+    color: white;
 }
 
 .content {
@@ -151,12 +154,12 @@ button.navbar-toggler {
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
 
 @media (max-width: 767.98px) {
     .main .top-row:not(.auth) {

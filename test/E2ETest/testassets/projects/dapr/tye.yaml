@@ -1,0 +1,6 @@
+name: dapr_test_application
+extensions:
+- name: dapr
+services:
+- name: dapr_test_project
+  project: dapr.csproj

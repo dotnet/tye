@@ -124,7 +124,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
             // Create the logger factory for this replica
             using var loggerFactory = LoggerFactory.Create(builder => ConfigureLogging(serviceName, replicaName, builder));
 
-            var processor = new SimpleSpanProcessor(CreateSpanExporter(serviceName, replicaName));
+            var processor = new SimpleSpanProcessor(CreateSpanExporter(serviceName));
 
             var providers = new List<EventPipeProvider>()
             {
@@ -252,7 +252,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
                 {
                     var source = new EventPipeEventSource(session.EventStream);
 
-                    // Distribued Tracing
+                    // Distributed Tracing
                     HandleDistributedTracingEvents(source, processor);
 
                     // Metrics
@@ -375,7 +375,17 @@ namespace Microsoft.Tye.Hosting.Diagnostics
                         var args = new object[formatter.ValueNames.Count];
                         for (var i = 0; i < args.Length; i++)
                         {
-                            args[i] = message.GetProperty(formatter.ValueNames[i]).GetString();
+                            if (!message.TryGetProperty(formatter.ValueNames[i], out var argValue))
+                            {
+                                // We couldn't find the parsed property in the original message, it's likely that this is a JSON object or something else
+                                // being logged, or some other format that just looks like the formatted message. Stop here and log the formatted message
+                                var obj = new LogObject(message, lastFormattedMessage);
+                                logger.Log(logLevel, new EventId(eventId, eventName), obj, exception, LogObject.Callback);
+
+                                break;
+                            }
+
+                            args[i] = argValue.GetString();
                         }
 
                         logger.Log(logLevel, new EventId(eventId, eventName), exception, formatString, args);
@@ -768,7 +778,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
         }
 
 
-        private SpanExporter CreateSpanExporter(string serviceName, string replicaName)
+        private SpanExporter CreateSpanExporter(string serviceName)
         {
             if (string.Equals(_options.DistributedTraceProvider.Key, "zipkin", StringComparison.OrdinalIgnoreCase) &&
                 !string.IsNullOrEmpty(_options.DistributedTraceProvider.Value))
@@ -838,10 +848,10 @@ namespace Microsoft.Tye.Hosting.Diagnostics
             public static readonly string HttpFlavorKey = "http.flavor";
         }
 
-        internal sealed class LoggingEventSource
+        internal static class LoggingEventSource
         {
             /// <summary>
-            /// This is public from an EventSource consumer point of view, but since these defintions
+            /// This is public from an EventSource consumer point of view, but since these definitions
             /// are not needed outside this class
             /// </summary>
             public static class Keywords
