@@ -11,7 +11,7 @@ namespace Microsoft.Tye.ConfigModel
     public class ConfigService
     {
         [Required]
-        public string Name { get; set; } = default!;
+        public string? Name { get; set; } = default!;
         public bool External { get; set; }
         public string? Image { get; set; }
         public string? Project { get; set; }

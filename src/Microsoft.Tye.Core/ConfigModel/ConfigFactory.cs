@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Tye.Serialization;
+using Tye.Serialization;
 
 namespace Microsoft.Tye.ConfigModel
 {
@@ -74,28 +75,8 @@ namespace Microsoft.Tye.ConfigModel
 
         private static ConfigApplication FromYaml(FileInfo file)
         {
-            var deserializer = YamlSerializer.CreateDeserializer();
-
-            using var reader = file.OpenText();
-            var application = deserializer.Deserialize<ConfigApplication>(reader);
-            application.Source = file;
-
-            // Deserialization makes all collection properties null so make sure they are non-null so
-            // other code doesn't need to react
-            foreach (var service in application.Services)
-            {
-                service.Bindings ??= new List<ConfigServiceBinding>();
-                service.Configuration ??= new List<ConfigConfigurationSource>();
-                service.Volumes ??= new List<ConfigVolume>();
-            }
-
-            foreach (var ingress in application.Ingress)
-            {
-                ingress.Bindings ??= new List<ConfigIngressBinding>();
-                ingress.Rules ??= new List<ConfigIngressRule>();
-            }
-
-            return application;
+            using var parser = new YamlParser(file);
+            return parser.ParseConfigApplication();
         }
     }
 }

@@ -11,23 +11,6 @@ namespace UnitTests
     public class TyeDeserializationTests
     {
         [Fact]
-        public void ParseProjects()
-        {
-            var input = "name: temp";
-            var parser = YamlSerializer.CreateDeserializer();
-            var result = parser.Deserialize<ConfigApplication>(input);
-        }
-
-
-        [Fact]
-        public void ParseInvalidName()
-        {
-            var input = "abc: temp";
-            var parser = YamlSerializer.CreateDeserializer();
-            var result = Assert.Throws<YamlException>(() => parser.Deserialize<ConfigApplication>(input));
-        }
-
-        [Fact]
         public void Testing()
         {
             var parser = new YamlParser(
@@ -37,7 +20,7 @@ name: single-project
 services:
 - name: test-project
   project: test-project/test-project.csproj");
-            var app = parser.GetConfigApplication();
+            var app = parser.ParseConfigApplication();
         }
 
         [Fact]
@@ -58,7 +41,63 @@ services:
   project: test-project/test-project.csproj
 - name: test-project
   project: test-project/test-project.csproj");
-            var app = parser.GetConfigApplication();
+            var app = parser.ParseConfigApplication();
+        }
+
+        [Fact]
+        public void IngressTest()
+        {
+            var parser = new YamlParser(
+@"name: apps-with-ingress
+ingress:
+  - name: ingress
+    bindings:
+      - port: 8080
+    rules:
+      - path: /A
+        service: appA
+      - path: /B
+        service: appB
+      - host: a.example.com
+        service: appA
+      - host: b.example.com
+        service: appB  
+
+services:
+- name: appA
+  project: ApplicationA/ApplicationA.csproj
+  replicas: 2
+- name: appB
+  project: ApplicationB/ApplicationB.csproj
+  replicas: 2");
+            var app = parser.ParseConfigApplication();
+        }
+
+
+        [Fact]
+        public void VotingTest()
+        {
+            var parser = new YamlParser(
+@"name: VotingSample
+services:
+- name: vote
+  project: vote/vote.csproj
+- name: redis
+  image: redis
+  bindings:
+    - port: 6379
+- name: worker
+  project: worker/worker.csproj
+- name: postgres
+  image:  postgres
+  env:
+    - name: POSTGRES_PASSWORD
+      value: ""test""
+  bindings:
+    - port: 5432
+- name: results
+  project: results/results.csproj");
+            var app = parser.ParseConfigApplication();
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Microsoft.Tye.ConfigModel
     public class ConfigIngress
     {
         [Required]
-        public string Name { get; set; } = default!;
+        public string? Name { get; set; } = default!;
         public int? Replicas { get; set; }
         public List<ConfigIngressRule> Rules { get; set; } = new List<ConfigIngressRule>();
         public List<ConfigIngressBinding> Bindings { get; set; } = new List<ConfigIngressBinding>();
