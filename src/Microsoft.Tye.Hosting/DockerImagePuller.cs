@@ -2,9 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Tye.Hosting.Model;
@@ -66,16 +64,33 @@ namespace Microsoft.Tye.Hosting
         {
             await Task.Yield();
 
+            var result = await ProcessUtil.RunAsync(
+                                    "docker",
+                                    $"images --filter \"reference={image}\" --format \"{{{{.ID}}}}\"",
+                                    throwOnError: false);
+
+            if (result.ExitCode != 0)
+            {
+                _logger.LogInformation("{Image}: " + result.StandardError, image);
+                throw new CommandException("Docker images command failed");
+            }
+
+            if (!string.IsNullOrWhiteSpace(result.StandardOutput))
+            {
+                _logger.LogInformation("Docker image {image} already installed", image);
+                return;
+            }
+
             var command = $"pull {image}";
 
             _logger.LogInformation("Running docker command {command}", command);
 
-            var result = await ProcessUtil.RunAsync(
-                           "docker",
-                           command,
-                           outputDataReceived: data => _logger.LogInformation("{Image}: " + data, image),
-                           errorDataReceived: data => _logger.LogInformation("{Image}: " + data, image),
-                           throwOnError: false);
+            result = await ProcessUtil.RunAsync(
+                             "docker",
+                             command,
+                             outputDataReceived: data => _logger.LogInformation("{Image}: " + data, image),
+                             errorDataReceived: data => _logger.LogInformation("{Image}: " + data, image),
+                             throwOnError: false);
 
             if (result.ExitCode != 0)
             {
