@@ -64,22 +64,17 @@ namespace Microsoft.Tye.Hosting
         {
             await Task.Yield();
 
-            string name = image;
-            string version = "latest";
-            var idx = image.LastIndexOf(":");
-            if (image.IndexOf("/") < idx)
-            {
-                name = image.Substring(0, idx);
-                version = image.Substring(idx + 1);
-            }
-
             bool installed = false;
-            string output = string.Empty;
-            await ProcessUtil.RunAsync(
+            var result = await ProcessUtil.RunAsync(
                                     "docker",
-                                    $"images --filter \"reference={name}:{version}\" --format \"{{{{.ID}}}}\"",
+                                    $"images --filter \"reference={image}\" --format \"{{{{.ID}}}}\"",
                                     outputDataReceived: data => installed = true,
                                     throwOnError: false);
+
+            if (result.ExitCode != 0)
+            {
+                throw new CommandException("Docker images command failed");
+            }
 
             if (installed)
             {
@@ -91,7 +86,7 @@ namespace Microsoft.Tye.Hosting
 
             _logger.LogInformation("Running docker command {command}", command);
 
-            var result = await ProcessUtil.RunAsync(
+            result = await ProcessUtil.RunAsync(
                              "docker",
                              command,
                              outputDataReceived: data => _logger.LogInformation("{Image}: " + data, image),
