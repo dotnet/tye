@@ -95,11 +95,11 @@ namespace E2ETest
                 var frontendUri = await GetServiceUrl(client, uri, "frontend");
                 var backendUri = await GetServiceUrl(client, uri, "backend");
 
-                var frontendResponse = await client.GetAsync(frontendUri);
                 var backendResponse = await client.GetAsync(backendUri);
+                var frontendResponse = await client.GetAsync(frontendUri);
 
-                Assert.True(frontendResponse.IsSuccessStatusCode);
                 Assert.True(backendResponse.IsSuccessStatusCode);
+                Assert.True(frontendResponse.IsSuccessStatusCode);
             });
         }
 
@@ -131,11 +131,11 @@ namespace E2ETest
                 var frontendUri = await GetServiceUrl(client, uri, "frontend");
                 var backendUri = await GetServiceUrl(client, uri, "backend");
 
-                var frontendResponse = await client.GetAsync(frontendUri);
                 var backendResponse = await client.GetAsync(backendUri);
+                var frontendResponse = await client.GetAsync(frontendUri);
 
-                Assert.True(frontendResponse.IsSuccessStatusCode);
                 Assert.True(backendResponse.IsSuccessStatusCode);
+                Assert.True(frontendResponse.IsSuccessStatusCode);
             });
         }
 
@@ -177,11 +177,11 @@ namespace E2ETest
                 var frontendUri = await GetServiceUrl(client, uri, "frontend");
                 var backendUri = await GetServiceUrl(client, uri, "backend");
 
-                var frontendResponse = await client.GetAsync(frontendUri);
                 var backendResponse = await client.GetAsync(backendUri);
+                var frontendResponse = await client.GetAsync(frontendUri);
 
-                Assert.True(frontendResponse.IsSuccessStatusCode);
                 Assert.True(backendResponse.IsSuccessStatusCode);
+                Assert.True(frontendResponse.IsSuccessStatusCode);
             });
         }
 
