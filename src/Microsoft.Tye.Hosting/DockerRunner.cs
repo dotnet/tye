@@ -51,8 +51,32 @@ namespace Microsoft.Tye.Hosting
 
             string? dockerNetwork = null;
 
+            if (!string.IsNullOrWhiteSpace(application.Network))
+            {
+                var dockerNetworkResult = await ProcessUtil.RunAsync("docker", $"network ls --filter \"name={application.Network}\" --format \"{{{{.ID}}}}\"");
+                if (dockerNetworkResult.ExitCode != 0)
+                {
+                    _logger.LogInformation("{Network}: Run docker network ls command failed", application.Network);
+
+                    throw new CommandException("Run docker network ls command failed");
+                }
+
+                if (!string.IsNullOrWhiteSpace(dockerNetworkResult.StandardOutput))
+                {
+                    _logger.LogInformation("The specified network {Network} exist", application.Network);
+
+                    dockerNetwork = application.Network;
+                }
+                else
+                {
+                    _logger.LogInformation("The specified network {Network} doesn't exist.", application.Network);
+
+                    application.Network = null;
+                }
+            }
+
             // We're going to be making containers, only make a network if we have more than one (we assume they'll need to talk)
-            if (containers.Count > 1)
+            if (string.IsNullOrWhiteSpace(dockerNetwork) && containers.Count > 1)
             {
                 dockerNetwork = "tye_network_" + Guid.NewGuid().ToString().Substring(0, 10);
 
@@ -94,7 +118,7 @@ namespace Microsoft.Tye.Hosting
 
             await Task.WhenAll(tasks);
 
-            if (application.Items.TryGetValue("dockerNetwork", out var dockerNetwork))
+            if (string.IsNullOrWhiteSpace(application.Network) && application.Items.TryGetValue("dockerNetwork", out var dockerNetwork))
             {
                 _logger.LogInformation("Removing docker network {Network}", dockerNetwork);
 

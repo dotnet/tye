@@ -21,6 +21,8 @@ namespace Microsoft.Tye.ConfigModel
 
         public string? Registry { get; set; }
 
+        public string? Network { get; set; }
+
         public List<Dictionary<string, object>> Extensions { get; set; } = new List<Dictionary<string, object>>();
 
         public List<ConfigService> Services { get; set; } = new List<ConfigService>();

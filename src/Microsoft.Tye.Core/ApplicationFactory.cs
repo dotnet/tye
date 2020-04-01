@@ -30,6 +30,8 @@ namespace Microsoft.Tye
                 builder.Registry = new ContainerRegistry(config.Registry);
             }
 
+            builder.Network = config.Network;
+
             foreach (var configExtension in config.Extensions)
             {
                 var extension = new ExtensionConfiguration((string)configExtension["name"]);
