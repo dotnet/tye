@@ -216,6 +216,12 @@ namespace Tye.Serialization
                     case "value":
                         config.Value = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "secretProvider":
+                        config.SecretProvider = YamlParser.GetScalarValue(key, child.Value);
+                        break;
+                    case "secretKey":
+                        config.SecretKey = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }

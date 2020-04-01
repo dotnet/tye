@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Microsoft.Tye.Hosting.Secrets;
 
 namespace Microsoft.Tye.Hosting.Model
 {
@@ -37,7 +38,7 @@ namespace Microsoft.Tye.Hosting.Model
             {
                 // Inject normal configuration
                 foreach (var pair in service.Description.Configuration)
-                {
+                {                    
                     if (pair.Value is object)
                     {
                         set(pair.Name, pair.Value);
@@ -45,6 +46,10 @@ namespace Microsoft.Tye.Hosting.Model
                     else if (pair.Source is object)
                     {
                         set(pair.Name, GetValueFromBinding(bindings, pair.Source));
+                    }
+                    else if (pair.Secret is object)
+                    {
+                        set(pair.Name, GetValueFromSecret(pair.Secret));
                     }
                 }
             }
@@ -81,6 +86,11 @@ namespace Microsoft.Tye.Hosting.Model
                 }
 
                 throw new InvalidOperationException($"Unable to resolve the desired value '{source.Kind}' from binding '{source.Binding}' for service '{source.Service}'.");
+            }
+
+            string GetValueFromSecret(SecretEnvironmentVariableSource source)
+            {
+                return SecretResolver.GetSecretValue(source.SecretProvider, source.SecretKey, source.AppSource);
             }
 
             void SetBinding(EffectiveBinding binding)

@@ -72,6 +72,36 @@ namespace Tye.Serialization
             return app;
         }
 
+        public ConfigSecrets ParseConfigSecrets()
+        {
+            try
+            {
+                _yamlStream.Load(_reader);
+            }
+            catch (YamlException ex)
+            {
+                throw new TyeYamlException(ex.Start, "Unable to parse tye.secrets.yaml. See inner exception.", ex);
+            }
+
+            var configSecrets = new ConfigSecrets();
+
+            // TODO assuming first document.
+            var document = _yamlStream.Documents[0];
+            var node = document.RootNode;
+            ThrowIfNotYamlMapping(node);
+            ConfigSecretsParser.HandleConfigSecrets((YamlMappingNode)node, configSecrets);
+
+            configSecrets.Source = _fileInfo!;
+
+            // TODO confirm if these are ever null.
+            foreach (var provider in configSecrets.Providers)
+            {
+                provider.Settings ??= new Dictionary<string, string>();
+            }
+
+            return configSecrets;
+        }
+
         public static string GetScalarValue(YamlNode node)
         {
             if (node.NodeType != YamlNodeType.Scalar)

@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text.Json;
 
-namespace Microsoft.Tye
+namespace Microsoft.Tye.Hosting.Secrets
 {
     internal class UserSecretsProvider : ISecretProvider
     {

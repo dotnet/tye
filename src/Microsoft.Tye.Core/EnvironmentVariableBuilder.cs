@@ -16,5 +16,7 @@ namespace Microsoft.Tye
         public string? Value { get; set; }
 
         public EnvironmentVariableSourceBuilder? Source { get; set; }
+
+        public SecretEnvironmentVariableBuilder? Secret { get; set; }
     }
 }

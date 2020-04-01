@@ -15,5 +15,17 @@ namespace Microsoft.Tye.Hosting.Model
         public string? Value { get; set; }
 
         public EnvironmentVariableSource? Source { get; set; }
+
+        public SecretEnvironmentVariableSource? Secret { get; set; }
+    }
+
+    public class SecretEnvironmentVariable
+    {
+        public SecretEnvironmentVariable(string name)
+        {
+            Name = name;
+        }
+
+        public string Name { get; }
     }
 }
