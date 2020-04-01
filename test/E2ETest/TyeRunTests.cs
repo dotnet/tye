@@ -162,7 +162,6 @@ namespace E2ETest
             container.Bindings.AddRange(project.Bindings);
 
             await ProcessUtil.RunAsync("dotnet", $"publish \"{project.ProjectFile.FullName}\" /nologo", outputDataReceived: _sink.WriteLine, errorDataReceived: _sink.WriteLine);
-            
             application.Services.Add(container);
 
             var handler = new HttpClientHandler
