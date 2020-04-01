@@ -75,7 +75,7 @@ namespace Microsoft.Tye.Hosting
 
             bool installed = false;
             string output = string.Empty;
-            var processResult = await ProcessUtil.RunAsync(
+            await ProcessUtil.RunAsync(
                                     "docker",
                                     $"images --filter \"reference={name}:{version}\" --format \"{{{{.ID}}}}\"",
                                     outputDataReceived: data => installed = true,
