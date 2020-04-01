@@ -40,8 +40,6 @@ namespace Microsoft.Tye.Hosting
                 UseProxy = false
             }));
 
-            var ingress = new List<Service>();
-
             foreach (var service in application.Services.Values)
             {
                 var serviceDescription = service.Description;

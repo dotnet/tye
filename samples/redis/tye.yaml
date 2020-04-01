@@ -1,0 +1,8 @@
+services:
+ - name: redis
+   image: redis
+   bindings:
+    - port: 6379
+ - name: redis-cli
+   image: redis
+   args: "redis-cli -h redis MONITOR"

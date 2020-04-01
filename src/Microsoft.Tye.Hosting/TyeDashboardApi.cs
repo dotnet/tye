@@ -185,6 +185,8 @@ namespace Microsoft.Tye.Hosting
                 {
                     replicaStatus.DockerCommand = dockerStatus.DockerCommand;
                     replicaStatus.ContainerId = dockerStatus.ContainerId;
+                    replicaStatus.DockerNetwork = dockerStatus.DockerNetwork;
+                    replicaStatus.DockerNetworkAlias = dockerStatus.DockerNetworkAlias;
                 }
             }
 
