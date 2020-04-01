@@ -64,19 +64,18 @@ namespace Microsoft.Tye.Hosting
         {
             await Task.Yield();
 
-            bool installed = false;
             var result = await ProcessUtil.RunAsync(
                                     "docker",
                                     $"images --filter \"reference={image}\" --format \"{{{{.ID}}}}\"",
-                                    outputDataReceived: data => installed = true,
                                     throwOnError: false);
 
             if (result.ExitCode != 0)
             {
+                _logger.LogInformation("{Image}: " + result.StandardError, image);
                 throw new CommandException("Docker images command failed");
             }
 
-            if (installed)
+            if (!string.IsNullOrWhiteSpace(result.StandardOutput))
             {
                 _logger.LogInformation("Docker image {image} already installed", image);
                 return;
