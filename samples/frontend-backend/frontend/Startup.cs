@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -57,12 +58,17 @@ namespace Frontend
                     var bytes = await httpClient.GetByteArrayAsync("/");
                     var backendInfo = JsonSerializer.Deserialize<BackendInfo>(bytes, options);
 
+                    var backendHost = Configuration.GetServiceHost("backend");
+                    var addresses = await Dns.GetHostAddressesAsync(backendHost);
+
                     await context.Response.WriteAsync($"Frontend Listening IP: {context.Connection.LocalIpAddress}{Environment.NewLine}");
                     await context.Response.WriteAsync($"Frontend Hostname: {Dns.GetHostName()}{Environment.NewLine}");
                     await context.Response.WriteAsync($"EnvVar Configuration value: {Configuration["App:Value"]}{Environment.NewLine}");
 
                     await context.Response.WriteAsync($"Backend Listening IP: {backendInfo.IP}{Environment.NewLine}");
                     await context.Response.WriteAsync($"Backend Hostname: {backendInfo.Hostname}{Environment.NewLine}");
+
+                    await context.Response.WriteAsync($"Backend Host Addresses: {string.Join(", ", addresses.Select(a => a.ToString()))}");
                 });
 
                 endpoints.MapHealthChecks("/healthz");
