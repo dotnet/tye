@@ -79,7 +79,7 @@ namespace Tye.Serialization
         {
             if (node.NodeType != YamlNodeType.Scalar)
             {
-                throw new TyeYamlException(node.Start, $"Excpeted scalar value for key: {key}.");
+                //throw new TyeYamlException(node.Start, CoreStrings.);
             }
 
             return (node as YamlScalarNode)!.Value;

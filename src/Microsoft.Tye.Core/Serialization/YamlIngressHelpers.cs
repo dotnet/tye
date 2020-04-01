@@ -44,10 +44,10 @@ namespace Tye.Serialization
                 switch (key)
                 {
                     case "name":
-                        configIngress.Name = GetScalarValue(key, child.Value);
+                        configIngress.Name = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     case "replicas":
-                        var value = GetScalarValue(key, child.Value);
+                        var value = YamlParser.GetScalarValue(key, child.Value);
                         if (!int.TryParse(value, out var replicas))
                         {
                             throw new TyeYamlException(child.Value.Start, "\"replicas\" value must be an integer.");
@@ -118,13 +118,13 @@ namespace Tye.Serialization
                 switch (key)
                 {
                     case "host":
-                        rule.Host = GetScalarValue(key, child.Value);
+                        rule.Host = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     case "path":
-                        rule.Path = GetScalarValue(key, child.Value);
+                        rule.Path = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     case "port":
-                        rule.Service = GetScalarValue(key, child.Value);
+                        rule.Service = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     default:
                         break;
@@ -168,10 +168,10 @@ namespace Tye.Serialization
                 switch (key)
                 {
                     case "name":
-                        binding.Name = GetScalarValue(key, child.Value);
+                        binding.Name = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     case "autoAssignPort":
-                        if (!bool.TryParse(GetScalarValue(key, child.Value), out var autoAssignPort))
+                        if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var autoAssignPort))
                         {
                             throw new TyeYamlException(child.Value.Start, "\"autoAssignPort\" must be a boolean value (true/false).");
                         }
@@ -179,7 +179,7 @@ namespace Tye.Serialization
                         binding.AutoAssignPort = autoAssignPort;
                         break;
                     case "port":
-                        if (!int.TryParse(GetScalarValue(key, child.Value), out var port))
+                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var port))
                         {
                             throw new TyeYamlException(child.Value.Start, "\"port\" value must be an integer.");
                         }
@@ -187,7 +187,7 @@ namespace Tye.Serialization
                         binding.Port = port;
                         break;
                     case "protocol":
-                        binding.Protocol = GetScalarValue(key, child.Value);
+                        binding.Protocol = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     default:
                         continue;

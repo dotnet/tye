@@ -30,6 +30,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="CoreStrings.resx" EmitFormatMethods="true">
+      <Generator></Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\shared\KubectlDetector.cs" Link="KubectlDetector.cs" />
     <Compile Include="..\shared\TempDirectory.cs" Link="TempDirectory.cs" />
     <Compile Include="..\shared\TempFile.cs" Link="TempFile.cs" />

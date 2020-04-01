@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyName>Microsoft.Tye.E2ETest</AssemblyName>
+    <AssemblyName>Microsoft.Tye.UnitTests</AssemblyName>
     <IsTestProject>true</IsTestProject>
     <IsUnitTestProject>true</IsUnitTestProject>
     <IsPackable>false</IsPackable>

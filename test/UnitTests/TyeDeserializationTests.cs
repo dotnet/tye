@@ -1,22 +1,16 @@
-﻿using System.IO;
-using Microsoft.Tye.ConfigModel;
-using Microsoft.Tye.Serialization;
+﻿using Tye;
 using Tye.Serialization;
 using Xunit;
-using YamlDotNet.Core;
-using YamlDotNet.RepresentationModel;
 
 namespace UnitTests
 {
     public class TyeDeserializationTests
     {
         [Fact]
-        public void Testing()
+        public void BasicServiceAndNameProject()
         {
             var parser = new YamlParser(
-@"# tye application configuration file
-# read all about it at https://github.com/dotnet/tye
-name: single-project
+@"name: single-project
 services:
 - name: test-project
   project: test-project/test-project.csproj");
@@ -24,12 +18,10 @@ services:
         }
 
         [Fact]
-        public void MultipleProjectsSameName()
+        public void MultipleProjectsSameNameParsed_NotValidated()
         {
             var parser = new YamlParser(
-@"# tye application configuration file
-# read all about it at https://github.com/dotnet/tye
-name: SoManyProjects
+@"name: SoManyProjects
 services:
 - name: test-project
   project: test-project/test-project.csproj
@@ -98,6 +90,37 @@ services:
 - name: results
   project: results/results.csproj");
             var app = parser.ParseConfigApplication();
+        }
+
+
+        [Fact]
+        public void UnrecognizedField_Ignored()
+        {
+            var parser = new YamlParser("asdf: 123");
+            var app = parser.ParseConfigApplication();
+        }
+
+
+        [Fact]
+        public void Replicas_MustBeInteger()
+        {
+            var parser = new YamlParser(
+@"services:
+- name: app
+  replicas: asdf");
+            //figure out how kestrel does exceptions
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Equal(CoreStrings.FormatScalarValueRequired(""), exception.Message);
+        }
+
+        [Fact]
+        public void Replicas_MustBePositive()
+        {
+            var parser = new YamlParser(
+@"services:
+- name: app
+  replicas: -1");
+            Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
         }
     }
 }
