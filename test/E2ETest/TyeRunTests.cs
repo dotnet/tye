@@ -377,12 +377,15 @@ namespace E2ETest
 
                     foreach (var s in host.Application.Services.Values)
                     {
-                        var request = new HttpRequestMessage(HttpMethod.Get, new Uri(uri, $"/api/v1/logs/{s.Description.Name}"));
-                        var response = await client.SendAsync(request);
-                        var text = await response.Content.ReadAsStringAsync();
+                        var logs = await client.GetStringAsync(new Uri(uri, $"/api/v1/logs/{s.Description.Name}"));
 
                         _output.WriteLine($"Logs for service: {s.Description.Name}");
-                        _output.WriteLine(text);
+                        _output.WriteLine(logs);
+
+                        var description = await client.GetStringAsync(new Uri(uri, $"/api/v1/services/{s.Description.Name}"));
+
+                        _output.WriteLine($"Service defintion: {s.Description.Name}");
+                        _output.WriteLine(description);
                     }
                 }
             }
