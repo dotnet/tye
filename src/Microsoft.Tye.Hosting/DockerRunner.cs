@@ -213,7 +213,8 @@ namespace Microsoft.Tye.Hosting
                 }
 
                 var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {docker.Image} {docker.Args ?? ""}";
-                _logger.LogInformation("Running docker command {Command}", command);
+
+                _logger.LogInformation("Running command image {Image} for {Replica}", docker.Image, replica);
 
                 service.Logs.OnNext($"[{replica}]: docker {command}");
 
@@ -259,12 +260,9 @@ namespace Microsoft.Tye.Hosting
 
                 if (!string.IsNullOrEmpty(dockerNetwork))
                 {
-                    // If this is the only replica then the network alias is the service name
-                    var alias = serviceDescription.Replicas == 1 ? serviceDescription.Name : replica;
+                    status.DockerNetworkAlias = serviceDescription.Name;
 
-                    status.DockerNetworkAlias = alias;
-
-                    var networkCommand = $"network connect {dockerNetwork} {replica} --alias {alias}";
+                    var networkCommand = $"network connect {dockerNetwork} {replica} --alias {serviceDescription.Name}";
 
                     service.Logs.OnNext($"[{replica}]: docker {networkCommand}");
 
