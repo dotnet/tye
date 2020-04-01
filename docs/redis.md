@@ -95,7 +95,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
       - port: 6379
     - name: redis-cli
       image: redis
-      args: "redis-cli -h host.docker.internal MONITOR"
+      args: "redis-cli -h redis MONITOR"
    ```
 
     We've added 2 services to the `tye.yaml` file. The `redis` service itself and a `redis-cli` service that we will use to watch the data being sent to and retrieved from redis.

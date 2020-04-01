@@ -84,14 +84,13 @@ namespace Microsoft.Tye.Hosting
                 // Default the first http and https port to 80 and 443
                 if (httpBinding != null)
                 {
-                    httpBinding.ContainerPort = 80;
+                    httpBinding.ContainerPort ??= 80;
                 }
 
                 if (httpsBinding != null)
                 {
-                    httpsBinding.ContainerPort = 443;
+                    httpsBinding.ContainerPort ??= 443;
                 }
-
             }
 
             return Task.CompletedTask;

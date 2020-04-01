@@ -154,12 +154,14 @@ namespace Microsoft.Tye.Hosting
 
                         conventions.WithDisplayName(rule.Service);
                     }
-                }
-            }
 
-            foreach (var app in _webApplications)
-            {
-                await app.StartAsync();
+                    await webApp.StartAsync();
+
+                    foreach (var replica in service.Replicas)
+                    {
+                        service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, replica.Value));
+                    }
+                }
             }
         }
 

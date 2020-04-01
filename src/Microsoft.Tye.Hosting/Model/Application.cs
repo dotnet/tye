@@ -24,6 +24,8 @@ namespace Microsoft.Tye.Hosting.Model
 
         public Dictionary<string, Service> Services { get; }
 
+        public Dictionary<object, object> Items { get; } = new Dictionary<object, object>();
+
         public void PopulateEnvironment(Service service, Action<string, string> set, string defaultHost = "localhost")
         {
             if (service.Description.Configuration != null)
@@ -76,8 +78,9 @@ namespace Microsoft.Tye.Hosting.Model
                 throw new InvalidOperationException($"Unable to resolve the desired value '{source.Kind}' from binding '{source.Binding}' for service '{source.Service}'.");
             }
 
-            void SetBinding(string serviceName, ServiceBinding b)
+            void SetBinding(ServiceDescription targetService, ServiceBinding b)
             {
+                var serviceName = targetService.Name.ToUpper();
                 var configName = "";
                 var envName = "";
 
@@ -107,12 +110,21 @@ namespace Microsoft.Tye.Hosting.Model
 
                 if (b.Port != null)
                 {
-                    set($"SERVICE__{configName}__PORT", b.Port.Value.ToString());
-                    set($"{envName}_SERVICE_PORT", b.Port.Value.ToString());
+                    var port = (service.Description.RunInfo is DockerRunInfo &&
+                                targetService.RunInfo is DockerRunInfo &&
+                                targetService.Replicas == 1) ? b.ContainerPort ?? b.Port.Value : b.Port.Value;
+
+                    set($"SERVICE__{configName}__PORT", port.ToString());
+                    set($"{envName}_SERVICE_PORT", port.ToString());
                 }
 
-                set($"SERVICE__{configName}__HOST", b.Host ?? defaultHost);
-                set($"{envName}_SERVICE_HOST", b.Host ?? defaultHost);
+                // Use the container name as the host name if there's a single replica (current limitation)
+                var host = b.Host ?? (service.Description.RunInfo is DockerRunInfo &&
+                                      targetService.RunInfo is DockerRunInfo &&
+                                      targetService.Replicas == 1 ? targetService.Name : defaultHost);
+
+                set($"SERVICE__{configName}__HOST", host);
+                set($"{envName}_SERVICE_HOST", host);
             }
 
             // Inject dependency information
@@ -120,7 +132,7 @@ namespace Microsoft.Tye.Hosting.Model
             {
                 foreach (var b in s.Description.Bindings)
                 {
-                    SetBinding(s.Description.Name.ToUpper(), b);
+                    SetBinding(s.Description, b);
                 }
             }
         }

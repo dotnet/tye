@@ -129,6 +129,9 @@ namespace Microsoft.Tye.Hosting
                     // Default to development environment
                     ["DOTNET_ENVIRONMENT"] = "Development",
                     ["ASPNETCORE_ENVIRONMENT"] = "Development",
+                    // Remove the color codes from the console output
+                    ["DOTNET_LOGGING__CONSOLE__DISABLECOLORS"] = "true",
+                    ["ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS"] = "true"
                 };
 
                 // Set up environment variables to use the version of dotnet we're using to run

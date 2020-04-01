@@ -42,7 +42,7 @@
                         {
                             if (b.Port != null)
                             {
-                                if (b.Protocol == null || b.Protocol == "http" || b.Protocol == "https")
+                                if (b.Protocol == "http" || b.Protocol == "https")
                                 {
                                     var url = GetUrl(b);
                                     <span><a href="@url" target="_blank">@url</a></span>
@@ -79,7 +79,7 @@
 
     string GetUrl(ServiceBinding b)
     {
-        return $"{(b.Protocol ?? "http")}://{b.Host ?? "localhost"}:{b.Port}";
+        return $"{(b.Protocol ?? "tcp")}://{b.Host ?? "localhost"}:{b.Port}";
     }
 
     protected override void OnInitialized()
