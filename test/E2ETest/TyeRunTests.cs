@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.CommandLine.IO;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -127,6 +128,53 @@ namespace E2ETest
                 // Make sure we're running containers
                 Assert.True(app.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
 
+                var frontendUri = await GetServiceUrl(client, uri, "frontend");
+                var backendUri = await GetServiceUrl(client, uri, "backend");
+
+                var frontendResponse = await client.GetAsync(frontendUri);
+                var backendResponse = await client.GetAsync(backendUri);
+
+                Assert.True(frontendResponse.IsSuccessStatusCode);
+                Assert.True(backendResponse.IsSuccessStatusCode);
+            });
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task FrontendProjectBackendDocker()
+        {
+            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
+            using var tempDirectory = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
+            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+
+            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            // Transform the backend into a docker image for testing
+            var project = (ProjectServiceBuilder)application.Services.First(s => s.Name == "backend");
+            application.Services.Remove(project);
+
+            var outputFileName = project.AssemblyName + ".dll";
+            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/sdk:{project.TargetFrameworkVersion}");
+            container.Volumes.Add(new VolumeBuilder(project.PublishDir, name: null, target: "/app"));
+            container.Args = $"dotnet /app/{outputFileName} {project.Args}";
+            container.Bindings.AddRange(project.Bindings);
+
+            await ProcessUtil.RunAsync("dotnet", $"publish \"{project.ProjectFile.FullName}\" /nologo", outputDataReceived: _sink.WriteLine, errorDataReceived: _sink.WriteLine);
+            
+            application.Services.Add(container);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
+            {
                 var frontendUri = await GetServiceUrl(client, uri, "frontend");
                 var backendUri = await GetServiceUrl(client, uri, "backend");
 
