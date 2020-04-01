@@ -12,16 +12,18 @@ namespace Tye.Serialization
     {
         public static void HandleIngress(YamlSequenceNode yamlSequenceNode, List<ConfigIngress> ingress)
         {
-            foreach (var s in yamlSequenceNode.Children)
+            foreach (var child in yamlSequenceNode.Children)
             {
-                var configIngress = new ConfigIngress();
-                switch (s.NodeType)
+                switch (child.NodeType)
                 {
                     case YamlNodeType.Mapping:
-                        HandleIngressMapping(s as YamlMappingNode, configIngress);
+                        var configIngress = new ConfigIngress();
+                        HandleIngressMapping(child as YamlMappingNode, configIngress);
+                        ingress.Add(configIngress);
                         break;
                     default:
-                        continue;
+                        throw new TyeYamlException(child.Start,
+                            CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), child.NodeType.ToString()));
                 }
             }
         }
@@ -30,15 +32,15 @@ namespace Tye.Serialization
         {
             foreach (var child in yamlMappingNode!.Children)
             {
-                string key;
+                string? key;
                 switch (child.Key.NodeType)
                 {
                     case YamlNodeType.Scalar:
-                        key = (child.Key as YamlScalarNode)!.Value!;
+                        key = (child.Key as YamlScalarNode)!.Value;
                         break;
                     default:
-                        // Don't support other types.
-                        continue;
+                        throw new TyeYamlException(child.Key.Start,
+                            CoreStrings.FormatUnexpectedType(YamlNodeType.Scalar.ToString(), child.Key.NodeType.ToString()));
                 }
 
                 switch (key)
@@ -47,15 +49,14 @@ namespace Tye.Serialization
                         configIngress.Name = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     case "replicas":
-                        var value = YamlParser.GetScalarValue(key, child.Value);
-                        if (!int.TryParse(value, out var replicas))
+                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var replicas))
                         {
-                            throw new TyeYamlException(child.Value.Start, "\"replicas\" value must be an integer.");
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
                         }
 
                         if (replicas < 0)
                         {
-                            throw new TyeYamlException(child.Value.Start, "\"replicas\" value cannot be negative.");
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBePositive(key));
                         }
 
                         configIngress.Replicas = replicas;
@@ -63,40 +64,38 @@ namespace Tye.Serialization
                     case "rules":
                         if (child.Value.NodeType != YamlNodeType.Sequence)
                         {
-                            throw new TyeYamlException(child.Value.Start, $"Excpeted yaml sequence for key: {key}.");
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
                         }
                         HandleIngressRules((child.Value as YamlSequenceNode)!, configIngress.Rules);
                         break;
                     case "bindings":
                         if (child.Value.NodeType != YamlNodeType.Sequence)
                         {
-                            throw new TyeYamlException(child.Value.Start, $"Excpeted yaml sequence for key: {key}.");
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
                         }
                         HandleIngressBindings((child.Value as YamlSequenceNode)!, configIngress.Bindings);
                         break;
                     default:
-                        continue;
+                        throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
             }
         }
 
-        private static void HandleIngressRules(YamlSequenceNode yamlSequenceNode, List<ConfigIngressRule> bindings)
+        private static void HandleIngressRules(YamlSequenceNode yamlSequenceNode, List<ConfigIngressRule> rules)
         {
-            foreach (var s in yamlSequenceNode.Children)
+            foreach (var child in yamlSequenceNode.Children)
             {
-                var rule = new ConfigIngressRule();
-                switch (s.NodeType)
+                switch (child.NodeType)
                 {
                     case YamlNodeType.Mapping:
-                        // get key and value here
-                        HandleIngressRuleMapping(s as YamlMappingNode, rule);
+                        var rule = new ConfigIngressRule();
+                        HandleIngressRuleMapping(child as YamlMappingNode, rule);
+                        rules.Add(rule);
                         break;
                     default:
-                        continue;
-
+                        throw new TyeYamlException(child.Start,
+                            CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), child.NodeType.ToString()));
                 }
-
-                bindings.Add(rule);
             }
         }
 
@@ -111,8 +110,8 @@ namespace Tye.Serialization
                         key = (child.Key as YamlScalarNode)!.Value;
                         break;
                     default:
-                        // Don't support other types.
-                        continue;
+                        throw new TyeYamlException(child.Key.Start,
+                            CoreStrings.FormatUnexpectedType(YamlNodeType.Scalar.ToString(), child.Key.NodeType.ToString()));
                 }
 
                 switch (key)
@@ -123,29 +122,29 @@ namespace Tye.Serialization
                     case "path":
                         rule.Path = YamlParser.GetScalarValue(key, child.Value);
                         break;
-                    case "port":
+                    case "service":
                         rule.Service = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     default:
-                        break;
+                        throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
             }
         }
 
         private static void HandleIngressBindings(YamlSequenceNode yamlSequenceNode, List<ConfigIngressBinding> bindings)
         {
-            foreach (var s in yamlSequenceNode.Children)
+            foreach (var child in yamlSequenceNode.Children)
             {
-                switch (s.NodeType)
+                switch (child.NodeType)
                 {
                     case YamlNodeType.Mapping:
-                        // get key and value here
                         var binding = new ConfigIngressBinding();
-                        HandleIngressBindingMapping(s as YamlMappingNode, binding);
+                        HandleIngressBindingMapping(child as YamlMappingNode, binding);
                         bindings.Add(binding);
                         break;
                     default:
-                        continue;
+                        throw new TyeYamlException(child.Start,
+                            CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), child.NodeType.ToString()));
                 }
             }
         }
@@ -161,8 +160,8 @@ namespace Tye.Serialization
                         key = (child.Key as YamlScalarNode)!.Value;
                         break;
                     default:
-                        // Don't support other types.
-                        continue;
+                        throw new TyeYamlException(child.Key.Start,
+                            CoreStrings.FormatUnexpectedType(YamlNodeType.Scalar.ToString(), child.Key.NodeType.ToString()));
                 }
 
                 switch (key)
@@ -173,7 +172,7 @@ namespace Tye.Serialization
                     case "autoAssignPort":
                         if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var autoAssignPort))
                         {
-                            throw new TyeYamlException(child.Value.Start, "\"autoAssignPort\" must be a boolean value (true/false).");
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeABoolean(key));
                         }
 
                         binding.AutoAssignPort = autoAssignPort;
@@ -181,7 +180,7 @@ namespace Tye.Serialization
                     case "port":
                         if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var port))
                         {
-                            throw new TyeYamlException(child.Value.Start, "\"port\" value must be an integer.");
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
                         }
 
                         binding.Port = port;
@@ -190,7 +189,7 @@ namespace Tye.Serialization
                         binding.Protocol = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     default:
-                        continue;
+                        throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
             }
         }

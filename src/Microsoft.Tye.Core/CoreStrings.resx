@@ -117,7 +117,25 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ScalarValueRequired" xml:space="preserve">
-    <value>Excpeted scalar value for key: {key}.</value>
+  <data name="ExpectedYamlScalar" xml:space="preserve">
+    <value>Excpeted scalar value for key: "{key}".</value>
+  </data>
+  <data name="ExpectedYamlSequence" xml:space="preserve">
+    <value>Excpeted yaml sequence for key: "{key}".</value>
+  </data>
+  <data name="MustBeABoolean" xml:space="preserve">
+    <value>"{value}" must be a boolean value (true/false).</value>
+  </data>
+  <data name="MustBeAnInteger" xml:space="preserve">
+    <value>"{value}" value must be an integer.</value>
+  </data>
+  <data name="MustBePositive" xml:space="preserve">
+    <value>"{value}" value cannot be negative.</value>
+  </data>
+  <data name="UnexpectedType" xml:space="preserve">
+    <value>Unexpected node type in tye.yaml. Expected "{expected}" but got "{actual}".</value>
+  </data>
+  <data name="UnrecognizedKey" xml:space="preserve">
+    <value>Unexpected key "{key}" in tye.yaml.</value>
   </data>
 </root>

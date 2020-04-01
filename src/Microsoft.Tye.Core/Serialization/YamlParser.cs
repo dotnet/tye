@@ -40,20 +40,15 @@ namespace Tye.Serialization
 
             // TODO assuming first document.
             var document = _yamlStream.Documents[0];
-            foreach (var node in document.AllNodes)
+            var node = document.RootNode;
+            switch (node.NodeType)
             {
-                switch (node.NodeType)
-                {
-                    case YamlNodeType.Mapping:
-                        YamlConfigApplicationHelpers.HandleConfigApplication(node as YamlMappingNode, app);
-                        break;
-                    case YamlNodeType.Alias:
-                        break;
-                    case YamlNodeType.Scalar:
-                        break;
-                    case YamlNodeType.Sequence:
-                        break;
-                }
+                case YamlNodeType.Mapping:
+                    YamlConfigApplicationHelpers.HandleConfigApplication(node as YamlMappingNode, app);
+                    break;
+                default:
+                    throw new TyeYamlException(node.Start, 
+                        CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), node.NodeType.ToString()));
             }
 
             app.Source = _fileInfo!;
@@ -79,7 +74,7 @@ namespace Tye.Serialization
         {
             if (node.NodeType != YamlNodeType.Scalar)
             {
-                //throw new TyeYamlException(node.Start, CoreStrings.);
+                throw new TyeYamlException(node.Start, CoreStrings.FormatExpectedYamlScalar(key));
             }
 
             return (node as YamlScalarNode)!.Value;
@@ -87,7 +82,7 @@ namespace Tye.Serialization
 
         public void Dispose()
         {
-            _reader?.Dispose();
+            _reader.Dispose();
         }
     }
 }

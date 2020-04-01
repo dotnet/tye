@@ -9,9 +9,9 @@ namespace Microsoft.Tye.ConfigModel
     public class ConfigConfigurationSource
     {
         [Required]
-        public string Name { get; set; } = default!;
+        public string? Name { get; set; }
 
         [Required]
-        public string Value { get; set; } = default!;
+        public string? Value { get; set; }
     }
 }

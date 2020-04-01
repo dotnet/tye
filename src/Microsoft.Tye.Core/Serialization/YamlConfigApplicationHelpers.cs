@@ -14,15 +14,16 @@ namespace Tye.Serialization
         {
             foreach (var child in yamlMappingNode!.Children)
             {
-                string key;
+                string? key;
                 switch (child.Key.NodeType)
                 {
                     case YamlNodeType.Scalar:
-                        key = (child.Key as YamlScalarNode)!.Value!;
+                        key = (child.Key as YamlScalarNode)!.Value;
                         break;
                     default:
-                        // Don't support other types.
-                        continue;
+                        // TODO I don't think this can every be hit.
+                        throw new TyeYamlException(child.Key.Start, 
+                            CoreStrings.FormatUnexpectedType(YamlNodeType.Scalar.ToString(), child.Key.NodeType.ToString()));
                 }
 
                 switch (key)
@@ -36,17 +37,19 @@ namespace Tye.Serialization
                     case "ingress":
                         if (child.Value.NodeType != YamlNodeType.Sequence)
                         {
-                            throw new TyeYamlException(child.Value.Start, $"Excpeted yaml sequence for key: {key}.");
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
                         }
                         YamlIngressHelpers.HandleIngress((child.Value as YamlSequenceNode)!, app.Ingress);
                         break;
                     case "services":
                         if (child.Value.NodeType != YamlNodeType.Sequence)
                         {
-                            throw new TyeYamlException(child.Value.Start, $"Excpeted yaml sequence for key: {key}.");
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
                         }
                         YamlServiceHelpers.HandleServiceMapping((child.Value as YamlSequenceNode)!, app.Services);
                         break;
+                    default:
+                        throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
             }
         }
