@@ -10,14 +10,11 @@ namespace Microsoft.Tye.ConfigModel
     {
         [Required]
         public string Name { get; set; } = default!;
+        
+        public string Value { get; set; } = default!;        
 
-        [Required]
-        public string Value { get; set; } = default!;
+        public string SecretProvider { get; set; } = default!;
 
-        [Required]
-        public string SecretName { get; set; } = default!;
-
-        [Required]
-        public string SecretStoreId { get; set; } = default!;
+        public string SecretKey { get; set; } = default!;
     }
 }

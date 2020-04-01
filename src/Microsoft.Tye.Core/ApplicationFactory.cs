@@ -169,15 +169,7 @@ namespace Microsoft.Tye
                     }
                     else if (service is ContainerServiceBuilder container)
                     {
-                        if (configEnvVar.Value is null)
-                        {
-                            var value = UserSecretsBuilder.GetSecretValue(configEnvVar.SecretStoreId, configEnvVar.SecretName);
-                            container.EnvironmentVariables.Add(new EnvironmentVariable(configEnvVar.Name, value));
-                        }
-                        else
-                        {
-                            container.EnvironmentVariables.Add(envVar);
-                        }
+                        container.EnvironmentVariables.Add(envVar);
                     }
                     else if (service is ExecutableServiceBuilder executable)
                     {

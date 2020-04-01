@@ -57,6 +57,12 @@ namespace Microsoft.Tye
                     {
                         env.Add(entry.ToHostingEnvironmentVariable());
                     }
+
+                    var containerSecrets = SecretResolver.GetContainerSecrets(container, application.Source);
+                    foreach (var secret in containerSecrets)
+                    {
+                        env.Add(secret.ToHostingEnvironmentVariable());
+                    }
                 }
                 else if (service is ExecutableServiceBuilder executable)
                 {
@@ -164,6 +170,14 @@ namespace Microsoft.Tye
                 env.Source = new Tye.Hosting.Model.EnvironmentVariableSource(builder.Source.Service, builder.Source.Binding);
                 env.Source.Kind = (Tye.Hosting.Model.EnvironmentVariableSource.SourceKind)(int)builder.Source.Kind;
             }
+
+            return env;
+        }
+
+        public static Tye.Hosting.Model.EnvironmentVariable ToHostingEnvironmentVariable(this SecretEnvironmentVariableBuilder builder)
+        {
+            var env = new Tye.Hosting.Model.EnvironmentVariable(builder.Name);
+            env.Value = builder.Value;
 
             return env;
         }
