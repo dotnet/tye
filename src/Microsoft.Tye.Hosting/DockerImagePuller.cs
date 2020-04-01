@@ -76,15 +76,15 @@ namespace Microsoft.Tye.Hosting
                 version = image.Substring(idx + 1);
             }
 
+            bool installed = false;
             string output = string.Empty;
-            await ProcessUtil.RunAsync(
-                             "docker",
-                             "images",
-                             outputDataReceived: data => output += data + '\n',
-                             throwOnError: false);
+            var processResult = await ProcessUtil.RunAsync(
+                                    "docker",
+                                    $"images --filter \"reference={name}:{version}\" --format \"{{{{.ID}}}}\"",
+                                    outputDataReceived: data => installed = true,
+                                    throwOnError: false);
 
-            var matchCollection = Regex.Matches(output, @"([^\s]+)\s+([^\s]+).+");
-            if (matchCollection.Any(match => match.Groups[1].Value == name && match.Groups[2].Value == version))
+            if (installed)
             {
                 _logger.LogInformation("Docker image {image} already installed", image);
                 return;
