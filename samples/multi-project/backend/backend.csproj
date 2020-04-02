@@ -6,7 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration.KeyPerFile" Version="3.1.1" />
+    <ProjectReference Include="$(TyeLibrariesPath)\Microsoft.Tye.Extensions.Configuration\Microsoft.Tye.Extensions.Configuration.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="RabbitMQ.Client" Version="5.1.2" />
     <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.0.21" />
   </ItemGroup>

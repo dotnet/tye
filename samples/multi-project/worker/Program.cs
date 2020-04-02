@@ -22,14 +22,7 @@ namespace Worker
             Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration(config =>
                 {
-                    if (Directory.Exists("/var/tye/bindings/"))
-                    {
-                        foreach (var directory in Directory.GetDirectories("/var/tye/bindings/"))
-                        {
-                            Console.WriteLine($"Adding config in '{directory}'.");
-                            config.AddKeyPerFile(directory, optional: true);
-                        }
-                    }
+                    config.AddTyeSecrets();
                 })
                 .ConfigureServices((hostContext, services) =>
                 {

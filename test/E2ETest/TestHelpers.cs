@@ -68,10 +68,63 @@ namespace E2ETest
             return directory;
         }
 
+        public static DirectoryInfo GetSampleProjectDirectory(string projectName)
+        {
+            var directory = new DirectoryInfo(Path.Combine(
+                TestHelpers.GetSolutionRootDirectory("tye"),
+                "samples",
+                projectName));
+            Assert.True(directory.Exists, $"Project {projectName} not found.");
+            return directory;
+        }
+
+        internal static TempDirectory CopySampleProjectDirectory(string projectName)
+        {
+            var temp = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
+            DirectoryCopy.Copy(GetSampleProjectDirectory(projectName).FullName, temp.DirectoryPath);
+
+            // We need to hijack any P2P references to Tye libraries.
+            // Test projects must use $(TyeLibrariesPath) to find their references.
+            var libraryPath = Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "src");
+            if (!libraryPath.EndsWith(Path.DirectorySeparatorChar))
+            {
+                libraryPath += Path.DirectorySeparatorChar;
+            }
+
+            File.WriteAllText(
+                Path.Combine(temp.DirectoryPath, "Directory.Build.props"),
+                $@"
+<Project>
+  <PropertyGroup>
+    <TyeLibrariesPath>{libraryPath}</TyeLibrariesPath>
+  </PropertyGroup>
+</Project>");
+
+            return temp;
+        }
+
         internal static TempDirectory CopyTestProjectDirectory(string projectName)
         {
-            var temp = TempDirectory.Create();
+            var temp = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
             DirectoryCopy.Copy(GetTestProjectDirectory(projectName).FullName, temp.DirectoryPath);
+
+            // We need to hijack any P2P references to Tye libraries.
+            // Test projects must use $(TyeLibrariesPath) to find their references.
+            var libraryPath = Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "src");
+            if (!libraryPath.EndsWith(Path.DirectorySeparatorChar))
+            {
+                libraryPath += Path.DirectorySeparatorChar;
+            }
+
+            File.WriteAllText(
+                Path.Combine(temp.DirectoryPath, "Directory.Build.props"),
+                $@"
+<Project>
+  <PropertyGroup>
+    <TyeLibrariesPath>{libraryPath}</TyeLibrariesPath>
+  </PropertyGroup>
+</Project>");
+
             return temp;
         }
 

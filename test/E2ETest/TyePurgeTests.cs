@@ -4,18 +4,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Tye;
-using Microsoft.Tye.ConfigModel;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
 using Xunit;
 using Xunit.Abstractions;
+using static E2ETest.TestHelpers;
 
 namespace E2ETest
 {
@@ -33,12 +31,10 @@ namespace E2ETest
         [Fact]
         public async Task FrontendBackendPurgeTest()
         {
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
-            using var tempDirectory = TempDirectory.Create();
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
-            var tyeDir = new DirectoryInfo(Path.Combine(tempDirectory.DirectoryPath, ".tye"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var tyeDir = new DirectoryInfo(Path.Combine(projectDirectory.DirectoryPath, ".tye"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
             var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
@@ -73,12 +69,10 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task MultiProjectPurgeTest()
         {
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "multi-project"));
-            using var tempDirectory = TempDirectory.Create();
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory("multi-project");
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
-            var tyeDir = new DirectoryInfo(Path.Combine(tempDirectory.DirectoryPath, ".tye"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var tyeDir = new DirectoryInfo(Path.Combine(projectDirectory.DirectoryPath, ".tye"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
             var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())

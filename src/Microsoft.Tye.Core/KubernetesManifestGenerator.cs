@@ -186,7 +186,7 @@ namespace Microsoft.Tye
                     project.Bindings.Any(b => b.Protocol == "http" || b.Protocol is null) ||
 
                     // We generate environment variables for other services if there dependencies
-                    (bindings is object && bindings.Bindings.OfType<EnvironmentVariableInputBinding>().Any()))
+                    (bindings is object && bindings.Bindings.Any()))
                 {
                     var env = new YamlSequenceNode();
                     container.Add("env", env);
@@ -208,6 +208,15 @@ namespace Microsoft.Tye
                             {
                                 { "name", binding.Name },
                                 { "value", new YamlScalarNode(binding.Value) { Style = ScalarStyle.SingleQuoted, } },
+                            });
+                        }
+
+                        if (bindings.Bindings.OfType<SecretInputBinding>().Any())
+                        {
+                            env.Add(new YamlMappingNode()
+                            {
+                                { "name", "TYE_SECRETS_PATH" },
+                                { "value", new YamlScalarNode("/var/tye/bindings/") { Style = ScalarStyle.SingleQuoted, } },
                             });
                         }
                     }
