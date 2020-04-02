@@ -31,15 +31,21 @@ namespace Microsoft.Tye.Proxy
                     {
                         var logger = server.ApplicationServices.GetRequiredService<ILogger<Program>>();
 
-                        logger.LogInformation("Received connection information {Host}:{Port}", containerHost, Environment.GetEnvironmentVariable("PORT"));
+                        logger.LogInformation("Received connection information {Host}:{Port}", containerHost, Environment.GetEnvironmentVariable("PROXY_PORT"));
 
-                        var ports = Environment.GetEnvironmentVariable("PORT")?.Split(';').Select(int.Parse) ?? Enumerable.Empty<int>();
+                        static (int Port, int ExternalPort) ResolvePort(string portValue)
+                        {
+                            var pair = portValue.Split(':');
+                            return (int.Parse(pair[0]), int.Parse(pair[1]));
+                        }
+
+                        var ports = Environment.GetEnvironmentVariable("PROXY_PORT")?.Split(';').Select(ResolvePort) ?? Enumerable.Empty<(int, int)>();
 
                         server.UseSockets(sockets =>
                         {
-                            foreach (var port in ports)
+                            foreach (var mapping in ports)
                             {
-                                sockets.Listen(IPAddress.Any, port, o =>
+                                sockets.Listen(IPAddress.Any, mapping.Port, o =>
                                 {
                                     // o.UseConnectionLogging("Microsoft.Tye.Proxy");
 
@@ -56,11 +62,11 @@ namespace Microsoft.Tye.Proxy
                                                 NoDelay = true
                                             };
 
-                                            logger.LogDebug("Attempting to connect to {ServiceName} listening on {ExternalPort}:{Port}", serviceName, port, port);
+                                            logger.LogDebug("Attempting to connect to {ServiceName} listening on {Port}:{ExternalPort}", serviceName, mapping.Port, mapping.ExternalPort);
 
-                                            await target.ConnectAsync(containerHost, port);
+                                            await target.ConnectAsync(containerHost, mapping.ExternalPort);
 
-                                            logger.LogDebug("Successfully connected to {ServiceName} listening on {ExternalPort}:{Port}", serviceName, serviceName, port);
+                                            logger.LogDebug("Successfully connected to {ServiceName} listening on {Port}:{ExternalPort}", serviceName, mapping.Port, mapping.ExternalPort);
 
                                             targetStream = new NetworkStream(target, ownsSocket: true);
                                         }
@@ -79,7 +85,7 @@ namespace Microsoft.Tye.Proxy
 
                                         try
                                         {
-                                            logger.LogDebug("Proxying traffic to {ServiceName} {ExternalPort}:{InternalPort}", serviceName, port, port);
+                                            logger.LogDebug("Proxying traffic to {ServiceName} {Port}:{ExternalPort}", serviceName, mapping.Port, mapping.ExternalPort);
 
                                             // external -> internal
                                             var reading = Task.Run(() => connection.Transport.Input.CopyToAsync(targetStream, notificationFeature.ConnectionClosedRequested));
