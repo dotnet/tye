@@ -123,6 +123,27 @@
   <data name="ExpectedYamlSequence" xml:space="preserve">
     <value>Excpeted yaml sequence for key: "{key}".</value>
   </data>
+  <data name="ExtensionMustProvideAName" xml:space="preserve">
+    <value>Configuration validation failed. Extensions must provide a name.</value>
+  </data>
+  <data name="IngressBindingMustBeHttpOrHttps" xml:space="preserve">
+    <value>Ingress bindings must be http or https.</value>
+  </data>
+  <data name="IngressRuleMustReferenceService" xml:space="preserve">
+    <value>Ingress rules references a service that does not exist.</value>
+  </data>
+  <data name="MultipleIngressBindingWithoutName" xml:space="preserve">
+    <value>Cannot have multiple ingress bindings without names. Please specify names for each ingress binding.</value>
+  </data>
+  <data name="MultipleIngressBindingWithSameName" xml:space="preserve">
+    <value>Cannot have multiple ingress bindings with the same name.</value>
+  </data>
+  <data name="MultipleServiceBindingsWithoutName" xml:space="preserve">
+    <value>Cannot have multiple service bindings without names. Please specify names for each service binding.</value>
+  </data>
+  <data name="MultipleServiceBindingsWithSameName" xml:space="preserve">
+    <value>Cannot have multiple service bindings with the same name.</value>
+  </data>
   <data name="MustBeABoolean" xml:space="preserve">
     <value>"{value}" must be a boolean value (true/false).</value>
   </data>
@@ -131,6 +152,9 @@
   </data>
   <data name="MustBePositive" xml:space="preserve">
     <value>"{value}" value cannot be negative.</value>
+  </data>
+  <data name="ServiceMustHaveUniqueNames" xml:space="preserve">
+    <value>Services must have unique names.</value>
   </data>
   <data name="UnexpectedType" xml:space="preserve">
     <value>Unexpected node type in tye.yaml. Expected "{expected}" but got "{actual}".</value>
