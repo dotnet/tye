@@ -179,6 +179,50 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        public async Task FrontendDockerBackendProject()
+        {
+            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            // Transform the backend into a docker image for testing
+            var project = (ProjectServiceBuilder)application.Services.First(s => s.Name == "frontend");
+            application.Services.Remove(project);
+
+            var outputFileName = project.AssemblyName + ".dll";
+            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/sdk:{project.TargetFrameworkVersion}");
+            container.Volumes.Add(new VolumeBuilder(project.PublishDir, name: null, target: "/app"));
+            container.Args = $"dotnet /app/{outputFileName} {project.Args}";
+            container.Bindings.AddRange(project.Bindings);
+
+            await ProcessUtil.RunAsync("dotnet", $"publish \"{project.ProjectFile.FullName}\" /nologo", outputDataReceived: _sink.WriteLine, errorDataReceived: _sink.WriteLine);
+            application.Services.Add(container);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
+            {
+                var frontendUri = await GetServiceUrl(client, uri, "frontend");
+                var backendUri = await GetServiceUrl(client, uri, "backend");
+
+                var backendResponse = await client.GetAsync(backendUri);
+                var frontendResponse = await client.GetAsync(frontendUri);
+
+                Assert.True(backendResponse.IsSuccessStatusCode);
+                Assert.True(frontendResponse.IsSuccessStatusCode);
+            });
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
         public async Task DockerNamedVolumeTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("volume-test");

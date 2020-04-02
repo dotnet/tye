@@ -214,7 +214,7 @@ namespace Microsoft.Tye.Hosting
 
                 var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {docker.Image} {docker.Args ?? ""}";
 
-                _logger.LogInformation("Running command image {Image} for {Replica}", docker.Image, replica);
+                _logger.LogInformation("Running image {Image} for {Replica}", docker.Image, replica);
 
                 service.Logs.OnNext($"[{replica}]: docker {command}");
 
