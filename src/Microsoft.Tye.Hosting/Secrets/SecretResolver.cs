@@ -11,7 +11,6 @@ using Tye.Serialization;
 
 namespace Microsoft.Tye.Hosting.Secrets
 {
-
     public static class SecretResolver
     {
         public static string GetSecretValue(string providerName, string secretKey, FileInfo source)
@@ -55,8 +54,9 @@ namespace Microsoft.Tye.Hosting.Secrets
                 throw new InvalidOperationException($"The secret provider {secretProviderName} is not configured in {secretConfigSource.FullName}.");
             }
 
-            // This should be extensible so maybe 3rd party or community could register provider sources
-            // but I'm hung up on all this statics right now
+            // This should be more extensible so maybe 3rd party or community could register provider sources
+            // but I'm hung up on all this statics right now.
+            // Wonder if we can get these via nuget based on the provider type?
             ISecretProvider secretProvider;
             switch (providerConfig.Type)
             {
@@ -65,8 +65,14 @@ namespace Microsoft.Tye.Hosting.Secrets
                     {
                         throw new InvalidOperationException($"Missing the secretId for user-secrets provider named {providerConfig.Name}");
                     }
-                    var secretId = providerConfig.Settings["secretId"];
-                    secretProvider = new UserSecretsProvider(secretId);
+                    secretProvider = new UserSecretsProvider(providerConfig.Settings["secretId"]);
+                    break;
+                case "key-vault":
+                    if (!providerConfig.Settings.ContainsKey("vaultName"))
+                    {
+                        throw new InvalidOperationException($"Missing the vaultName for key-vault provider named {providerConfig.Name}");
+                    }
+                    secretProvider = new KeyVaultProvider(providerConfig.Settings["vaultName"]);
                     break;
                 default:
                     throw new InvalidOperationException($"The secret provider type {providerConfig.Type} is not valid.");
@@ -79,6 +85,6 @@ namespace Microsoft.Tye.Hosting.Secrets
 
     public interface ISecretProvider
     {
-        string GetSecretValue(string name);
+        string GetSecretValue(string secretName);
     }
 }

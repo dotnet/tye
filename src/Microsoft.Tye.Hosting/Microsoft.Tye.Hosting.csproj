@@ -15,6 +15,8 @@
   </ItemGroup>
   
   <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.1.1" />
+    <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.0.2" />
     <PackageReference Include="Bedrock.Framework" Version="0.1.38-alpha.gd25d5b37ad" />
     <PackageReference Include="FeatherHttp" Version="0.1.42-alpha.gf06a8747e7" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.0" />
