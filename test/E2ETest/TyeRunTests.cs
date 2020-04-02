@@ -246,8 +246,9 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task DockerNetworkAssignmentTest()
         {
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
-            using var tempDirectory = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
+            var projectDirectory = new DirectoryInfo(
+                Path.Combine(GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
+            using var tempDirectory = TempDirectory.Create(true);
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
@@ -270,18 +271,22 @@ namespace E2ETest
 
             try
             {
-                await RunHostingApplication(application, new[] { "--docker" }, async (app, uri) =>
-                {
-                    foreach (var serviceBuilder in application.Services)
+                await RunHostingApplication(
+                    application,
+                    new[] { "--docker" },
+                    async (app, uri) =>
                     {
-                        var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceBuilder.Name}");
-                        var service = JsonSerializer.Deserialize<V1Service>(serviceResult, _options);
+                        foreach (var serviceBuilder in application.Services)
+                        {
+                            var serviceResult =
+                                await client.GetStringAsync($"{uri}api/v1/services/{serviceBuilder.Name}");
+                            var service = JsonSerializer.Deserialize<V1Service>(serviceResult, _options);
 
-                        Assert.NotNull(service);
+                            Assert.NotNull(service);
 
-                        Assert.Equal(dockerNetwork, service.Replicas.FirstOrDefault().Value.DockerNetwork);
-                    }
-                });
+                            Assert.Equal(dockerNetwork, service.Replicas.FirstOrDefault().Value.DockerNetwork);
+                        }
+                    });
             }
             finally
             {
@@ -290,13 +295,13 @@ namespace E2ETest
             }
         }
 
-
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task DockerNetworkAssignmentForNonExistingNetworkTest()
         {
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
-            using var tempDirectory = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
+            var projectDirectory = new DirectoryInfo(
+                Path.Combine(GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
+            using var tempDirectory = TempDirectory.Create(true);
             DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
 
             var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
@@ -314,18 +319,21 @@ namespace E2ETest
 
             var client = new HttpClient(new RetryHandler(handler));
 
-            await RunHostingApplication(application, new[] { "--docker" }, async (app, uri) =>
-            {
-                foreach (var serviceBuilder in application.Services)
+            await RunHostingApplication(
+                application,
+                new[] { "--docker" },
+                async (app, uri) =>
                 {
-                    var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceBuilder.Name}");
-                    var service = JsonSerializer.Deserialize<V1Service>(serviceResult, _options);
+                    foreach (var serviceBuilder in application.Services)
+                    {
+                        var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceBuilder.Name}");
+                        var service = JsonSerializer.Deserialize<V1Service>(serviceResult, _options);
 
-                    Assert.NotNull(service);
+                        Assert.NotNull(service);
 
-                    Assert.NotEqual(dockerNetwork, service.Replicas.FirstOrDefault().Value.DockerNetwork);
-                }
-            });
+                        Assert.NotEqual(dockerNetwork, service.Replicas.FirstOrDefault().Value.DockerNetwork);
+                    }
+                });
         }
 
         [ConditionalFact]
@@ -339,7 +347,7 @@ namespace E2ETest
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Add a volume
-            var project = ((ProjectServiceBuilder)application.Services[0]);
+            var project = (ProjectServiceBuilder)application.Services[0];
 
             using var tempDir = TempDirectory.Create();
 
