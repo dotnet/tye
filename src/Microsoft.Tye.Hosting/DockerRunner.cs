@@ -49,6 +49,47 @@ namespace Microsoft.Tye.Hosting
                 return;
             }
 
+            foreach (var service in application.Services.Values)
+            {
+                if (service.Description.RunInfo is DockerRunInfo || service.Description.Bindings.Count == 0)
+                {
+                    continue;
+                }
+
+                // Inject a proxy per non-container service. This allows the container to use normal host names within the
+                // container network to talk to services on the host
+                var proxyContanier = new DockerRunInfo($"mcr.microsoft.com/dotnet/core/sdk:3.1", "dotnet Microsoft.Tye.Proxy.dll")
+                {
+                    WorkingDirectory = "/app",
+                    NetworkAlias = service.Description.Name,
+                    Private = true
+                };
+                var proxyLocation = Path.GetDirectoryName(typeof(Microsoft.Tye.Proxy.Program).Assembly.Location);
+                proxyContanier.VolumeMappings.Add(new DockerVolume(proxyLocation, name: null, target: "/app"));
+                var proxyDescription = new ServiceDescription($"{service.Description.Name}-proxy", proxyContanier);
+                foreach (var binding in service.Description.Bindings)
+                {
+                    if (binding.Port == null)
+                    {
+                        continue;
+                    }
+
+                    var b = new ServiceBinding()
+                    {
+                        ConnectionString = binding.ConnectionString,
+                        Host = binding.Host,
+                        ContainerPort = binding.ContainerPort,
+                        Name = binding.Name,
+                        Port = binding.Port,
+                        Protocol = binding.Protocol
+                    };
+                    b.ReplicaPorts.Add(b.Port.Value);
+                    proxyDescription.Bindings.Add(b);
+                }
+                var proxyContanierService = new Service(proxyDescription);
+                containers.Add(proxyContanierService);
+            }
+
             string? dockerNetwork = null;
 
             if (!string.IsNullOrEmpty(application.Network))
@@ -189,7 +230,7 @@ namespace Microsoft.Tye.Hosting
                     // These are the ports that the application should use for binding
 
                     // 1. Tell the docker container what port to bind to
-                    portString = string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.ContainerPort ?? p.Port}"));
+                    portString = string.Join(" ", ports.Select(p => $"-p " + (docker.Private ? $"{p.ContainerPort ?? p.Port}" : $"{p.Port}:{p.ContainerPort ?? p.Port}")));
 
                     // 2. Configure ASP.NET Core to bind to those same ports
                     environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://*:{p.ContainerPort ?? p.Port}"));
@@ -215,6 +256,7 @@ namespace Microsoft.Tye.Hosting
                 application.PopulateEnvironment(service, (key, value) => environment[key] = value, hostname);
 
                 environment["APP_INSTANCE"] = replica;
+                environment["CONTAINER_HOST"] = hostname;
 
                 status.Environment = environment;
 
@@ -284,9 +326,9 @@ namespace Microsoft.Tye.Hosting
 
                 if (!string.IsNullOrEmpty(dockerNetwork))
                 {
-                    status.DockerNetworkAlias = serviceDescription.Name;
+                    status.DockerNetworkAlias = docker.NetworkAlias ?? serviceDescription.Name;
 
-                    var networkCommand = $"network connect {dockerNetwork} {replica} --alias {serviceDescription.Name}";
+                    var networkCommand = $"network connect {dockerNetwork} {replica} --alias {status.DockerNetworkAlias}";
 
                     service.Logs.OnNext($"[{replica}]: docker {networkCommand}");
 
@@ -477,6 +519,12 @@ namespace Microsoft.Tye.Hosting
 
             public Task[] Tasks { get; }
             public CancellationTokenSource StoppingTokenSource { get; } = new CancellationTokenSource();
+        }
+
+        private class DockerApplicationInformation
+        {
+            public string? DockerNetwork { get; set; }
+
         }
     }
 }
