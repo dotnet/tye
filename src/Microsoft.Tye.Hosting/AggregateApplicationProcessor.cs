@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Microsoft.Tye.Hosting.Model;
 
@@ -28,10 +29,28 @@ namespace Microsoft.Tye.Hosting
 
         public async Task StopAsync(Application application)
         {
+            var exceptions = new List<Exception>();
+
             // Shutdown in the opposite order
             foreach (var processor in _applicationProcessors.Reverse())
             {
-                await processor.StopAsync(application);
+                try
+                {
+                    await processor.StopAsync(application);
+                }
+                catch (Exception ex)
+                {
+                    exceptions.Add(ex);
+                }
+            }
+
+            if (exceptions.Count == 1)
+            {
+                ExceptionDispatchInfo.Throw(exceptions[0]);
+            }
+            else if (exceptions.Count > 0)
+            {
+                throw new AggregateException(exceptions);
             }
         }
     }

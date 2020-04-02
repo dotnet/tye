@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Bedrock.Framework;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -17,23 +18,23 @@ namespace Microsoft.Tye.Proxy
     {
         static async Task Main(string[] args)
         {
-            using var loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder.AddConsole();
-                builder.SetMinimumLevel(LogLevel.Debug);
-            });
-
-            var logger = loggerFactory.CreateLogger<Program>();
             var serviceName = Environment.GetEnvironmentVariable("APP_INSTANCE");
             var containerHost = Environment.GetEnvironmentVariable("CONTAINER_HOST");
 
-            logger.LogInformation("Received connection information {Host}:{Port}", containerHost, Environment.GetEnvironmentVariable("PORT"));
-
-            var ports = Environment.GetEnvironmentVariable("PORT")?.Split(';').Select(Int32.Parse) ?? Enumerable.Empty<int>();
-
-            var host = new HostBuilder()
+            using var host = new HostBuilder()
+                    .ConfigureLogging(logging =>
+                    {
+                        logging.AddConsole();
+                        logging.SetMinimumLevel(LogLevel.Debug);
+                    })
                     .ConfigureServer(server =>
                     {
+                        var logger = server.ApplicationServices.GetRequiredService<ILogger<Program>>();
+
+                        logger.LogInformation("Received connection information {Host}:{Port}", containerHost, Environment.GetEnvironmentVariable("PORT"));
+
+                        var ports = Environment.GetEnvironmentVariable("PORT")?.Split(';').Select(int.Parse) ?? Enumerable.Empty<int>();
+
                         server.UseSockets(sockets =>
                         {
                             foreach (var port in ports)
@@ -122,7 +123,7 @@ namespace Microsoft.Tye.Proxy
                     })
                     .Build();
 
-            await host.StartAsync();
+            await host.RunAsync();
         }
     }
 }
