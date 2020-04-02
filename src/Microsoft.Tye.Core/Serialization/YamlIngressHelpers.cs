@@ -169,14 +169,6 @@ namespace Tye.Serialization
                     case "name":
                         binding.Name = YamlParser.GetScalarValue(key, child.Value);
                         break;
-                    case "autoAssignPort":
-                        if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var autoAssignPort))
-                        {
-                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeABoolean(key));
-                        }
-
-                        binding.AutoAssignPort = autoAssignPort;
-                        break;
                     case "port":
                         if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var port))
                         {

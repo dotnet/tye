@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Tye.ConfigModel;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace Tye.Serialization
@@ -31,11 +32,19 @@ namespace Tye.Serialization
         {
             _reader = reader;
             _yamlStream = new YamlStream();
-            _yamlStream.Load(reader);
         }
 
         public ConfigApplication ParseConfigApplication()
         {
+            try
+            {
+                _yamlStream.Load(_reader);
+            }
+            catch (YamlException ex)
+            {
+                throw new TyeYamlException(ex.Start, "Unable to parse tye.yaml. See inner exception.", ex);
+            }
+
             var app = new ConfigApplication();
 
             // TODO assuming first document.

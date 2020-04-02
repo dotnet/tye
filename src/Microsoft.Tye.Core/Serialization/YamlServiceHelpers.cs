@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
 using Microsoft.Tye.ConfigModel;
 using YamlDotNet.RepresentationModel;
@@ -164,14 +163,6 @@ namespace Tye.Serialization
                     case "connectionString":
                         binding.ConnectionString = YamlParser.GetScalarValue(key, child.Value);
                         break;
-                    case "autoAssignPort":
-                        if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var autoAssignPort))
-                        {
-                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeABoolean(key));
-                        }
-
-                        binding.AutoAssignPort = autoAssignPort;
-                        break;
                     case "port":
                         if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var port))
                         {
@@ -235,6 +226,9 @@ namespace Tye.Serialization
 
                 switch (key)
                 {
+                    case "name":
+                        volume.Name = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     case "source":
                         volume.Source = YamlParser.GetScalarValue(key, child.Value);
                         break;
