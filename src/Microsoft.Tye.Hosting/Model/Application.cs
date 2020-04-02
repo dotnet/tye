@@ -26,6 +26,8 @@ namespace Microsoft.Tye.Hosting.Model
 
         public Dictionary<object, object> Items { get; } = new Dictionary<object, object>();
 
+        public string? Network { get; set; }
+
         public void PopulateEnvironment(Service service, Action<string, string> set, string defaultHost = "localhost")
         {
             if (service.Description.Configuration != null)

@@ -17,10 +17,12 @@ using Microsoft.Tye.Hosting.Model;
 using Microsoft.Tye.Hosting.Model.V1;
 using Xunit;
 using Xunit.Abstractions;
+
 using static E2ETest.TestHelpers;
 
 namespace E2ETest
 {
+
     public class TyeRunTests
     {
         private readonly ITestOutputHelper _output;
@@ -278,6 +280,114 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        public async Task DockerNetworkAssignmentTest()
+        {
+            var projectDirectory = new DirectoryInfo(
+                Path.Combine(GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
+            using var tempDirectory = TempDirectory.Create(true);
+            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+
+            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var dockerNetwork = "tye_docker_network_test" + Guid.NewGuid().ToString().Substring(0, 10);
+            application.Network = dockerNetwork;
+
+            // Create the existing network
+            await ProcessUtil.RunAsync("docker", $"network create {dockerNetwork}");
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            try
+            {
+                await RunHostingApplication(
+                    application,
+                    new[] { "--docker" },
+                    async (app, uri) =>
+                    {
+                        // Make sure we're running containers
+                        Assert.True(app.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
+
+                        foreach (var serviceBuilder in application.Services)
+                        {
+                            var serviceUri = await GetServiceUrl(client, uri, serviceBuilder.Name);
+                            var serviceResponse = await client.GetAsync(serviceUri);
+                            Assert.True(serviceResponse.IsSuccessStatusCode);
+
+                            var serviceResult =
+                                await client.GetStringAsync($"{uri}api/v1/services/{serviceBuilder.Name}");
+                            var service = JsonSerializer.Deserialize<V1Service>(serviceResult, _options);
+
+                            Assert.NotNull(service);
+
+                            Assert.Equal(dockerNetwork, service.Replicas.FirstOrDefault().Value.DockerNetwork);
+                        }
+                    });
+            }
+            finally
+            {
+                // Delete the network
+                await ProcessUtil.RunAsync("docker", $"network rm {dockerNetwork}");
+            }
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task DockerNetworkAssignmentForNonExistingNetworkTest()
+        {
+            var projectDirectory = new DirectoryInfo(
+                Path.Combine(GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
+            using var tempDirectory = TempDirectory.Create(true);
+            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+
+            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var dockerNetwork = "tye_docker_network_test" + Guid.NewGuid().ToString().Substring(0, 10);
+            application.Network = dockerNetwork;
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(
+                application,
+                new[] { "--docker" },
+                async (app, uri) =>
+                {
+                    // Make sure we're running containers
+                    Assert.True(app.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
+
+                    foreach (var serviceBuilder in application.Services)
+                    {
+                        var serviceUri = await GetServiceUrl(client, uri, serviceBuilder.Name);
+                        var serviceResponse = await client.GetAsync(serviceUri);
+                        Assert.True(serviceResponse.IsSuccessStatusCode);
+
+                        var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceBuilder.Name}");
+                        var service = JsonSerializer.Deserialize<V1Service>(serviceResult, _options);
+
+                        Assert.NotNull(service);
+
+                        Assert.NotEqual(dockerNetwork, service.Replicas.FirstOrDefault().Value.DockerNetwork);
+                    }
+                });
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
         public async Task DockerHostVolumeTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("volume-test");
@@ -287,7 +397,7 @@ namespace E2ETest
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Add a volume
-            var project = ((ProjectServiceBuilder)application.Services[0]);
+            var project = (ProjectServiceBuilder)application.Services[0];
 
             using var tempDir = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
 

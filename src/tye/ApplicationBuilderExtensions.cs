@@ -152,7 +152,7 @@ namespace Microsoft.Tye
                 services.Add(ingress.Name, new Service(description));
             }
 
-            return new Application(application.Source, services);
+            return new Application(application.Source, services) { Network = application.Network };
         }
 
         public static Tye.Hosting.Model.EnvironmentVariable ToHostingEnvironmentVariable(this EnvironmentVariableBuilder builder)
