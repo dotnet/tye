@@ -21,6 +21,10 @@ using static E2ETest.TestHelpers;
 
 namespace E2ETest
 {
+    using Newtonsoft.Json;
+
+    using JsonSerializer = System.Text.Json.JsonSerializer;
+
     public class TyeRunTests
     {
         private readonly ITestOutputHelper _output;
@@ -238,6 +242,80 @@ namespace E2ETest
 
             // Delete the volume
             await ProcessUtil.RunAsync("docker", $"volume rm {volumeName}");
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task DockerNetworkAssignmentTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("network-test");
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var dockerNetwork = "tye_docker_network_test" + Guid.NewGuid().ToString().Substring(0, 10);
+            application.Network = dockerNetwork;
+
+            // Create the existing network
+            await ProcessUtil.RunAsync("docker", $"network create {dockerNetwork}");
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+            var args = new[] { "--docker" };
+
+            await RunHostingApplication(application, args, async (app, serviceApi) =>
+            {
+                var serviceResult = await client.GetStringAsync($"{serviceApi}api/v1/services/network-test");
+                var service = JsonConvert.DeserializeObject<V1Service>(serviceResult);
+
+                Assert.NotNull(service);
+
+                Assert.Equal(dockerNetwork, service.Replicas.FirstOrDefault().Value.DockerNetwork);
+            });
+
+
+            // Delete the network
+            await ProcessUtil.RunAsync("docker", $"network rm {dockerNetwork}");
+        }
+
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task DockerNetworkAssignmentForNonExistingNetworkTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("network-test");
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var networkName = "tye_docker_network_test" + Guid.NewGuid().ToString().Substring(0, 10);
+            application.Network = networkName;
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+            var args = new[] { "--docker" };
+
+            await RunHostingApplication(application, args, async (app, serviceApi) =>
+            {
+                var serviceResult = await client.GetStringAsync($"{serviceApi}api/v1/services/network-test");
+                var service = JsonConvert.DeserializeObject<V1Service>(serviceResult);
+
+                Assert.NotNull(service);
+
+                Assert.NotEqual(networkName, service.Replicas.FirstOrDefault().Value.DockerNetwork);
+            });
         }
 
         [ConditionalFact]

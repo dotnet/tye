@@ -1,0 +1,12 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
+#
+name: network-test
+services:
+- name: network-test
+  project: network-test.csproj
+- name: network-test-2
+  project: network-test-2.csproj

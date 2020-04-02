@@ -40,6 +40,10 @@
     <None Remove="testassets\generate\single-project.yaml" />
     <None Remove="testassets\init\frontend-backend.yaml" />
     <None Remove="testassets\init\multi-project.yaml" />
+    <None Remove="testassets\projects\network-test\appsettings.Development.json" />
+    <None Remove="testassets\projects\network-test\appsettings.json" />
+    <None Remove="testassets\projects\network-test\Properties\launchSettings.json" />
+    <None Remove="testassets\projects\network-test\tye.yaml" />
   </ItemGroup>
 
 </Project>
