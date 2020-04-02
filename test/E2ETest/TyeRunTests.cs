@@ -463,6 +463,37 @@ namespace E2ETest
         }
 
         [Fact]
+        public async Task NginxIngressTest()
+        {
+            using var projectDirectory = CopySampleProjectDirectory("nginx-ingress");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
+            {
+                using var client = new HttpClient();
+
+                var nginxUri = await GetServiceUrl(client, uri, "nginx");
+
+                var responseA = await client.GetAsync(nginxUri + "/A");
+                var responseB = await client.GetAsync(nginxUri + "/B");
+
+                Assert.StartsWith("Hello from Application A", await responseA.Content.ReadAsStringAsync());
+                Assert.StartsWith("Hello from Application B", await responseB.Content.ReadAsStringAsync());
+            });
+        }
+
+        [Fact]
         public async Task NullDebugTargetsDoesNotThrow()
         {
             using var projectDirectory = CopySampleProjectDirectory(Path.Combine("single-project", "test-project"));

@@ -9,10 +9,8 @@ services:
 - name: appA
   project: ApplicationA/ApplicationA.csproj
   bindings:
-    - containerPort: 80
   replicas: 2
 - name: appB
   project: ApplicationB/ApplicationB.csproj
   bindings:
-    - containerPort: 80
   replicas: 2
