@@ -175,7 +175,7 @@ namespace Microsoft.Tye.Hosting
 
             await Task.WhenAll(tasks);
 
-            if (string.IsNullOrEmpty(application.Network) && string.IsNullOrEmpty(info.DockerNetwork))
+            if (string.IsNullOrEmpty(application.Network) && !string.IsNullOrEmpty(info.DockerNetwork))
             {
                 _logger.LogInformation("Removing docker network {Network}", info.DockerNetwork);
 
