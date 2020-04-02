@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Tye;
 using Xunit.Abstractions;
+using static E2ETest.TestHelpers;
 
 namespace E2ETest
 {
@@ -29,11 +30,9 @@ namespace E2ETest
             var projectName = "single-project";
             var environment = "production";
 
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", projectName));
-            using var tempDirectory = TempDirectory.Create();
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory(projectName);
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
@@ -62,11 +61,9 @@ namespace E2ETest
             var projectName = "frontend-backend";
             var environment = "production";
 
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", projectName));
-            using var tempDirectory = TempDirectory.Create();
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory(projectName);
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
@@ -98,11 +95,9 @@ namespace E2ETest
             var projectName = "multi-project";
             var environment = "production";
 
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", projectName));
-            using var tempDirectory = TempDirectory.Create();
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory(projectName);
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
@@ -134,11 +129,9 @@ namespace E2ETest
             var projectName = "single-project";
             var environment = "production";
 
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", projectName));
-            using var tempDirectory = TempDirectory.Create();
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory(projectName);
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 

@@ -134,45 +134,22 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
     In order to access redis we need to add some code to the `backend` project to be able to read secrets from inside the container.
 
-    First, add the `KeyPerFile` configuration provider package to the backend project using the command line.
+    First, add the Tye configuration provider package to the backend project using the command line.
 
     ```text
     cd backend
-    dotnet add package Microsoft.Extensions.Configuration.KeyPerFile
+    dotnet add package Microsoft.Tye.Extensions.Configuration
     cd ..
     ```
 
-    Next, add the following `using`s for the configuration provider near the top of `Program.cs`
-
-    ```C#
-    using System.IO;
-    using Microsoft.Extensions.Configuration.KeyPerFile;
-    ```
-
-    Then, add the following method to the `Program` class:
-
-    ```C#
-    private static void AddTyeBindingSecrets(IConfigurationBuilder config)
-    {
-        if (Directory.Exists("/var/tye/bindings/"))
-        {
-            foreach (var directory in Directory.GetDirectories("/var/tye/bindings/"))
-            {
-                Console.WriteLine($"Adding config in '{directory}'.");
-                config.AddKeyPerFile(directory, optional: true);
-            }
-        }
-    }
-    ```
-
-    Then update `CreateHostBuilder` to call the new method:
+    Then update `CreateHostBuilder` to create the configuration source:
 
     ```C#
     public static IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
             .ConfigureAppConfiguration(config =>
             {
-                AddTyeBindingSecrets(config);
+                config.AddTyeSecrets();
             })
             .ConfigureWebHostDefaults(webBuilder =>
             {

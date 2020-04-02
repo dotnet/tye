@@ -26,23 +26,10 @@ namespace Vote
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration(builder => AddTyeBindingSecrets(builder))
+                .ConfigureAppConfiguration(builder => builder.AddTyeSecrets())
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
                 });
-
-
-        private static void AddTyeBindingSecrets(IConfigurationBuilder config)
-        {
-            if (Directory.Exists("/var/tye/bindings/"))
-            {
-                foreach (var directory in Directory.GetDirectories("/var/tye/bindings/"))
-                {
-                    Console.WriteLine($"Adding config in '{directory}'.");
-                    config.AddKeyPerFile(directory, optional: true);
-                }
-            }
-        }
     }
 }

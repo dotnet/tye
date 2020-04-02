@@ -45,11 +45,9 @@ namespace E2ETest
         [Fact]
         public async Task SingleProjectRunTest()
         {
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "single-project", "test-project"));
-            using var tempDirectory = TempDirectory.Create();
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory(Path.Combine("single-project", "test-project"));
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "test-project.csproj"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "test-project.csproj"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -74,11 +72,9 @@ namespace E2ETest
         [Fact]
         public async Task FrontendBackendRunTest()
         {
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
-            using var tempDirectory = TempDirectory.Create();
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -107,11 +103,9 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task FrontendBackendRunTestWithDocker()
         {
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
-            using var tempDirectory = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -143,11 +137,9 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task FrontendProjectBackendDocker()
         {
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
-            using var tempDirectory = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -253,7 +245,7 @@ namespace E2ETest
             // Add a volume
             var project = ((ProjectServiceBuilder)application.Services[0]);
 
-            using var tempDir = TempDirectory.Create();
+            using var tempDir = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
 
             project.Volumes.Clear();
             project.Volumes.Add(new VolumeBuilder(source: tempDir.DirectoryPath, name: null, target: "/data"));
@@ -283,11 +275,9 @@ namespace E2ETest
         [Fact]
         public async Task IngressRunTest()
         {
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "apps-with-ingress"));
-            using var tempDirectory = TempDirectory.Create();
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory("apps-with-ingress");
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -327,11 +317,9 @@ namespace E2ETest
         [Fact]
         public async Task NullDebugTargetsDoesNotThrow()
         {
-            var projectDirectory = new DirectoryInfo(Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "samples", "single-project", "test-project"));
-            using var tempDirectory = TempDirectory.Create();
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory(Path.Combine("single-project", "test-project"));
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "test-project.csproj"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "test-project.csproj"));
 
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
             var outputContext = new OutputContext(_sink, Verbosity.Debug);

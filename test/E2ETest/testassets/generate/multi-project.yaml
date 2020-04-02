@@ -31,6 +31,8 @@ spec:
           value: '8000'
         - name: SERVICE__FRONTEND__HOST
           value: 'frontend'
+        - name: TYE_SECRETS_PATH
+          value: '/var/tye/bindings/'
         volumeMounts:
         - name: rabbit-rabbit
           mountPath: /var/tye/bindings/rabbit-rabbit
@@ -97,6 +99,8 @@ spec:
           value: '7000'
         - name: SERVICE__BACKEND__HOST
           value: 'backend'
+        - name: TYE_SECRETS_PATH
+          value: '/var/tye/bindings/'
         volumeMounts:
         - name: rabbit-rabbit
           mountPath: /var/tye/bindings/rabbit-rabbit
@@ -165,6 +169,8 @@ spec:
           value: '8000'
         - name: SERVICE__FRONTEND__HOST
           value: 'frontend'
+        - name: TYE_SECRETS_PATH
+          value: '/var/tye/bindings/'
         volumeMounts:
         - name: rabbit-rabbit
           mountPath: /var/tye/bindings/rabbit-rabbit
