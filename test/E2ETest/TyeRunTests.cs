@@ -468,7 +468,8 @@ namespace E2ETest
             });
         }
 
-        [Fact]
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
         public async Task NginxIngressTest()
         {
             using var projectDirectory = CopySampleProjectDirectory("nginx-ingress");
@@ -491,9 +492,11 @@ namespace E2ETest
                 var appAUri = await GetServiceUrl(client, uri, "appA");
                 var appBUri = await GetServiceUrl(client, uri, "appB");
 
+                var nginxResponse = await client.GetAsync(nginxUri);
                 var appAResponse = await client.GetAsync(appAUri);
                 var appBResponse = await client.GetAsync(appBUri);
 
+                Assert.Equal(HttpStatusCode.NotFound, nginxResponse.StatusCode);
                 Assert.True(appAResponse.IsSuccessStatusCode);
                 Assert.True(appBResponse.IsSuccessStatusCode);
 
