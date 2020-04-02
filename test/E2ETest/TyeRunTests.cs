@@ -276,8 +276,15 @@ namespace E2ETest
                     new[] { "--docker" },
                     async (app, uri) =>
                     {
+                        // Make sure we're running containers
+                        Assert.True(app.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
+
                         foreach (var serviceBuilder in application.Services)
                         {
+                            var serviceUri = await GetServiceUrl(client, uri, serviceBuilder.Name);
+                            var serviceResponse = await client.GetAsync(serviceUri);
+                            Assert.True(serviceResponse.IsSuccessStatusCode);
+
                             var serviceResult =
                                 await client.GetStringAsync($"{uri}api/v1/services/{serviceBuilder.Name}");
                             var service = JsonSerializer.Deserialize<V1Service>(serviceResult, _options);
@@ -324,8 +331,15 @@ namespace E2ETest
                 new[] { "--docker" },
                 async (app, uri) =>
                 {
+                    // Make sure we're running containers
+                    Assert.True(app.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
+
                     foreach (var serviceBuilder in application.Services)
                     {
+                        var serviceUri = await GetServiceUrl(client, uri, serviceBuilder.Name);
+                        var serviceResponse = await client.GetAsync(serviceUri);
+                        Assert.True(serviceResponse.IsSuccessStatusCode);
+
                         var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceBuilder.Name}");
                         var service = JsonSerializer.Deserialize<V1Service>(serviceResult, _options);
 
