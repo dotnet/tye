@@ -56,7 +56,7 @@ namespace Microsoft.Tye.Hosting
                 var dockerNetworkResult = await ProcessUtil.RunAsync("docker", $"network ls --filter \"name={application.Network}\" --format \"{{{{.ID}}}}\"");
                 if (dockerNetworkResult.ExitCode != 0)
                 {
-                    _logger.LogInformation("{Network}: Run docker network ls command failed", application.Network);
+                    _logger.LogError("{Network}: Run docker network ls command failed", application.Network);
 
                     throw new CommandException("Run docker network ls command failed");
                 }
@@ -69,7 +69,7 @@ namespace Microsoft.Tye.Hosting
                 }
                 else
                 {
-                    _logger.LogInformation("The specified network {Network} doesn't exist.", application.Network);
+                    _logger.LogWarning("The specified network {Network} doesn't exist.", application.Network);
 
                     application.Network = null;
                 }
