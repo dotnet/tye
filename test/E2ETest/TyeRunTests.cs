@@ -282,12 +282,9 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task DockerNetworkAssignmentTest()
         {
-            var projectDirectory = new DirectoryInfo(
-                Path.Combine(GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
-            using var tempDirectory = TempDirectory.Create(true);
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -342,12 +339,9 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task DockerNetworkAssignmentForNonExistingNetworkTest()
         {
-            var projectDirectory = new DirectoryInfo(
-                Path.Combine(GetSolutionRootDirectory("tye"), "samples", "frontend-backend"));
-            using var tempDirectory = TempDirectory.Create(true);
-            DirectoryCopy.Copy(projectDirectory.FullName, tempDirectory.DirectoryPath);
+            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
 
-            var projectFile = new FileInfo(Path.Combine(tempDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
