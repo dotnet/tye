@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Frontend
 {
@@ -37,7 +38,7 @@ namespace Frontend
             services.AddHealthChecks();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
             if (env.IsDevelopment())
             {
@@ -48,9 +49,13 @@ namespace Frontend
 
             app.UseEndpoints(endpoints =>
             {
+                var uri = Configuration.GetServiceUri("backend");
+
+                logger.LogInformation("Backend URL: {BackendUrl}", uri);
+
                 var httpClient = new HttpClient()
                 {
-                    BaseAddress = Configuration.GetServiceUri("backend"),
+                    BaseAddress = uri
                 };
 
                 endpoints.MapGet("/", async context =>

@@ -179,7 +179,7 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        public async Task FrontendContanierBackendProject()
+        public async Task FrontendDockerBackendProject()
         {
             using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
 
