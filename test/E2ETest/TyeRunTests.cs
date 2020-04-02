@@ -439,9 +439,15 @@ namespace E2ETest
 
             await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
             {
-                using var client = new HttpClient();
-
                 var ingressUri = await GetServiceUrl(client, uri, "ingress");
+                var appAUri = await GetServiceUrl(client, uri, "appA");
+                var appBUri = await GetServiceUrl(client, uri, "appB");
+
+                var appAResponse = await client.GetAsync(appAUri);
+                var appBResponse = await client.GetAsync(appBUri);
+
+                Assert.True(appAResponse.IsSuccessStatusCode);
+                Assert.True(appBResponse.IsSuccessStatusCode);
 
                 var responseA = await client.GetAsync(ingressUri + "/A");
                 var responseB = await client.GetAsync(ingressUri + "/B");
@@ -481,9 +487,15 @@ namespace E2ETest
 
             await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
             {
-                using var client = new HttpClient();
-
                 var nginxUri = await GetServiceUrl(client, uri, "nginx");
+                var appAUri = await GetServiceUrl(client, uri, "appA");
+                var appBUri = await GetServiceUrl(client, uri, "appB");
+
+                var appAResponse = await client.GetAsync(appAUri);
+                var appBResponse = await client.GetAsync(appBUri);
+
+                Assert.True(appAResponse.IsSuccessStatusCode);
+                Assert.True(appBResponse.IsSuccessStatusCode);
 
                 var responseA = await client.GetAsync(nginxUri + "/A");
                 var responseB = await client.GetAsync(nginxUri + "/B");
