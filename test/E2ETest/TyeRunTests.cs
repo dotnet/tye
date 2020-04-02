@@ -307,10 +307,10 @@ namespace E2ETest
             application.Network = dockerNetwork;
 
             var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
-                AllowAutoRedirect = false
-            };
+                          {
+                              ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                              AllowAutoRedirect = false
+                          };
 
             var client = new HttpClient(new RetryHandler(handler));
 
