@@ -48,6 +48,14 @@ namespace Tye.Serialization
                         }
                         YamlServiceHelpers.HandleServiceMapping((child.Value as YamlSequenceNode)!, app.Services);
                         break;
+                    case "extensions":
+                        if (child.Value.NodeType != YamlNodeType.Sequence)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
+                        }
+                        YamlExtensionHelper.HandleExtensionsMapping((child.Value as YamlSequenceNode)!, app.Extensions);
+
+                        break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }

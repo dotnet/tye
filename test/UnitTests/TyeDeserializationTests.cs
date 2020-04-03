@@ -27,6 +27,8 @@ namespace UnitTests
             var input = @"
 name: apps-with-ingress
 registry: myregistry
+extensions:
+  - name: dapr
 ingress:
   - name: ingress
     bindings:
