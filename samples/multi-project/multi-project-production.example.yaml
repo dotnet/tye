@@ -37,7 +37,7 @@ spec:
           secretName: binding-production-rabbit-rabbit-secret
           items:
           - key: connectionstring
-            path: CONNECTIONSTRING__RABBIT
+            path: CONNECTIONSTRINGS__RABBIT
 ...
 ---
 kind: Service
@@ -97,7 +97,7 @@ spec:
           secretName: binding-production-rabbit-rabbit-secret
           items:
           - key: connectionstring
-            path: CONNECTIONSTRING__RABBIT
+            path: CONNECTIONSTRINGS__RABBIT
 ...
 ---
 kind: Service
@@ -157,5 +157,5 @@ spec:
           secretName: binding-production-rabbit-rabbit-secret
           items:
           - key: connectionstring
-            path: CONNECTIONSTRING__RABBIT
+            path: CONNECTIONSTRINGS__RABBIT
 ...

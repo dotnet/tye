@@ -64,7 +64,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
        services.AddStackExchangeRedisCache(o =>
        {
-            var connectionString = Configuration["connectionstring:redis"];
+            var connectionString = Configuration["connectionstrings:redis"];
             if (connectionString != null)
             {
                 o.Configuration = connectionString;

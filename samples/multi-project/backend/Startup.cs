@@ -31,7 +31,7 @@ namespace Backend
             services.AddSingleton(sp =>
             {
                 AmqpTcpEndpoint endpoint;
-                var connectionString = Configuration["connectionstring:rabbit"];
+                var connectionString = Configuration["connectionstrings:rabbit"];
                 if (connectionString == null)
                 {
                     var host = Configuration["service:rabbit:host"];

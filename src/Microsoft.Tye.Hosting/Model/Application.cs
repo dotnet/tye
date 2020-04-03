@@ -100,7 +100,7 @@ namespace Microsoft.Tye.Hosting.Model
                 if (!string.IsNullOrEmpty(b.ConnectionString))
                 {
                     // Special case for connection strings
-                    set($"CONNECTIONSTRING__{configName}", b.ConnectionString);
+                    set($"CONNECTIONSTRINGS__{configName}", b.ConnectionString);
                 }
 
                 if (!string.IsNullOrEmpty(b.Protocol))

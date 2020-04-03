@@ -71,7 +71,7 @@ namespace Microsoft.Tye
                         if (!string.IsNullOrEmpty(binding.ConnectionString))
                         {
                             // Special case for connection strings
-                            bindings.Bindings.Add(new EnvironmentVariableInputBinding($"CONNECTIONSTRING__{configName}", binding.ConnectionString));
+                            bindings.Bindings.Add(new EnvironmentVariableInputBinding($"CONNECTIONSTRINGS__{configName}", binding.ConnectionString));
                             continue;
                         }
 
@@ -109,7 +109,7 @@ namespace Microsoft.Tye
                         // The other service is not a project, so we'll use secrets.
                         bindings.Bindings.Add(new SecretInputBinding(
                             name: $"binding-{Environment}-{other.Name}-{binding.Name ?? other.Name}-secret",
-                            filename: $"CONNECTIONSTRING__{configName}",
+                            filename: $"CONNECTIONSTRINGS__{configName}",
                             other,
                             binding));
                     }

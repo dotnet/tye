@@ -66,7 +66,7 @@ namespace Worker
                 try
                 {
                     AmqpTcpEndpoint endpoint;
-                    var connectionString = _configuration["connectionstring:rabbit"];
+                    var connectionString = _configuration["connectionstrings:rabbit"];
                     if (connectionString == null)
                     {
                         var host = _configuration["service:rabbit:host"];

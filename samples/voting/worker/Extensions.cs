@@ -10,7 +10,7 @@ namespace Worker
     {
         public static string GetSqlConnectionString(this IConfiguration configuration)
         {
-            return configuration["connectionstring:postgres"] ?? $"Server={configuration["service:postgres:host"]};Port={configuration["service:postgres:port"]};User Id=postgres;Password=pass@word1;";
+            return configuration["connectionstrings:postgres"] ?? $"Server={configuration["service:postgres:host"]};Port={configuration["service:postgres:port"]};User Id=postgres;Password=pass@word1;";
         }
     }
 }

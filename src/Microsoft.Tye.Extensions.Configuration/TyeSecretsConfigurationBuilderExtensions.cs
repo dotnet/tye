@@ -4,7 +4,6 @@
 
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using Microsoft.Extensions.FileProviders;
 
 namespace Microsoft.Extensions.Configuration

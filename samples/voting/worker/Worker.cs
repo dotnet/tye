@@ -103,7 +103,7 @@ namespace Worker
 
         private string GetRedisConnectionString(IConfiguration configuration)
         {
-            var connectionString = configuration["connectionstring:redis"];
+            var connectionString = configuration["connectionstrings:redis"];
             if (connectionString != null)
             {
                 return connectionString;
