@@ -3,14 +3,9 @@
 
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
-  <!-- 
-  
-    TODO come back here for copyright as part of #4 
-  
   <PropertyGroup Condition="'$(CopyrightNetFoundation)' != ''">
     <Copyright>$(CopyrightNetFoundation)</Copyright>
   </PropertyGroup>
-  -->
 
   <PropertyGroup>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
