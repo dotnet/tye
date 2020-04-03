@@ -209,8 +209,8 @@ Bindings represent protocols *exposed* by a service. How bindings are specified 
 Bindings should either provide:
 
 - A `connectionString`
-- A `protocol` and `port`
-- A `protocol` and `autoAssignPort: true`
+- A `protocol`
+- A `port`
 
 ### Binding Example
 
@@ -259,7 +259,7 @@ Specifies the port used by the binding when running in a docker container.
 
 Specifies the port used by the binding when running in a docker container.
 
-#### `autoAssignPort` (bool)
+#### `autoAssignPort` (bool deprecated, by default a port will be auto assigned if no connection string was specified)
 
 Specifies that the port should be assigned randomly. Defaults to `false`. This is currently only useful for projects - where the tye host will automatically infer bindings with `autoAssignPort: true`
 
@@ -282,9 +282,13 @@ name: myapplication
 
 ### Volume Properties
 
-#### `source` (string) *required*
+#### `source` (string)
 
 The local path.
+
+### `name` (string)
+
+A named docker volume.
 
 #### `target` (string) *required*
 
