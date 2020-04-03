@@ -15,7 +15,7 @@ namespace Tye.Serialization
         }
 
         public TyeYamlException(Mark start, string message)
-            : this(start,  message, null)
+            : this(start, message, null)
         {
         }
 
@@ -24,7 +24,7 @@ namespace Tye.Serialization
         {
         }
 
-        public TyeYamlException(string message, Exception inner)
+        public TyeYamlException(string message, Exception? inner)
             : base(message, inner)
         {
         }

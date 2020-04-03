@@ -23,12 +23,12 @@ namespace Tye.Serialization
         }
 
         public YamlParser(FileInfo fileInfo)
-            : this (fileInfo.OpenText())
+            : this(fileInfo.OpenText())
         {
             _fileInfo = fileInfo;
         }
 
-        public YamlParser(TextReader reader)
+        internal YamlParser(TextReader reader)
         {
             _reader = reader;
             _yamlStream = new YamlStream();
@@ -50,15 +50,8 @@ namespace Tye.Serialization
             // TODO assuming first document.
             var document = _yamlStream.Documents[0];
             var node = document.RootNode;
-            switch (node.NodeType)
-            {
-                case YamlNodeType.Mapping:
-                    YamlConfigApplicationHelpers.HandleConfigApplication(node as YamlMappingNode, app);
-                    break;
-                default:
-                    throw new TyeYamlException(node.Start, 
-                        CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), node.NodeType.ToString()));
-            }
+            ThrowIfNotYamlMapping(node);
+            ConfigApplicationParser.HandleConfigApplication((YamlMappingNode)node, app);
 
             app.Source = _fileInfo!;
 
@@ -79,14 +72,42 @@ namespace Tye.Serialization
             return app;
         }
 
-        public static string? GetScalarValue(string key, YamlNode node)
+        public static string GetScalarValue(YamlNode node)
+        {
+            if (node.NodeType != YamlNodeType.Scalar)
+            {
+                throw new TyeYamlException(node.Start,
+                    CoreStrings.FormatUnexpectedType(YamlNodeType.Scalar.ToString(), node.NodeType.ToString()));
+            }
+
+            return ((YamlScalarNode)node).Value!;
+        }
+
+        public static string GetScalarValue(string key, YamlNode node)
         {
             if (node.NodeType != YamlNodeType.Scalar)
             {
                 throw new TyeYamlException(node.Start, CoreStrings.FormatExpectedYamlScalar(key));
             }
 
-            return (node as YamlScalarNode)!.Value;
+            return ((YamlScalarNode)node).Value!;
+        }
+
+        public static void ThrowIfNotYamlSequence(string key, YamlNode node)
+        {
+            if (node.NodeType != YamlNodeType.Sequence)
+            {
+                throw new TyeYamlException(node.Start, CoreStrings.FormatExpectedYamlSequence(key));
+            }
+        }
+
+        public static void ThrowIfNotYamlMapping(YamlNode node)
+        {
+            if (node.NodeType != YamlNodeType.Mapping)
+            {
+                throw new TyeYamlException(node.Start,
+                    CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), node.NodeType.ToString()));
+            }
         }
 
         public void Dispose()

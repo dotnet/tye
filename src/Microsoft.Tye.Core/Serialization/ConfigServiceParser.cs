@@ -8,24 +8,15 @@ using YamlDotNet.RepresentationModel;
 
 namespace Tye.Serialization
 {
-    public static class YamlServiceHelpers
+    public static class ConfigServiceParser
     {
         public static void HandleServiceMapping(YamlSequenceNode yamlSequenceNode, List<ConfigService> services)
         {
             foreach (var child in yamlSequenceNode.Children)
             {
+                YamlParser.ThrowIfNotYamlMapping(child);
                 var service = new ConfigService();
-                switch (child.NodeType)
-                {
-                    case YamlNodeType.Mapping:
-                        // get key and value here
-                        HandleServiceNameMapping((child as YamlMappingNode)!, service);
-                        break;
-                    default:
-                        throw new TyeYamlException(child.Start, 
-                            CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), child.NodeType.ToString()));
-                }
-
+                HandleServiceNameMapping((YamlMappingNode)child, service);
                 services.Add(service);
             }
         }
@@ -34,16 +25,7 @@ namespace Tye.Serialization
         {
             foreach (var child in yamlMappingNode!.Children)
             {
-                string? key;
-                switch (child.Key.NodeType)
-                {
-                    case YamlNodeType.Scalar:
-                        key = (child.Key as YamlScalarNode)!.Value;
-                        break;
-                    default:
-                        throw new TyeYamlException(child.Key.Start,
-                            CoreStrings.FormatUnexpectedType(YamlNodeType.Scalar.ToString(), child.Key.NodeType.ToString()));
-                }
+                var key = YamlParser.GetScalarValue(child.Key);
 
                 switch (key)
                 {
@@ -126,34 +108,18 @@ namespace Tye.Serialization
         {
             foreach (var child in yamlSequenceNode.Children)
             {
-                switch (child.NodeType)
-                {
-                    case YamlNodeType.Mapping:
-                        var binding = new ConfigServiceBinding();
-                        HandleServiceBindingNameMapping(child as YamlMappingNode, binding);
-                        bindings.Add(binding);
-                        break;
-                    default:
-                        throw new TyeYamlException(child.Start,
-                            CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), child.NodeType.ToString()));
-                }
+                YamlParser.ThrowIfNotYamlMapping(child);
+                var binding = new ConfigServiceBinding();
+                HandleServiceBindingNameMapping((YamlMappingNode)child, binding);
+                bindings.Add(binding);
             }
         }
 
-        private static void HandleServiceBindingNameMapping(YamlMappingNode? yamlMappingNode, ConfigServiceBinding binding)
+        private static void HandleServiceBindingNameMapping(YamlMappingNode yamlMappingNode, ConfigServiceBinding binding)
         {
-            foreach (var child in yamlMappingNode!.Children)
+            foreach (var child in yamlMappingNode.Children)
             {
-                string? key;
-                switch (child.Key.NodeType)
-                {
-                    case YamlNodeType.Scalar:
-                        key = (child.Key as YamlScalarNode)!.Value;
-                        break;
-                    default:
-                        throw new TyeYamlException(child.Key.Start,
-                            CoreStrings.FormatUnexpectedType(YamlNodeType.Scalar.ToString(), child.Key.NodeType.ToString()));
-                }
+                var key = YamlParser.GetScalarValue(child.Key);
 
                 switch (key)
                 {
@@ -195,34 +161,18 @@ namespace Tye.Serialization
         {
             foreach (var child in yamlSequenceNode.Children)
             {
-                switch (child.NodeType)
-                {
-                    case YamlNodeType.Mapping:
-                        var volume = new ConfigVolume();
-                        HandleServiceVolumeNameMapping(child as YamlMappingNode, volume);
-                        volumes.Add(volume);
-                        break;
-                    default:
-                        throw new TyeYamlException(child.Start,
-                            CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), child.NodeType.ToString()));
-                }
+                YamlParser.ThrowIfNotYamlMapping(child);
+                var volume = new ConfigVolume();
+                HandleServiceVolumeNameMapping((YamlMappingNode)child, volume);
+                volumes.Add(volume);
             }
         }
 
-        private static void HandleServiceVolumeNameMapping(YamlMappingNode? yamlMappingNode, ConfigVolume volume)
+        private static void HandleServiceVolumeNameMapping(YamlMappingNode yamlMappingNode, ConfigVolume volume)
         {
             foreach (var child in yamlMappingNode!.Children)
             {
-                string? key;
-                switch (child.Key.NodeType)
-                {
-                    case YamlNodeType.Scalar:
-                        key = (child.Key as YamlScalarNode)!.Value;
-                        break;
-                    default:
-                        throw new TyeYamlException(child.Key.Start,
-                            CoreStrings.FormatUnexpectedType(YamlNodeType.Scalar.ToString(), child.Key.NodeType.ToString()));
-                }
+                var key = YamlParser.GetScalarValue(child.Key);
 
                 switch (key)
                 {
@@ -245,17 +195,10 @@ namespace Tye.Serialization
         {
             foreach (var child in yamlSequenceNode.Children)
             {
-                switch (child.NodeType)
-                {
-                    case YamlNodeType.Mapping:
-                        var config = new ConfigConfigurationSource();
-                        HandleServiceConfigurationNameMapping(child as YamlMappingNode, config);
-                        configuration.Add(config);
-                        break;
-                    default:
-                        throw new TyeYamlException(child.Start,
-                            CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), child.NodeType.ToString()));
-                }
+                YamlParser.ThrowIfNotYamlMapping(child);
+                var config = new ConfigConfigurationSource();
+                HandleServiceConfigurationNameMapping((YamlMappingNode)child, config);
+                configuration.Add(config);
             }
         }
 
@@ -263,16 +206,7 @@ namespace Tye.Serialization
         {
             foreach (var child in yamlMappingNode!.Children)
             {
-                string? key;
-                switch (child.Key.NodeType)
-                {
-                    case YamlNodeType.Scalar:
-                        key = (child.Key as YamlScalarNode)!.Value;
-                        break;
-                    default:
-                        throw new TyeYamlException(child.Key.Start,
-                            CoreStrings.FormatUnexpectedType(YamlNodeType.Scalar.ToString(), child.Key.NodeType.ToString()));
-                }
+                var key = YamlParser.GetScalarValue(child.Key);
 
                 switch (key)
                 {

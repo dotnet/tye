@@ -116,8 +116,6 @@ namespace Microsoft.Tye.ConfigModel
 
             foreach (var ingress in config.Ingress)
             {
-                // We don't currently recurse into ingress rules or ingress bindings right now.
-                // There's nothing to validate there.
                 context = new ValidationContext(ingress);
                 if (!Validator.TryValidateObject(ingress, context, results, validateAllProperties: true))
                 {

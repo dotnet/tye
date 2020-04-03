@@ -31,7 +31,6 @@
 
   <ItemGroup>
     <EmbeddedResource Update="CoreStrings.resx" EmitFormatMethods="true">
-      <Generator></Generator>
     </EmbeddedResource>
   </ItemGroup>
 
