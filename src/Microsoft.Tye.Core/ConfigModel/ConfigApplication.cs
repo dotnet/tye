@@ -41,8 +41,6 @@ namespace Microsoft.Tye.ConfigModel
             var context = new ValidationContext(config);
             var results = new List<ValidationResult>();
             
-            // TODO it would incredibly nice to know where in the tye.yaml file the error occurs
-            // during validation
             if (!Validator.TryValidateObject(config, context, results, validateAllProperties: true))
             {
                 throw new TyeYamlException(

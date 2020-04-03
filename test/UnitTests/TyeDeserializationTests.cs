@@ -239,6 +239,23 @@ ingress:
         }
 
         [Fact]
+        public void ExtensionsTest()
+        {
+            var input = @"
+extensions:
+  - name: dapr";
+            using var parser = new YamlParser(input);
+
+            var app = parser.ParseConfigApplication();
+
+            Assert.Equal("dapr", app.Extensions.Single()["name"]);
+
+            var expected = _deserializer.Deserialize<ConfigApplication>(new StringReader(input));
+
+            Assert.Equal(expected.Extensions.Count, app.Extensions.Count);
+        }
+
+        [Fact]
         public void VotingTest()
         {
             using var parser = new YamlParser(
