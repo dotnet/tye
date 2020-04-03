@@ -40,7 +40,7 @@ namespace Microsoft.Tye.ConfigModel
 
             var context = new ValidationContext(config);
             var results = new List<ValidationResult>();
-            
+
             if (!Validator.TryValidateObject(config, context, results, validateAllProperties: true))
             {
                 throw new TyeYamlException(
