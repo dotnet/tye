@@ -8,7 +8,6 @@
     <PackageId>Microsoft.Tye</PackageId>
     <ToolCommandName>tye</ToolCommandName>
     <PackAsTool>true</PackAsTool>
-    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

@@ -8,8 +8,6 @@
     <PackageId>Microsoft.Tye.Hosting</PackageId>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
     <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
-    <Nullable>enable</Nullable>
-    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
