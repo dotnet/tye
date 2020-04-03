@@ -78,22 +78,18 @@ namespace Microsoft.Tye.Hosting
                         binding.Name ?? binding.Protocol);
                 }
 
-                // Only set the container port if we're running in a container
-                if (service.Description.RunInfo is DockerRunInfo)
+                var httpBinding = service.Description.Bindings.FirstOrDefault(b => b.Protocol == "http");
+                var httpsBinding = service.Description.Bindings.FirstOrDefault(b => b.Protocol == "https");
+
+                // Default the first http and https port to 80 and 443
+                if (httpBinding != null)
                 {
-                    var httpBinding = service.Description.Bindings.FirstOrDefault(b => b.Protocol == "http");
-                    var httpsBinding = service.Description.Bindings.FirstOrDefault(b => b.Protocol == "https");
+                    httpBinding.ContainerPort ??= 80;
+                }
 
-                    // Default the first http and https port to 80 and 443
-                    if (httpBinding != null)
-                    {
-                        httpBinding.ContainerPort ??= 80;
-                    }
-
-                    if (httpsBinding != null)
-                    {
-                        httpsBinding.ContainerPort ??= 443;
-                    }
+                if (httpsBinding != null)
+                {
+                    httpsBinding.ContainerPort ??= 443;
                 }
             }
 

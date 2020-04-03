@@ -281,7 +281,6 @@ namespace Microsoft.Tye.Hosting
                 {
                     await _processor.StopAsync(_application);
                 }
-                _processor = null;
             }
             catch (Exception ex)
             {
@@ -295,6 +294,8 @@ namespace Microsoft.Tye.Hosting
                     await DashboardWebApplication.StopAsync();
                 }
             }
+
+            _processor = null;
         }
 
         public async ValueTask DisposeAsync()

@@ -439,9 +439,15 @@ namespace E2ETest
 
             await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
             {
-                using var client = new HttpClient();
-
                 var ingressUri = await GetServiceUrl(client, uri, "ingress");
+                var appAUri = await GetServiceUrl(client, uri, "appA");
+                var appBUri = await GetServiceUrl(client, uri, "appB");
+
+                var appAResponse = await client.GetAsync(appAUri);
+                var appBResponse = await client.GetAsync(appBUri);
+
+                Assert.True(appAResponse.IsSuccessStatusCode);
+                Assert.True(appBResponse.IsSuccessStatusCode);
 
                 var responseA = await client.GetAsync(ingressUri + "/A");
                 var responseB = await client.GetAsync(ingressUri + "/B");
@@ -456,6 +462,46 @@ namespace E2ETest
 
                 responseA = await client.SendAsync(requestA);
                 responseB = await client.SendAsync(requestB);
+
+                Assert.StartsWith("Hello from Application A", await responseA.Content.ReadAsStringAsync());
+                Assert.StartsWith("Hello from Application B", await responseB.Content.ReadAsStringAsync());
+            });
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task NginxIngressTest()
+        {
+            using var projectDirectory = CopySampleProjectDirectory("nginx-ingress");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
+            {
+                var nginxUri = await GetServiceUrl(client, uri, "nginx");
+                var appAUri = await GetServiceUrl(client, uri, "appA");
+                var appBUri = await GetServiceUrl(client, uri, "appB");
+
+                var nginxResponse = await client.GetAsync(nginxUri);
+                var appAResponse = await client.GetAsync(appAUri);
+                var appBResponse = await client.GetAsync(appBUri);
+
+                Assert.Equal(HttpStatusCode.NotFound, nginxResponse.StatusCode);
+                Assert.True(appAResponse.IsSuccessStatusCode);
+                Assert.True(appBResponse.IsSuccessStatusCode);
+
+                var responseA = await client.GetAsync(nginxUri + "/A");
+                var responseB = await client.GetAsync(nginxUri + "/B");
 
                 Assert.StartsWith("Hello from Application A", await responseA.Content.ReadAsStringAsync());
                 Assert.StartsWith("Hello from Application B", await responseB.Content.ReadAsStringAsync());

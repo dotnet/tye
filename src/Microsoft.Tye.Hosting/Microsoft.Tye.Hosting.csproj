@@ -31,6 +31,7 @@
     <ProjectReference Include="..\Microsoft.Tye.Hosting.Diagnostics\Microsoft.Tye.Hosting.Diagnostics.csproj" />
     <ProjectReference Include="..\Microsoft.Tye.Core\Microsoft.Tye.Core.csproj" />
     <ProjectReference Include="..\Microsoft.Tye.Hosting.Runtime\Microsoft.Tye.Hosting.Runtime.csproj" />
+    <ProjectReference Include="..\Microsoft.Tye.Proxy\Microsoft.Tye.Proxy.csproj" />
   </ItemGroup>
 
 </Project>

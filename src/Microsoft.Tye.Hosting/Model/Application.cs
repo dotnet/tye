@@ -112,16 +112,14 @@ namespace Microsoft.Tye.Hosting.Model
 
                 if (b.Port != null)
                 {
-                    var port = (service.Description.RunInfo is DockerRunInfo &&
-                                targetService.RunInfo is DockerRunInfo) ? b.ContainerPort ?? b.Port.Value : b.Port.Value;
+                    var port = (service.Description.RunInfo is DockerRunInfo) ? b.ContainerPort ?? b.Port.Value : b.Port.Value;
 
                     set($"SERVICE__{configName}__PORT", port.ToString());
                     set($"{envName}_SERVICE_PORT", port.ToString());
                 }
 
                 // Use the container name as the host name if there's a single replica (current limitation)
-                var host = b.Host ?? (service.Description.RunInfo is DockerRunInfo &&
-                                      targetService.RunInfo is DockerRunInfo ? targetService.Name : defaultHost);
+                var host = b.Host ?? (service.Description.RunInfo is DockerRunInfo ? targetService.Name : defaultHost);
 
                 set($"SERVICE__{configName}__HOST", host);
                 set($"{envName}_SERVICE_HOST", host);

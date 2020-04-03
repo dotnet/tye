@@ -1,0 +1,16 @@
+services:
+- name: nginx
+  image: nginx
+  bindings:
+    - protocol: http
+  volumes:
+    - source: nginx.conf
+      target: /etc/nginx/conf.d/default.conf
+- name: appA
+  project: ApplicationA/ApplicationA.csproj
+  bindings:
+  replicas: 2
+- name: appB
+  project: ApplicationB/ApplicationB.csproj
+  bindings:
+  replicas: 2

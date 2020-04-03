@@ -49,6 +49,49 @@ namespace Microsoft.Tye.Hosting
                 return;
             }
 
+            var proxies = new List<Service>();
+            foreach (var service in application.Services.Values)
+            {
+                if (service.Description.RunInfo is DockerRunInfo || service.Description.Bindings.Count == 0)
+                {
+                    continue;
+                }
+
+                // Inject a proxy per non-container service. This allows the container to use normal host names within the
+                // container network to talk to services on the host
+                var proxyContanier = new DockerRunInfo($"mcr.microsoft.com/dotnet/core/sdk:3.1", "dotnet Microsoft.Tye.Proxy.dll")
+                {
+                    WorkingDirectory = "/app",
+                    NetworkAlias = service.Description.Name,
+                    Private = true
+                };
+                var proxyLocation = Path.GetDirectoryName(typeof(Microsoft.Tye.Proxy.Program).Assembly.Location);
+                proxyContanier.VolumeMappings.Add(new DockerVolume(proxyLocation, name: null, target: "/app"));
+                var proxyDescription = new ServiceDescription($"{service.Description.Name}-proxy", proxyContanier);
+                foreach (var binding in service.Description.Bindings)
+                {
+                    if (binding.Port == null)
+                    {
+                        continue;
+                    }
+
+                    var b = new ServiceBinding()
+                    {
+                        ConnectionString = binding.ConnectionString,
+                        Host = binding.Host,
+                        ContainerPort = binding.ContainerPort,
+                        Name = binding.Name,
+                        Port = binding.Port,
+                        Protocol = binding.Protocol
+                    };
+                    b.ReplicaPorts.Add(b.Port.Value);
+                    proxyDescription.Bindings.Add(b);
+                }
+                var proxyContanierService = new Service(proxyDescription);
+                containers.Add(proxyContanierService);
+                proxies.Add(proxyContanierService);
+            }
+
             string? dockerNetwork = null;
 
             if (!string.IsNullOrEmpty(application.Network))
@@ -91,6 +134,9 @@ namespace Microsoft.Tye.Hosting
                 await ProcessUtil.RunAsync("docker", command);
             }
 
+            // Stash information outside of the application services
+            application.Items[typeof(DockerApplicationInformation)] = new DockerApplicationInformation(dockerNetwork, proxies);
+
             var tasks = new Task[containers.Count];
             var index = 0;
 
@@ -106,23 +152,34 @@ namespace Microsoft.Tye.Hosting
 
         public async Task StopAsync(Application application)
         {
+            if (!application.Items.TryGetValue(typeof(DockerApplicationInformation), out var value))
+            {
+                return;
+            }
+
+            var info = (DockerApplicationInformation)value;
+
             var services = application.Services;
 
             var index = 0;
-            var tasks = new Task[services.Count];
+            var tasks = new Task[services.Count + info.Proxies.Count];
             foreach (var s in services.Values)
             {
-                var state = s;
-                tasks[index++] = StopContainerAsync(state);
+                tasks[index++] = StopContainerAsync(s);
+            }
+
+            foreach (var s in info.Proxies)
+            {
+                tasks[index++] = StopContainerAsync(s);
             }
 
             await Task.WhenAll(tasks);
 
-            if (string.IsNullOrEmpty(application.Network) && application.Items.TryGetValue("dockerNetwork", out var dockerNetwork))
+            if (string.IsNullOrEmpty(application.Network) && !string.IsNullOrEmpty(info.DockerNetwork))
             {
-                _logger.LogInformation("Removing docker network {Network}", dockerNetwork);
+                _logger.LogInformation("Removing docker network {Network}", info.DockerNetwork);
 
-                var command = $"network rm {dockerNetwork}";
+                var command = $"network rm {info.DockerNetwork}";
 
                 _logger.LogInformation("Running docker command {Command}", command);
 
@@ -189,7 +246,7 @@ namespace Microsoft.Tye.Hosting
                     // These are the ports that the application should use for binding
 
                     // 1. Tell the docker container what port to bind to
-                    portString = string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.ContainerPort ?? p.Port}"));
+                    portString = docker.Private ? "" : string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.ContainerPort ?? p.Port}"));
 
                     // 2. Configure ASP.NET Core to bind to those same ports
                     environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://*:{p.ContainerPort ?? p.Port}"));
@@ -206,6 +263,9 @@ namespace Microsoft.Tye.Hosting
 
                     // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
                     environment["PORT"] = string.Join(";", ports.Select(p => $"{p.ContainerPort ?? p.Port}"));
+
+                    // This the port for the container proxy (containerport:externalport)
+                    environment["PROXY_PORT"] = string.Join(";", ports.Select(p => $"{p.ContainerPort ?? p.Port}:{p.ExternalPort}"));
                 }
 
                 // See: https://github.com/docker/for-linux/issues/264
@@ -215,6 +275,7 @@ namespace Microsoft.Tye.Hosting
                 application.PopulateEnvironment(service, (key, value) => environment[key] = value, hostname);
 
                 environment["APP_INSTANCE"] = replica;
+                environment["CONTAINER_HOST"] = hostname;
 
                 status.Environment = environment;
 
@@ -284,9 +345,9 @@ namespace Microsoft.Tye.Hosting
 
                 if (!string.IsNullOrEmpty(dockerNetwork))
                 {
-                    status.DockerNetworkAlias = serviceDescription.Name;
+                    status.DockerNetworkAlias = docker.NetworkAlias ?? serviceDescription.Name;
 
-                    var networkCommand = $"network connect {dockerNetwork} {replica} --alias {serviceDescription.Name}";
+                    var networkCommand = $"network connect {dockerNetwork} {replica} --alias {status.DockerNetworkAlias}";
 
                     service.Logs.OnNext($"[{replica}]: docker {networkCommand}");
 
@@ -477,6 +538,19 @@ namespace Microsoft.Tye.Hosting
 
             public Task[] Tasks { get; }
             public CancellationTokenSource StoppingTokenSource { get; } = new CancellationTokenSource();
+        }
+
+        private class DockerApplicationInformation
+        {
+            public DockerApplicationInformation(string? dockerNetwork, List<Service> proxies)
+            {
+                DockerNetwork = dockerNetwork;
+                Proxies = proxies;
+            }
+
+            public string? DockerNetwork { get; set; }
+
+            public List<Service> Proxies { get; }
         }
     }
 }
