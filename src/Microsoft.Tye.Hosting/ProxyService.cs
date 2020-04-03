@@ -60,7 +60,12 @@ namespace Microsoft.Tye.Hosting
 
                                     var ports = binding.ReplicaPorts;
 
-                                    sockets.Listen(IPAddress.Loopback, binding.Port.Value, o =>
+                                    // We need to bind to all interfaces on linux since the container -> host communication won't work
+                                    // if we use the IP address to reach out of the host. This works fine on osx and windows
+                                    // but doesn't work on linux.
+                                    var host = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? IPAddress.Any : IPAddress.Loopback;
+
+                                    sockets.Listen(host, binding.Port.Value, o =>
                                     {
                                         long count = 0;
 
@@ -84,12 +89,7 @@ namespace Microsoft.Tye.Hosting
 
                                                 _logger.LogDebug("Attempting to connect to {ServiceName} listening on {ExternalPort}:{Port}", service.Description.Name, binding.Port, port);
 
-                                                // We need to bind to all interfaces on linux since the container -> host communication won't work
-                                                // if we use the IP address to reach out of the host. This works fine on osx and windows
-                                                // but doesn't work on linux.
-                                                var host = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? IPAddress.Any : IPAddress.Loopback;
-
-                                                await target.ConnectAsync(host, port);
+                                                await target.ConnectAsync(IPAddress.Loopback, port);
 
                                                 _logger.LogDebug("Successfully connected to {ServiceName} listening on {ExternalPort}:{Port}", service.Description.Name, binding.Port, port);
 
