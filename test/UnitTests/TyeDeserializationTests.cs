@@ -8,7 +8,7 @@ using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace UnitTests
+namespace Microsoft.Tye.UnitTests
 {
     public class TyeDeserializationTests
     {

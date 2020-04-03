@@ -202,7 +202,7 @@ namespace Tye.Serialization
             }
         }
 
-        private static void HandleServiceConfigurationNameMapping(YamlMappingNode? yamlMappingNode, ConfigConfigurationSource config)
+        private static void HandleServiceConfigurationNameMapping(YamlMappingNode yamlMappingNode, ConfigConfigurationSource config)
         {
             foreach (var child in yamlMappingNode!.Children)
             {
