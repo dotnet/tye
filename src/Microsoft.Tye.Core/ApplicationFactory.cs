@@ -22,8 +22,7 @@ namespace Microsoft.Tye
             }
 
             var config = ConfigFactory.FromFile(source);
-            ValidateConfigApplication(config);
-
+            config.Validate();
             var builder = new ApplicationBuilder(source, config.Name ?? source.Directory.Name.ToLowerInvariant());
             if (!string.IsNullOrEmpty(config.Registry))
             {
@@ -55,7 +54,7 @@ namespace Microsoft.Tye
                 {
                     var expandedProject = Environment.ExpandEnvironmentVariables(configService.Project);
                     var projectFile = new FileInfo(Path.Combine(builder.Source.DirectoryName, expandedProject));
-                    var project = new ProjectServiceBuilder(configService.Name, projectFile);
+                    var project = new ProjectServiceBuilder(configService.Name!, projectFile);
                     service = project;
 
                     project.Build = configService.Build ?? true;
@@ -76,7 +75,7 @@ namespace Microsoft.Tye
                 }
                 else if (!string.IsNullOrEmpty(configService.Image))
                 {
-                    var container = new ContainerServiceBuilder(configService.Name, configService.Image)
+                    var container = new ContainerServiceBuilder(configService.Name!, configService.Image)
                     {
                         Args = configService.Args,
                         Replicas = configService.Replicas ?? 1
@@ -95,7 +94,7 @@ namespace Microsoft.Tye
                         workingDirectory = Path.GetDirectoryName(expandedExecutable)!;
                     }
 
-                    var executable = new ExecutableServiceBuilder(configService.Name, expandedExecutable)
+                    var executable = new ExecutableServiceBuilder(configService.Name!, expandedExecutable)
                     {
                         Args = configService.Args,
                         WorkingDirectory = configService.WorkingDirectory != null ?
@@ -107,7 +106,7 @@ namespace Microsoft.Tye
                 }
                 else if (configService.External)
                 {
-                    var external = new ExternalServiceBuilder(configService.Name);
+                    var external = new ExternalServiceBuilder(configService.Name!);
                     service = external;
                 }
                 else
@@ -214,7 +213,7 @@ namespace Microsoft.Tye
 
             foreach (var configIngress in config.Ingress)
             {
-                var ingress = new IngressBuilder(configIngress.Name);
+                var ingress = new IngressBuilder(configIngress.Name!);
                 ingress.Replicas = configIngress.Replicas ?? 1;
 
                 builder.Ingress.Add(ingress);
@@ -243,85 +242,6 @@ namespace Microsoft.Tye
             }
 
             return builder;
-        }
-
-        private static void ValidateConfigApplication(ConfigApplication config)
-        {
-            var context = new ValidationContext(config);
-            var results = new List<ValidationResult>();
-            if (!Validator.TryValidateObject(config, context, results, validateAllProperties: true))
-            {
-                throw new CommandException(
-                    "Configuration validation failed." + Environment.NewLine +
-                    string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
-            }
-
-            foreach (var extension in config.Extensions)
-            {
-                if (!extension.TryGetValue("name", out var name) || string.IsNullOrWhiteSpace(name as string))
-                {
-                    throw new CommandException(
-                        "Configuration validation failed." + Environment.NewLine +
-                        "Extensions must provide a name.");
-                }
-            }
-
-            foreach (var service in config.Services)
-            {
-                context = new ValidationContext(service);
-                if (!Validator.TryValidateObject(service, context, results, validateAllProperties: true))
-                {
-                    throw new CommandException(
-                        $"Service '{service.Name}' validation failed." + Environment.NewLine +
-                        string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
-                }
-
-                foreach (var binding in service.Bindings)
-                {
-                    context = new ValidationContext(binding);
-                    if (!Validator.TryValidateObject(binding, context, results, validateAllProperties: true))
-                    {
-                        throw new CommandException(
-                            $"Binding '{binding.Name}' of service '{service.Name}' validation failed." + Environment.NewLine +
-                            string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
-                    }
-                }
-
-                foreach (var envVar in service.Configuration)
-                {
-                    context = new ValidationContext(service);
-                    if (!Validator.TryValidateObject(service, context, results, validateAllProperties: true))
-                    {
-                        throw new CommandException(
-                            $"Environment variable '{envVar.Name}' of service '{service.Name}' validation failed." + Environment.NewLine +
-                            string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
-                    }
-                }
-
-                foreach (var volume in service.Volumes)
-                {
-                    context = new ValidationContext(service);
-                    if (!Validator.TryValidateObject(service, context, results, validateAllProperties: true))
-                    {
-                        throw new CommandException(
-                            $"Volume '{volume.Source}' of service '{service.Name}' validation failed." + Environment.NewLine +
-                            string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
-                    }
-                }
-            }
-
-            foreach (var ingress in config.Ingress)
-            {
-                // We don't currently recurse into ingress rules or ingress bindings right now.
-                // There's nothing to validate there.
-                context = new ValidationContext(ingress);
-                if (!Validator.TryValidateObject(ingress, context, results, validateAllProperties: true))
-                {
-                    throw new CommandException(
-                        $"Ingress '{ingress.Name}' validation failed." + Environment.NewLine +
-                        string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
-                }
-            }
         }
     }
 }

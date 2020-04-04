@@ -1,6 +1,11 @@
 <Project>
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
   
+  <PropertyGroup Label="Resx settings">
+    <GenerateResxSource Condition="$(GenerateResxSource) == ''">true</GenerateResxSource>
+    <GenerateResxSourceEmitFormatMethods Condition="$(GenerateResxSourceEmitFormatMethods) == ''">true</GenerateResxSourceEmitFormatMethods>
+  </PropertyGroup>
+
   <Target Name="AddInternalsVisibleTo" BeforeTargets="CoreCompile">
     <ItemGroup Condition="'@(InternalsVisibleTo->Count())' &gt; 0">
       <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">

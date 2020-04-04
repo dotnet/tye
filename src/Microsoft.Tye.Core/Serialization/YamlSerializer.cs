@@ -17,12 +17,5 @@ namespace Microsoft.Tye.Serialization
                     .WithEmissionPhaseObjectGraphVisitor(args => new OmitDefaultAndEmptyArrayObjectGraphVisitor(args.InnerVisitor))
                     .Build();
         }
-
-        public static IDeserializer CreateDeserializer()
-        {
-            return new DeserializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-        }
     }
 }
