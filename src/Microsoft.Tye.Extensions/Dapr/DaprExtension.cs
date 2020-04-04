@@ -143,14 +143,14 @@ namespace Microsoft.Tye.Extensions.Dapr
                             continue;
                         }
 
-                        if (config.Data.ContainsKey("config"))
+                        if (config.Data.TryGetValue("config", out var daprConfig))
                         {
-                            deployment.Annotations.Add("dapr.io/config", (config.Data["config"] ?? "tracing").ToString());
+                            deployment.Annotations.Add("dapr.io/config", (daprConfig.ToString() ?? "tracing").ToString(CultureInfo.InvariantCulture));
                         }
 
-                        if (config.Data.ContainsKey("log-level"))
+                        if (config.Data.TryGetValue("log-level", out var logLevel))
                         {
-                            deployment.Annotations.Add("dapr.io/log-level", (config.Data["log-level"] ?? "info").ToString());
+                            deployment.Annotations.Add("dapr.io/log-level", (logLevel.ToString() ?? "info").ToString(CultureInfo.InvariantCulture));
                         }
                     }
                 }
