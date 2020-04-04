@@ -141,7 +141,7 @@ namespace Microsoft.Tye.ConfigModel
                     {
                         throw new TyeYamlException(CoreStrings.MultipleIngressBindingWithSameName);
                     }
-                    if (binding.Protocol != "http" && binding.Protocol != "https")
+                    if (binding.Protocol != "http" && binding.Protocol != "https" && binding.Protocol != null)
                     {
                         throw new TyeYamlException(CoreStrings.IngressBindingMustBeHttpOrHttps);
                     }

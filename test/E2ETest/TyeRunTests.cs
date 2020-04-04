@@ -469,7 +469,7 @@ namespace E2ETest
         }
 
         [ConditionalFact]
-        [SkipIfDockerNotRunning]
+        //[SkipIfDockerNotRunning]
         public async Task NginxIngressTest()
         {
             using var projectDirectory = CopySampleProjectDirectory("nginx-ingress");
