@@ -7,10 +7,8 @@ namespace Microsoft.Tye
 {
     public static class ApplicationBuilderExtensions
     {
-        public static async Task<bool> TransformProjectsIntoContainersAync(this ApplicationBuilder application, OutputContext output)
+        public static void TransformProjectsIntoContainers(this ApplicationBuilder application)
         {
-            var targets = new[] { "Restore", "Publish" };
-
             for (var i = 0; i < application.Services.Count; i++)
             {
                 var service = application.Services[i];
@@ -19,13 +17,6 @@ namespace Microsoft.Tye
                 {
                     continue;
                 }
-
-                if (!await ProjectReader.ReadProjectDetailsAsync(output, project, targets))
-                {
-                    return false;
-                }
-
-                PopulateProjectDefaults(project);
 
                 static string DetermineContainerImage(ProjectServiceBuilder project)
                 {
@@ -52,45 +43,6 @@ namespace Microsoft.Tye
                 containerService.EnvironmentVariables.AddRange(project.EnvironmentVariables);
 
                 application.Services[i] = containerService;
-            }
-
-            return true;
-        }
-
-        public static async Task<bool> BuildProjectsAsync(this ApplicationBuilder application, OutputContext output)
-        {
-            var targets = new string[] { "Restore", "Build" };
-            foreach (var service in application.Services)
-            {
-                if (service is ProjectServiceBuilder project)
-                {
-                    if (!await ProjectReader.ReadProjectDetailsAsync(output, project, targets))
-                    {
-                        return false;
-                    }
-
-                    PopulateProjectDefaults(project);
-                }
-            }
-
-            return true;
-        }
-
-        private static void PopulateProjectDefaults(ProjectServiceBuilder project)
-        {
-            if (project.Bindings.Count == 0 && project.IsAspNet)
-            {
-                // HTTP is the default binding
-                project.Bindings.Add(new BindingBuilder()
-                {
-                    Protocol = "http"
-                });
-
-                project.Bindings.Add(new BindingBuilder()
-                {
-                    Name = "https",
-                    Protocol = "https"
-                });
             }
         }
     }

@@ -14,7 +14,7 @@ namespace Microsoft.Tye
 {
     public static class ApplicationFactory
     {
-        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, bool populateProjectInformation = true)
+        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, string[]? targets = null)
         {
             if (source is null)
             {
@@ -60,10 +60,7 @@ namespace Microsoft.Tye
                     project.Args = configService.Args;
                     project.Replicas = configService.Replicas ?? 1;
 
-                    if (populateProjectInformation)
-                    {
-                        await ProjectReader.ReadProjectDetailsAsync(output, project);
-                    }
+                    await ProjectReader.ReadProjectDetailsAsync(output, project, targets);
 
                     // We don't apply more container defaults here because we might need
                     // to prompt for the registry name.

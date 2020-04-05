@@ -540,7 +540,7 @@ namespace E2ETest
         {
             if (args.Contains("--docker"))
             {
-                await application.TransformProjectsIntoContainersAync(outputContext);
+                application.TransformProjectsIntoContainers();
             }
 
             await using var host = new TyeHost(application.ToHostingApplication(), args)

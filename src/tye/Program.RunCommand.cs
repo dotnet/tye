@@ -74,23 +74,28 @@ namespace Microsoft.Tye
                 }
 
                 // Populate project information if docker is false and we're not building
-                var populateProjectInformation = nobuild && !docker;
                 var output = new OutputContext(console, Verbosity.Debug);
-                var application = await ApplicationFactory.CreateAsync(output, path, populateProjectInformation);
+
+                string[]? targets = null;
 
                 if (docker)
                 {
-                    if (!await application.TransformProjectsIntoContainersAync(output))
-                    {
-                        return;
-                    }
+                    targets = new[] { "Restore", "Publish" };
                 }
-                else if (!populateProjectInformation)
+                else if (nobuild)
                 {
-                    if (!await application.BuildProjectsAsync(output))
-                    {
-                        return;
-                    }
+                    targets = null;
+                }
+                else
+                {
+                    targets = new[] { "Restore", "Build" };
+                }
+
+                var application = await ApplicationFactory.CreateAsync(output, path, targets);
+
+                if (docker)
+                {
+                    application.TransformProjectsIntoContainers();
                 }
 
                 await application.ProcessExtensionsAsync(ExtensionContext.OperationKind.LocalRun);
