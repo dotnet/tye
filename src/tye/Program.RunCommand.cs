@@ -73,9 +73,6 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                // Populate project information if docker is false and we're not building
-                var output = new OutputContext(console, Verbosity.Debug);
-
                 string[]? targets = null;
 
                 if (docker)
@@ -91,6 +88,7 @@ namespace Microsoft.Tye
                     targets = new[] { "Restore", "Build" };
                 }
 
+                var output = new OutputContext(console, Verbosity.Debug);
                 var application = await ApplicationFactory.CreateAsync(output, path, targets);
 
                 if (docker)
