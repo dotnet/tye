@@ -61,7 +61,7 @@ namespace E2ETest
 
             var client = new HttpClient(new RetryHandler(handler));
 
-            await RunHostingApplication(application, outputContext, Array.Empty<string>(), async (app, uri) =>
+            await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
             {
                 var testUri = await GetServiceUrl(client, uri, "test-project");
 
@@ -88,7 +88,7 @@ namespace E2ETest
 
             var client = new HttpClient(new RetryHandler(handler));
 
-            await RunHostingApplication(application, outputContext, Array.Empty<string>(), async (app, uri) =>
+            await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
             {
                 var frontendUri = await GetServiceUrl(client, uri, "frontend");
                 var backendUri = await GetServiceUrl(client, uri, "backend");
@@ -119,7 +119,7 @@ namespace E2ETest
 
             var client = new HttpClient(new RetryHandler(handler));
 
-            await RunHostingApplication(application, outputContext, new[] { "--docker" }, async (app, uri) =>
+            await RunHostingApplication(application, new[] { "--docker" }, async (app, uri) =>
             {
                 // Make sure we're running containers
                 Assert.True(app.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
@@ -166,7 +166,7 @@ namespace E2ETest
 
             var client = new HttpClient(new RetryHandler(handler));
 
-            await RunHostingApplication(application, outputContext, Array.Empty<string>(), async (app, uri) =>
+            await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
             {
                 var frontendUri = await GetServiceUrl(client, uri, "frontend");
                 var backendUri = await GetServiceUrl(client, uri, "backend");
@@ -210,7 +210,7 @@ namespace E2ETest
 
             var client = new HttpClient(new RetryHandler(handler));
 
-            await RunHostingApplication(application, outputContext, Array.Empty<string>(), async (app, uri) =>
+            await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
             {
                 var frontendUri = await GetServiceUrl(client, uri, "frontend");
                 var backendUri = await GetServiceUrl(client, uri, "backend");
@@ -249,7 +249,7 @@ namespace E2ETest
             var client = new HttpClient(new RetryHandler(handler));
             var args = new[] { "--docker" };
 
-            await RunHostingApplication(application, outputContext, args, async (app, serviceApi) =>
+            await RunHostingApplication(application, args, async (app, serviceApi) =>
             {
                 var serviceUri = await GetServiceUrl(client, serviceApi, "volume-test");
 
@@ -264,7 +264,7 @@ namespace E2ETest
                 Assert.Equal("Things saved to the volume!", await client.GetStringAsync(serviceUri));
             });
 
-            await RunHostingApplication(application, outputContext, args, async (app, serviceApi) =>
+            await RunHostingApplication(application, args, async (app, serviceApi) =>
             {
                 var serviceUri = await GetServiceUrl(client, serviceApi, "volume-test");
 
@@ -306,7 +306,6 @@ namespace E2ETest
             {
                 await RunHostingApplication(
                     application,
-                    outputContext,
                     new[] { "--docker" },
                     async (app, uri) =>
                     {
@@ -359,7 +358,6 @@ namespace E2ETest
 
             await RunHostingApplication(
                 application,
-                outputContext,
                 new[] { "--docker" },
                 async (app, uri) =>
                 {
@@ -411,7 +409,7 @@ namespace E2ETest
             var client = new HttpClient(new RetryHandler(handler));
             var args = new[] { "--docker" };
 
-            await RunHostingApplication(application, outputContext, args, async (app, serviceApi) =>
+            await RunHostingApplication(application, args, async (app, serviceApi) =>
             {
                 var serviceUri = await GetServiceUrl(client, serviceApi, "volume-test");
 
@@ -439,7 +437,7 @@ namespace E2ETest
 
             var client = new HttpClient(new RetryHandler(handler));
 
-            await RunHostingApplication(application, outputContext, Array.Empty<string>(), async (app, uri) =>
+            await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
             {
                 var ingressUri = await GetServiceUrl(client, uri, "ingress");
                 var appAUri = await GetServiceUrl(client, uri, "appA");
@@ -488,7 +486,7 @@ namespace E2ETest
 
             var client = new HttpClient(new RetryHandler(handler));
 
-            await RunHostingApplication(application, outputContext, Array.Empty<string>(), async (app, uri) =>
+            await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
             {
                 var nginxUri = await GetServiceUrl(client, uri, "nginx");
                 var appAUri = await GetServiceUrl(client, uri, "appA");
@@ -536,7 +534,7 @@ namespace E2ETest
             return $"{binding.Protocol ?? "http"}://localhost:{binding.Port}";
         }
 
-        private async Task RunHostingApplication(ApplicationBuilder application, OutputContext outputContext, string[] args, Func<Application, Uri, Task> execute)
+        private async Task RunHostingApplication(ApplicationBuilder application, string[] args, Func<Application, Uri, Task> execute)
         {
             if (args.Contains("--docker"))
             {
