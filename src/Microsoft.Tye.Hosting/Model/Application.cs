@@ -97,10 +97,32 @@ namespace Microsoft.Tye.Hosting.Model
                     envName = $"{serviceName.ToUpper()}_{b.Name.ToUpper()}";
                 }
 
+                // Use the container name as the host name if there's a single replica (current limitation)
+                var host = b.Host ?? (service.Description.RunInfo is DockerRunInfo ? targetService.Name : defaultHost);
+
+                // Review: should we split this codepath based on the KIND of service that 
+                // provides the binding?
+
+                // Create the best kind of connection string possible, in order:
+                //
+                // - connectionString from config
+                // - URI
+                // - host:port
+                //
+                // This is used by the GetConnectionString method, commonly when the service providing the
+                // binding isn't the user's code.
                 if (!string.IsNullOrEmpty(b.ConnectionString))
                 {
                     // Special case for connection strings
                     set($"CONNECTIONSTRINGS__{configName}", b.ConnectionString);
+                }
+                else if (!string.IsNullOrEmpty(b.Protocol) && b.Port != null)
+                {
+                    set($"CONNECTIONSTRINGS__{configName}", $"{b.Protocol}://{host}:{b.Port}");
+                }
+                else if (b.Port != null)
+                {
+                    set($"CONNECTIONSTRINGS__{configName}", $"{host}:{b.Port}");
                 }
 
                 if (!string.IsNullOrEmpty(b.Protocol))
@@ -117,9 +139,6 @@ namespace Microsoft.Tye.Hosting.Model
                     set($"SERVICE__{configName}__PORT", port.ToString());
                     set($"{envName}_SERVICE_PORT", port.ToString());
                 }
-
-                // Use the container name as the host name if there's a single replica (current limitation)
-                var host = b.Host ?? (service.Description.RunInfo is DockerRunInfo ? targetService.Name : defaultHost);
 
                 set($"SERVICE__{configName}__HOST", host);
                 set($"{envName}_SERVICE_HOST", host);

@@ -12,12 +12,6 @@ namespace Microsoft.Extensions.Configuration
         {
             var key = GetKey(name, binding);
 
-            var connectionString = configuration[$"connectionstrings:{key}"];
-            if (!string.IsNullOrEmpty(connectionString))
-            {
-                return new Uri(connectionString);
-            }
-
             var host = configuration[$"service:{key}:host"];
             var port = configuration[$"service:{key}:port"];
             var protocol = configuration[$"service:{key}:protocol"] ?? "http";
@@ -28,27 +22,6 @@ namespace Microsoft.Extensions.Configuration
             }
 
             return new Uri(protocol + "://" + host + ":" + port + "/");
-        }
-
-        public static string? GetServiceHost(this IConfiguration configuration, string name, string? binding = null)
-        {
-            var key = GetKey(name, binding);
-
-            var connectionString = configuration[$"connectionstrings:{key}"];
-            if (!string.IsNullOrEmpty(connectionString))
-            {
-                return connectionString;
-            }
-
-            var host = configuration[$"service:{key}:host"];
-            var port = configuration[$"service:{key}:port"];
-
-            if (string.IsNullOrEmpty(host) || port == null)
-            {
-                return null;
-            }
-
-            return host + ":" + port;
         }
 
         public static string? GetConnectionString(this IConfiguration configuration, string name, string? binding)
