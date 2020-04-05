@@ -178,22 +178,28 @@ namespace Microsoft.Tye
 
             public void StdOut(string line)
             {
-                if (output.Verbosity >= Verbosity.Debug)
-                {
-                    output.Console.SetTerminalForegroundColor(ConsoleColor.Gray);
-                    output.Console.Out.WriteLine(new string(' ', output.indent + IndentAmount) + line);
-                    output.Console.ResetTerminalForegroundColor();
-                }
+                //if (output.Verbosity >= Verbosity.Debug)
+                //{
+                //    output.Console.SetTerminalForegroundColor(ConsoleColor.Gray);
+                //    output.Console.Out.WriteLine(new string(' ', output.indent + IndentAmount) + line);
+                //    output.Console.ResetTerminalForegroundColor();
+                //}
+                output.Console.SetTerminalForegroundColor(ConsoleColor.Gray);
+                output.Console.Out.WriteLine(new string(' ', output.indent + IndentAmount) + line);
+                output.Console.ResetTerminalForegroundColor();
             }
 
             public void StdErr(string line)
             {
-                if (output.Verbosity >= Verbosity.Info)
-                {
-                    output.Console.SetTerminalForegroundColor(ConsoleColor.Red);
-                    output.Console.Out.WriteLine(new string(' ', output.indent + IndentAmount) + line);
-                    output.Console.ResetTerminalForegroundColor();
-                }
+                //if (output.Verbosity >= Verbosity.Info)
+                //{
+                //    output.Console.SetTerminalForegroundColor(ConsoleColor.Red);
+                //    output.Console.Out.WriteLine(new string(' ', output.indent + IndentAmount) + line);
+                //    output.Console.ResetTerminalForegroundColor();
+                //}
+                output.Console.SetTerminalForegroundColor(ConsoleColor.Red);
+                output.Console.Out.WriteLine(new string(' ', output.indent + IndentAmount) + line);
+                output.Console.ResetTerminalForegroundColor();
             }
         }
 

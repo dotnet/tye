@@ -151,7 +151,6 @@ namespace Microsoft.Tye.Hosting
             {
                 v1RunInfo.Type = V1RunInfoType.Project;
                 v1RunInfo.Args = projectRunInfo.Args;
-                v1RunInfo.Build = projectRunInfo.Build;
                 v1RunInfo.Project = projectRunInfo.ProjectFile.FullName;
             }
 

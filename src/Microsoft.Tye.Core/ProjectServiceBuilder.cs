@@ -19,8 +19,6 @@ namespace Microsoft.Tye
 
         public int Replicas { get; set; } = 1;
 
-        public bool Build { get; set; }
-
         public string? Args { get; set; }
 
         public FrameworkCollection Frameworks { get; } = new FrameworkCollection();

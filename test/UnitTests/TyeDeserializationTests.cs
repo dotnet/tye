@@ -180,7 +180,6 @@ ingress:
                     .Single();
                 Assert.NotNull(otherService);
                 Assert.Equal(otherService.Args, service.Args);
-                Assert.Equal(otherService.Build, service.Build);
                 Assert.Equal(otherService.Executable, service.Executable);
                 Assert.Equal(otherService.External, service.External);
                 Assert.Equal(otherService.Image, service.Image);

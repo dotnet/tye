@@ -13,7 +13,6 @@ namespace Microsoft.Tye.Hosting.Model
         {
             ProjectFile = project.ProjectFile;
             Args = project.Args;
-            Build = project.Build;
             TargetFramework = project.TargetFramework;
             TargetFrameworkName = project.TargetFrameworkName;
             TargetFrameworkVersion = project.TargetFrameworkVersion;
@@ -26,7 +25,6 @@ namespace Microsoft.Tye.Hosting.Model
         }
 
         public string? Args { get; }
-        public bool Build { get; }
         public FileInfo ProjectFile { get; }
         public string TargetFrameworkName { get; set; } = default!;
         public string TargetFrameworkVersion { get; set; } = default!;

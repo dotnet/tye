@@ -56,7 +56,7 @@ namespace Microsoft.Tye.Hosting
             return KillRunningProcesses(application.Services);
         }
 
-        private async Task LaunchService(Application application, Service service)
+        private Task LaunchService(Application application, Service service)
         {
             var serviceDescription = service.Description;
             var serviceName = serviceDescription.Name;
@@ -95,27 +95,6 @@ namespace Microsoft.Tye.Hosting
             service.Status.Args = args;
 
             var processInfo = new ProcessInfo(new Task[service.Description.Replicas]);
-
-            if (service.Status.ProjectFilePath != null &&
-                service.Description.RunInfo is ProjectRunInfo project2 &&
-                project2.Build &&
-                _options.BuildProjects)
-            {
-                // Sometimes building can fail because of file locking (like files being open in VS)
-                _logger.LogInformation("Building project {ProjectFile}", service.Status.ProjectFilePath);
-
-                service.Logs.OnNext($"dotnet build \"{service.Status.ProjectFilePath}\" /nologo");
-
-                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: workingDirectory);
-
-                service.Logs.OnNext(buildResult.StandardOutput);
-
-                if (buildResult.ExitCode != 0)
-                {
-                    _logger.LogInformation("Building {ProjectFile} failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, service.Status.ProjectFilePath, buildResult.ExitCode);
-                    return;
-                }
-            }
 
             async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol)> ports)
             {
@@ -298,6 +277,8 @@ namespace Microsoft.Tye.Hosting
             }
 
             service.Items[typeof(ProcessInfo)] = processInfo;
+
+            return Task.CompletedTask;
         }
 
         private Task KillRunningProcesses(IDictionary<string, Service> services)

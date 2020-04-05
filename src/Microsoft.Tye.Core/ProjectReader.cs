@@ -60,7 +60,7 @@ namespace Microsoft.Tye
             }
         }
 
-        public static Task ReadProjectDetailsAsync(OutputContext output, ProjectServiceBuilder project)
+        public static Task<bool> ReadProjectDetailsAsync(OutputContext output, ProjectServiceBuilder project, string[]? targets = null)
         {
             if (output is null)
             {
@@ -74,7 +74,7 @@ namespace Microsoft.Tye
 
             EnsureMSBuildRegistered(output, project.ProjectFile);
 
-            EvaluateProject(output, project);
+            var result = EvaluateProject(output, project, targets);
 
             if (!SemVersion.TryParse(project.Version, out var version))
             {
@@ -83,7 +83,7 @@ namespace Microsoft.Tye
                 project.Version = version.ToString();
             }
 
-            return Task.CompletedTask;
+            return Task.FromResult(result);
         }
 
         private static void EnsureMSBuildRegistered(OutputContext? output, FileInfo projectFile)
@@ -141,8 +141,10 @@ namespace Microsoft.Tye
 
         // Do not load MSBuild types before using EnsureMSBuildRegistered.
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void EvaluateProject(OutputContext output, ProjectServiceBuilder project)
+        private static bool EvaluateProject(OutputContext output, ProjectServiceBuilder project, string[]? targets = null)
         {
+            var result = true;
+
             var sw = Stopwatch.StartNew();
 
             // We need to isolate projects from each other for testing. MSBuild does not support
@@ -168,17 +170,19 @@ namespace Microsoft.Tye
 
             // Currently we only log at debug level.
             var logger = new ConsoleLogger(
-                verbosity: LoggerVerbosity.Normal,
+                verbosity: LoggerVerbosity.Quiet,
                 write: message => output.WriteDebug(message),
                 colorSet: null,
                 colorReset: null);
 
             try
             {
+                targets ??= new[] { "Restore", "ResolveReferences", "ResolvePackageDependenciesDesignTime", "PrepareResources", "GetAssemblyAttributes" };
+
+                output.WriteDebugLine($"Executing targtes: {string.Join(", ", targets)}");
+
                 AssemblyLoadContext.Default.Resolving += ResolveAssembly;
-                var result = projectInstance.Build(
-                    targets: new[] { "Restore", "ResolveReferences", "ResolvePackageDependenciesDesignTime", "PrepareResources", "GetAssemblyAttributes", },
-                    loggers: new[] { logger, });
+                result = projectInstance.Build(targets, loggers: new[] { logger });
 
                 // If the build fails, we're not really blocked from doing our work.
                 // For now we just log the output to debug. There are errors that occur during
@@ -234,6 +238,7 @@ namespace Microsoft.Tye
 
             output.WriteDebugLine($"Evaluation Took: {sw.Elapsed.TotalMilliseconds}ms");
 
+            return result;
             // The Microsoft.Build.Locator doesn't handle the loading of other assemblies
             // that are shipped with MSBuild (ex NuGet).
             //
@@ -246,14 +251,12 @@ namespace Microsoft.Tye
             // See: https://github.com/microsoft/MSBuildLocator/issues/86
             Assembly? ResolveAssembly(AssemblyLoadContext context, AssemblyName assemblyName)
             {
-                if (assemblyName.Name is object && assemblyName.Name.StartsWith("NuGet."))
+                var msbuildDirectory = Environment.GetEnvironmentVariable("MSBuildExtensionsPath")!;
+                var assemblyFilePath = Path.Combine(msbuildDirectory, assemblyName.Name + ".dll");
+
+                if (File.Exists(assemblyFilePath))
                 {
-                    var msbuildDirectory = Environment.GetEnvironmentVariable("MSBuildExtensionsPath")!;
-                    var assemblyFilePath = Path.Combine(msbuildDirectory, assemblyName.Name + ".dll");
-                    if (File.Exists(assemblyFilePath))
-                    {
-                        return context.LoadFromAssemblyPath(assemblyFilePath);
-                    }
+                    return context.LoadFromAssemblyPath(assemblyFilePath);
                 }
 
                 return default;

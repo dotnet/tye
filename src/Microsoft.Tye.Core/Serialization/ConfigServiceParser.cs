@@ -45,13 +45,6 @@ namespace Tye.Serialization
                     case "project":
                         service.Project = YamlParser.GetScalarValue(key, child.Value);
                         break;
-                    case "build":
-                        if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var build))
-                        {
-                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeABoolean(key));
-                        }
-                        service.Build = build;
-                        break;
                     case "executable":
                         service.Executable = YamlParser.GetScalarValue(key, child.Value);
                         break;

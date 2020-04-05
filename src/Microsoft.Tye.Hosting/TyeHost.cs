@@ -264,12 +264,6 @@ namespace Microsoft.Tye.Hosting
                 new ProcessRunner(logger, replicaRegistry, ProcessRunnerOptions.FromArgs(args, servicesToDebug))
             };
 
-            // If the docker command is specified then transform the ProjectRunInfo into DockerRunInfo
-            if (args.Contains("--docker"))
-            {
-                processors.Insert(0, new TransformProjectsIntoContainers(logger));
-            }
-
             return new AggregateApplicationProcessor(processors);
         }
 

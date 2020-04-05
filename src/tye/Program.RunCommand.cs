@@ -7,6 +7,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Microsoft.Tye.ConfigModel;
 using Microsoft.Tye.Extensions;
@@ -64,7 +65,7 @@ namespace Microsoft.Tye
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, string[]>(async (console, path, debug) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, string[], bool, bool>(async (console, path, debug, docker, nobuild) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -72,8 +73,25 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                var output = new OutputContext(console, Verbosity.Quiet);
-                var application = await ApplicationFactory.CreateAsync(output, path);
+                // Populate project information if docker is false and we're not building
+                var populateProjectInformation = nobuild && !docker;
+                var output = new OutputContext(console, Verbosity.Debug);
+                var application = await ApplicationFactory.CreateAsync(output, path, populateProjectInformation);
+
+                if (docker)
+                {
+                    if (!await application.TransformProjectsIntoContainersAync(output))
+                    {
+                        return;
+                    }
+                }
+                else if (!populateProjectInformation)
+                {
+                    if (!await application.BuildProjectsAsync(output))
+                    {
+                        return;
+                    }
+                }
 
                 await application.ProcessExtensionsAsync(ExtensionContext.OperationKind.LocalRun);
 
