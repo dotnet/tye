@@ -32,6 +32,10 @@ if [ $sourced -eq 0 ]; then
     exit 1
 fi
 
+dev-tye () {
+    dotnet run --project "$THIS_SCRIPT/src/tye" "$@"
+}
+
 deactivate () {
 
     # reset old environment variables
