@@ -104,21 +104,21 @@ namespace Microsoft.Extensions.Configuration
         }
 
         [Fact]
-        public void GetServiceUri_WithoutBinding_GetsConnectionStringIfSet()
+        public void GetServiceUri_WithoutBinding_IgnoresConnectionStringIfSet()
         {
             var builder = new ConfigurationBuilder();
             builder.AddInMemoryCollection(new Dictionary<string, string>()
             {
-                { "connectionstrings:myservice", "http://expected.example.com" },
-                { "service:myservice:protocol", "https" },
-                { "service:myservice:host", "example.com" },
-                { "service:myservice:port", "443" },
+                { "connectionstrings:myservice", "https://example.com" },
+                { "service:myservice:protocol", "http" },
+                { "service:myservice:host", "expected.example.com" },
+                { "service:myservice:port", "80" },
             });
 
             var configuration = builder.Build();
 
             var result = configuration.GetServiceUri("myservice");
-            Assert.Equal(new Uri("http://expected.example.com"), result);
+            Assert.Equal(new Uri("http://expected.example.com:80"), result);
         }
 
         [Fact]
@@ -220,21 +220,21 @@ namespace Microsoft.Extensions.Configuration
         }
 
         [Fact]
-        public void GetServiceUri_WithBinding_GetsConnectionStringIfSet()
+        public void GetServiceUri_WithBinding_IgnoresConnectionStringIfSet()
         {
             var builder = new ConfigurationBuilder();
             builder.AddInMemoryCollection(new Dictionary<string, string>()
             {
-                { "connectionstrings:myservice:metrics", "http://expected.example.com" },
-                { "service:myservice:metrics:protocol", "https" },
-                { "service:myservice:metrics:host", "example.com" },
-                { "service:myservice:metrics:port", "443" },
+                { "connectionstrings:myservice:metrics", "https://example.com" },
+                { "service:myservice:metrics:protocol", "http" },
+                { "service:myservice:metrics:host", "expected.example.com" },
+                { "service:myservice:metrics:port", "80" },
             });
 
             var configuration = builder.Build();
 
             var result = configuration.GetServiceUri("myservice", "metrics");
-            Assert.Equal(new Uri("http://expected.example.com"), result);
+            Assert.Equal(new Uri("http://expected.example.com:80"), result);
         }
 
         [Fact]
