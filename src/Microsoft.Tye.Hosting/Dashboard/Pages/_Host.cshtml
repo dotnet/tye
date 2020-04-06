@@ -15,6 +15,33 @@
     <base href="~/" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link href="css/site.css" rel="stylesheet" />
+    <style>
+        #components-reconnect-modal {
+            font-family: 'Cascadia Code', Consolas, monospace;
+            position: fixed;
+            top: 0px;
+            right: 0px;
+            bottom: 0px;
+            left: 0px;
+            z-index: 1000;
+            display: block;
+            overflow: hidden;
+            background-color: rgb(0, 0, 0);
+            color: red;
+            opacity: 0.8;
+            text-align: center;
+            font-weight: bold;
+            padding: 2em;
+        }
+
+        #components-reconnect-modal.components-reconnect-hide {
+            display: none
+        }
+
+        #components-reconnect-modal.components-reconnect-show {
+            display: inherit
+        }
+    </style>
 </head>
 <body>
     <app>
@@ -30,6 +57,11 @@
         </environment>
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
+    </div>
+
+    <div id="components-reconnect-modal" class="components-reconnect-hide">
+        <h1>Tye has exited.</h1>
+        <h2>It is now safe to close this browser window.</h2>
     </div>
 
     <script src="_framework/blazor.server.js"></script>
