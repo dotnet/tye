@@ -228,9 +228,17 @@ namespace Microsoft.Tye
             project.Frameworks.AddRange(sharedFrameworks.Select(s => new Framework(s)));
             output.WriteDebugLine($"Found shared frameworks: {string.Join(", ", sharedFrameworks)}");
 
+            bool PropertyIsTrue(string property)
+            {
+                return projectInstance.GetPropertyValue(property) is string s && !string.IsNullOrEmpty(s) && bool.Parse(s);
+            }
+
             project.IsAspNet = project.Frameworks.Any(f => f.Name == "Microsoft.AspNetCore.App") ||
                                projectInstance.GetPropertyValue("MicrosoftNETPlatformLibrary") == "Microsoft.AspNetCore.App" ||
-                               projectInstance.GetPropertyValue("_AspNetCoreAppSharedFxIsEnabled") is string s && !string.IsNullOrEmpty(s) && bool.Parse(s);
+                               PropertyIsTrue("_AspNetCoreAppSharedFxIsEnabled") ||
+                               PropertyIsTrue("UsingMicrosoftNETSdkWeb");
+
+            output.WriteDebugLine($"IsAspNet={project.IsAspNet}");
 
             output.WriteDebugLine($"Evaluation Took: {sw.Elapsed.TotalMilliseconds}ms");
 
