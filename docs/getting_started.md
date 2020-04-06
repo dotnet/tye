@@ -38,7 +38,7 @@ This will install the newest available build from our CI.
 dotnet tool install -g Microsoft.Tye --version "0.1.0-*" --add-source https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
 ```
 
-If you aleady have a build installed and you want to update, replace `install` with `update`:
+If you already have a build installed and you want to update, replace `install` with `update`:
 
 ```txt
 dotnet tool update -g Microsoft.Tye --version "0.1.0-*" --add-source https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
