@@ -61,6 +61,7 @@ deactivate () {
     if [ ! "${1:-}" = "init" ] ; then
         # Remove the deactivate function
         unset -f deactivate
+        unset -f dev-tye
     fi
 }
 
