@@ -30,8 +30,8 @@ namespace Backend
 
             services.AddSingleton(sp =>
             {
-                var connectionString = Configuration.GetConnectionString("rabbit");
-                var endpoint = new AmqpTcpEndpoint(new Uri(connectionString));
+                var uri = Configuration.GetServiceUri("rabbit");
+                var endpoint = new AmqpTcpEndpoint(uri);
 
                 var factory = new ConnectionFactory()
                 {

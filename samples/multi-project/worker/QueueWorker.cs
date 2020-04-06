@@ -65,8 +65,8 @@ namespace Worker
             {
                 try
                 {
-                    var connectionString = _configuration.GetConnectionString("rabbit");
-                    var endpoint = new AmqpTcpEndpoint(new Uri(connectionString));
+                    var uri = _configuration.GetServiceUri("rabbit");
+                    var endpoint = new AmqpTcpEndpoint(uri);
 
                     var factory = new ConnectionFactory()
                     {
