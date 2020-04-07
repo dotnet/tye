@@ -138,7 +138,7 @@ namespace Microsoft.Tye
 
                             output.WriteAlwaysLine($"Invalid URI: '{text}'");
                         }
-                        
+
                         if (string.IsNullOrWhiteSpace(text))
                         {
                             output.WriteAlwaysLine($"Skipping creation of secret for '{secretInputBinding.Service.Name}'. This may prevent creation of pods until secrets are created.");
@@ -157,7 +157,7 @@ namespace Microsoft.Tye
                     else
                     {
                         throw new InvalidOperationException("Unknown Secret type: " + secretInputBinding);
-                    }             
+                    }
 
                     secret.Metadata = new V1ObjectMeta();
                     secret.Metadata.Name = secretInputBinding.Name;
