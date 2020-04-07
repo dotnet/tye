@@ -22,7 +22,7 @@ namespace Worker
         [HttpGet("/results")]
         public async Task<IEnumerable<VoteCount>> Get()
         {
-            using (var connection = new NpgsqlConnection(_configuration.GetSqlConnectionString()))
+            using (var connection = new NpgsqlConnection(_configuration.GetConnectionString("postgres")))
             {
                 connection.Open();
 
