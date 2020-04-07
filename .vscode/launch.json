@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/tye/bin/Debug/netcoreapp3.1/tye.dll",
+            "program": "${workspaceFolder}/artifacts/bin/tye/Debug/netcoreapp3.1/tye.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/tye",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
