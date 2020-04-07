@@ -58,20 +58,22 @@ namespace Microsoft.Tye
                     continue;
                 }
 
+
                 foreach (var binding in other.Bindings)
                 {
-                    // The other thing is a project, and will be deployed along with this
-                    // service.
-                    var configName =
-                        (binding.Name is null || binding.Name == other.Name) ?
-                        other.Name.ToUpperInvariant() :
-                        $"{other.Name.ToUpperInvariant()}__{binding.Name.ToUpperInvariant()}";
                     if (other is ProjectServiceBuilder)
                     {
+                        // The other thing is a project, and will be deployed along with this
+                        // service.
+                        var configName =
+                            (binding.Name is null || binding.Name == other.Name) ?
+                            other.Name.ToUpperInvariant() :
+                            $"{other.Name.ToUpperInvariant()}__{binding.Name.ToUpperInvariant()}";
+
                         if (!string.IsNullOrEmpty(binding.ConnectionString))
                         {
                             // Special case for connection strings
-                            bindings.Bindings.Add(new EnvironmentVariableInputBinding($"CONNECTIONSTRING__{configName}", binding.ConnectionString));
+                            bindings.Bindings.Add(new EnvironmentVariableInputBinding($"CONNECTIONSTRINGS__{configName}", binding.ConnectionString));
                             continue;
                         }
 
@@ -107,11 +109,22 @@ namespace Microsoft.Tye
                     else
                     {
                         // The other service is not a project, so we'll use secrets.
-                        bindings.Bindings.Add(new SecretInputBinding(
-                            name: $"binding-{Environment}-{other.Name}-{binding.Name ?? other.Name}-secret",
-                            filename: $"CONNECTIONSTRING__{configName}",
-                            other,
-                            binding));
+                        if (!string.IsNullOrEmpty(binding.ConnectionString))
+                        {
+                            bindings.Bindings.Add(new SecretConnctionStringInputBinding(
+                                name: $"binding-{Environment}-{(binding.Name == null ? other.Name.ToLowerInvariant() : (other.Name.ToLowerInvariant() + "-" + binding.Name.ToLowerInvariant()))}-secret",
+                                other,
+                                binding,
+                                filename: $"CONNECTIONSTRINGS__{(binding.Name == null ? other.Name.ToUpperInvariant() : (other.Name.ToUpperInvariant() + "__" + binding.Name.ToUpperInvariant()))}"));
+                        }
+                        else
+                        {
+                            bindings.Bindings.Add(new SecretUrlInputBinding(
+                                name: $"binding-{Environment}-{(binding.Name == null ? other.Name.ToLowerInvariant() : (other.Name.ToLowerInvariant() + "-" + binding.Name.ToLowerInvariant()))}-secret",
+                                other,
+                                binding,
+                                filenameBase: $"SERVICE__{(binding.Name == null ? other.Name.ToUpperInvariant() : (other.Name.ToUpperInvariant() + "__" + binding.Name.ToUpperInvariant()))}"));
+                        }
                     }
                 }
             }

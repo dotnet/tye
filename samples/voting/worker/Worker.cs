@@ -34,8 +34,8 @@ namespace Worker
 
             try
             {
-                using (var connection = new NpgsqlConnection(_configuration.GetSqlConnectionString()))
-                using (var redisConnection = ConnectionMultiplexer.Connect(GetRedisConnectionString(_configuration)))
+                using (var connection = new NpgsqlConnection(_configuration.GetConnectionString("postgres")))
+                using (var redisConnection = ConnectionMultiplexer.Connect(_configuration.GetConnectionString("redis")))
                 {
                     await Task.Delay(1000);
 
@@ -99,17 +99,6 @@ namespace Worker
             await connection.ExecuteAsync(@"CREATE TABLE IF NOT EXISTS votes (
                                                 Id VARCHAR(255) NOT NULL UNIQUE,
                                                 Vote VARCHAR(255) NOT NULL);");
-        }
-
-        private string GetRedisConnectionString(IConfiguration configuration)
-        {
-            var connectionString = configuration["connectionstring:redis"];
-            if (connectionString != null)
-            {
-                return connectionString;
-            }
-
-            return $"{configuration["service:redis:host"]}:{configuration["service:redis:port"]}";
         }
     }
 }

@@ -1,3 +1,4 @@
+name: mongo-sample
 services:
 - name: mongo
   image: mongo

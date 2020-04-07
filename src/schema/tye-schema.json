@@ -42,68 +42,44 @@
     ],
     "definitions": {
         "binding": {
-            "anyOf": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "description": "The binding name.",
-                            "type": "string"
-                        },
-                        "connectionString": {
-                            "description": "The connection string.",
-                            "type": "string"
-                        }
-                    },
-                    "additionalProperties": false
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "The binding name.",
+                    "type": "string"
                 },
-                {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "description": "The binding name.",
-                            "type": "string"
-                        },
-                        "port": {
-                            "description": "The binding port.",
-                            "type": "integer"
-                        },
-                        "host": {
-                            "description": "The hostname for the binding.",
-                            "type": "string"
-                        },
-                        "protocol": {
-                            "description": "The protocol used by the binding",
-                            "type": "string"
-                        }
-                    },
-                    "additionalProperties": false
+                "port": {
+                    "description": "The binding port.",
+                    "type": "integer"
                 },
-                {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "description": "The binding name.",
-                            "type": "string"
-                        },
-                        "autoAssignPort": {
-                            "description": "Whether to auto-assign a port value.",
-                            "type": "boolean",
-                            "default": false
-                        },
-                        "protocol": {
-                            "description": "The protocol used by the binding",
-                            "type": "string"
-                        }
-                    },
-                    "additionalProperties": false
+                "containerPort": {
+                    "description": "The port used when running inside a container.",
+                    "type": "integer"
+                },
+                "host": {
+                    "description": "The hostname for the binding.",
+                    "type": "string"
+                },
+                "protocol": {
+                    "description": "The protocol used by the binding",
+                    "type": "string"
+                },
+                "autoAssignPort": {
+                    "description": "Whether to auto-assign a port value.",
+                    "type": "boolean",
+                    "default": false
+                },
+                "connectionString": {
+                    "description": "The connection string.",
+                    "type": "string"
                 }
-            ]
+            },
+            "additionalProperties": false
         },
         "env-var": {
             "type": "object",
             "properties": {
-                "name" :{
+                "name": {
                     "description": "Environment variable name.",
                     "type": "string"
                 },
@@ -112,7 +88,10 @@
                     "type": "string"
                 }
             },
-            "required": ["name", "value"],
+            "required": [
+                "name",
+                "value"
+            ],
             "additionalProperties": false
         },
         "executable": {
@@ -132,7 +111,7 @@
                 },
                 "env": {
                     "description": "Environment variables to use when launching.",
-                    "type" : "array",
+                    "type": "array",
                     "items": {
                         "$ref": "#/definitions/env-var"
                     }
@@ -147,7 +126,7 @@
                 },
                 "bindings": {
                     "description": "The bindings provided by the service.",
-                    "type":"array",
+                    "type": "array",
                     "items": {
                         "$ref": "#/definitions/binding"
                     }
@@ -185,7 +164,7 @@
                 },
                 "env": {
                     "description": "Environment variables to use when launching.",
-                    "type" : "array",
+                    "type": "array",
                     "items": {
                         "$ref": "#/definitions/env-var"
                     }
@@ -200,7 +179,7 @@
                 },
                 "bindings": {
                     "description": "The bindings provided by the service.",
-                    "type":"array",
+                    "type": "array",
                     "items": {
                         "$ref": "#/definitions/binding"
                     }
@@ -224,7 +203,7 @@
                 },
                 "env": {
                     "description": "Environment variables to use when launching.",
-                    "type" : "array",
+                    "type": "array",
                     "items": {
                         "$ref": "#/definitions/env-var"
                     }
@@ -243,7 +222,7 @@
                 },
                 "bindings": {
                     "description": "The bindings provided by the service.",
-                    "type":"array",
+                    "type": "array",
                     "items": {
                         "$ref": "#/definitions/binding"
                     }

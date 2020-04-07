@@ -5,10 +5,10 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine.Invocation;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using k8s;
@@ -83,7 +83,7 @@ namespace Microsoft.Tye
                         continue;
                     }
 
-                    if (!Interactive)
+                    if (!Interactive && secretInputBinding is SecretConnctionStringInputBinding)
                     {
                         throw new CommandException(
                             $"The secret '{secretInputBinding.Name}' used for service '{secretInputBinding.Service.Name}' is missing from the deployment environment. " +
@@ -92,20 +92,73 @@ namespace Microsoft.Tye
                             $"kubectl create secret generic {secretInputBinding.Name} --from-literal=connectionstring=<value>");
                     }
 
-                    // If we get here then we should create the secret.
-                    var text = output.Prompt($"Enter the connection string to use for service '{secretInputBinding.Service.Name}'", allowEmpty: true);
-                    if (string.IsNullOrWhiteSpace(text))
+                    if (!Interactive && secretInputBinding is SecretUrlInputBinding)
                     {
-                        output.WriteAlways($"Skipping creation of secret for '{secretInputBinding.Service.Name}'. This may prevent creation of pods until secrets are created.");
-                        output.WriteAlways($"Manually create a secret with:");
-                        output.WriteAlways($"kubectl create secret generic {secretInputBinding.Name} --from-literal=connectionstring=<value>");
-                        continue;
+                        throw new CommandException(
+                            $"The secret '{secretInputBinding.Name}' used for service '{secretInputBinding.Service.Name}' is missing from the deployment environment. " +
+                            $"Rerun the command with --interactive to specify the value interactively, or with --force to skip validation. Alternatively " +
+                            $"use the following command to manually create the secret." + System.Environment.NewLine +
+                            $"kubectl create secret generic {secretInputBinding.Name} --from-literal=protocol=<value> --from-literal=host=<value> --from-literal=port=<value>");
                     }
 
-                    var secret = new V1Secret(type: "Opaque", stringData: new Dictionary<string, string>()
+                    V1Secret secret;
+                    if (secretInputBinding is SecretConnctionStringInputBinding)
                     {
-                        { "connectionstring", text },
-                    });
+                        // If we get here then we should create the secret.
+                        var text = output.Prompt($"Enter the connection string to use for service '{secretInputBinding.Service.Name}'", allowEmpty: true);
+                        if (string.IsNullOrWhiteSpace(text))
+                        {
+                            output.WriteAlwaysLine($"Skipping creation of secret for '{secretInputBinding.Service.Name}'. This may prevent creation of pods until secrets are created.");
+                            output.WriteAlwaysLine($"Manually create a secret with:");
+                            output.WriteAlwaysLine($"kubectl create secret generic {secretInputBinding.Name} --from-literal=connectionstring=<value>");
+                            continue;
+                        }
+
+                        secret = new V1Secret(type: "Opaque", stringData: new Dictionary<string, string>()
+                        {
+                            { "connectionstring", text },
+                        });
+                    }
+                    else if (secretInputBinding is SecretUrlInputBinding)
+                    {
+                        // If we get here then we should create the secret.
+                        string text;
+                        Uri? uri = null;
+                        while (true)
+                        {
+                            text = output.Prompt($"Enter the URI to use for service '{secretInputBinding.Service.Name}'", allowEmpty: true);
+                            if (string.IsNullOrEmpty(text))
+                            {
+                                break; // skip
+                            }
+                            else if (Uri.TryCreate(text, UriKind.Absolute, out uri))
+                            {
+                                break; // success
+                            }
+
+                            output.WriteAlwaysLine($"Invalid URI: '{text}'");
+                        }
+
+                        if (string.IsNullOrWhiteSpace(text))
+                        {
+                            output.WriteAlwaysLine($"Skipping creation of secret for '{secretInputBinding.Service.Name}'. This may prevent creation of pods until secrets are created.");
+                            output.WriteAlwaysLine($"Manually create a secret with:");
+                            output.WriteAlwaysLine($"kubectl create secret generic {secretInputBinding.Name} -from-literal=protocol=<value> --from-literal=host=<value> --from-literal=port=<value>");
+                            continue;
+                        }
+
+                        secret = new V1Secret(type: "Opaque", stringData: new Dictionary<string, string>()
+                        {
+                            { "protocol", uri!.Scheme },
+                            { "host", uri!.Host },
+                            { "port", uri!.Port.ToString(CultureInfo.InvariantCulture) },
+                        });
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Unknown Secret type: " + secretInputBinding);
+                    }
+
                     secret.Metadata = new V1ObjectMeta();
                     secret.Metadata.Name = secretInputBinding.Name;
 

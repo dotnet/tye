@@ -27,7 +27,11 @@ namespace Frontend
             services.AddRazorPages();
 
             var address = Configuration.GetServiceUri("backend");
-            services.AddSingleton(_ => GrpcChannel.ForAddress(address!).CreateGrpcService<IOrderService>());
+            services.AddSingleton(_ => 
+            {
+                GrpcClientFactory.AllowUnencryptedHttp2 = true;
+                return GrpcChannel.ForAddress(address!).CreateGrpcService<IOrderService>();
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

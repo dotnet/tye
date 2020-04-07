@@ -5,4 +5,8 @@
     <RootNamespace>Backend</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="$(TyeLibrariesPath)\Microsoft.Tye.Extensions.Configuration\Microsoft.Tye.Extensions.Configuration.csproj" />
+  </ItemGroup>
+
 </Project>

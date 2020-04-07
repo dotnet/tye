@@ -281,7 +281,7 @@ namespace Microsoft.Tye.Hosting
 
                 foreach (var pair in environment)
                 {
-                    environmentArguments += $"-e {pair.Key}={pair.Value} ";
+                    environmentArguments += $"-e \"{pair.Key}={pair.Value}\" ";
                 }
 
                 foreach (var volumeMapping in docker.VolumeMappings)

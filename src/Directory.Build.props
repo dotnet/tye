@@ -3,5 +3,6 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
+    <DebugType>Embedded</DebugType>
   </PropertyGroup>
 </Project>

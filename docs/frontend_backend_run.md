@@ -63,22 +63,26 @@ This tutorial will demonstrate how to use [`tye run`](commandline/tye-run.md) to
 
 ## Getting the frontend to communicate with the backend
 
-Now that we have two applications running, let's make them communicate. By default, `tye` enables service discovery by injecting environment variables with a specific naming convention.
+Now that we have two applications running, let's make them communicate. By default, `tye` enables service discovery by injecting environment variables with a specific naming convention. For more information on, see [service discovery](service_discovery.md).
 
-1. Open the solution in your editor of choice.
+1. Add a NuGet.config to add the `dotnet-core` package source.
 
-1. Add a `GetUri()` method to the frontend project at the bottom of the Startup.cs class:
+    Paste the following into `nuget.config` in the `microservice/` directory.
 
-    ```C#
-    private Uri GetUri(IConfiguration configuration, string name)
-    {
-        return new Uri($"http://{configuration[$"service:{name}:host"]}:{configuration[$"service:{name}:port"]}");
-    }
+    ```xml
+    <?xml version="1.0" encoding="utf-8"?>
+    <configuration>
+        <packageSources>
+            <clear />
+            <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
+            <add key="nuget" value="https://api.nuget.org/v3/index.json" />
+        </packageSources>
+    </configuration>
     ```
 
-    This method resolved the URL using the `tye` naming convention for services. For more information on, see [service discovery](service_discovery.md).
+2. Open the solution in your editor of choice.
 
-2. Add a file `WeatherForecast.cs` to the `frontend` project.
+3. Add a file `WeatherForecast.cs` to the `frontend` project.
 
     ```C#
     using System;
@@ -100,7 +104,7 @@ Now that we have two applications running, let's make them communicate. By defau
 
     This will match the backend `WeatherForecast.cs`.
 
-3. Add a file `WeatherClient.cs` to the `frontend` project with the following contents:
+4. Add a file `WeatherClient.cs` to the `frontend` project with the following contents:
 
    ```C#
     using System.Net.Http;
@@ -134,7 +138,13 @@ Now that we have two applications running, let's make them communicate. By defau
     }
    ```
 
-4. Now register this client in `Startup.cs` class in `ConfigureServices` of the `frontend` project:
+5. Add a reference to the `Microsoft.Tye.Extensions.Configuration` package to the frontend project
+
+    ```txt
+    dotnet add frontend/frontend.csproj package Microsoft.Tye.Extensions.Configuration  --version "0.1.0-*"
+    ```
+
+6. Now register this client in `Startup.cs` class in `ConfigureServices` of the `frontend` project:
 
    ```C#
    public void ConfigureServices(IServiceCollection services)
@@ -143,14 +153,14 @@ Now that we have two applications running, let's make them communicate. By defau
 
        services.AddHttpClient<WeatherClient>(client =>
        {
-            client.BaseAddress = GetUri(Configuration, "backend");
+            client.BaseAddress = Configuration.GetServiceUri("backend");
        });
    }
    ```
 
    This will wire up the `WeatherClient` to use the correct URL for the `backend` service.
 
-5. Add a `Forecasts` property to the `Index` page model under `Pages\Index.cshtml.cs` in the `frontend` project.
+7. Add a `Forecasts` property to the `Index` page model under `Pages\Index.cshtml.cs` in the `frontend` project.
 
     ```C#
     public WeatherForecast[] Forecasts { get; set; }
@@ -165,7 +175,7 @@ Now that we have two applications running, let's make them communicate. By defau
    }
    ```
 
-6. Change the `Index.cshtml` razor view to render the `Forecasts` property in the razor page:
+8. Change the `Index.cshtml` razor view to render the `Forecasts` property in the razor page:
 
    ```cshtml
    @page
@@ -204,7 +214,7 @@ Now that we have two applications running, let's make them communicate. By defau
     </table>
    ```
 
-7. Run the project with [`tye run`](commandline/tye-run.md) and the `frontend` service should be able to successfully call the `backend` service!
+9.  Run the project with [`tye run`](commandline/tye-run.md) and the `frontend` service should be able to successfully call the `backend` service!
 
     When you visit the `frontend` service you should see a table of weather data. This data was produced randomly in the `backend` service. The fact that you're seeing it in a web UI in the `frontend` means that the services are able to communicate.
 

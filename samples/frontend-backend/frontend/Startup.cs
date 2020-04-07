@@ -49,7 +49,7 @@ namespace Frontend
 
             app.UseEndpoints(endpoints =>
             {
-                var uri = Configuration.GetServiceUri("backend");
+                var uri = Configuration.GetServiceUri("backend")!;
 
                 logger.LogInformation("Backend URL: {BackendUrl}", uri);
 
@@ -63,16 +63,13 @@ namespace Frontend
                     var bytes = await httpClient.GetByteArrayAsync("/");
                     var backendInfo = JsonSerializer.Deserialize<BackendInfo>(bytes, options);
 
-                    var backendHost = Configuration.GetServiceHost("backend");
-                    var addresses = await Dns.GetHostAddressesAsync(backendHost);
-
                     await context.Response.WriteAsync($"Frontend Listening IP: {context.Connection.LocalIpAddress}{Environment.NewLine}");
                     await context.Response.WriteAsync($"Frontend Hostname: {Dns.GetHostName()}{Environment.NewLine}");
                     await context.Response.WriteAsync($"EnvVar Configuration value: {Configuration["App:Value"]}{Environment.NewLine}");
 
                     await context.Response.WriteAsync($"Backend Listening IP: {backendInfo.IP}{Environment.NewLine}");
                     await context.Response.WriteAsync($"Backend Hostname: {backendInfo.Hostname}{Environment.NewLine}");
-
+                    var addresses = await Dns.GetHostAddressesAsync(uri.Host);
                     await context.Response.WriteAsync($"Backend Host Addresses: {string.Join(", ", addresses.Select(a => a.ToString()))}");
                 });
 

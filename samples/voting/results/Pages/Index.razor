@@ -76,7 +76,7 @@
         try
         {
             var connection = new HubConnectionBuilder()
-                .WithUrl(Configuration.GetUri("worker")+ "/resultsHub")
+                .WithUrl(Configuration.GetServiceUri("worker")!.AbsoluteUri + "resultsHub")
                 .WithAutomaticReconnect()
                 .Build();
             

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -30,6 +31,8 @@ namespace Microsoft.Tye.Hosting.Model
 
         public void PopulateEnvironment(Service service, Action<string, string> set, string defaultHost = "localhost")
         {
+            var bindings = ComputeBindings(service, defaultHost);
+
             if (service.Description.Configuration != null)
             {
                 // Inject normal configuration
@@ -41,36 +44,36 @@ namespace Microsoft.Tye.Hosting.Model
                     }
                     else if (pair.Source is object)
                     {
-                        set(pair.Name, GetValueFromBinding(pair.Source));
+                        set(pair.Name, GetValueFromBinding(bindings, pair.Source));
                     }
                 }
             }
 
-            string GetValueFromBinding(EnvironmentVariableSource source)
+            // Inject dependency information
+            foreach (var binding in bindings)
             {
-                if (!Services.TryGetValue(source.Service, out var service))
-                {
-                    throw new InvalidOperationException($"Could not find service '{source.Service}'.");
-                }
+                SetBinding(binding);
+            }
 
-                var binding = service.Description.Bindings.Where(b => b.Name == source.Binding).FirstOrDefault();
+            static string GetValueFromBinding(List<EffectiveBinding> bindings, EnvironmentVariableSource source)
+            {
+                var binding = bindings.Where(b => b.Service == b.Service && b.Name == source.Binding).FirstOrDefault();
                 if (binding == null)
                 {
                     throw new InvalidOperationException($"Could not find binding '{source.Binding}' for service '{source.Service}'.");
                 }
 
-                // TODO finish
                 if (source.Kind == EnvironmentVariableSource.SourceKind.Port && binding.Port != null)
                 {
                     return binding.Port.Value.ToString();
                 }
                 else if (source.Kind == EnvironmentVariableSource.SourceKind.Host)
                 {
-                    return binding.Host ?? defaultHost;
+                    return binding.Host;
                 }
                 else if (source.Kind == EnvironmentVariableSource.SourceKind.Url)
                 {
-                    return $"{binding.Protocol ?? "http"}://{binding.Host ?? defaultHost}" + (binding.Port.HasValue ? (":" + binding.Port) : string.Empty);
+                    return $"{binding.Protocol ?? "http"}://{binding.Host}" + (binding.Port.HasValue ? (":" + binding.Port) : string.Empty);
                 }
                 else if (source.Kind == EnvironmentVariableSource.SourceKind.ConnectionString && binding.ConnectionString != null)
                 {
@@ -80,59 +83,80 @@ namespace Microsoft.Tye.Hosting.Model
                 throw new InvalidOperationException($"Unable to resolve the desired value '{source.Kind}' from binding '{source.Binding}' for service '{source.Service}'.");
             }
 
-            void SetBinding(ServiceDescription targetService, ServiceBinding b)
+            void SetBinding(EffectiveBinding binding)
             {
-                var serviceName = targetService.Name.ToUpper();
+                var serviceName = binding.Service.ToUpper();
                 var configName = "";
                 var envName = "";
 
-                if (string.IsNullOrEmpty(b.Name))
+                if (string.IsNullOrEmpty(binding.Name))
                 {
                     configName = serviceName;
                     envName = serviceName;
                 }
                 else
                 {
-                    configName = $"{serviceName.ToUpper()}__{b.Name.ToUpper()}";
-                    envName = $"{serviceName.ToUpper()}_{b.Name.ToUpper()}";
+                    configName = $"{serviceName.ToUpper()}__{binding.Name.ToUpper()}";
+                    envName = $"{serviceName.ToUpper()}_{binding.Name.ToUpper()}";
                 }
 
-                if (!string.IsNullOrEmpty(b.ConnectionString))
+                if (!string.IsNullOrEmpty(binding.ConnectionString))
                 {
                     // Special case for connection strings
-                    set($"CONNECTIONSTRING__{configName}", b.ConnectionString);
+                    var connectionString = TokenReplacement.ReplaceValues(binding.ConnectionString, binding, bindings);
+                    set($"CONNECTIONSTRINGS__{configName}", connectionString);
+                    return;
                 }
 
-                if (!string.IsNullOrEmpty(b.Protocol))
+                if (!string.IsNullOrEmpty(binding.Protocol))
                 {
                     // IConfiguration specific (double underscore ends up telling the configuration provider to use it as a separator)
-                    set($"SERVICE__{configName}__PROTOCOL", b.Protocol);
-                    set($"{envName}_SERVICE_PROTOCOL", b.Protocol);
+                    set($"SERVICE__{configName}__PROTOCOL", binding.Protocol);
+                    set($"{envName}_SERVICE_PROTOCOL", binding.Protocol);
                 }
 
-                if (b.Port != null)
+                if (binding.Port != null)
                 {
-                    var port = (service.Description.RunInfo is DockerRunInfo) ? b.ContainerPort ?? b.Port.Value : b.Port.Value;
-
-                    set($"SERVICE__{configName}__PORT", port.ToString());
-                    set($"{envName}_SERVICE_PORT", port.ToString());
+                    set($"SERVICE__{configName}__PORT", binding.Port.Value.ToString(CultureInfo.InvariantCulture));
+                    set($"{envName}_SERVICE_PORT", binding.Port.Value.ToString(CultureInfo.InvariantCulture));
                 }
 
-                // Use the container name as the host name if there's a single replica (current limitation)
-                var host = b.Host ?? (service.Description.RunInfo is DockerRunInfo ? targetService.Name : defaultHost);
-
-                set($"SERVICE__{configName}__HOST", host);
-                set($"{envName}_SERVICE_HOST", host);
+                set($"SERVICE__{configName}__HOST", binding.Host);
+                set($"{envName}_SERVICE_HOST", binding.Host);
             }
+        }
 
-            // Inject dependency information
+        // Compute the list of bindings visible to `service`. This is contextual because details like
+        // whether `service` is a container or not will change the result.
+        private List<EffectiveBinding> ComputeBindings(Service service, string defaultHost)
+        {
+            var bindings = new List<EffectiveBinding>();
+
             foreach (var s in Services.Values)
             {
                 foreach (var b in s.Description.Bindings)
                 {
-                    SetBinding(s.Description, b);
+                    var protocol = b.Protocol;
+                    var host = b.Host ?? (service.Description.RunInfo is DockerRunInfo ? s.Description.Name : defaultHost);
+
+                    var port = b.Port;
+                    if (b.Port is object && service.Description.RunInfo is DockerRunInfo)
+                    {
+                        port = b.ContainerPort ?? b.Port.Value;
+                    }
+
+                    bindings.Add(new EffectiveBinding(
+                        s.Description.Name,
+                        b.Name,
+                        protocol,
+                        host,
+                        port,
+                        b.ConnectionString,
+                        s.Description.Configuration));
                 }
             }
+
+            return bindings;
         }
     }
 }
