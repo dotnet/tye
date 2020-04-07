@@ -32,7 +32,7 @@ if [ $sourced -eq 0 ]; then
     exit 1
 fi
 
-dev-tye () {
+tye () {
     dotnet run --project "$THIS_SCRIPT/src/tye" "$@"
 }
 
@@ -61,7 +61,7 @@ deactivate () {
     if [ ! "${1:-}" = "init" ] ; then
         # Remove the deactivate function
         unset -f deactivate
-        unset -f dev-tye
+        unset -f tye
     fi
 }
 
