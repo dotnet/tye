@@ -123,7 +123,7 @@ namespace Microsoft.Tye
                     {
                         // If we get here then we should create the secret.
                         string text;
-                        Uri uri = null;
+                        Uri? uri = null;
                         while (true)
                         {
                             text = output.Prompt($"Enter the URI to use for service '{secretInputBinding.Service.Name}'", allowEmpty: true);

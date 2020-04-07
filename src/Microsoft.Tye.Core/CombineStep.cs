@@ -109,21 +109,21 @@ namespace Microsoft.Tye
                     else
                     {
                         // The other service is not a project, so we'll use secrets.
-                        if (string.IsNullOrEmpty(binding.ConnectionString))
+                        if (!string.IsNullOrEmpty(binding.ConnectionString))
                         {
                             bindings.Bindings.Add(new SecretConnctionStringInputBinding(
-                                name: $"binding-{Environment}-{(binding.Name == null ? other.Name : (other.Name + "-" + binding.Name))}-secret",
+                                name: $"binding-{Environment}-{(binding.Name == null ? other.Name.ToLowerInvariant() : (other.Name.ToLowerInvariant() + "-" + binding.Name.ToLowerInvariant()))}-secret",
                                 other,
                                 binding,
-                                filename: $"CONNECTIONSTRINGS__{(binding.Name == null ? other.Name : (other.Name + "__" + binding.Name))}"));
+                                filename: $"CONNECTIONSTRINGS__{(binding.Name == null ? other.Name.ToUpperInvariant() : (other.Name.ToUpperInvariant() + "__" + binding.Name.ToUpperInvariant()))}"));
                         }
                         else
                         {
                             bindings.Bindings.Add(new SecretUrlInputBinding(
-                                name: $"binding-{Environment}-{(binding.Name == null ? other.Name : (other.Name + "-" + binding.Name))}-secret",
+                                name: $"binding-{Environment}-{(binding.Name == null ? other.Name.ToLowerInvariant() : (other.Name.ToLowerInvariant() + "-" + binding.Name.ToLowerInvariant()))}-secret",
                                 other,
                                 binding,
-                                filenameBase: $"SERVICE__{(binding.Name == null ? other.Name : (other.Name + "__" + binding.Name))}"));
+                                filenameBase: $"SERVICE__{(binding.Name == null ? other.Name.ToUpperInvariant() : (other.Name.ToUpperInvariant() + "__" + binding.Name.ToUpperInvariant()))}"));
                         }
                     }
                 }

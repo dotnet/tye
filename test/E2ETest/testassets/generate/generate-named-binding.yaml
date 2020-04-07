@@ -1,0 +1,65 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: frontend
+  labels:
+    app.kubernetes.io/name: 'frontend'
+    app.kubernetes.io/part-of: 'generate-named-binding'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: 'frontend'
+        app.kubernetes.io/part-of: 'generate-named-binding'
+    spec:
+      containers:
+      - name: frontend
+        image: frontend:1.0.0
+        imagePullPolicy: Always
+        env:
+        - name: ASPNETCORE_URLS
+          value: 'http://*'
+        - name: PORT
+          value: '80'
+        - name: TYE_SECRETS_PATH
+          value: '/var/tye/bindings/'
+        volumeMounts:
+        - name: binding-dependency-mybinding
+          mountPath: /var/tye/bindings/dependency-mybinding
+          readOnly: true
+        ports:
+        - containerPort: 80
+      volumes:
+      - name: binding-dependency-mybinding
+        secret:
+          secretName: binding-production-dependency-mybinding-secret
+          items:
+          - key: protocol
+            path: SERVICE__DEPENDENCY__MYBINDING__PROTOCOL
+          - key: host
+            path: SERVICE__DEPENDENCY__MYBINDING__HOST
+          - key: port
+            path: SERVICE__DEPENDENCY__MYBINDING__PORT
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: frontend
+  labels:
+    app.kubernetes.io/name: 'frontend'
+    app.kubernetes.io/part-of: 'generate-named-binding'
+spec:
+  selector:
+    app.kubernetes.io/name: frontend
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+...

@@ -232,8 +232,8 @@ namespace Microsoft.Tye
                         var volumeMount = new YamlMappingNode();
                         volumeMounts.Add(volumeMount);
 
-                        volumeMount.Add("name", $"binding-{(binding.Binding.Name == null ? binding.Service.Name : (binding.Service.Name + "-" + binding.Binding.Name))}");
-                        volumeMount.Add("mountPath", $"/var/tye/bindings/{(binding.Binding.Name == null ? binding.Service.Name : (binding.Service.Name + "-" + binding.Binding.Name))}");
+                        volumeMount.Add("name", $"binding-{(binding.Binding.Name == null ? binding.Service.Name.ToLowerInvariant() : (binding.Service.Name.ToLowerInvariant() + "-" + binding.Binding.Name.ToLowerInvariant()))}");
+                        volumeMount.Add("mountPath", $"/var/tye/bindings/{(binding.Binding.Name == null ? binding.Service.Name.ToLowerInvariant() : (binding.Service.Name.ToLowerInvariant() + "-" + binding.Binding.Name.ToLowerInvariant()))}");
                         volumeMount.Add("readOnly", "true");
                     }
                 }
@@ -271,7 +271,7 @@ namespace Microsoft.Tye
                 {
                     var volume = new YamlMappingNode();
                     volumes.Add(volume);
-                    volume.Add("name", $"binding-{(binding.Binding.Name == null ? binding.Service.Name : (binding.Service.Name + "-" + binding.Binding.Name))}");
+                    volume.Add("name", $"binding-{(binding.Binding.Name == null ? binding.Service.Name.ToLowerInvariant() : (binding.Service.Name.ToLowerInvariant() + "-" + binding.Binding.Name.ToLowerInvariant()))}");
 
                     var secret = new YamlMappingNode();
                     volume.Add("secret", secret);
@@ -290,7 +290,7 @@ namespace Microsoft.Tye
                 {
                     var volume = new YamlMappingNode();
                     volumes.Add(volume);
-                    volume.Add("name", $"binding-{(binding.Binding.Name == null ? binding.Service.Name : (binding.Service.Name + "-" + binding.Binding.Name))}");
+                    volume.Add("name", $"binding-{(binding.Binding.Name == null ? binding.Service.Name.ToLowerInvariant() : (binding.Service.Name.ToLowerInvariant() + "-" + binding.Binding.Name.ToLowerInvariant()))}");
 
                     var secret = new YamlMappingNode();
                     volume.Add("secret", secret);

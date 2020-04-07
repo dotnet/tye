@@ -34,18 +34,22 @@ spec:
         - name: TYE_SECRETS_PATH
           value: '/var/tye/bindings/'
         volumeMounts:
-        - name: rabbit-rabbit
-          mountPath: /var/tye/bindings/rabbit-rabbit
+        - name: binding-rabbit
+          mountPath: /var/tye/bindings/rabbit
           readOnly: true
         ports:
         - containerPort: 7000
       volumes:
-      - name: rabbit-rabbit
+      - name: binding-rabbit
         secret:
-          secretName: binding-production-rabbit-rabbit-secret
+          secretName: binding-production-rabbit-secret
           items:
-          - key: connectionstring
-            path: CONNECTIONSTRINGS__RABBIT
+          - key: protocol
+            path: SERVICE__RABBIT__PROTOCOL
+          - key: host
+            path: SERVICE__RABBIT__HOST
+          - key: port
+            path: SERVICE__RABBIT__PORT
 ...
 ---
 kind: Service
@@ -102,18 +106,22 @@ spec:
         - name: TYE_SECRETS_PATH
           value: '/var/tye/bindings/'
         volumeMounts:
-        - name: rabbit-rabbit
-          mountPath: /var/tye/bindings/rabbit-rabbit
+        - name: binding-rabbit
+          mountPath: /var/tye/bindings/rabbit
           readOnly: true
         ports:
         - containerPort: 8000
       volumes:
-      - name: rabbit-rabbit
+      - name: binding-rabbit
         secret:
-          secretName: binding-production-rabbit-rabbit-secret
+          secretName: binding-production-rabbit-secret
           items:
-          - key: connectionstring
-            path: CONNECTIONSTRINGS__RABBIT
+          - key: protocol
+            path: SERVICE__RABBIT__PROTOCOL
+          - key: host
+            path: SERVICE__RABBIT__HOST
+          - key: port
+            path: SERVICE__RABBIT__PORT
 ...
 ---
 kind: Service
@@ -172,14 +180,18 @@ spec:
         - name: TYE_SECRETS_PATH
           value: '/var/tye/bindings/'
         volumeMounts:
-        - name: rabbit-rabbit
-          mountPath: /var/tye/bindings/rabbit-rabbit
+        - name: binding-rabbit
+          mountPath: /var/tye/bindings/rabbit
           readOnly: true
       volumes:
-      - name: rabbit-rabbit
+      - name: binding-rabbit
         secret:
-          secretName: binding-production-rabbit-rabbit-secret
+          secretName: binding-production-rabbit-secret
           items:
-          - key: connectionstring
-            path: CONNECTIONSTRINGS__RABBIT
+          - key: protocol
+            path: SERVICE__RABBIT__PROTOCOL
+          - key: host
+            path: SERVICE__RABBIT__HOST
+          - key: port
+            path: SERVICE__RABBIT__PORT
 ...

@@ -210,5 +210,110 @@ namespace E2ETest
                 await DockerAssert.DeleteDockerImagesAsync(output, projectName);
             }
         }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task Generate_ConnectionStringDependency()
+        {
+            var applicationName = "generate-connectionstring-dependency";
+            var projectName = "frontend";
+            var environment = "production";
+
+            await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory(applicationName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            try
+            {
+                await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
+
+                // name of application is the folder
+                var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
+
+                Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
+
+                await DockerAssert.AssertImageExistsAsync(output, projectName);
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+            }
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task Generate_UriDependency()
+        {
+            var applicationName = "generate-uri-dependency";
+            var projectName = "frontend";
+            var environment = "production";
+
+            await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory(applicationName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            try
+            {
+                await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
+
+                // name of application is the folder
+                var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
+
+                Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
+
+                await DockerAssert.AssertImageExistsAsync(output, projectName);
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+            }
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task Generate_NamedBinding()
+        {
+            var applicationName = "generate-named-binding";
+            var projectName = "frontend";
+            var environment = "production";
+
+            await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory(applicationName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            try
+            {
+                await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
+
+                // name of application is the folder
+                var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
+
+                Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
+
+                await DockerAssert.AssertImageExistsAsync(output, projectName);
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+            }
+        }
     }
 }
