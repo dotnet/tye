@@ -232,8 +232,8 @@ namespace Microsoft.Tye
                         var volumeMount = new YamlMappingNode();
                         volumeMounts.Add(volumeMount);
 
-                        volumeMount.Add("name", $"{binding.Service.Name}-{binding.Binding.Name ?? binding.Service.Name}");
-                        volumeMount.Add("mountPath", $"/var/tye/bindings/{binding.Service.Name}-{binding.Binding.Name ?? binding.Service.Name}");
+                        volumeMount.Add("name", $"binding-{(binding.Binding.Name == null ? binding.Service.Name : (binding.Service.Name + "-" + binding.Binding.Name))}");
+                        volumeMount.Add("mountPath", $"/var/tye/bindings/{(binding.Binding.Name == null ? binding.Service.Name : (binding.Service.Name + "-" + binding.Binding.Name))}");
                         volumeMount.Add("readOnly", "true");
                     }
                 }
@@ -267,15 +267,15 @@ namespace Microsoft.Tye
                 var volumes = new YamlSequenceNode();
                 spec.Add("volumes", volumes);
 
-                foreach (var binding in bindings.Bindings.OfType<SecretInputBinding>())
+                foreach (var binding in bindings.Bindings.OfType<SecretConnctionStringInputBinding>())
                 {
                     var volume = new YamlMappingNode();
                     volumes.Add(volume);
-                    volume.Add("name", $"{binding.Service.Name}-{binding.Binding.Name ?? binding.Service.Name}");
+                    volume.Add("name", $"binding-{(binding.Binding.Name == null ? binding.Service.Name : (binding.Service.Name + "-" + binding.Binding.Name))}");
 
                     var secret = new YamlMappingNode();
                     volume.Add("secret", secret);
-                    secret.Add("secretName", binding.Name!);
+                    secret.Add("secretName", binding.Name);
 
                     var items = new YamlSequenceNode();
                     secret.Add("items", items);
@@ -284,6 +284,35 @@ namespace Microsoft.Tye
                     items.Add(item);
                     item.Add("key", "connectionstring");
                     item.Add("path", binding.Filename);
+                }
+
+                foreach (var binding in bindings.Bindings.OfType<SecretUrlInputBinding>())
+                {
+                    var volume = new YamlMappingNode();
+                    volumes.Add(volume);
+                    volume.Add("name", $"binding-{(binding.Binding.Name == null ? binding.Service.Name : (binding.Service.Name + "-" + binding.Binding.Name))}");
+
+                    var secret = new YamlMappingNode();
+                    volume.Add("secret", secret);
+                    secret.Add("secretName", binding.Name);
+
+                    var items = new YamlSequenceNode();
+                    secret.Add("items", items);
+
+                    var item = new YamlMappingNode();
+                    items.Add(item);
+                    item.Add("key", "protocol");
+                    item.Add("path", binding.FilenameBase + "__PROTOCOL");
+
+                    item = new YamlMappingNode();
+                    items.Add(item);
+                    item.Add("key", "host");
+                    item.Add("path", binding.FilenameBase + "__HOST");
+
+                    item = new YamlMappingNode();
+                    items.Add(item);
+                    item.Add("key", "port");
+                    item.Add("path", binding.FilenameBase + "__PORT");
                 }
             }
 
