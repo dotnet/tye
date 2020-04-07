@@ -38,7 +38,7 @@ namespace Microsoft.Tye.Hosting
             {
                 var start = i;
                 var end = (int?)null;
-                for (;i < text.Length; i++)
+                for (; i < text.Length; i++)
                 {
                     if (text[i] == '}')
                     {
