@@ -74,5 +74,24 @@ namespace E2ETest
 
             Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
         }
+
+        // Tests our logic that excludes non-applications (unit tests, classlibs, etc)
+        [Fact]
+        public void Init_ProjectKinds()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("project-types");
+
+            // delete already present yaml
+            File.Delete(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "project-types.sln"));
+
+            var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
+            var expectedContent = File.ReadAllText("testassets/init/project-types.yaml");
+
+            output.WriteLine(content);
+
+            Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
+        }
     }
 }

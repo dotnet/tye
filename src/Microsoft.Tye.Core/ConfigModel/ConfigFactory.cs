@@ -61,13 +61,23 @@ namespace Microsoft.Tye.ConfigModel
             // throughout the code, because we load them dynamically.
             foreach (var projectFile in ProjectReader.EnumerateProjects(file))
             {
-                var service = new ConfigService()
+                // Check for the existance of a launchSettings.json as an indication that the project is
+                // runnable. This will only apply in the case where tye is being used against a solution
+                // like `tye init` or `tye run` without a `tye.yaml`.
+                //
+                // We want a *fast* heuristic that excludes unit test projects and class libraries without
+                // having to load all of the projects. 
+                var launchSettings = Path.Combine(projectFile.DirectoryName, "Properties", "launchSettings.json");
+                if (File.Exists(launchSettings))
                 {
-                    Name = Path.GetFileNameWithoutExtension(projectFile.Name).ToLowerInvariant(),
-                    Project = projectFile.FullName.Replace('\\', '/'),
-                };
+                    var service = new ConfigService()
+                    {
+                        Name = Path.GetFileNameWithoutExtension(projectFile.Name).ToLowerInvariant(),
+                        Project = projectFile.FullName.Replace('\\', '/'),
+                    };
 
-                application.Services.Add(service);
+                    application.Services.Add(service);
+                }
             }
 
             return application;
