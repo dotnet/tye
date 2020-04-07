@@ -67,7 +67,7 @@ Now that we have two applications running, let's make them communicate. By defau
 
 1. Add a NuGet.config to add the `dotnet-core` package source.
 
-    Paste the following into `NuGet.config` in your solution directory.
+    Paste the following into `nuget.config` in the `microservice/` directory.
 
     ```xml
     <?xml version="1.0" encoding="utf-8"?>
@@ -138,10 +138,10 @@ Now that we have two applications running, let's make them communicate. By defau
     }
    ```
 
-5. Add a reference to the `Microsoft.Tye.Extensions.Configuration` package.
+5. Add a reference to the `Microsoft.Tye.Extensions.Configuration` package to the frontend project
 
     ```txt
-    dotnet add package Microsoft.Tye.Extensions.Configuration
+    dotnet add frontend/frontend.csproj package Microsoft.Tye.Extensions.Configuration  --version "0.1.0-*"
     ```
 
 6. Now register this client in `Startup.cs` class in `ConfigureServices` of the `frontend` project:

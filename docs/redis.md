@@ -54,6 +54,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
    ```
    cd backend/
    dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis
+   cd ..
    ```
 
 3. Modify `Startup.ConfigureServices` in the `backend` project to add the redis `IDistributedCache` implementation.
@@ -64,19 +65,11 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
        services.AddStackExchangeRedisCache(o =>
        {
-            var connectionString = Configuration["connectionstrings:redis"];
-            if (connectionString != null)
-            {
-                o.Configuration = connectionString;
-            }
-            else
-            {
-                o.Configuration = $"{Configuration["service:redis:host"]}:{Configuration["service:redis:port"]}";
-            }
+            o.Configuration = Configuration.GetConnectionString("redis");
         });
    }
    ```
-   The above configures redis to use the host and port for the `redis` service injected by the `tye` host.
+   The above configures redis to the configuration string for the `redis` service injected by the `tye` host.
 
 4. Modify `tye.yaml` to include redis as a dependency.
 
@@ -93,12 +86,15 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
       image: redis
       bindings:
       - port: 6379
+        connectionString: "${host}:${port}" 
     - name: redis-cli
       image: redis
       args: "redis-cli -h redis MONITOR"
    ```
 
     We've added 2 services to the `tye.yaml` file. The `redis` service itself and a `redis-cli` service that we will use to watch the data being sent to and retrieved from redis.
+
+    > :bulb: The `"${host}:${port}"` format in the `connectionString` property will substitute the values of the host and port number to produce a connection string that can be used with StackExchange.Redis.
 
 5. Run the `tye` command line in the solution root
 
@@ -138,11 +134,11 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
     ```text
     cd backend
-    dotnet add package Microsoft.Tye.Extensions.Configuration
+    dotnet add package Microsoft.Tye.Extensions.Configuration --version "0.1.0-*"
     cd ..
     ```
 
-    Then update `CreateHostBuilder` to create the configuration source:
+    Then update `CreateHostBuilder` in `Program.cs` of the `backend` project to create the configuration source:
 
     ```C#
     public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -183,7 +179,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
     ```text
     Validating Secrets...
         Enter the connection string to use for service 'redis': redis:6379
-        Created secret 'binding-production-redis-redis-secret'.
+        Created secret 'binding-production-redis-secret'.
     ```
 
     > :question: `--interactive` is needed here to create the secret. This is a one-time configuration step. In a CI/CD scenario you would not want to have to specify connection strings over and over, deployment would rely on the existing configuration in the cluster.
