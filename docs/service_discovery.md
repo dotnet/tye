@@ -84,7 +84,53 @@ using (var connection = new NpgsqlConnection(connectionString))
 
 Connection strings will be available for bindings that use the `connectionString` property in configuration.
 
-## How it works: URIs
+---
+
+Specifying a connection string in `tye.yaml` will usually involve the use of templating to fill in values that are provided by Tye.
+
+Example: Redis
+
+```yaml
+services:
+- name: redis
+  image: redis
+  bindings:
+  - port: 6379
+    connectionString: ${host}:${port}
+```
+
+This fragment will launch `redis` when used with `tye run` on port `6379` (the typical listening port for Redis) **and** will provide a connection string to other services with the value of `localhost:6379`.
+
+> :bulb: It's preferrable to use `${host}` over hardcoding the string `localhost` - for instance `localhost` will not work inside a container. You'll usually see `localhost` as the names of services, but Tye has features that will replace this with hostname values that work from containers.
+
+--- 
+
+Templating of connection strings can be used to avoid duplication.
+
+Example: Postgres
+
+```yaml
+services:
+- name: postgres
+  image:  postgres
+  env:
+  - name: POSTGRES_PASSWORD
+    value: "pass@word1"
+  bindings:
+  - port: 5432
+    connectionString: Server=${host};Port=${port};User Id=postgres;Password=${env:POSTGRES_PASSWORD};
+```
+
+In this case a `postgres` container is being passed its password via the `POSTGRES_PASSWORD` value. The token `${env:POSTGRES_PASSWORD}` will be replaced with the value from `POSTGRES_PASSWORD` to avoid repetition.
+
+Currently replacement of environment variables using this mechanism is limited to environment variables defined in `tye.yaml`.
+
+This is a typical pattern for initializing a database for local development - initializing the password and passing it to the application in the same place.
+
+> :bulb: Avoid generating connection strings, or hardcoding connection string parameters in application code. Tye allows you to configure connection strings differently between local development and deployed apps. The `connectionString` property in `tye.yaml` is not used in deployed applications, it's only for development.
+
+
+## How it works: URIs in development
 
 For URIs, the Tye infrastructure will generate a set of environment variables using a well-known pattern. These environment variables will through through the configuration system and by used by `GetServiceUri()`.
 
@@ -137,3 +183,125 @@ These services are ASP.NET Core projects. The following set of steps takes place
 
 6. When the application calls `GetServiceUri("backend")`, the method will read the `service:backend:protocol`, `service:backend:host`, `service:backend:port` variables and combine them into a URI.
 
+## How it works: Connection Strings in development
+
+When a `binding` element in `tye.yaml` sets the `connectionString` property, then Tye will not set the environment variables used for URIs (previous section). Tye will instead build a connection string and make that available.
+
+Connection strings are typically used when a URI is not the right solution. For example, databases often have many configurable parameters beyond the hostname and port of the server.
+
+Use the `GetConnectionString()` method to read connection strings.
+
+These are normal environment variables and can be read directly or through the configuration system.
+
+The pattern for a default binding on the `postgres` service:
+
+|                   | Environment Variable         | Configuration Key          |
+|-------------------|------------------------------|----------------------------|
+| Connection String | `CONNECTIONSTRING__POSTGRES` | `connectionstrings:postgres` |
+
+
+The pattern for a named binding called `myBinding` on the `postgres` service:
+
+|                   | Environment Variable         | Configuration Key          |
+|-------------------|------------------------------|----------------------------|
+| Connection String | `CONNECTIONSTRING__POSTGRES__MYBINDING` | `connectionstrings:postgres:mybinding` |
+
+> :bulb: That's a double-underscore (`__`) in the environment variables. The `Microsoft.Extensions.Configuration` system uses double-underscore as a separator because single underscores are already common in environment variables.
+
+Here's a walkthrough of how this works in practice, using the following example application:
+
+```yaml
+services:
+- name: backend
+  project: backend/backend.csproj
+- name: frontend
+  project: frontend/frontend.csproj
+- name: postgres
+  image:  postgres
+  env:
+  - name: POSTGRES_PASSWORD
+    value: "pass@word1"
+  bindings:
+  - port: 5432
+    connectionString: Server=${host};Port=${port};User Id=postgres;Password=${env:POSTGRES_PASSWORD};
+```
+
+We'll follow the example of the connection string for `postgres` is generated and made available to `frontend` and `backend`. The following set of steps takes place in development when doing `tye run`.
+
+1. The `postgres` service has a single binding with a hardcoded port. If the port was unspecified then Tye will assign each binding an available port (avoiding conflicts).
+   
+2. Tye will substitute the values of `${host}` and `${port}` from the binding. Tye will substitue the value of `POSTGRES_PASSWORD` for `${env:POSTGRES_PASSWORD}`. The result is generate as the `CONNECTIONSTRINGS__POSTGRES` environment variable.
+   
+3. Each service is given access to the environment variables that contain the bindings of the *other* services in the application. So `frontend` and `backend` both have access to each-other's bindings as well as the environment variable `CONNECTIONSTRINGS__POSTGRES`. The Tye host will provide these environment variables when launching application processes.
+   
+4. On startup, the environment variable configuration source reads all environment variables and translates them to the config key format (see table above).
+
+5. When the application calls `GetConnectionString("postgres")`, the method will read the `connectionstrings:postgres` key and return the value.
+
+## How it works: Deployed applications
+
+When deploying an application, Tye will deploy all of the containers built from your .NET projects. However, Tye is not able to deploy your application's dependencies - since Tye is orchestrating things, it needs to know what values (URIs and connection strings) to provide to application code.
+
+---
+
+When deploying your .NET projects, Tye will use the environment variable format described above to to set environment variables on your pods and containers.
+
+To avoid hardcoding ephemeral details like pod names, Tye relies on Kubernetes Services. Each project gets its own Service, and the environment variables can refer to the hostname mapped to the service. 
+
+This allows service discovery for URIs to work very simply in a deployed application. 
+
+--- 
+
+When an application contains a dependency (like Redis, or a Database), Tye will use Kubernetes Secret objects to store the connection string or URI.
+
+Tye will look for an existing secret based on the service and binding names. If the secret already exists then deployment will proceed.
+
+If the secret does not exist, then Tye will prompt (in interactive mode) for the connection string or URI value. Based on whether it's a connection string or URI, Tye will create a secret like one of the following.
+
+Example secret for a URI:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: binding-production-rabbit-secret
+type: Opaque
+stringData:
+  protocol: amqp
+  host: rabbitmq
+  port: 5672
+```
+
+Example secret for a connection string:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: binding-production-redis-secret
+type: Opaque
+stringData:
+  connectionstring: <redacted>
+```
+
+Creating the secret is a one-time operation, and Tye will only prompt for it if it does not already exist. If desired you can use standard `kubectl` commands to update values or delete the secret and force it to be recreated.
+
+To get these values into the application, Tye will use Kubernetes volume mounts to create files on disk inside the container. Currrently these files will be placed in `/var/tye/bindings/<service>-<binding>/` and will use the environment-variable naming scheme described above.
+
+Inside the application, adding the Tye secrets provider will add these to the configuration.
+
+```C#
+public static IHostBuilder CreateHostBuilder(string[] args) =>
+    Host.CreateDefaultBuilder(args)
+        .ConfigureAppConfiguration(config =>
+        {
+            // Add Tye secrets
+            config.AddTyeSecrets();
+        })
+        .ConfigureWebHostDefaults(web =>
+        {
+            web.UseStartup<Startup>();
+        });
+```
+
+Tye will also inject the `TYE_SECRETS_PATH` environment variable with the value `/var/tye/bindings/`. This is done to avoid hardcoding a file-system path in the configuration provider.
