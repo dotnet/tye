@@ -108,9 +108,9 @@ namespace Microsoft.Tye
                         var text = output.Prompt($"Enter the connection string to use for service '{secretInputBinding.Service.Name}'", allowEmpty: true);
                         if (string.IsNullOrWhiteSpace(text))
                         {
-                            output.WriteAlways($"Skipping creation of secret for '{secretInputBinding.Service.Name}'. This may prevent creation of pods until secrets are created.");
-                            output.WriteAlways($"Manually create a secret with:");
-                            output.WriteAlways($"kubectl create secret generic {secretInputBinding.Name} --from-literal=connectionstring=<value>");
+                            output.WriteAlwaysLine($"Skipping creation of secret for '{secretInputBinding.Service.Name}'. This may prevent creation of pods until secrets are created.");
+                            output.WriteAlwaysLine($"Manually create a secret with:");
+                            output.WriteAlwaysLine($"kubectl create secret generic {secretInputBinding.Name} --from-literal=connectionstring=<value>");
                             continue;
                         }
 
@@ -136,14 +136,14 @@ namespace Microsoft.Tye
                                 break; // success
                             }
 
-                            output.WriteAlways($"Invalid URI: '{text}'");
+                            output.WriteAlwaysLine($"Invalid URI: '{text}'");
                         }
                         
                         if (string.IsNullOrWhiteSpace(text))
                         {
-                            output.WriteAlways($"Skipping creation of secret for '{secretInputBinding.Service.Name}'. This may prevent creation of pods until secrets are created.");
-                            output.WriteAlways($"Manually create a secret with:");
-                            output.WriteAlways($"kubectl create secret generic {secretInputBinding.Name} -from-literal=protocol=<value> --from-literal=host=<value> --from-literal=port=<value>");
+                            output.WriteAlwaysLine($"Skipping creation of secret for '{secretInputBinding.Service.Name}'. This may prevent creation of pods until secrets are created.");
+                            output.WriteAlwaysLine($"Manually create a secret with:");
+                            output.WriteAlwaysLine($"kubectl create secret generic {secretInputBinding.Name} -from-literal=protocol=<value> --from-literal=host=<value> --from-literal=port=<value>");
                             continue;
                         }
 
