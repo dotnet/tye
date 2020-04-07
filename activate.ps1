@@ -11,6 +11,11 @@ if ($MyInvocation.CommandOrigin -eq 'runspace') {
     exit 1
 }
 
+function tye() {
+    $ProjectPath = Join-Path (Join-Path $PSScriptRoot "src") "tye"
+    dotnet run --project "$ProjectPath" @args
+}
+
 function deactivate ([switch]$init) {
 
     # reset old environment variables
@@ -27,8 +32,9 @@ function deactivate ([switch]$init) {
     Remove-Item env:DOTNET_ROOT -ea ignore
     Remove-Item env:DOTNET_MULTILEVEL_LOOKUP -ea ignore
     if (-not $init) {
-        # Remove the deactivate function
+        # Remove the deactivate and dev-tye functions
         Remove-Item function:deactivate
+        Remove-Item function:tye
     }
 }
 
