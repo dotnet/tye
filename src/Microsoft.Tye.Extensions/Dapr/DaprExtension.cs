@@ -138,19 +138,14 @@ namespace Microsoft.Tye.Extensions.Dapr
                         deployment.Annotations.Add("dapr.io/id", project.Name);
                         deployment.Annotations.Add("dapr.io/port", (httpBinding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
 
-                        if (!config.Data.Any())
+                        if (config.Data.TryGetValue("config", out var daprConfig) && daprConfig is object)
                         {
-                            continue;
+                            deployment.Annotations.TryAdd("dapr.io/config", daprConfig.ToString());
                         }
 
-                        if (config.Data.TryGetValue("config", out var daprConfig))
+                        if (config.Data.TryGetValue("log-level", out var logLevel) && logLevel is object)
                         {
-                            deployment.Annotations.Add("dapr.io/config", (daprConfig.ToString() ?? "tracing").ToString(CultureInfo.InvariantCulture));
-                        }
-
-                        if (config.Data.TryGetValue("log-level", out var logLevel))
-                        {
-                            deployment.Annotations.Add("dapr.io/log-level", (logLevel.ToString() ?? "info").ToString(CultureInfo.InvariantCulture));
+                            deployment.Annotations.TryAdd("dapr.io/log-level", logLevel.ToString());
                         }
                     }
                 }
