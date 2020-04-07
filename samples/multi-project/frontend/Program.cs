@@ -17,8 +17,6 @@ namespace Frontend
         public static void Main(string[] args)
         {
             Activity.DefaultIdFormat = ActivityIdFormat.W3C;
-            GrpcClientFactory.AllowUnencryptedHttp2 = true;
-
             CreateHostBuilder(args).Build().Run();
         }
 

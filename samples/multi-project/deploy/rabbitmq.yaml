@@ -40,11 +40,15 @@ spec:
     port: 5672
     targetPort: 5672
 ...
+#
+# Use the URI amqp://rabbitmq:5672 when prompted. Tye will create something like:
 # ---
 # apiVersion: v1
 # kind: Secret
 # metadata:
-#   name: binding-production-rabbit-rabbit-secret
+#   name: binding-production-rabbit-secret
 # type: Opaque
 # stringData:
-#   connectionstring: amqp://rabbitmq:5672
+#   protocol: amqp
+#   host: rabbitmq
+#   port: 5672
