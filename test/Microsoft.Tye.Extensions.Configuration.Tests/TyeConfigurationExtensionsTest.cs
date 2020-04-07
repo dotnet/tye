@@ -118,7 +118,7 @@ namespace Microsoft.Extensions.Configuration
             var configuration = builder.Build();
 
             var result = configuration.GetServiceUri("myservice");
-            Assert.Equal(new Uri("http://expected.example.com:80"), result);
+            Assert.Equal(new Uri("http://expected.example.com"), result);
         }
 
         [Fact]
@@ -234,7 +234,7 @@ namespace Microsoft.Extensions.Configuration
             var configuration = builder.Build();
 
             var result = configuration.GetServiceUri("myservice", "metrics");
-            Assert.Equal(new Uri("http://expected.example.com:80"), result);
+            Assert.Equal(new Uri("http://expected.example.com"), result);
         }
 
         [Fact]
