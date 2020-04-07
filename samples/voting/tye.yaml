@@ -6,6 +6,7 @@ services:
   image: redis
   bindings:
     - port: 6379
+      connectionString: ${host}:${port}
 - name: worker
   project: worker/worker.csproj
 - name: postgres
@@ -15,5 +16,6 @@ services:
       value: "pass@word1"
   bindings:
     - port: 5432
+      connectionString: Server=${host};Port=${port};User Id=postgres;Password=${env:POSTGRES_PASSWORD};
 - name: results
   project: results/results.csproj
