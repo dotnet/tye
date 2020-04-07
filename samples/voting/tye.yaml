@@ -12,10 +12,10 @@ services:
 - name: postgres
   image:  postgres
   env:
-    - name: POSTGRES_PASSWORD
-      value: "pass@word1"
+  - name: POSTGRES_PASSWORD
+    value: "pass@word1"
   bindings:
-    - port: 5432
-      connectionString: Server=${host};Port=${port};User Id=postgres;Password=${env:POSTGRES_PASSWORD};
+  - port: 5432
+    connectionString: Server=${host};Port=${port};User Id=postgres;Password=${env:POSTGRES_PASSWORD};
 - name: results
   project: results/results.csproj
