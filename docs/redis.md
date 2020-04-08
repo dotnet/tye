@@ -126,34 +126,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
     You will see redis deployed and running.
 
-2. Add secrets to the application
-
-    In order to access redis we need to add some code to the `backend` project to be able to read secrets from inside the container.
-
-    First, add the Tye configuration provider package to the backend project using the command line.
-
-    ```text
-    cd backend
-    dotnet add package Microsoft.Tye.Extensions.Configuration --version "0.1.0-*"
-    cd ..
-    ```
-
-    Then update `CreateHostBuilder` in `Program.cs` of the `backend` project to create the configuration source:
-
-    ```C#
-    public static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration(config =>
-            {
-                config.AddTyeSecrets();
-            })
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.UseStartup<Startup>();
-            });
-    ```
-
-3. Deploy to Kubernetes
+2. Deploy to Kubernetes
 
     Next, deploy the rest of the application by running:
 
@@ -186,7 +159,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
     > :bulb: Tye uses kubernetes secrets to store connection information about dependencies like redis that might live outside the cluster. Tye will automatically generate mappings between service names, binding names, and secret names.
 
-4. Test it out!
+3. Test it out!
 
     You should now see three pods running after deploying.
 

@@ -213,13 +213,11 @@ namespace Microsoft.Tye
 
                         foreach (var binding in bindings.Bindings.OfType<SecretInputBinding>())
                         {
-                            /*
-                             - name: SECRET_USERNAME
-                               valueFrom:
-                                 secretKeyRef:
-                                   name: mysecret
-                                   key: username
-                           */
+                            //- name: SECRET_USERNAME
+                            //  valueFrom:
+                            //    secretKeyRef:
+                            //      name: mysecret
+                            //      key: username
 
                             if (binding is SecretConnectionStringInputBinding connectionStringBinding)
                             {
