@@ -38,10 +38,6 @@ namespace Microsoft.Tye.Hosting.Model
                 // Inject normal configuration
                 foreach (var pair in service.Description.Configuration)
                 {
-                    if (pair.Name == "METRICS_PORT")
-                    {
-                        Console.WriteLine("wow");
-                    }
                     if (pair.Value is object)
                     {
                         set(pair.Name, pair.Value);
