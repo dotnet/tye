@@ -51,9 +51,11 @@ services:
 
 ### Root Properties
 
-#### `name` (string) *required*
+#### `name` (string)
 
 Configures the name of the application. This will appear in some Kubernetes labels right now, but not many other places.
+
+If the name name is not specified, then the lowercased directory name containing the `tye.yaml` file will be used as the default.
 
 #### `registry` (string)
 
