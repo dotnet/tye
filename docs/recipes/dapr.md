@@ -97,7 +97,7 @@ extensions:
 
 **:warning: The current Dapr dotnet-sdk release has an issue where its default settings don't work when deployed with mTLS enabled. This will be resolved as part of the upcoming 0.6.0 release. For now you can work around this by disabling mTLS as part of Dapr installation.**
 
-First, you will need a Kubernetes instance to deploy to. The [Frontend-Backed Deployment tutorial](/docs/frontend_backend_deploy.md) covers some options.
+First, you will need a Kubernetes instance to deploy to. The [Basic Tutorial](/docs/tutorials/hello-tye/01_deploy.md) covers some options.
 
 Secondly initialize Dapr for your cluster following the instructions [here](https://github.com/dapr/samples/tree/master/2.hello-kubernetes). Make sure to configure redis as both a state store and as pub-sub as described [here](https://github.com/dapr/docs/blob/master/howto/configure-redis/README.md#configuration).
 

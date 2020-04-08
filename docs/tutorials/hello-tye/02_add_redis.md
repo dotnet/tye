@@ -1,6 +1,6 @@
 # Adding redis to an application
 
-This tutorial assumes that you have completed the [Frontend Backend Run Sample](frontend_backend_run.md) and [Frontend Backend Deploy Sample](frontend_backend_deploy.md).
+This tutorial assumes that you have completed the [first step (run locally)](00_run_locally.md) and [second step (deploy)](01_deploy.md).
 
 We just showed how `tye` makes it easier to communicate between 2 applications running locally but what happens if we want to use redis to store weather information?
 
