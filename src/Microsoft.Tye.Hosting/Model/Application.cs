@@ -38,6 +38,10 @@ namespace Microsoft.Tye.Hosting.Model
                 // Inject normal configuration
                 foreach (var pair in service.Description.Configuration)
                 {
+                    if (pair.Name == "METRICS_PORT")
+                    {
+                        Console.WriteLine("wow");
+                    }
                     if (pair.Value is object)
                     {
                         set(pair.Name, pair.Value);
@@ -57,7 +61,7 @@ namespace Microsoft.Tye.Hosting.Model
 
             static string GetValueFromBinding(List<EffectiveBinding> bindings, EnvironmentVariableSource source)
             {
-                var binding = bindings.Where(b => b.Service == b.Service && b.Name == source.Binding).FirstOrDefault();
+                var binding = bindings.Where(b => b.Service == source.Service && b.Name == source.Binding).FirstOrDefault();
                 if (binding == null)
                 {
                     throw new InvalidOperationException($"Could not find binding '{source.Binding}' for service '{source.Service}'.");
