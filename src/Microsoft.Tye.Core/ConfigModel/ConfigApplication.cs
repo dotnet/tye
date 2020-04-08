@@ -66,11 +66,11 @@ namespace Microsoft.Tye.ConfigModel
                         string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
                 }
 
-                if (config.Services.Where(o => o.Name == service.Name).Count() > 1)
+                if (config.Services.Count(o => o.Name == service.Name) > 1)
                 {
                     throw new TyeYamlException(CoreStrings.ServiceMustHaveUniqueNames);
                 }
-                
+
                 if (service.Project != null && service.Image != null)
                 {
                     throw new TyeYamlException(CoreStrings.FormatProjectImageExecutableExclusive("project", "image"));
@@ -101,12 +101,12 @@ namespace Microsoft.Tye.ConfigModel
                         throw new TyeYamlException(CoreStrings.FormatMultipleBindingWithoutName("service"));
                     }
 
-                    if (service.Bindings.Where(o => o.Name == binding.Name).Count() > 1)
+                    if (service.Bindings.Count(o => o.Name == binding.Name)> 1)
                     {
                         throw new TyeYamlException(CoreStrings.FormatMultipleBindingWithSameName("service"));
                     }
-                    
-                    if (service.Bindings.Where(o => o.Port == binding.Port).Count() > 1)
+
+                    if (service.Bindings.Count(o => o.Port == binding.Port) > 1)
                     {
                         throw new TyeYamlException(CoreStrings.FormatMultipleBindingWithSamePort("service"));
                     }
@@ -158,7 +158,7 @@ namespace Microsoft.Tye.ConfigModel
                     {
                         throw new TyeYamlException(CoreStrings.FormatMultipleBindingWithoutName("ingress"));
                     }
-                    if (ingress.Bindings.Where(o => o.Name == binding.Name).Count() > 1)
+                    if (ingress.Bindings.Count(o => o.Name == binding.Name)> 1)
                     {
                         throw new TyeYamlException(CoreStrings.FormatMultipleBindingWithSameName("ingress"));
                     }
@@ -166,7 +166,7 @@ namespace Microsoft.Tye.ConfigModel
                     {
                         throw new TyeYamlException(CoreStrings.IngressBindingMustBeHttpOrHttps);
                     }
-                    if (ingress.Bindings.Where(o => o.Port == binding.Port).Count() > 1)
+                    if (ingress.Bindings.Count(o => o.Port == binding.Port)> 1)
                     {
                         throw new TyeYamlException(CoreStrings.FormatMultipleBindingWithSamePort("ingress"));
                     }
@@ -183,7 +183,7 @@ namespace Microsoft.Tye.ConfigModel
                             string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
                     }
 
-                    if (config.Services.Where(o => o.Name == rule.Service).Count() != 1)
+                    if (config.Services.Count(o => o.Name == rule.Service) != 1)
                     {
                         throw new TyeYamlException(CoreStrings.IngressRuleMustReferenceService);
                     }
