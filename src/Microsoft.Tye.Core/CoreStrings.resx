@@ -132,17 +132,14 @@
   <data name="IngressRuleMustReferenceService" xml:space="preserve">
     <value>Ingress rules references a service that does not exist.</value>
   </data>
-  <data name="MultipleIngressBindingWithoutName" xml:space="preserve">
-    <value>Cannot have multiple ingress bindings without names. Please specify names for each ingress binding.</value>
+  <data name="MultipleBindingWithoutName" xml:space="preserve">
+    <value>Cannot have multiple {0} bindings without names. Please specify names for each {0} binding.</value>
   </data>
-  <data name="MultipleIngressBindingWithSameName" xml:space="preserve">
-    <value>Cannot have multiple ingress bindings with the same name.</value>
+  <data name="MultipleBindingWithSameName" xml:space="preserve">
+    <value>Cannot have multiple {0} bindings with the same name.</value>
   </data>
-  <data name="MultipleServiceBindingsWithoutName" xml:space="preserve">
-    <value>Cannot have multiple service bindings without names. Please specify names for each service binding.</value>
-  </data>
-  <data name="MultipleServiceBindingsWithSameName" xml:space="preserve">
-    <value>Cannot have multiple service bindings with the same name.</value>
+  <data name="MultipleBindingWithSamePort" xml:space="preserve">
+    <value>Cannot have multiple {0} bindings with the same port.</value>
   </data>
   <data name="MustBeABoolean" xml:space="preserve">
     <value>"{value}" must be a boolean value (true/false).</value>
@@ -152,6 +149,9 @@
   </data>
   <data name="MustBePositive" xml:space="preserve">
     <value>"{value}" value cannot be negative.</value>
+  </data>
+  <data name="ProjectImageExecutableExclusive" xml:space="preserve">
+    <value>Cannot have both "{0}" and "{1}" set for a service. Only one of project, image, and executable can be set for a given service.</value>
   </data>
   <data name="ServiceMustHaveUniqueNames" xml:space="preserve">
     <value>Services must have unique names.</value>
