@@ -138,15 +138,17 @@ namespace Microsoft.Tye.Extensions.Dapr
                         deployment.Annotations.Add("dapr.io/id", project.Name);
                         deployment.Annotations.Add("dapr.io/port", (httpBinding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
 
+#pragma warning disable CS8604 // Possible null reference argument.
                         if (config.Data.TryGetValue("config", out var daprConfig) && daprConfig is object)
                         {
-                            deployment.Annotations.TryAdd("dapr.io/config", daprConfig?.ToString());
+                            deployment.Annotations.TryAdd("dapr.io/config", daprConfig.ToString());
                         }
 
                         if (config.Data.TryGetValue("log-level", out var logLevel) && logLevel is object)
                         {
-                            deployment.Annotations.TryAdd("dapr.io/log-level", logLevel?.ToString());
+                            deployment.Annotations.TryAdd("dapr.io/log-level", logLevel.ToString());
                         }
+#pragma warning restore CS8604 // Possible null reference argument.
                     }
                 }
             }
