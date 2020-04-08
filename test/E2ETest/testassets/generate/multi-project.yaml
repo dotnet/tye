@@ -31,25 +31,23 @@ spec:
           value: '8000'
         - name: SERVICE__FRONTEND__HOST
           value: 'frontend'
-        - name: TYE_SECRETS_PATH
-          value: '/var/tye/bindings/'
-        volumeMounts:
-        - name: binding-rabbit
-          mountPath: /var/tye/bindings/rabbit
-          readOnly: true
+        - name: SERVICE__RABBIT__PROTOCOL
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-rabbit-secret'
+              key: 'protocol'
+        - name: SERVICE__RABBIT__HOST
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-rabbit-secret'
+              key: 'host'
+        - name: SERVICE__RABBIT__PORT
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-rabbit-secret'
+              key: 'port'
         ports:
         - containerPort: 7000
-      volumes:
-      - name: binding-rabbit
-        secret:
-          secretName: binding-production-rabbit-secret
-          items:
-          - key: protocol
-            path: SERVICE__RABBIT__PROTOCOL
-          - key: host
-            path: SERVICE__RABBIT__HOST
-          - key: port
-            path: SERVICE__RABBIT__PORT
 ...
 ---
 kind: Service
@@ -103,25 +101,23 @@ spec:
           value: '7000'
         - name: SERVICE__BACKEND__HOST
           value: 'backend'
-        - name: TYE_SECRETS_PATH
-          value: '/var/tye/bindings/'
-        volumeMounts:
-        - name: binding-rabbit
-          mountPath: /var/tye/bindings/rabbit
-          readOnly: true
+        - name: SERVICE__RABBIT__PROTOCOL
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-rabbit-secret'
+              key: 'protocol'
+        - name: SERVICE__RABBIT__HOST
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-rabbit-secret'
+              key: 'host'
+        - name: SERVICE__RABBIT__PORT
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-rabbit-secret'
+              key: 'port'
         ports:
         - containerPort: 8000
-      volumes:
-      - name: binding-rabbit
-        secret:
-          secretName: binding-production-rabbit-secret
-          items:
-          - key: protocol
-            path: SERVICE__RABBIT__PROTOCOL
-          - key: host
-            path: SERVICE__RABBIT__HOST
-          - key: port
-            path: SERVICE__RABBIT__PORT
 ...
 ---
 kind: Service
@@ -177,21 +173,19 @@ spec:
           value: '8000'
         - name: SERVICE__FRONTEND__HOST
           value: 'frontend'
-        - name: TYE_SECRETS_PATH
-          value: '/var/tye/bindings/'
-        volumeMounts:
-        - name: binding-rabbit
-          mountPath: /var/tye/bindings/rabbit
-          readOnly: true
-      volumes:
-      - name: binding-rabbit
-        secret:
-          secretName: binding-production-rabbit-secret
-          items:
-          - key: protocol
-            path: SERVICE__RABBIT__PROTOCOL
-          - key: host
-            path: SERVICE__RABBIT__HOST
-          - key: port
-            path: SERVICE__RABBIT__PORT
+        - name: SERVICE__RABBIT__PROTOCOL
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-rabbit-secret'
+              key: 'protocol'
+        - name: SERVICE__RABBIT__HOST
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-rabbit-secret'
+              key: 'host'
+        - name: SERVICE__RABBIT__PORT
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-rabbit-secret'
+              key: 'port'
 ...

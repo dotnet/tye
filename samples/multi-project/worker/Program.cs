@@ -20,10 +20,6 @@ namespace Worker
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration(config =>
-                {
-                    config.AddTyeSecrets();
-                })
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddHostedService<QueueWorker>();

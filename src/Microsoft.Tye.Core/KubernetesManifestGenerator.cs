@@ -211,30 +211,79 @@ namespace Microsoft.Tye
                             });
                         }
 
-                        if (bindings.Bindings.OfType<SecretInputBinding>().Any())
+                        foreach (var binding in bindings.Bindings.OfType<SecretInputBinding>())
                         {
-                            env.Add(new YamlMappingNode()
+                            //- name: SECRET_USERNAME
+                            //  valueFrom:
+                            //    secretKeyRef:
+                            //      name: mysecret
+                            //      key: username
+
+                            if (binding is SecretConnectionStringInputBinding connectionStringBinding)
                             {
-                                { "name", "TYE_SECRETS_PATH" },
-                                { "value", new YamlScalarNode("/var/tye/bindings/") { Style = ScalarStyle.SingleQuoted, } },
-                            });
+                                env.Add(new YamlMappingNode()
+                                {
+                                    { "name", connectionStringBinding.KeyName },
+                                    { "valueFrom", new YamlMappingNode()
+                                        {
+                                            { "secretKeyRef", new YamlMappingNode()
+                                                {
+                                                    { "name", new YamlScalarNode(binding.Name) { Style = ScalarStyle.SingleQuoted } },
+                                                    { "key", new YamlScalarNode("connectionString") { Style = ScalarStyle.SingleQuoted } },
+                                                }
+                                            },
+                                        }
+                                    },
+                                });
+                            }
+                            else if (binding is SecretUrlInputBinding urlBinding)
+                            {
+                                env.Add(new YamlMappingNode()
+                                {
+                                    { "name", $"{urlBinding.KeyNameBase}__PROTOCOL" },
+                                    { "valueFrom", new YamlMappingNode()
+                                        {
+                                            { "secretKeyRef", new YamlMappingNode()
+                                                {
+                                                    { "name", new YamlScalarNode(binding.Name) { Style = ScalarStyle.SingleQuoted } },
+                                                    { "key", new YamlScalarNode("protocol") { Style = ScalarStyle.SingleQuoted } },
+                                                }
+                                            },
+                                        }
+                                    },
+                                });
+
+                                env.Add(new YamlMappingNode()
+                                {
+                                    { "name", $"{urlBinding.KeyNameBase}__HOST" },
+                                    { "valueFrom", new YamlMappingNode()
+                                        {
+                                            { "secretKeyRef", new YamlMappingNode()
+                                                {
+                                                    { "name", new YamlScalarNode(binding.Name) { Style = ScalarStyle.SingleQuoted } },
+                                                    { "key", new YamlScalarNode("host") { Style = ScalarStyle.SingleQuoted } },
+                                                }
+                                            },
+                                        }
+                                    },
+                                });
+
+                                env.Add(new YamlMappingNode()
+                                {
+                                    { "name", $"{urlBinding.KeyNameBase}__PORT" },
+                                    { "valueFrom", new YamlMappingNode()
+                                        {
+                                            { "secretKeyRef", new YamlMappingNode()
+                                                {
+                                                    { "name", new YamlScalarNode(binding.Name) { Style = ScalarStyle.SingleQuoted } },
+                                                    { "key", new YamlScalarNode("port") { Style = ScalarStyle.SingleQuoted } },
+                                                }
+                                            },
+                                        }
+                                    },
+                                });
+                            }
                         }
-                    }
-                }
-
-                if (bindings is object && bindings.Bindings.OfType<SecretInputBinding>().Any())
-                {
-                    var volumeMounts = new YamlSequenceNode();
-                    container.Add("volumeMounts", volumeMounts);
-
-                    foreach (var binding in bindings.Bindings.OfType<SecretInputBinding>())
-                    {
-                        var volumeMount = new YamlMappingNode();
-                        volumeMounts.Add(volumeMount);
-
-                        volumeMount.Add("name", $"binding-{(binding.Binding.Name == null ? binding.Service.Name.ToLowerInvariant() : (binding.Service.Name.ToLowerInvariant() + "-" + binding.Binding.Name.ToLowerInvariant()))}");
-                        volumeMount.Add("mountPath", $"/var/tye/bindings/{(binding.Binding.Name == null ? binding.Service.Name.ToLowerInvariant() : (binding.Service.Name.ToLowerInvariant() + "-" + binding.Binding.Name.ToLowerInvariant()))}");
-                        volumeMount.Add("readOnly", "true");
                     }
                 }
 
@@ -259,60 +308,6 @@ namespace Microsoft.Tye
                             containerPort.Add("containerPort", binding.Port.Value.ToString());
                         }
                     }
-                }
-            }
-
-            if (bindings.Bindings.OfType<SecretInputBinding>().Any())
-            {
-                var volumes = new YamlSequenceNode();
-                spec.Add("volumes", volumes);
-
-                foreach (var binding in bindings.Bindings.OfType<SecretConnctionStringInputBinding>())
-                {
-                    var volume = new YamlMappingNode();
-                    volumes.Add(volume);
-                    volume.Add("name", $"binding-{(binding.Binding.Name == null ? binding.Service.Name.ToLowerInvariant() : (binding.Service.Name.ToLowerInvariant() + "-" + binding.Binding.Name.ToLowerInvariant()))}");
-
-                    var secret = new YamlMappingNode();
-                    volume.Add("secret", secret);
-                    secret.Add("secretName", binding.Name);
-
-                    var items = new YamlSequenceNode();
-                    secret.Add("items", items);
-
-                    var item = new YamlMappingNode();
-                    items.Add(item);
-                    item.Add("key", "connectionstring");
-                    item.Add("path", binding.Filename);
-                }
-
-                foreach (var binding in bindings.Bindings.OfType<SecretUrlInputBinding>())
-                {
-                    var volume = new YamlMappingNode();
-                    volumes.Add(volume);
-                    volume.Add("name", $"binding-{(binding.Binding.Name == null ? binding.Service.Name.ToLowerInvariant() : (binding.Service.Name.ToLowerInvariant() + "-" + binding.Binding.Name.ToLowerInvariant()))}");
-
-                    var secret = new YamlMappingNode();
-                    volume.Add("secret", secret);
-                    secret.Add("secretName", binding.Name);
-
-                    var items = new YamlSequenceNode();
-                    secret.Add("items", items);
-
-                    var item = new YamlMappingNode();
-                    items.Add(item);
-                    item.Add("key", "protocol");
-                    item.Add("path", binding.FilenameBase + "__PROTOCOL");
-
-                    item = new YamlMappingNode();
-                    items.Add(item);
-                    item.Add("key", "host");
-                    item.Add("path", binding.FilenameBase + "__HOST");
-
-                    item = new YamlMappingNode();
-                    items.Add(item);
-                    item.Add("key", "port");
-                    item.Add("path", binding.FilenameBase + "__PORT");
                 }
             }
 
