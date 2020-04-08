@@ -25,25 +25,23 @@ spec:
           value: 'http://*'
         - name: PORT
           value: '80'
-        - name: TYE_SECRETS_PATH
-          value: '/var/tye/bindings/'
-        volumeMounts:
-        - name: binding-dependency
-          mountPath: /var/tye/bindings/dependency
-          readOnly: true
+        - name: SERVICE__DEPENDENCY__PROTOCOL
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-dependency-secret'
+              key: 'protocol'
+        - name: SERVICE__DEPENDENCY__HOST
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-dependency-secret'
+              key: 'host'
+        - name: SERVICE__DEPENDENCY__PORT
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-dependency-secret'
+              key: 'port'
         ports:
         - containerPort: 80
-      volumes:
-      - name: binding-dependency
-        secret:
-          secretName: binding-production-dependency-secret
-          items:
-          - key: protocol
-            path: SERVICE__DEPENDENCY__PROTOCOL
-          - key: host
-            path: SERVICE__DEPENDENCY__HOST
-          - key: port
-            path: SERVICE__DEPENDENCY__PORT
 ...
 ---
 kind: Service

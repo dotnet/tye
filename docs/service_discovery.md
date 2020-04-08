@@ -286,22 +286,4 @@ stringData:
 
 Creating the secret is a one-time operation, and Tye will only prompt for it if it does not already exist. If desired you can use standard `kubectl` commands to update values or delete the secret and force it to be recreated.
 
-To get these values into the application, Tye will use Kubernetes volume mounts to create files on disk inside the container. Currrently these files will be placed in `/var/tye/bindings/<service>-<binding>/` and will use the environment-variable naming scheme described above.
-
-Inside the application, adding the Tye secrets provider will add these to the configuration.
-
-```C#
-public static IHostBuilder CreateHostBuilder(string[] args) =>
-    Host.CreateDefaultBuilder(args)
-        .ConfigureAppConfiguration(config =>
-        {
-            // Add Tye secrets
-            config.AddTyeSecrets();
-        })
-        .ConfigureWebHostDefaults(web =>
-        {
-            web.UseStartup<Startup>();
-        });
-```
-
-Tye will also inject the `TYE_SECRETS_PATH` environment variable with the value `/var/tye/bindings/`. This is done to avoid hardcoding a file-system path in the configuration provider.
+To get these values into the application, Tye will use environment variables that reference the Kubernetes secrets described above and will use the environment-variable naming scheme described above.

@@ -43,33 +43,33 @@ namespace Microsoft.Tye
         public BindingBuilder Binding { get; }
     }
 
-    public sealed class SecretConnctionStringInputBinding : SecretInputBinding
+    public sealed class SecretConnectionStringInputBinding : SecretInputBinding
     {
-        public SecretConnctionStringInputBinding(string name, ServiceBuilder service, BindingBuilder binding, string filename)
+        public SecretConnectionStringInputBinding(string name, ServiceBuilder service, BindingBuilder binding, string keyname)
             : base(name, service, binding)
         {
-            Filename = filename;
+            KeyName = keyname;
         }
 
         // Used to generate a kubernetes secret
         public string? Value { get; }
 
         // Used to map the secret to a key that ASP.NET Core understands
-        public string Filename { get; }
+        public string KeyName { get; }
     }
 
     public sealed class SecretUrlInputBinding : SecretInputBinding
     {
-        public SecretUrlInputBinding(string name, ServiceBuilder service, BindingBuilder binding, string filenameBase)
+        public SecretUrlInputBinding(string name, ServiceBuilder service, BindingBuilder binding, string keynamebase)
             : base(name, service, binding)
         {
-            FilenameBase = filenameBase;
+            KeyNameBase = keynamebase;
         }
 
         // Used to generate a kubernetes secret
         public string? Value { get; }
 
         // Used to map the secret to keys that ASP.NET Core understands
-        public string FilenameBase { get; }
+        public string KeyNameBase { get; }
     }
 }

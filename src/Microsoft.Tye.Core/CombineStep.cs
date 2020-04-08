@@ -111,11 +111,11 @@ namespace Microsoft.Tye
                         // The other service is not a project, so we'll use secrets.
                         if (!string.IsNullOrEmpty(binding.ConnectionString))
                         {
-                            bindings.Bindings.Add(new SecretConnctionStringInputBinding(
+                            bindings.Bindings.Add(new SecretConnectionStringInputBinding(
                                 name: $"binding-{Environment}-{(binding.Name == null ? other.Name.ToLowerInvariant() : (other.Name.ToLowerInvariant() + "-" + binding.Name.ToLowerInvariant()))}-secret",
                                 other,
                                 binding,
-                                filename: $"CONNECTIONSTRINGS__{(binding.Name == null ? other.Name.ToUpperInvariant() : (other.Name.ToUpperInvariant() + "__" + binding.Name.ToUpperInvariant()))}"));
+                                keyname: $"CONNECTIONSTRINGS__{(binding.Name == null ? other.Name.ToUpperInvariant() : (other.Name.ToUpperInvariant() + "__" + binding.Name.ToUpperInvariant()))}"));
                         }
                         else
                         {
@@ -123,7 +123,7 @@ namespace Microsoft.Tye
                                 name: $"binding-{Environment}-{(binding.Name == null ? other.Name.ToLowerInvariant() : (other.Name.ToLowerInvariant() + "-" + binding.Name.ToLowerInvariant()))}-secret",
                                 other,
                                 binding,
-                                filenameBase: $"SERVICE__{(binding.Name == null ? other.Name.ToUpperInvariant() : (other.Name.ToUpperInvariant() + "__" + binding.Name.ToUpperInvariant()))}"));
+                                keynamebase: $"SERVICE__{(binding.Name == null ? other.Name.ToUpperInvariant() : (other.Name.ToUpperInvariant() + "__" + binding.Name.ToUpperInvariant()))}"));
                         }
                     }
                 }

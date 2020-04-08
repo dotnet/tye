@@ -83,7 +83,7 @@ namespace Microsoft.Tye
                         continue;
                     }
 
-                    if (!Interactive && secretInputBinding is SecretConnctionStringInputBinding)
+                    if (!Interactive && secretInputBinding is SecretConnectionStringInputBinding)
                     {
                         throw new CommandException(
                             $"The secret '{secretInputBinding.Name}' used for service '{secretInputBinding.Service.Name}' is missing from the deployment environment. " +
@@ -102,7 +102,7 @@ namespace Microsoft.Tye
                     }
 
                     V1Secret secret;
-                    if (secretInputBinding is SecretConnctionStringInputBinding)
+                    if (secretInputBinding is SecretConnectionStringInputBinding)
                     {
                         // If we get here then we should create the secret.
                         var text = output.Prompt($"Enter the connection string to use for service '{secretInputBinding.Service.Name}'", allowEmpty: true);
