@@ -35,20 +35,82 @@ namespace Microsoft.Tye.Hosting
         {
             await PurgeFromPreviousRun();
 
-            var tasks = new Task[application.Services.Count];
-            var index = 0;
-            foreach (var s in application.Services)
-            {
-                tasks[index++] = s.Value.ServiceType switch
-                {
-                    ServiceType.Executable => LaunchService(application, s.Value),
-                    ServiceType.Project => LaunchService(application, s.Value),
+            await BuildProjects(application);
+        }
 
-                    _ => Task.CompletedTask,
-                };
+        private async Task BuildProjects(Application application)
+        {
+            foreach (var service in application.Services.Values)
+            {
+                var serviceDescription = service.Description;
+
+                var path = "";
+                var workingDirectory = "";
+                var args = "";
+
+                if (serviceDescription.RunInfo is ProjectRunInfo project)
+                {
+                    path = project.RunCommand;
+                    workingDirectory = project.ProjectFile.Directory.FullName;
+                    args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
+                    service.Status.ProjectFilePath = project.ProjectFile.FullName;
+                }
+                else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
+                {
+                    path = executable.Executable;
+                    workingDirectory = executable.WorkingDirectory!;
+                    args = executable.Args ?? "";
+                }
+                else
+                {
+                    continue;
+                }
+
+                // If this is a dll then use dotnet to run it
+                if (Path.GetExtension(path) == ".dll")
+                {
+                    args = $"\"{path}\" {args}".Trim();
+                    path = "dotnet";
+                }
+
+                service.Status.ExecutablePath = path;
+                service.Status.WorkingDirectory = workingDirectory;
+                service.Status.Args = args;
+
+                if (service.Status.ProjectFilePath != null &&
+                    service.Description.RunInfo is ProjectRunInfo project2 &&
+                    project2.Build &&
+                    _options.BuildProjects)
+                {
+                    // Sometimes building can fail because of file locking (like files being open in VS)
+                    _logger.LogInformation("Building project {ProjectFile}", service.Status.ProjectFilePath);
+
+                    service.Logs.OnNext($"dotnet build \"{service.Status.ProjectFilePath}\" /nologo");
+
+                    var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: workingDirectory);
+
+                    service.Logs.OnNext(buildResult.StandardOutput);
+
+                    if (buildResult.ExitCode != 0)
+                    {
+                        _logger.LogInformation("Building {ProjectFile} failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, service.Status.ProjectFilePath, buildResult.ExitCode);
+                        return;
+                    }
+                }
             }
 
-            await Task.WhenAll(tasks);
+            foreach (var s in application.Services)
+            {
+                switch (s.Value.ServiceType)
+                {
+                    case ServiceType.Executable:
+                        LaunchService(application, s.Value);
+                        break;
+                    case ServiceType.Project: 
+                        LaunchService(application, s.Value);
+                        break;
+                };
+            }
         }
 
         public Task StopAsync(Application application)
@@ -56,66 +118,14 @@ namespace Microsoft.Tye.Hosting
             return KillRunningProcesses(application.Services);
         }
 
-        private async Task LaunchService(Application application, Service service)
+        private void LaunchService(Application application, Service service)
         {
             var serviceDescription = service.Description;
-            var serviceName = serviceDescription.Name;
-
-            var path = "";
-            var workingDirectory = "";
-            var args = "";
-
-            if (serviceDescription.RunInfo is ProjectRunInfo project)
-            {
-                path = project.RunCommand;
-                workingDirectory = project.ProjectFile.Directory.FullName;
-                args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
-                service.Status.ProjectFilePath = project.ProjectFile.FullName;
-            }
-            else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
-            {
-                path = executable.Executable;
-                workingDirectory = executable.WorkingDirectory!;
-                args = executable.Args ?? "";
-            }
-            else
-            {
-                throw new InvalidOperationException("Unsupported ServiceType.");
-            }
-
-            // If this is a dll then use dotnet to run it
-            if (Path.GetExtension(path) == ".dll")
-            {
-                args = $"\"{path}\" {args}".Trim();
-                path = "dotnet";
-            }
-
-            service.Status.ExecutablePath = path;
-            service.Status.WorkingDirectory = workingDirectory;
-            service.Status.Args = args;
-
             var processInfo = new ProcessInfo(new Task[service.Description.Replicas]);
-
-            if (service.Status.ProjectFilePath != null &&
-                service.Description.RunInfo is ProjectRunInfo project2 &&
-                project2.Build &&
-                _options.BuildProjects)
-            {
-                // Sometimes building can fail because of file locking (like files being open in VS)
-                _logger.LogInformation("Building project {ProjectFile}", service.Status.ProjectFilePath);
-
-                service.Logs.OnNext($"dotnet build \"{service.Status.ProjectFilePath}\" /nologo");
-
-                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: workingDirectory);
-
-                service.Logs.OnNext(buildResult.StandardOutput);
-
-                if (buildResult.ExitCode != 0)
-                {
-                    _logger.LogInformation("Building {ProjectFile} failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, service.Status.ProjectFilePath, buildResult.ExitCode);
-                    return;
-                }
-            }
+            var serviceName = serviceDescription.Name;
+            var args = service.Status.Args!;
+            var path = service.Status.ExecutablePath!;
+            var workingDirectory = service.Status.WorkingDirectory!;
 
             async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol)> ports)
             {
