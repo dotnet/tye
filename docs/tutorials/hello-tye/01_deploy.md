@@ -115,7 +115,7 @@ Tye has a optional configuration file (`tye.yaml`) to allow customizing settings
 
     `tye.yaml` lists all of the application's services under the `services` node. This is the place for per-service configuration.
 
-    See [schema](schema.md) for more details about `tye.yaml`.
+    See [schema](/docs/reference/schema.md) for more details about `tye.yaml`.
 
     > :bulb: We provide a json-schema for `tye.yaml` and some editors support json-schema for completion and validation of yaml files. See [json-schema](/src/schema/README.md) for instructions.
 

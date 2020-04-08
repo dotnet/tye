@@ -22,5 +22,5 @@
 | Area | Description |
 |------|-------------|
 |**[Tye Commandline Reference](reference/commandline/README.md)** | Documentation for `tye` commands.
-|**[Service Discovery](service_discovery.md)** | Learn more about service discovery in Tye.
-|**[`tye.yaml` Schema](schema.md)** | `tye.yaml` configuration.
+|**[Service Discovery](reference/service_discovery.md)** | Learn more about service discovery in Tye.
+|**[`tye.yaml` Schema](reference/schema.md)** | `tye.yaml` configuration.

@@ -63,7 +63,7 @@ This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandlin
 
 ## Getting the frontend to communicate with the backend
 
-Now that we have two applications running, let's make them communicate. By default, `tye` enables service discovery by injecting environment variables with a specific naming convention. For more information on, see [service discovery](/docs/service_discovery.md).
+Now that we have two applications running, let's make them communicate. By default, `tye` enables service discovery by injecting environment variables with a specific naming convention. For more information on, see [service discovery](/docs/reference/service_discovery.md).
 
 1. Add a NuGet.config to add the `dotnet-core` package source.
 

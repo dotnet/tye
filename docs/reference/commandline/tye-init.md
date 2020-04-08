@@ -25,7 +25,7 @@ services:
   project: project2/project2.csproj
 ```
 
-See [the tye.yaml schema](../schema.md) to learn more about customizations that can be made to the `tye.yaml` file.
+See [the tye.yaml schema](/docs/reference/schema.md) to learn more about customizations that can be made to the `tye.yaml` file.
 
 ## Arguments
 
