@@ -24,7 +24,7 @@ ingress:
             using var parser = new YamlParser(input);
             var app = parser.ParseConfigApplication();
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
-            Assert.Contains(CoreStrings.MultipleIngressBindingWithoutName, exception.Message);
+            Assert.Contains(CoreStrings.FormatMultipleBindingWithoutName("ingress"), exception.Message);
         }
 
         [Fact]
@@ -36,13 +36,13 @@ services:
     bindings:
       - port: 8080
         protocol: http
-      - port: 8080
+      - port: 8081
         protocol: http";
 
             using var parser = new YamlParser(input);
             var app = parser.ParseConfigApplication();
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
-            Assert.Contains(CoreStrings.MultipleServiceBindingsWithoutName, exception.Message);
+            Assert.Contains(CoreStrings.FormatMultipleBindingWithoutName("service"), exception.Message);
         }
 
         [Fact]
@@ -62,7 +62,7 @@ ingress:
             using var parser = new YamlParser(input);
             var app = parser.ParseConfigApplication();
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
-            Assert.Contains(CoreStrings.MultipleIngressBindingWithSameName, exception.Message);
+            Assert.Contains(CoreStrings.FormatMultipleBindingWithSameName("ingress"), exception.Message);
         }
 
 
@@ -100,7 +100,7 @@ services:
             using var parser = new YamlParser(input);
             var app = parser.ParseConfigApplication();
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
-            Assert.Contains(CoreStrings.MultipleServiceBindingsWithSameName, exception.Message);
+            Assert.Contains(CoreStrings.FormatMultipleBindingWithSameName("service"), exception.Message);
         }
 
         [Fact]
@@ -128,6 +128,69 @@ ingress:
             var app = parser.ParseConfigApplication();
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
             Assert.Contains(CoreStrings.IngressRuleMustReferenceService, exception.Message);
+        }
+
+        [Fact]
+        public void IngressMustHaveUniquePorts()
+        {
+            var input = @"
+ingress:
+  - name: ingress
+    bindings:
+      - port: 8080
+        protocol: http
+        name: foo
+      - port: 8080
+        protocol: https
+        name: bar";
+
+            using var parser = new YamlParser(input);
+            var app = parser.ParseConfigApplication();
+            var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
+            Assert.Contains(CoreStrings.FormatMultipleBindingWithSamePort("ingress"), exception.Message);
+        }
+
+
+        [Fact]
+        public void ServicesMustHaveUniquePorts()
+        {
+            var input = @"
+services:
+  - name: app
+    bindings:
+      - port: 8080
+        protocol: http
+        name: a
+      - port: 8080
+        protocol: https
+        name: b";
+
+            using var parser = new YamlParser(input);
+            var app = parser.ParseConfigApplication();
+            var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
+            Assert.Contains(CoreStrings.FormatMultipleBindingWithSamePort("service"), exception.Message);
+        }
+
+
+        [Theory]
+        [InlineData("image", "executable")]
+        [InlineData("project", "image")]
+        [InlineData("project", "executable")]
+        public void ImageExeProjectMutuallyExclusive(string a, string b)
+        {
+            var input = @$"
+services:
+  - name: app
+    {a}: foo
+    {b}: baz
+    bindings:
+      - port: 8080
+        protocol: http";
+
+            using var parser = new YamlParser(input);
+            var app = parser.ParseConfigApplication();
+            var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
+            Assert.Contains(CoreStrings.FormatProjectImageExecutableExclusive(a, b), exception.Message);
         }
     }
 }
