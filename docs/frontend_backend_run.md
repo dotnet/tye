@@ -1,6 +1,6 @@
 # Frontend Backend sample with tye run
 
-This tutorial will demonstrate how to use [`tye run`](commandline/tye-run.md) to run a multi-project application. If you haven't so already, follow the [Getting Started Instructions](getting_started.md) to install tye.
+This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandline/tye-run.md) to run a multi-project application. If you haven't so already, follow the [Getting Started Instructions](getting_started.md) to install tye.
 
 ## Running a single application with tye run
 
@@ -214,10 +214,10 @@ Now that we have two applications running, let's make them communicate. By defau
     </table>
    ```
 
-9.  Run the project with [`tye run`](commandline/tye-run.md) and the `frontend` service should be able to successfully call the `backend` service!
+9.  Run the project with [`tye run`](/docs/reference/commandline/tye-run.md) and the `frontend` service should be able to successfully call the `backend` service!
 
     When you visit the `frontend` service you should see a table of weather data. This data was produced randomly in the `backend` service. The fact that you're seeing it in a web UI in the `frontend` means that the services are able to communicate.
 
 ## Next Steps
 
-Now that you are able to run a multi-project application with [`tye run`](commandline/tye-run.md), move on to the [Frontend Backend Deploy Sample](frontend_backend_deploy.md) to learn how to deploy this application to Kubernetes.
+Now that you are able to run a multi-project application with [`tye run`](/docs/reference/commandline/tye-run.md), move on to the [Frontend Backend Deploy Sample](frontend_backend_deploy.md) to learn how to deploy this application to Kubernetes.

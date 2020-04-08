@@ -2,7 +2,7 @@
 
 This tutorial assumes that you have completed the [Frontend Backend Run Sample](frontend_backend_run.md)
 
-> :bulb: `tye` will use your current credentials for pushing Docker images and accessing kubernetes clusters. If you have configured kubectl with a context already, that's what [`tye deploy`](commandline/tye-deploy.md) is going to use!
+> :bulb: `tye` will use your current credentials for pushing Docker images and accessing kubernetes clusters. If you have configured kubectl with a context already, that's what [`tye deploy`](/docs/reference/commandline/tye-deploy.md) is going to use!
 
 Before we deploy, make sure you have the following ready...
 
