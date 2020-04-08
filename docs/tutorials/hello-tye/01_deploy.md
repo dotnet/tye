@@ -1,6 +1,6 @@
 # Getting Started with Deployment
 
-This tutorial assumes that you have completed the [Frontend Backend Run Sample](frontend_backend_run.md)
+This tutorial assumes that you have completed the [first step (run locally)](00_run_locally.md)
 
 > :bulb: `tye` will use your current credentials for pushing Docker images and accessing kubernetes clusters. If you have configured kubectl with a context already, that's what [`tye deploy`](/docs/reference/commandline/tye-deploy.md) is going to use!
 
@@ -136,4 +136,4 @@ Tye has a optional configuration file (`tye.yaml`) to allow customizing settings
 
 ## Next Steps
 
-Now that you are able to deploy an application to Kubernetes, learn how to add a non-project dependency to tye with our [Redis](redis.md) tutorial.
+Now that you are able to deploy an application to Kubernetes, learn how to add a non-project dependency to tye with [the next step (add Redis)](02_add_redis.md).

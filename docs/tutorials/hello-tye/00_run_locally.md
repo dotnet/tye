@@ -1,6 +1,6 @@
 # Frontend Backend sample with tye run
 
-This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandline/tye-run.md) to run a multi-project application. If you haven't so already, follow the [Getting Started Instructions](getting_started.md) to install tye.
+This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandline/tye-run.md) to run a multi-project application. If you haven't so already, follow the [Getting Started Instructions](/docs/getting_started.md) to install tye.
 
 ## Running a single application with tye run
 
@@ -63,7 +63,7 @@ This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandlin
 
 ## Getting the frontend to communicate with the backend
 
-Now that we have two applications running, let's make them communicate. By default, `tye` enables service discovery by injecting environment variables with a specific naming convention. For more information on, see [service discovery](service_discovery.md).
+Now that we have two applications running, let's make them communicate. By default, `tye` enables service discovery by injecting environment variables with a specific naming convention. For more information on, see [service discovery](/docs/service_discovery.md).
 
 1. Add a NuGet.config to add the `dotnet-core` package source.
 
@@ -220,4 +220,4 @@ Now that we have two applications running, let's make them communicate. By defau
 
 ## Next Steps
 
-Now that you are able to run a multi-project application with [`tye run`](/docs/reference/commandline/tye-run.md), move on to the [Frontend Backend Deploy Sample](frontend_backend_deploy.md) to learn how to deploy this application to Kubernetes.
+Now that you are able to run a multi-project application with [`tye run`](/docs/reference/commandline/tye-run.md), move on to [the next step (deploy)](01_deploy.md) to learn how to deploy this application to Kubernetes.
