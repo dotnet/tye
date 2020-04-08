@@ -35,19 +35,23 @@ namespace Microsoft.Tye.Hosting
         {
             await PurgeFromPreviousRun();
 
-            await BuildProjects(application);
+            await BuildAndRunProjects(application);
         }
 
-        private async Task BuildProjects(Application application)
+        public Task StopAsync(Application application)
+        {
+            return KillRunningProcesses(application.Services);
+        }
+
+        private async Task BuildAndRunProjects(Application application)
         {
             foreach (var service in application.Services.Values)
             {
                 var serviceDescription = service.Description;
 
-                var path = "";
-                var workingDirectory = "";
-                var args = "";
-
+                string path;
+                string args;
+                string workingDirectory;
                 if (serviceDescription.RunInfo is ProjectRunInfo project)
                 {
                     path = project.RunCommand;
@@ -77,6 +81,7 @@ namespace Microsoft.Tye.Hosting
                 service.Status.WorkingDirectory = workingDirectory;
                 service.Status.Args = args;
 
+                // TODO instead of always building with projects, try building with sln if available.
                 if (service.Status.ProjectFilePath != null &&
                     service.Description.RunInfo is ProjectRunInfo project2 &&
                     project2.Build &&
@@ -106,16 +111,11 @@ namespace Microsoft.Tye.Hosting
                     case ServiceType.Executable:
                         LaunchService(application, s.Value);
                         break;
-                    case ServiceType.Project: 
+                    case ServiceType.Project:
                         LaunchService(application, s.Value);
                         break;
                 };
             }
-        }
-
-        public Task StopAsync(Application application)
-        {
-            return KillRunningProcesses(application.Services);
         }
 
         private void LaunchService(Application application, Service service)
@@ -123,6 +123,8 @@ namespace Microsoft.Tye.Hosting
             var serviceDescription = service.Description;
             var processInfo = new ProcessInfo(new Task[service.Description.Replicas]);
             var serviceName = serviceDescription.Name;
+
+            // Set by BuildAndRunService
             var args = service.Status.Args!;
             var path = service.Status.ExecutablePath!;
             var workingDirectory = service.Status.WorkingDirectory!;
