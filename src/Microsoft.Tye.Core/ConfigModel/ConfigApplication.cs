@@ -56,7 +56,6 @@ namespace Microsoft.Tye.ConfigModel
                 }
             }
 
-
             foreach (var service in config.Services)
             {
                 context = new ValidationContext(service);
