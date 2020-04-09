@@ -58,7 +58,6 @@ namespace Microsoft.Tye
                     continue;
                 }
 
-
                 foreach (var binding in other.Bindings)
                 {
                     if (other is ProjectServiceBuilder)
