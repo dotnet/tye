@@ -51,7 +51,7 @@ namespace Microsoft.Tye
                 throw new CommandException("'dotnet publish' failed.");
             }
 
-            output.WriteDebugLine($"Created Publish Output: '{outputDirectory}'");
+            output.WriteDebugLine($"Created Publish Output: '{outputDirectory.DirectoryPath}'");
             service.Outputs.Add(new ProjectPublishOutput(outputDirectory.DirectoryInfo));
         }
     }
