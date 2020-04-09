@@ -15,6 +15,8 @@ namespace Microsoft.Tye
         public static async Task GenerateAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive)
         {
             var output = new OutputContext(console, verbosity);
+
+            output.WriteInfoLine("Loading Application Details...");
             var application = await ApplicationFactory.CreateAsync(output, path);
             if (application.Services.Count == 0)
             {
