@@ -57,27 +57,128 @@ Tye will publish all .NET projects in release mode via calling `dotnet publish`.
 
 ## Create docker files and images
 
-- Allows for single phase or multi phase docker
-- Creates a temporary docker file based on whether there is a docker file present or not.
-- builds a docker image from the docker file (docker build)
-- smart taging
-TODO
+Tye will create docker files based on well known conventions for creating dotnet containers. The docker file output will look like:
+```docker
+FROM {baseImageName}:{baseImageTag}
+WORKDIR /app
+COPY . /app
+ENTRYPOINT [\"dotnet\", \"{appName}.dll\"]
+```
+
+Tye will then execute `docker build`, where it will copy the output of dotnet publish to the container, creating and tagging the image.
+
+When tagging the image, 
 
 ## Push docker images
 
-- Runs docker push
-TODO
+Tye pushes the docker images created for a project. These are pushed to the registry based on the registry specified in `tye.yaml` or in interactive deployment.
 
 ## Validate secrets
 
-- How do credentials work
-TODO
+Earlier, during the compute bindings step, Tye determined which services required external configuration via secrets. For example, a connection string to redis will be required to run your services in Kubernetes. Tye will now validate that these secrets are present in Kubernetes.
 
-## Generate Kubernetes manifests
+Tye will look for an existing secret based on the service and binding names. This will call into Kubernetes to check the value of the secret. If the secret already exists then deployment will proceed.
 
-Mention how labels are created
-TODO
+If the secret does not exist, then Tye will prompt (in interactive mode) for the connection string or URI value, otherwise it . Based on whether it's a connection string or URI, Tye will create a secret like one of the following.
 
-## Apply Kubernetes manifests to current Kubernetes Cluster
+Example secret for a URI:
 
-TODO
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: binding-production-rabbit-secret
+type: Opaque
+stringData:
+  protocol: amqp
+  host: rabbitmq
+  port: 5672
+```
+
+Example secret for a connection string:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: binding-production-redis-secret
+type: Opaque
+stringData:
+  connectionstring: <redacted>
+```
+
+Creating the secret is a one-time operation, and Tye will only prompt for it if it does not already exist. If desired you can use standard `kubectl` commands to update values or delete the secret and force it to be recreated.
+
+If a secret needs to be applied, tye will call kubectl to apply the secret.
+
+## Generate Kubernetes manifests and apply them
+
+Tye will create the Kubernetes manifests from the projects. By default, each project will have an associated Kubernetes Deployment and Kubernetes Service, like as follows.
+
+```yaml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {serviceName}
+  labels:
+    app.kubernetes.io/name: '{serviceName}'
+    app.kubernetes.io/part-of: '{appName}'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {serviceName}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: '{serviceName}'
+        app.kubernetes.io/part-of: '{appName}'
+    spec:
+      containers:
+      - name: {serviceName}
+        image: {imageName}:{imageTag}
+        imagePullPolicy: Always
+        env:
+        - name: ASPNETCORE_URLS
+          value: 'http://*'
+        - name: PORT
+          value: '80'
+        - name: SERVICE__{otherService}__PROTOCOL
+          value: 'http'
+        - name: SERVICE__{otherService}__PORT
+          value: '80'
+        - name: SERVICE__{otherService}__HOST
+          value: '{otherService}'
+        # more environment variables here for service discovery.
+        ports:
+        - containerPort: 80
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {serviceName}
+  labels:
+    app.kubernetes.io/name: '{serviceName}'
+    app.kubernetes.io/part-of: '{appName}'
+spec:
+  selector:
+    app.kubernetes.io/name: {serviceName}
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+...
+
+```
+
+Kubernetes labels follow a fairly straight forward convention:
+
+- name for both Service and Deployment will be the name of the service or project.
+- part-of will be the name of the application defined in tye.yaml (default to current directory name if undefined).
+
+As shown, all environment variables for service discovery will be part of the Deployment.
+
+The Kubernetes manifest will then be applied to the current kubernetes context.
