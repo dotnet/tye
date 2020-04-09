@@ -1,6 +1,6 @@
 # Deployment
 
-*This document is a conceptual overview of how Tye behaves when using `tye deploy` for deployment. For reference docs  on the `tye deploy` command see the [command line doc](/docs/reference/commandline/tye-deploy.md).
+*This document is a conceptual overview of how Tye behaves when using `tye deploy` for deployment. For reference docs  on the `tye deploy` command see the [command line doc](/docs/reference/commandline/tye-deploy.md).*
 
 Tye simplifies many of the common concerns when deploying services, including creating docker files, docker images, Kubernetes manifests, and service discovery.
 
