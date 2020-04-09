@@ -29,7 +29,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: 'binding-production-dependency-secret'
-              key: 'connectionString'
+              key: 'connectionstring'
         ports:
         - containerPort: 80
 ...
