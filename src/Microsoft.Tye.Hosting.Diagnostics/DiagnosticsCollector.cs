@@ -197,23 +197,9 @@ namespace Microsoft.Tye.Hosting.Diagnostics
                 {
                     session = client.StartEventPipeSession(providers);
                 }
-                catch (EndOfStreamException)
-                {
-                    break;
-                }
                 // If the process has already exited, a ServerNotAvailableException will be thrown.
-                catch (ServerNotAvailableException)
+                catch (Exception)
                 {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        _logger.LogDebug(0, ex, "Failed to start the event pipe session");
-                    }
-
-                    // We can't even start the session, wait until the process boots up again to start another metrics thread
                     break;
                 }
 
