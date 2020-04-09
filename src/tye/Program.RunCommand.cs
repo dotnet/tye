@@ -72,18 +72,21 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                var output = new OutputContext(console, Verbosity.Quiet);
+                var output = new OutputContext(console, Verbosity.Info);
+
+                output.WriteInfoLine("Loading Application Details...");
                 var application = await ApplicationFactory.CreateAsync(output, path);
-
-                await application.ProcessExtensionsAsync(ExtensionContext.OperationKind.LocalRun);
-
-                InitializeThreadPoolSettings(application.Services.Count);
-
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
                 }
 
+                await application.ProcessExtensionsAsync(ExtensionContext.OperationKind.LocalRun);
+
+                InitializeThreadPoolSettings(application.Services.Count);
+
+                output.WriteInfoLine("Launching Tye Host...");
+                output.WriteInfoLine(string.Empty);
                 await using var host = new TyeHost(application.ToHostingApplication(), args, debug);
                 await host.RunAsync();
             });

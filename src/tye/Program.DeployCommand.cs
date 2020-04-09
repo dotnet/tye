@@ -38,8 +38,9 @@ namespace Microsoft.Tye
                 }
 
                 var output = new OutputContext(console, verbosity);
-                var application = await ApplicationFactory.CreateAsync(output, path);
 
+                output.WriteInfoLine("Loading Application Details...");
+                var application = await ApplicationFactory.CreateAsync(output, path);
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
