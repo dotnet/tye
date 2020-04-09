@@ -229,7 +229,7 @@ namespace Microsoft.Tye
                                             { "secretKeyRef", new YamlMappingNode()
                                                 {
                                                     { "name", new YamlScalarNode(binding.Name) { Style = ScalarStyle.SingleQuoted } },
-                                                    { "key", new YamlScalarNode("connectionString") { Style = ScalarStyle.SingleQuoted } },
+                                                    { "key", new YamlScalarNode("connectionstring") { Style = ScalarStyle.SingleQuoted } },
                                                 }
                                             },
                                         }
