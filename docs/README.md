@@ -23,4 +23,5 @@
 |------|-------------|
 |**[Tye Commandline Reference](reference/commandline/README.md)** | Documentation for `tye` commands.
 |**[Service Discovery](reference/service_discovery.md)** | Learn more about service discovery in Tye.
+|**[Local Development](referenece/../reference/local_development.md)** | Learn more about how Tye works for local development.
 |**[`tye.yaml` Schema](reference/schema.md)** | `tye.yaml` configuration.
