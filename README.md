@@ -1,14 +1,19 @@
 # Project Tye
 
-Tye is a tool that makes developing, testing, and deploying microservices and distributed applications easier. Project Tye includes a local orchestrator to make developing microservices easier and the ability to deploy microservices to Kubernetes with minimal configuration. 
+Tye is a developer tool that makes developing, testing, and deploying microservices and distributed applications easier. Project Tye includes a local orchestrator to make developing microservices easier and the ability to deploy microservices to Kubernetes with minimal configuration. 
 
-What tye can do:
+Tye can:
 
-- Run multiple projects locally.
-- Easily manage dependencies running containers.
-- Automatically build Docker images by following .NET's conventions.
-- Deploy applications to Kubernetes with minimal configuration.
-- Make secret management and service discovery easy.
+- Simplify microservices development by making it easy to:
+  - Run many services with one command
+  - Use dependencies in containers
+  - Discover addresses of other services using simple conventions
+- Deploy .NET applications to Kubernetes by:
+  - Automatically containerizing .NET applications
+  - Generating Kubernetes manifests with minimal knowledge or configuration
+  - Using the same conventions as development to keep it consistent
+
+Want to learn more? Check out our [FAQ](docs/faq.md) or [documentation](docs/README.md).
 
 ## Current Status
 
