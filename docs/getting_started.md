@@ -35,14 +35,16 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
 This will install the newest available build from our CI.
 
 ```txt
-dotnet tool install -g Microsoft.Tye --version "0.1.0-*" --add-source https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
+dotnet tool install -g Microsoft.Tye --version "0.2.0-*" --add-source https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
 ```
 
 If you already have a build installed and you want to update, replace `install` with `update`:
 
 ```txt
-dotnet tool update -g Microsoft.Tye --version "0.1.0-*" --add-source https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
+dotnet tool update -g Microsoft.Tye --version "0.2.0-*" --add-source https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
 ```
+
+> :bulb: Note that the version numbers for our CI builds and released packages will usually be different. 
 
 If you are using CI builds of Tye we also recommend using CI builds of our libraries as well with the matching version. To add the `dotnet-core` package source add a `NuGet.config` to your repository or solution directory.
 
