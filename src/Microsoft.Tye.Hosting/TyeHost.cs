@@ -310,7 +310,7 @@ namespace Microsoft.Tye.Hosting
         {
             try
             {
-                //still not addressed https://github.com/dotnet/corefx/issues/10361
+                // https://github.com/dotnet/corefx/issues/10361
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
                     url = url.Replace("&", "^&");
