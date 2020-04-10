@@ -103,14 +103,7 @@ namespace Microsoft.Tye.Hosting
 
             if (_args.Contains("--dashboard"))
             {
-                try
-                {
-                    OpenDashboard(app.Addresses.First());
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error Launching Dashboard");
-                }
+                OpenDashboard(app.Addresses.First());
             }
 
             return app;
@@ -313,11 +306,10 @@ namespace Microsoft.Tye.Hosting
             _processor = null;
         }
 
-        private static void OpenDashboard(string url)
+        private void OpenDashboard(string url)
         {
             try
             {
-
                 //still not addressed https://github.com/dotnet/corefx/issues/10361
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
@@ -333,9 +325,9 @@ namespace Microsoft.Tye.Hosting
                     System.Diagnostics.Process.Start("open", url);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                throw;
+                _logger.LogError(ex, "Error launching dashboard.");
             }
         }
 
