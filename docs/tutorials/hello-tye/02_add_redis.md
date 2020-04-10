@@ -9,7 +9,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
 1. Change the `WeatherForecastController.Get()` method in the `backend` project to cache the weather information in redis using an `IDistributedCache`.
 
-   Add the following `using`s to the top of the file:
+   Add the following `using`'s to the top of the file:
 
    ```C#
    using Microsoft.Extensions.Caching.Distributed;
