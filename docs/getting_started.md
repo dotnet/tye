@@ -8,20 +8,20 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
 2. Install tye via the following command:
 
     ```text
-    dotnet tool install -g Microsoft.Tye --version "0.1.0-alpha.20209.2" --add-source https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
+    dotnet tool install -g Microsoft.Tye --version "0.1.0-alpha.20209.5"
     ```
 
     OR if you already have Tye installed and want to update:
 
     ```text
-    dotnet tool update -g Microsoft.Tye --version "0.1.0-alpha.20209.2" --add-source https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
+    dotnet tool update -g Microsoft.Tye --version "0.1.0-alpha.20209.5"
     ```
 
 3. Verify the installation was complete by running:
 
     ```
     tye --version
-    > 0.1.0-alpha.20209.2+40cecc60556a811586becfe6a793ea0e925b465c
+    > 0.1.0-alpha.20209.5+e3fc0045bd1e5913da935241874761929f1e8465
     ```
 
 ## Next steps
