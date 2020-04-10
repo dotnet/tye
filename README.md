@@ -13,7 +13,7 @@ Tye can:
   - Generating Kubernetes manifests with minimal knowledge or configuration
   - Using the same conventions as development to keep it consistent
 
-Want to learn more? Check out our [FAQ](docs/faq.md) or [documentation](docs/README.md).
+Want to learn more? Check out our [FAQ](docs/FAQ.md) or [documentation](docs/README.md).
 
 ## Current Status
 
