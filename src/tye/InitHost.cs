@@ -61,7 +61,7 @@ services:
 
             // Output in the current directory unless an input file was provided, then
             // output next to the input file.
-            var outputFilePath =  json ? "tye.json" : "tye.yaml";
+            var outputFilePath = json ? "tye.json" : "tye.yaml";
 
             if (path is FileInfo && path.Exists)
             {
