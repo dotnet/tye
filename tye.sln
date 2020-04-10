@@ -4,9 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{8C662D59-A3CB-466F-8E85-A8E6BA5E7601}"
-	ProjectSection(SolutionItems) = preProject
-		src\tye\InitHost.cs = src\tye\InitHost.cs
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tye", "src\tye\tye.csproj", "{9BFE4070-D6D8-41F8-B92E-F85C3DCD7AB8}"
 EndProject
