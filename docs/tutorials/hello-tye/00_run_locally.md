@@ -7,8 +7,7 @@ This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandlin
 1. Make a new folder called `microservice` and navigate to it:
 
     ```text
-    mkdir microservice
-    cd microservice
+    take microservice
     ```
 
 1. Create a frontend project:
