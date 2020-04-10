@@ -313,7 +313,6 @@ namespace Microsoft.Tye.Hosting
             _processor = null;
         }
 
-        
         private static void OpenDashboard(string url)
         {
             try
@@ -333,13 +332,13 @@ namespace Microsoft.Tye.Hosting
                 {
                     System.Diagnostics.Process.Start("open", url);
                 }
-            } catch 
+            }
+            catch
             {
                 throw;
             }
         }
 
-        
         public async ValueTask DisposeAsync()
         {
             await StopAsync();
