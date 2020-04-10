@@ -21,15 +21,21 @@ namespace Microsoft.Tye
                 CommonArguments.Path_Optional,
             };
 
+            command.AddOption(new Option(new[] { "--json" })
+            {
+                Description = "Create config file in json format i.e. tye.json",
+                Required = false
+            });
+
             command.AddOption(new Option(new[] { "-f", "--force" })
             {
                 Description = "Overrides the tye.yaml file if already present for project.",
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo?, bool>((console, path, force) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo?, bool, bool>((console, path, force, json) =>
             {
-                var outputFilePath = InitHost.CreateTyeFile(path, force);
+                var outputFilePath = InitHost.CreateTyeFile(path, force, json);
                 console.Out.WriteLine($"Created '{outputFilePath}'.");
             });
 

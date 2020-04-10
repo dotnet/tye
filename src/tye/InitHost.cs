@@ -6,21 +6,32 @@ namespace Microsoft.Tye
 {
     public static class InitHost
     {
-        public static string CreateTyeFile(FileInfo? path, bool force)
+        public static string CreateTyeFile(FileInfo? path, bool force, bool json = false)
         {
-            var (content, outputFilePath) = CreateTyeFileContent(path, force);
+            var (content, outputFilePath) = CreateTyeFileContent(path, force, json);
 
-            File.WriteAllText(outputFilePath, content);
+            if (json)
+            {
+                var jsonContent = YamlSerializer.ConvertToJson(content);
+                File.WriteAllText(outputFilePath, jsonContent);
+            }
+            else
+            {
+                File.WriteAllText(outputFilePath, content);
+            }
 
             return outputFilePath;
         }
 
-        public static (string, string) CreateTyeFileContent(FileInfo? path, bool force)
+        public static (string, string) CreateTyeFileContent(FileInfo? path, bool force, bool json = false)
         {
             if (path is FileInfo && path.Exists && !force)
             {
                 ThrowIfTyeFilePresent(path, "tye.yml");
                 ThrowIfTyeFilePresent(path, "tye.yaml");
+
+                if (json)
+                    ThrowIfTyeFilePresent(path, "tye.json");
             }
 
             var template = @"
@@ -50,7 +61,7 @@ services:
 
             // Output in the current directory unless an input file was provided, then
             // output next to the input file.
-            var outputFilePath = "tye.yaml";
+            var outputFilePath =  json ? "tye.json" : "tye.yaml";
 
             if (path is FileInfo && path.Exists)
             {
@@ -77,7 +88,7 @@ services:
                     }
 
                     // If the input file is a sln/project then place the config next to it
-                    outputFilePath = Path.Combine(directory.FullName, "tye.yaml");
+                    outputFilePath = Path.Combine(directory.FullName, outputFilePath);
                 }
                 else
                 {

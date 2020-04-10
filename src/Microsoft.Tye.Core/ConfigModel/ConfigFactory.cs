@@ -3,8 +3,13 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
+using k8s;
+using k8s.Models;
 using Microsoft.Tye.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Tye.Serialization;
 
 namespace Microsoft.Tye.ConfigModel
@@ -16,6 +21,9 @@ namespace Microsoft.Tye.ConfigModel
             var extension = file.Extension.ToLowerInvariant();
             switch (extension)
             {
+                case ".json":
+                    return FromJson(file);
+
                 case ".yaml":
                 case ".yml":
                     return FromYaml(file);
@@ -86,6 +94,17 @@ namespace Microsoft.Tye.ConfigModel
         private static ConfigApplication FromYaml(FileInfo file)
         {
             using var parser = new YamlParser(file);
+            return parser.ParseConfigApplication();
+        }
+
+        private static ConfigApplication FromJson(FileInfo file)
+        {
+            var converter = new ExpandoObjectConverter();
+            dynamic obj = JsonConvert.DeserializeObject<ExpandoObject>(file.OpenText().ReadToEnd(), converter);
+            var serializer = new YamlDotNet.Serialization.Serializer();
+            string yamlContent = serializer.Serialize(obj);
+
+            using var parser = new YamlParser(yamlContent);
             return parser.ParseConfigApplication();
         }
     }
