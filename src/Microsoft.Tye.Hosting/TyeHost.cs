@@ -103,7 +103,13 @@ namespace Microsoft.Tye.Hosting
 
             if (_args.Contains("--dashboard"))
             {
-                OpenDashboard(app.Addresses.First());
+                try
+                {
+                    OpenDashboard(app.Addresses.First());
+                } catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error Launching Dashboard");
+                }
             }
 
             return app;
@@ -309,19 +315,26 @@ namespace Microsoft.Tye.Hosting
         
         private static void OpenDashboard(string url)
         {
-            //still not addressed https://github.com/dotnet/corefx/issues/10361
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            try
             {
-                url = url.Replace("&", "^&");
-                System.Diagnostics.Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+
+                //still not addressed https://github.com/dotnet/corefx/issues/10361
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    url = url.Replace("&", "^&");
+                    System.Diagnostics.Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    System.Diagnostics.Process.Start("xdg-open", url);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    System.Diagnostics.Process.Start("open", url);
+                }
+            } catch 
             {
-                System.Diagnostics.Process.Start("xdg-open", url);
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                System.Diagnostics.Process.Start("open", url);
+                throw;
             }
         }
 
