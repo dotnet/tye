@@ -10,7 +10,6 @@ This document will describe how these features work, as well as the implications
 
 When executing `tye deploy`, Tye goes through the following steps for each project:
 
-- Load the application (`tye.yaml`)
 - Configure defaults for docker
 - Publish all projects
 - Creates docker files and images for each project
@@ -20,10 +19,6 @@ When executing `tye deploy`, Tye goes through the following steps for each proje
 - Apply Kubernetes manifests to current Kubernetes Cluster
 
 These steps are sequentially executed for each project.
-
-## Load the application
-
-TODO pull from tye run doc.
 
 ## Configure defaults for docker
 
