@@ -72,6 +72,33 @@ namespace E2ETest
         }
 
         [Fact]
+        public async Task SingleProjectRunTestWithDashboard()
+        {
+            using var projectDirectory = CopySampleProjectDirectory(Path.Combine("single-project", "test-project"));
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "test-project.csproj"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new[] { "--dashboard" }, async (app, uri) =>
+            {
+                var testUri = await GetServiceUrl(client, uri, "test-project");
+
+                var testResponse = await client.GetAsync(testUri);
+
+                Assert.True(testResponse.IsSuccessStatusCode);
+            });
+        }
+
+        [Fact]
         public async Task FrontendBackendRunTest()
         {
             using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
