@@ -106,7 +106,8 @@ namespace Microsoft.Tye.Hosting
                 try
                 {
                     OpenDashboard(app.Addresses.First());
-                } catch (Exception ex)
+                } 
+                catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error Launching Dashboard");
                 }
