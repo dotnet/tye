@@ -9,7 +9,7 @@ The project should be immediately runnable by calling `tye run` from the directo
 
 A few things need to be configured before deploying to Kubernetes.
 
-- Setting up Redis. A connection string needs to be provided to connect to Redis. You can follow our tutorial on [setting up redis in your cluster](../../docs/redis.md).
+- Setting up Redis. A connection string needs to be provided to connect to Redis. You can follow our tutorial on [setting up redis in your cluster](../../docs/tutorials/hello-tye/02_add_redis.md).
 - Setting up postgresql. A connection string eventually needs to be provided to tye for postgresql.
 - Deploying the ingress.yaml by calling:
 
