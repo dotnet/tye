@@ -64,6 +64,12 @@ namespace Microsoft.Tye
                 Required = false
             });
 
+            command.AddOption(new Option("--dashboard")
+            {
+                Description = "Launch dashboard on run.",
+                Required = false
+            });
+
             command.Handler = CommandHandler.Create<IConsole, FileInfo, string[]>(async (console, path, debug) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654

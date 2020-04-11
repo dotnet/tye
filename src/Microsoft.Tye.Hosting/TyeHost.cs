@@ -4,10 +4,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine.Invocation;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -97,6 +100,11 @@ namespace Microsoft.Tye.Hosting
             _logger.LogInformation("Dashboard running on {Address}", app.Addresses.First());
 
             await _processor.StartAsync(_application);
+
+            if (_args.Contains("--dashboard"))
+            {
+                OpenDashboard(app.Addresses.First());
+            }
 
             return app;
         }
@@ -296,6 +304,31 @@ namespace Microsoft.Tye.Hosting
             }
 
             _processor = null;
+        }
+
+        private void OpenDashboard(string url)
+        {
+            try
+            {
+                // https://github.com/dotnet/corefx/issues/10361
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    url = url.Replace("&", "^&");
+                    System.Diagnostics.Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    System.Diagnostics.Process.Start("xdg-open", url);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    System.Diagnostics.Process.Start("open", url);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error launching dashboard.");
+            }
         }
 
         public async ValueTask DisposeAsync()
