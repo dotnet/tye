@@ -106,9 +106,9 @@ Tye has a optional configuration file (`tye.yaml`) to allow customizing settings
     name: microservice
     services:
     - name: frontend
-    project: frontend/frontend.csproj
+      project: frontend/frontend.csproj
     - name: backend
-    project: backend/backend.csproj
+      project: backend/backend.csproj
     ```
 
     The top level scope (like the `name` node) is where global settings are applied.
