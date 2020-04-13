@@ -29,9 +29,7 @@ namespace Microsoft.Tye
             {
                 ThrowIfTyeFilePresent(path, "tye.yml");
                 ThrowIfTyeFilePresent(path, "tye.yaml");
-
-                if (json)
-                    ThrowIfTyeFilePresent(path, "tye.json");
+                ThrowIfTyeFilePresent(path, "tye.json");
             }
 
             var template = @"
