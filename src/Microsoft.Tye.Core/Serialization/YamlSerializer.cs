@@ -30,7 +30,7 @@ namespace Microsoft.Tye.Serialization
                 .Build();
 
             var json = serializer.Serialize(yamlObject);
-            
+
             if (string.IsNullOrEmpty(json))
                 json = json.Insert(json.IndexOf("{") + 1, schema);
 
