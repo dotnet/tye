@@ -195,7 +195,7 @@ namespace E2ETest
             }
         }
 
-        public static void AssertYamlContentEqual(string expected, string actual)
+        public static void AssertYamlContentEqual(string expected, string actual, ITestOutputHelper output = null)
         {
             var yamlStream = new YamlStream();
             using var reader = new StringReader(expected);
@@ -205,11 +205,25 @@ namespace E2ETest
             using var otherReader = new StringReader(expected);
             otherYamlStream.Load(new StringReader(actual));
 
-            Assert.Equal(yamlStream.Documents.Count, yamlStream.Documents.Count);
+            var yamlEqualityVisitor = new EqualityYamlNodeVisitor();
 
-            for (var i = 0; i < yamlStream.Documents.Count; i++)
+            try
             {
-                Assert.Equal(yamlStream.Documents[i].RootNode, otherYamlStream.Documents[i].RootNode);
+                Assert.Equal(yamlStream.Documents.Count, yamlStream.Documents.Count);
+
+                for (var i = 0; i < yamlStream.Documents.Count; i++)
+                {
+                    yamlEqualityVisitor.Visit(yamlStream.Documents[i].RootNode, otherYamlStream.Documents[i].RootNode);
+                }
+            }
+            catch (Exception)
+            {
+                output?.WriteLine("Expected:");
+                output?.WriteLine(expected);
+                output?.WriteLine("Actual:");
+                output?.WriteLine(actual);
+
+                throw;
             }
         }
     }

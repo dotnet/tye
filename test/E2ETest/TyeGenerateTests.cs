@@ -51,7 +51,7 @@ namespace E2ETest
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}.yaml");
 
-                TestHelpers.AssertYamlContentEqual(expectedContent, content);
+                TestHelpers.AssertYamlContentEqual(expectedContent, content, output);
 
                 await DockerAssert.AssertImageExistsAsync(output, "test/test-project");
             }
@@ -89,7 +89,7 @@ namespace E2ETest
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}.yaml");
 
-                TestHelpers.AssertYamlContentEqual(expectedContent, content);
+                TestHelpers.AssertYamlContentEqual(expectedContent, content, output);
 
                 await DockerAssert.AssertImageExistsAsync(output, "test/backend");
                 await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
@@ -130,7 +130,7 @@ namespace E2ETest
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}.yaml");
 
-                TestHelpers.AssertYamlContentEqual(expectedContent, content);
+                TestHelpers.AssertYamlContentEqual(expectedContent, content, output);
 
                 await DockerAssert.AssertImageExistsAsync(output, "test/backend");
                 await DockerAssert.AssertImageExistsAsync(output, "test/frontend");
@@ -168,7 +168,7 @@ namespace E2ETest
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}-noregistry.yaml");
 
-                TestHelpers.AssertYamlContentEqual(expectedContent, content);
+                TestHelpers.AssertYamlContentEqual(expectedContent, content, output);
 
                 await DockerAssert.AssertImageExistsAsync(output, "test-project");
             }
@@ -203,7 +203,7 @@ namespace E2ETest
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/dapr.yaml");
 
-                TestHelpers.AssertYamlContentEqual(expectedContent, content);
+                TestHelpers.AssertYamlContentEqual(expectedContent, content, output);
 
                 await DockerAssert.AssertImageExistsAsync(output, projectName);
             }
@@ -238,7 +238,7 @@ namespace E2ETest
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
 
-                TestHelpers.AssertYamlContentEqual(expectedContent, content);
+                TestHelpers.AssertYamlContentEqual(expectedContent, content, output);
 
                 await DockerAssert.AssertImageExistsAsync(output, projectName);
             }
@@ -273,7 +273,7 @@ namespace E2ETest
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
 
-                TestHelpers.AssertYamlContentEqual(expectedContent, content);
+                TestHelpers.AssertYamlContentEqual(expectedContent, content, output);
 
                 await DockerAssert.AssertImageExistsAsync(output, projectName);
             }
@@ -308,7 +308,7 @@ namespace E2ETest
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
 
-                TestHelpers.AssertYamlContentEqual(expectedContent, content);
+                TestHelpers.AssertYamlContentEqual(expectedContent, content, output);
 
                 await DockerAssert.AssertImageExistsAsync(output, projectName);
             }
