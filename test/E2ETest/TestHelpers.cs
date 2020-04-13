@@ -195,7 +195,7 @@ namespace E2ETest
             }
         }
 
-        public static void AssertYamlContentEqual(string expected, string actual, ITestOutputHelper output = null)
+        public static void AssertYamlContentEqual(string expected, string actual, ITestOutputHelper output = null!)
         {
             var yamlStream = new YamlStream();
             using var reader = new StringReader(expected);
