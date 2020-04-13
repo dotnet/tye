@@ -5,8 +5,11 @@
 using System;
 using System.IO;
 using Microsoft.Tye;
+using Microsoft.Tye.ConfigModel;
 using Xunit;
 using Xunit.Abstractions;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 using static E2ETest.TestHelpers;
 
 namespace E2ETest
@@ -15,64 +18,31 @@ namespace E2ETest
     {
         private readonly ITestOutputHelper output;
         private readonly TestOutputLogEventSink sink;
+        private readonly IDeserializer _deserializer;
 
         public TyeInitTests(ITestOutputHelper output)
         {
             this.output = output;
             sink = new TestOutputLogEventSink(output);
+            _deserializer = new DeserializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .Build();
         }
 
         [Fact]
-        public void SingleProjectInitTest()
+        public void Init_WorksForMultipleProjects()
         {
-            using var projectDirectory = CopySampleProjectDirectory(Path.Combine("single-project", "test-project"));
-
-            File.Delete(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
-
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "test-project.csproj"));
-
-            var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
-            var expectedContent = File.ReadAllText("testassets/init/single-project.yaml");
-
-            output.WriteLine(content);
-
-            Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
-        }
-
-        [Fact]
-        public void MultiProjectInitTest()
-        {
-            using var projectDirectory = CopySampleProjectDirectory("multi-project");
-
-            // delete already present yaml
-            File.Delete(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            using var projectDirectory = CopyTestProjectDirectory("multi-project");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "multi-project.sln"));
 
             var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
+            var actual = _deserializer.Deserialize<ConfigApplication>(content);
+
             var expectedContent = File.ReadAllText("testassets/init/multi-project.yaml");
+            var expected = _deserializer.Deserialize<ConfigApplication>(expectedContent);
 
-            output.WriteLine(content);
-
-            Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
-        }
-
-        [Fact]
-        public void FrontendBackendTest()
-        {
-            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
-
-            // delete already present yaml
-            File.Delete(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
-
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "frontend-backend.sln"));
-
-            var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
-            var expectedContent = File.ReadAllText("testassets/init/frontend-backend.yaml");
-
-            output.WriteLine(content);
-
-            Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
+            CompareConfigApplications(expected, actual);
         }
 
         // Tests our logic that excludes non-applications (unit tests, classlibs, etc)
@@ -81,17 +51,15 @@ namespace E2ETest
         {
             using var projectDirectory = CopyTestProjectDirectory("project-types");
 
-            // delete already present yaml
-            File.Delete(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
-
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "project-types.sln"));
 
             var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
+            var actual = _deserializer.Deserialize<ConfigApplication>(content);
+
             var expectedContent = File.ReadAllText("testassets/init/project-types.yaml");
+            var expected = _deserializer.Deserialize<ConfigApplication>(expectedContent);
 
-            output.WriteLine(content);
-
-            Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
+            CompareConfigApplications(expected, actual);
         }
     }
 }

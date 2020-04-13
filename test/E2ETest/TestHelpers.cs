@@ -16,6 +16,7 @@ using Microsoft.Tye.Hosting.Model;
 using Xunit;
 using Xunit.Abstractions;
 using Microsoft.Tye;
+using Microsoft.Tye.ConfigModel;
 
 namespace E2ETest
 {
@@ -76,31 +77,6 @@ namespace E2ETest
                 projectName));
             Assert.True(directory.Exists, $"Project {projectName} not found.");
             return directory;
-        }
-
-        internal static TempDirectory CopySampleProjectDirectory(string projectName)
-        {
-            var temp = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
-            DirectoryCopy.Copy(GetSampleProjectDirectory(projectName).FullName, temp.DirectoryPath);
-
-            // We need to hijack any P2P references to Tye libraries.
-            // Test projects must use $(TyeLibrariesPath) to find their references.
-            var libraryPath = Path.Combine(TestHelpers.GetSolutionRootDirectory("tye"), "src");
-            if (!libraryPath.EndsWith(Path.DirectorySeparatorChar))
-            {
-                libraryPath += Path.DirectorySeparatorChar;
-            }
-
-            File.WriteAllText(
-                Path.Combine(temp.DirectoryPath, "Directory.Build.props"),
-                $@"
-<Project>
-  <PropertyGroup>
-    <TyeLibrariesPath>{libraryPath}</TyeLibrariesPath>
-  </PropertyGroup>
-</Project>");
-
-            return temp;
         }
 
         internal static TempDirectory CopyTestProjectDirectory(string projectName)
@@ -218,6 +194,107 @@ namespace E2ETest
                 foreach (var observer in servicesStateObserver)
                 {
                     observer.Dispose();
+                }
+            }
+        }
+
+        public static void CompareConfigApplications(ConfigApplication expected, ConfigApplication actual)
+        {
+            Assert.Equal(expected.Name, actual.Name);
+            Assert.Equal(expected.Registry, actual.Registry);
+            Assert.Equal(expected.Network, actual.Network);
+
+            foreach (var ingress in actual.Ingress)
+            {
+                var otherIngress = expected
+                    .Ingress
+                    .Where(o => o.Name == ingress.Name)
+                    .Single();
+                Assert.NotNull(otherIngress);
+                Assert.Equal(otherIngress.Replicas, ingress.Replicas);
+
+                foreach (var rule in ingress.Rules)
+                {
+                    var otherRule = otherIngress
+                        .Rules
+                        .Where(o => o.Path == rule.Path && o.Host == rule.Host && o.Service == rule.Service)
+                        .Single();
+                    Assert.NotNull(otherRule);
+                }
+
+                foreach (var binding in ingress.Bindings)
+                {
+                    var otherBinding = otherIngress
+                        .Bindings
+                        .Where(o => o.Name == binding.Name && o.Port == binding.Port && o.Protocol == binding.Protocol)
+                        .Single();
+
+                    Assert.NotNull(otherBinding);
+                }
+            }
+
+            foreach (var service in actual.Services)
+            {
+                var otherService = expected
+                    .Services
+                    .Where(o => o.Name == service.Name)
+                    .Single();
+                Assert.NotNull(otherService);
+                Assert.Equal(otherService.Args, service.Args);
+                Assert.Equal(otherService.Build, service.Build);
+                Assert.Equal(otherService.Executable, service.Executable);
+                Assert.Equal(otherService.External, service.External);
+                Assert.Equal(otherService.Image, service.Image);
+                Assert.Equal(otherService.Project, service.Project);
+                Assert.Equal(otherService.Replicas, service.Replicas);
+                Assert.Equal(otherService.WorkingDirectory, service.WorkingDirectory);
+
+                foreach (var binding in service.Bindings)
+                {
+                    var otherBinding = otherService.Bindings
+                                    .Where(o => o.Name == binding.Name
+                                        && o.Port == binding.Port
+                                        && o.Protocol == binding.Protocol
+                                        && o.ConnectionString == binding.ConnectionString
+                                        && o.ContainerPort == binding.ContainerPort
+                                        && o.Host == binding.Host)
+                                    .Single();
+
+                    Assert.NotNull(otherBinding);
+                }
+
+                foreach (var binding in service.Bindings)
+                {
+                    var otherBinding = otherService.Bindings
+                                    .Where(o => o.Name == binding.Name
+                                        && o.Port == binding.Port
+                                        && o.Protocol == binding.Protocol
+                                        && o.ConnectionString == binding.ConnectionString
+                                        && o.ContainerPort == binding.ContainerPort
+                                        && o.Host == binding.Host)
+                                    .Single();
+
+                    Assert.NotNull(otherBinding);
+                }
+
+                foreach (var config in service.Configuration)
+                {
+                    var otherConfig = otherService.Configuration
+                                    .Where(o => o.Name == config.Name
+                                        && o.Value == config.Value)
+                                    .Single();
+
+                    Assert.NotNull(otherConfig);
+                }
+
+                foreach (var volume in service.Volumes)
+                {
+                    var otherVolume = otherService.Volumes
+                                   .Where(o => o.Name == volume.Name
+                                       && o.Target == volume.Target
+                                       && o.Source == volume.Source)
+                                   .Single();
+                    Assert.NotNull(otherVolume);
                 }
             }
         }
