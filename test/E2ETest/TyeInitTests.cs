@@ -33,6 +33,7 @@ namespace E2ETest
         public void Init_WorksForMultipleProjects()
         {
             using var projectDirectory = CopyTestProjectDirectory("multi-project");
+            File.Delete(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "multi-project.sln"));
 
