@@ -8,8 +8,12 @@ using Microsoft.Tye;
 using Microsoft.Tye.ConfigModel;
 using Xunit;
 using Xunit.Abstractions;
+<<<<<<< HEAD
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+=======
+using YamlDotNet.RepresentationModel;
+>>>>>>> a0fccc5... Use node comparison for generate and init comparison
 using static E2ETest.TestHelpers;
 
 namespace E2ETest
@@ -43,7 +47,7 @@ namespace E2ETest
             var expectedContent = File.ReadAllText("testassets/init/multi-project.yaml");
             var expected = _deserializer.Deserialize<ConfigApplication>(expectedContent);
 
-            TyeAssert.Equal(expected, actual);
+            TestHelpers.AssertYamlContentEqual(expectedContent, content);
         }
 
         [Fact]
@@ -61,7 +65,7 @@ namespace E2ETest
 
             output.WriteLine(content);
 
-            Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
+            TestHelpers.AssertYamlContentEqual(expectedContent, content);
         }
 
         // Tests our logic that excludes non-applications (unit tests, classlibs, etc)
@@ -78,7 +82,7 @@ namespace E2ETest
             var expectedContent = File.ReadAllText("testassets/init/project-types.yaml");
             var expected = _deserializer.Deserialize<ConfigApplication>(expectedContent);
 
-            TyeAssert.Equal(expected, actual);
+            TestHelpers.AssertYamlContentEqual(expectedContent, content);
         }
     }
 }
