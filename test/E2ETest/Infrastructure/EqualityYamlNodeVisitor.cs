@@ -34,14 +34,14 @@ namespace E2ETest
         {
             if (node.NodeType != otherNode.NodeType)
             {
-                throw new TyeYamlException($"Node types differ, Expected: {node.NodeType} at ({node.Start.Line}, {node.Start.Column}) " +
-                    $"Actual: {node.NodeType} at ({otherNode.Start.Line}, {otherNode.Start.Column})");
+                throw new TyeYamlException($"Node types differ, Expected: {node.NodeType} at ({node.Start.Line}, {node.Start.Column}). " +
+                    $"Actual: {node.NodeType} at ({otherNode.Start.Line}, {otherNode.Start.Column}).");
             }
 
             if (node.Tag?.Equals(otherNode.Tag) == false)
             {
                 throw new TyeYamlException($"Expected tags to be equal. " +
-                    $"Expected: ({node.Start.Line}, {node.Start.Column}) Actual: ({otherNode.Start.Line}, {otherNode.Start.Column})");
+                    $"Expected: ({node.Start.Line}, {node.Start.Column}). Actual: ({otherNode.Start.Line}, {otherNode.Start.Column}).");
             }
 
             if (node.NodeType == YamlNodeType.Mapping)
@@ -60,9 +60,9 @@ namespace E2ETest
 
         public void VisitSequence(YamlSequenceNode node, YamlSequenceNode otherNode)
         {
-            if (node.Children.Count != otherNode.Children.Count)
+            if (node.Children.Count > otherNode.Children.Count)
             {
-                throw new TyeYamlException($"Number of children differ for sequence, Expected: ({node.Start.Line}, {node.Start.Column}) Actual: ({otherNode.Start.Line}, {otherNode.Start.Column})");
+                throw new TyeYamlException($"Extra children in expected yaml sequence, Expected: ({node.Start.Line}, {node.Start.Column}). Actual: ({otherNode.Start.Line}, {otherNode.Start.Column})");
             }
 
             for (var i = 0; i < node.Children.Count; ++i)
@@ -72,15 +72,15 @@ namespace E2ETest
 
                 VisitInternal(childNode, otherChildNode);
             }
+
+            if (node.Children.Count < otherNode.Children.Count)
+            {
+                throw new TyeYamlException($"Extra children in actual yaml sequence, Expected: ({node.Start.Line}, {node.Start.Column}). Actual: ({otherNode.Start.Line}, {otherNode.Start.Column}).");
+            }
         }
 
         public void VisitMapping(YamlMappingNode node, YamlMappingNode otherNode)
         {
-            if (node.Children.Count != otherNode.Children.Count)
-            {
-                throw new TyeYamlException($"Number of children differ for mapping, Expected: ({node.Start.Line}, {node.Start.Column}) Actual: ({otherNode.Start.Line}, {otherNode.Start.Column})");
-            }
-
             foreach (var child in node.Children)
             {
                 var childValue = child.Value;
@@ -88,10 +88,15 @@ namespace E2ETest
                 if (!otherNode.Children.TryGetValue(child.Key, out var otherChildValue))
                 {
                     throw new TyeYamlException($"YamlMapping missing node, difference starting at Expected: ({node.Start.Line}, {node.Start.Column}). " +
-                                       $"Actual: ({otherNode.Start.Line}, {otherNode.Start.Column})");
+                                       $"Actual: ({otherNode.Start.Line}, {otherNode.Start.Column}).");
                 }
 
                 VisitInternal(childValue, otherChildValue);
+            }
+
+            if (node.Children.Count < otherNode.Children.Count)
+            {
+                throw new TyeYamlException($"Extra children in actual yaml mapping, Expected: ({node.Start.Line}, {node.Start.Column}). Actual: ({otherNode.Start.Line}, {otherNode.Start.Column}).");
             }
         }
 
