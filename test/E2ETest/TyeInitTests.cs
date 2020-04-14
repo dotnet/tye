@@ -43,7 +43,25 @@ namespace E2ETest
             var expectedContent = File.ReadAllText("testassets/init/multi-project.yaml");
             var expected = _deserializer.Deserialize<ConfigApplication>(expectedContent);
 
-            CompareConfigApplications(expected, actual);
+            TyeAssert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void Init_WorksForMultipleProjects_FileComparison()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
+
+            // delete already present yaml
+            File.Delete(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "frontend-backend.sln"));
+
+            var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
+            var expectedContent = File.ReadAllText("testassets/init/frontend-backend.yaml");
+
+            output.WriteLine(content);
+
+            Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
         }
 
         // Tests our logic that excludes non-applications (unit tests, classlibs, etc)
@@ -60,7 +78,7 @@ namespace E2ETest
             var expectedContent = File.ReadAllText("testassets/init/project-types.yaml");
             var expected = _deserializer.Deserialize<ConfigApplication>(expectedContent);
 
-            CompareConfigApplications(expected, actual);
+            TyeAssert.Equal(expected, actual);
         }
     }
 }

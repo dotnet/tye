@@ -106,7 +106,7 @@ ingress:
 
             var expected = _deserializer.Deserialize<ConfigApplication>(new StringReader(input));
 
-            TestHelpers.CompareConfigApplications(expected, actual);
+            TyeAssert.Equal(expected, actual);
         }
 
         [Fact]
@@ -146,7 +146,7 @@ ingress:
 
             var expected = _deserializer.Deserialize<ConfigApplication>(new StringReader(input));
 
-            TestHelpers.CompareConfigApplications(expected, actual);
+            TyeAssert.Equal(expected, actual);
         }
 
         [Fact]
