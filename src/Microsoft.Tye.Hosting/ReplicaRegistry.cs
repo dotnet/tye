@@ -56,9 +56,14 @@ namespace Microsoft.Tye.Hosting
         {
             var filePath = Path.Join(_tyeFolderPath, GetStoreFile(storeName));
 
+            if (!File.Exists(filePath))
+            {
+                return false;
+            }
+
             try
             {
-                File.Delete(storeName);
+                File.Delete(filePath);
                 return true;
             }
             catch (DirectoryNotFoundException ex)
