@@ -30,7 +30,7 @@ namespace E2ETest
             var projectName = "single-project";
             var environment = "production";
 
-            using var projectDirectory = CopySampleProjectDirectory(projectName);
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
@@ -61,7 +61,7 @@ namespace E2ETest
             var projectName = "frontend-backend";
             var environment = "production";
 
-            using var projectDirectory = CopySampleProjectDirectory(projectName);
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
@@ -95,7 +95,7 @@ namespace E2ETest
             var projectName = "multi-project";
             var environment = "production";
 
-            using var projectDirectory = CopySampleProjectDirectory(projectName);
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
@@ -129,7 +129,7 @@ namespace E2ETest
             var projectName = "single-project";
             var environment = "production";
 
-            using var projectDirectory = CopySampleProjectDirectory(projectName);
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(sink, Verbosity.Debug);

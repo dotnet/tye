@@ -31,7 +31,7 @@ namespace E2ETest
         [Fact]
         public async Task FrontendBackendPurgeTest()
         {
-            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
+            using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var tyeDir = new DirectoryInfo(Path.Combine(projectDirectory.DirectoryPath, ".tye"));
@@ -69,7 +69,7 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task MultiProjectPurgeTest()
         {
-            using var projectDirectory = CopySampleProjectDirectory("multi-project");
+            using var projectDirectory = CopyTestProjectDirectory("multi-project");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var tyeDir = new DirectoryInfo(Path.Combine(projectDirectory.DirectoryPath, ".tye"));

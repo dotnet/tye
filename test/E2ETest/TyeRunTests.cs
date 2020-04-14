@@ -45,36 +45,9 @@ namespace E2ETest
         }
 
         [Fact]
-        public async Task SingleProjectRunTest()
-        {
-            using var projectDirectory = CopySampleProjectDirectory(Path.Combine("single-project", "test-project"));
-
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "test-project.csproj"));
-            var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
-
-            var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
-                AllowAutoRedirect = false
-            };
-
-            var client = new HttpClient(new RetryHandler(handler));
-
-            await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
-            {
-                var testUri = await GetServiceUrl(client, uri, "test-project");
-
-                var testResponse = await client.GetAsync(testUri);
-
-                Assert.True(testResponse.IsSuccessStatusCode);
-            });
-        }
-
-        [Fact]
         public async Task FrontendBackendRunTest()
         {
-            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
+            using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
@@ -105,7 +78,7 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task FrontendBackendRunTestWithDocker()
         {
-            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
+            using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
@@ -139,7 +112,7 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task FrontendProjectBackendDocker()
         {
-            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
+            using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
@@ -183,7 +156,7 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task FrontendDockerBackendProject()
         {
-            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
+            using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
@@ -282,7 +255,7 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task DockerNetworkAssignmentTest()
         {
-            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
+            using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
@@ -339,7 +312,7 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task DockerNetworkAssignmentForNonExistingNetworkTest()
         {
-            using var projectDirectory = CopySampleProjectDirectory("frontend-backend");
+            using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
@@ -423,7 +396,7 @@ namespace E2ETest
         [Fact]
         public async Task IngressRunTest()
         {
-            using var projectDirectory = CopySampleProjectDirectory("apps-with-ingress");
+            using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
@@ -472,7 +445,7 @@ namespace E2ETest
         [SkipIfDockerNotRunning]
         public async Task NginxIngressTest()
         {
-            using var projectDirectory = CopySampleProjectDirectory("nginx-ingress");
+            using var projectDirectory = CopyTestProjectDirectory("nginx-ingress");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
@@ -511,7 +484,7 @@ namespace E2ETest
         [Fact]
         public async Task NullDebugTargetsDoesNotThrow()
         {
-            using var projectDirectory = CopySampleProjectDirectory(Path.Combine("single-project", "test-project"));
+            using var projectDirectory = CopyTestProjectDirectory(Path.Combine("single-project", "test-project"));
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "test-project.csproj"));
 

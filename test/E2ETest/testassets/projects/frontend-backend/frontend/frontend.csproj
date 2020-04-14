@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>Frontend</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(TyeLibrariesPath)\Microsoft.Tye.Extensions.Configuration\Microsoft.Tye.Extensions.Configuration.csproj" />
+  </ItemGroup>
+
+</Project>
