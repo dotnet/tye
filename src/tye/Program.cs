@@ -27,6 +27,7 @@ namespace Microsoft.Tye
             command.AddCommand(CreateGenerateCommand());
             command.AddCommand(CreateRunCommand(args));
             command.AddCommand(CreateBuildCommand());
+            command.AddCommand(CreatePushCommand());
             command.AddCommand(CreateDeployCommand());
 
             // Show commandline help unless a subcommand was used.
