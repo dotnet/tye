@@ -19,7 +19,7 @@ namespace Tye.Serialization
                 {
                     case "name":
                         app.Name = YamlParser.GetScalarValue(key, child.Value);
-                        break; 
+                        break;
                     case "network":
                         app.Network = YamlParser.GetScalarValue(key, child.Value);
                         break;
