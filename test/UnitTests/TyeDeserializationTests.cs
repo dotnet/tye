@@ -256,6 +256,22 @@ extensions:
         }
 
         [Fact]
+        public void NetworkTest()
+        {
+            var input = @"
+network: test-network";
+            using var parser = new YamlParser(input);
+
+            var app = parser.ParseConfigApplication();
+
+            Assert.Equal("test-network", app.Network);
+
+            var expected = _deserializer.Deserialize<ConfigApplication>(new StringReader(input));
+
+            Assert.Equal(expected.Network, app.Network);
+        }
+
+        [Fact]
         public void VotingTest()
         {
             using var parser = new YamlParser(
