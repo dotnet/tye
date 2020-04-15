@@ -10,6 +10,7 @@ using Xunit;
 using Xunit.Abstractions;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using YamlDotNet.RepresentationModel;
 using static E2ETest.TestHelpers;
 
 namespace E2ETest
@@ -18,15 +19,12 @@ namespace E2ETest
     {
         private readonly ITestOutputHelper output;
         private readonly TestOutputLogEventSink sink;
-        private readonly IDeserializer _deserializer;
 
         public TyeInitTests(ITestOutputHelper output)
         {
             this.output = output;
             sink = new TestOutputLogEventSink(output);
-            _deserializer = new DeserializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
+
         }
 
         [Fact]
@@ -38,12 +36,10 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "multi-project.sln"));
 
             var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
-            var actual = _deserializer.Deserialize<ConfigApplication>(content);
 
             var expectedContent = File.ReadAllText("testassets/init/multi-project.yaml");
-            var expected = _deserializer.Deserialize<ConfigApplication>(expectedContent);
 
-            TyeAssert.Equal(expected, actual);
+            YamlAssert.Equals(expectedContent, content);
         }
 
         [Fact]
@@ -61,7 +57,7 @@ namespace E2ETest
 
             output.WriteLine(content);
 
-            Assert.Equal(expectedContent.NormalizeNewLines(), content.NormalizeNewLines());
+            YamlAssert.Equals(expectedContent, content);
         }
 
         // Tests our logic that excludes non-applications (unit tests, classlibs, etc)
@@ -73,12 +69,10 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "project-types.sln"));
 
             var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
-            var actual = _deserializer.Deserialize<ConfigApplication>(content);
 
             var expectedContent = File.ReadAllText("testassets/init/project-types.yaml");
-            var expected = _deserializer.Deserialize<ConfigApplication>(expectedContent);
 
-            TyeAssert.Equal(expected, actual);
+            YamlAssert.Equals(expectedContent, content);
         }
     }
 }
