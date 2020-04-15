@@ -30,13 +30,13 @@ This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandlin
     - The `Logs` column has a link to view the streaming logs for the service.
     - the `Bindings` column has links to the listening URLs of the service.
     
-    Navigate to the `frontend` service using one of the links on the dashboard.
+    Navigate to the `frontend` service using one of the urls on the dashboard in the *Bindings* column. It should be in the form of <http://localhost:[port]> or <https://localhost:[port]>.
 
     The dashboard will use port 8000 if possible. Services written using ASP.NET Core will have their listening ports assigned randomly if not explicitly configured.
 
 ## Running multiple applications with tye run
 
-1. Create a backend API that the frontend will call inside of the `microservices/` folder.
+1. If you haven't already, stop the existing `tye run` command using `Ctrl + C`. Create a backend API that the frontend will call inside of the `microservices/` folder.
 
     ```text
     dotnet new webapi -n backend
@@ -51,7 +51,7 @@ This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandlin
 
     You should have a solution called `microservice.sln` that references the `frontend` and `backend` projects.
 
-2. If you haven't already, stop the existing `tye run` command using `Ctrl + C`. Run the `tye` command line in the folder with the solution.
+2. Run the `tye` command line in the folder with the solution.
 
     ```text
     tye run
