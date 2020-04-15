@@ -10,7 +10,7 @@ namespace Microsoft.Tye
             ProviderKey = providerKey;
             AppSource = appSource;
         }
-        
+
         public string ProviderName { get; }
         public string ProviderKey { get; }
         public FileInfo AppSource { get; }

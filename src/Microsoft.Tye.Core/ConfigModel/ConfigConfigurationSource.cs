@@ -10,8 +10,8 @@ namespace Microsoft.Tye.ConfigModel
     {
         [Required]
         public string Name { get; set; } = default!;
-        
-        public string Value { get; set; } = default!;        
+
+        public string Value { get; set; } = default!;
 
         public string SecretProvider { get; set; } = default!;
 

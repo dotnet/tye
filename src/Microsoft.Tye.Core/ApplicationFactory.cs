@@ -172,7 +172,7 @@ namespace Microsoft.Tye
                         if (!(configEnvVar.SecretKey is null))
                         {
                             envVar.Secret = new SecretEnvironmentVariableBuilder(configEnvVar.SecretProvider, configEnvVar.SecretKey, source);
-                        }                        
+                        }
                         container.EnvironmentVariables.Add(envVar);
                     }
                     else if (service is ExecutableServiceBuilder executable)

@@ -56,7 +56,7 @@ namespace Microsoft.Tye
                     foreach (var entry in container.EnvironmentVariables)
                     {
                         env.Add(entry.ToHostingEnvironmentVariable());
-                    }      
+                    }
                 }
                 else if (service is ExecutableServiceBuilder executable)
                 {
@@ -163,7 +163,7 @@ namespace Microsoft.Tye
             {
                 env.Source = new Tye.Hosting.Model.EnvironmentVariableSource(builder.Source.Service, builder.Source.Binding);
                 env.Source.Kind = (Tye.Hosting.Model.EnvironmentVariableSource.SourceKind)(int)builder.Source.Kind;
-            }          
+            }
             if (builder.Secret != null)
             {
                 env.Secret = new Tye.Hosting.Model.SecretEnvironmentVariableSource(builder.Secret.ProviderName, builder.Secret.ProviderKey, builder.Name, builder.Secret.AppSource);
