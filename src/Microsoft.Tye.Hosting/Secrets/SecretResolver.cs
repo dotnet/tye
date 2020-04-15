@@ -34,10 +34,34 @@ namespace Microsoft.Tye.Hosting.Secrets
 
         private static ConfigSecrets FromYaml(FileInfo file)
         {
+<<<<<<< HEAD:src/Microsoft.Tye.Hosting/Secrets/SecretResolver.cs
             var parser = new YamlParser(file);
             var configSecrets = parser.ParseConfigSecrets();
             configSecrets.Source = file;
             return configSecrets;
+=======
+            var deserializer = new YamlDotNet.Serialization.Deserializer();
+
+            using var reader = file.OpenText();
+            try
+            {
+                var secretConfig = deserializer.Deserialize<SecretConfig>(reader);
+                secretConfig.Source = file;
+
+                //Deserialization makes all collection properties null so make sure they are non-null so
+                //other code doesn't need to react
+                foreach (var secretProvider in secretConfig.SecretProviders)
+                {
+                    secretProvider.Settings ??= new Dictionary<string, string>();
+                }
+
+                return secretConfig;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+>>>>>>> serializer namespace:src/Microsoft.Tye.Hosting/SecretResolver.cs
         }
 
         internal static ISecretProvider GetProvider(FileInfo secretConfigSource, string secretProviderName)
