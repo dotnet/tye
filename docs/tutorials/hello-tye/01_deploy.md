@@ -124,7 +124,6 @@ Tye has a optional configuration file (`tye.yaml`) to allow customizing settings
     Based on what container registry you configured, add the following line in the `tye.yaml` file:
 
     ```yaml
-    name: microservice
     registry: <registry_name>
     ```
 
