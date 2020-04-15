@@ -77,6 +77,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
    ```yaml
     name: microservice
+    registry: <registry_name>
     services:
     - name: backend
       project: backend\backend.csproj
