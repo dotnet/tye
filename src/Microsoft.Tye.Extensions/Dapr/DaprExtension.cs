@@ -37,7 +37,7 @@ namespace Microsoft.Tye.Extensions.Dapr
 
                         // These environment variables are replaced with environment variables
                         // defined for this service.
-                        Args = $"-app-id {project.Name} -app-port %APP_PORT% -dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT% --placement-address localhost:50005",
+                        Args = $"-app-id {project.Name} -app-port %APP_PORT% -dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT% -log-level %LOG_LEVEL% -config %CONFIG% --placement-address localhost:50005",
                     };
                     context.Application.Services.Add(proxy);
 
@@ -138,17 +138,15 @@ namespace Microsoft.Tye.Extensions.Dapr
                         deployment.Annotations.Add("dapr.io/id", project.Name);
                         deployment.Annotations.Add("dapr.io/port", (httpBinding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
 
-#pragma warning disable CS8604 // Possible null reference argument.
                         if (config.Data.TryGetValue("config", out var daprConfig) && daprConfig is object)
                         {
-                            deployment.Annotations.TryAdd("dapr.io/config", daprConfig.ToString());
+                            deployment.Annotations.TryAdd("dapr.io/config", daprConfig!.ToString());
                         }
 
                         if (config.Data.TryGetValue("log-level", out var logLevel) && logLevel is object)
                         {
-                            deployment.Annotations.TryAdd("dapr.io/log-level", logLevel.ToString());
+                            deployment.Annotations.TryAdd("dapr.io/log-level", logLevel!.ToString());
                         }
-#pragma warning restore CS8604 // Possible null reference argument.
                     }
                 }
             }
