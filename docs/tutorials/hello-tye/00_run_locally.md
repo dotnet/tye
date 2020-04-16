@@ -65,7 +65,7 @@ This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandlin
 
 Now that we have two applications running, let's make them communicate. By default, `tye` enables service discovery by injecting environment variables with a specific naming convention. For more information on, see [service discovery](/docs/reference/service_discovery.md).
 
-1. Open the solution in your editor of choice.
+1. If you haven't already, stop the existing `tye run` command using `Ctrl + C`. Open the solution in your editor of choice.
 
 2. Add a file `WeatherForecast.cs` to the `frontend` project.
 
