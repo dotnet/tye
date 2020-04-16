@@ -6,6 +6,8 @@ metadata:
     dapr.io/enabled: 'true'
     dapr.io/id: 'dapr_test_project'
     dapr.io/port: '80'
+    dapr.io/config: 'tracing'
+    dapr.io/log-level: 'debug'
   labels:
     app.kubernetes.io/name: 'dapr_test_project'
     app.kubernetes.io/part-of: 'dapr_test_application'
@@ -20,6 +22,8 @@ spec:
         dapr.io/enabled: 'true'
         dapr.io/id: 'dapr_test_project'
         dapr.io/port: '80'
+        dapr.io/config: 'tracing'
+        dapr.io/log-level: 'debug'
       labels:
         app.kubernetes.io/name: 'dapr_test_project'
         app.kubernetes.io/part-of: 'dapr_test_application'
