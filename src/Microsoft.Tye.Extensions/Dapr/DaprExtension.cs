@@ -152,7 +152,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                             deployment.Annotations.TryAdd("dapr.io/config", daprConfig!.ToString() ?? string.Empty);
                         }
 
-                        if (config.Data.TryGetValue("log-level",  out var logLevel) && logLevel is object)
+                        if (config.Data.TryGetValue("log-level", out var logLevel) && logLevel is object)
                         {
                             deployment.Annotations.TryAdd("dapr.io/log-level", logLevel!.ToString() ?? string.Empty);
                         }
