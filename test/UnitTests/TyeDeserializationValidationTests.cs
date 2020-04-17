@@ -171,6 +171,23 @@ services:
             Assert.Contains(CoreStrings.FormatMultipleBindingWithSamePort("service"), exception.Message);
         }
 
+        [Fact]
+        public void ServicesMustHaveUniqueNonNullPorts()
+        {
+            var input = @"
+services:
+  - name: app
+    bindings:
+      - protocol: http
+        name: a
+      - protocol: https
+        name: b";
+
+            using var parser = new YamlParser(input);
+            var app = parser.ParseConfigApplication();
+            app.Validate();
+        }
+
 
         [Theory]
         [InlineData("image", "executable")]

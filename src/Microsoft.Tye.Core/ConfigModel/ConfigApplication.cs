@@ -106,7 +106,7 @@ namespace Microsoft.Tye.ConfigModel
                         throw new TyeYamlException(CoreStrings.FormatMultipleBindingWithSameName("service"));
                     }
 
-                    if (service.Bindings.Count(o => o.Port == binding.Port) > 1)
+                    if (service.Bindings.Count(o => o.Port != null && o.Port == binding.Port) > 1)
                     {
                         throw new TyeYamlException(CoreStrings.FormatMultipleBindingWithSamePort("service"));
                     }
