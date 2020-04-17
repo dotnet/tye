@@ -14,7 +14,7 @@ namespace Microsoft.Tye
     {
         // For layering reasons this has to live in the `tye` project. We don't want to leak
         // the extensions themselves into Tye.Core.
-        public static async Task ProcessExtensionsAsync(this ApplicationBuilder application, ExtensionContext.OperationKind operation)
+        public static async Task ProcessExtensionsAsync(this ApplicationBuilder application, OutputContext output, ExtensionContext.OperationKind operation)
         {
             foreach (var extensionConfig in application.Extensions)
             {
@@ -23,7 +23,7 @@ namespace Microsoft.Tye
                     throw new CommandException($"Could not find the extension '{extensionConfig.Name}'.");
                 }
 
-                var context = new ExtensionContext(application, operation);
+                var context = new ExtensionContext(application, output, operation);
                 await extension.ProcessAsync(context, extensionConfig);
             }
         }

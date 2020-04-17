@@ -54,7 +54,7 @@ namespace Microsoft.Tye
 
         private static async Task ExecutePushAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive, bool force)
         {
-            await application.ProcessExtensionsAsync(ExtensionContext.OperationKind.Deploy);
+            await application.ProcessExtensionsAsync(output, ExtensionContext.OperationKind.Deploy);
 
             var steps = new List<ServiceExecutor.Step>()
             {

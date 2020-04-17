@@ -4,6 +4,7 @@
 
 using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -49,8 +50,29 @@ namespace Microsoft.Tye.Extensions.Dapr
 
                         // These environment variables are replaced with environment variables
                         // defined for this service.
-                        Args = $"-app-id {project.Name} -app-port %APP_PORT% -dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT% -log-level %LOG_LEVEL% -config %CONFIG% --placement-address localhost:50005",
+                        Args = $"-app-id {project.Name} -app-port %APP_PORT% -dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT% --placement-address localhost:50005",
                     };
+
+                    // When running locally `-config` specifies a filename, not a configuration name. By convention
+                    // we'll assume the filename and config name are the same.
+                    if (config.Data.TryGetValue("config", out var obj) && obj?.ToString() is string daprConfig)
+                    {
+                        var configFile = Path.Combine(context.Application.Source.DirectoryName, "components", $"{daprConfig}.yaml");
+                        if (File.Exists(configFile))
+                        {
+                            proxy.Args += $" -config \"{configFile}\"";
+                        }
+                        else
+                        {
+                            context.Output.WriteAlwaysLine($"Could not find dapr config '{configFile}'. Skipping...");
+                        }
+                    }
+
+                    if (config.Data.TryGetValue("log-level", out obj) && obj?.ToString() is string logLevel)
+                    {
+                        proxy.Args += $" -log-level {logLevel}";
+                    }
+
                     context.Application.Services.Add(proxy);
 
                     // Listen for grpc on an auto-assigned port
@@ -147,14 +169,14 @@ namespace Microsoft.Tye.Extensions.Dapr
                         deployment.Annotations.Add("dapr.io/id", project.Name);
                         deployment.Annotations.Add("dapr.io/port", (httpBinding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
 
-                        if (config.Data.TryGetValue("config", out var daprConfig) && daprConfig is object)
+                        if (config.Data.TryGetValue("config", out var obj) && obj?.ToString() is string daprConfig)
                         {
-                            deployment.Annotations.TryAdd("dapr.io/config", daprConfig!.ToString() ?? string.Empty);
+                            deployment.Annotations.TryAdd("dapr.io/config", daprConfig);
                         }
 
-                        if (config.Data.TryGetValue("log-level", out var logLevel) && logLevel is object)
+                        if (config.Data.TryGetValue("log-level", out obj) && obj?.ToString() is string logLevel)
                         {
-                            deployment.Annotations.TryAdd("dapr.io/log-level", logLevel!.ToString() ?? string.Empty);
+                            deployment.Annotations.TryAdd("dapr.io/log-level", logLevel);
                         }
                     }
                 }
