@@ -7,6 +7,16 @@
 name: dapr
 extensions:
 - name: dapr
+
+  # log-level configures the log level of the dapr sidecar
+  log-level: debug
+
+  # config allows you to pass additional configuration into the dapr sidecar
+  # config will be interpreted as a named k8s resource when deployed, and will be interpreted as
+  # a file on disk when running locally at `./components/myconfig.yaml`
+  #
+  # config: myconfig
+  
 services:
 - name: orders
   project: orders/orders.csproj

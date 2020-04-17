@@ -87,7 +87,7 @@ namespace Microsoft.Tye
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
                 }
 
-                await application.ProcessExtensionsAsync(ExtensionContext.OperationKind.LocalRun);
+                await application.ProcessExtensionsAsync(output, ExtensionContext.OperationKind.LocalRun);
 
                 InitializeThreadPoolSettings(application.Services.Count);
 

@@ -6,13 +6,16 @@ namespace Microsoft.Tye
 {
     public sealed class ExtensionContext
     {
-        public ExtensionContext(ApplicationBuilder application, OperationKind operation)
+        public ExtensionContext(ApplicationBuilder application, OutputContext output, OperationKind operation)
         {
             Application = application;
+            Output = output;
             Operation = operation;
         }
 
         public ApplicationBuilder Application { get; }
+
+        public OutputContext Output { get; }
 
         public OperationKind Operation { get; }
 
