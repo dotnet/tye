@@ -248,8 +248,14 @@ namespace Microsoft.Tye.Hosting
                     // 1. Tell the docker container what port to bind to
                     portString = docker.Private ? "" : string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.ContainerPort ?? p.Port}"));
 
+                    static bool IsHttp(string? protocol)
+                    {
+                        return string.Equals(protocol, "https", StringComparison.OrdinalIgnoreCase) ||
+                               string.Equals(protocol, "http", StringComparison.OrdinalIgnoreCase);
+                    }
+
                     // 2. Configure ASP.NET Core to bind to those same ports
-                    environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://*:{p.ContainerPort ?? p.Port}"));
+                    environment["ASPNETCORE_URLS"] = string.Join(";", ports.Where(p => IsHttp(p.Protocol)).Select(p => $"{p.Protocol}://*:{p.ContainerPort ?? p.Port}"));
 
                     // Set the HTTPS port for the redirect middleware
                     foreach (var p in ports)
