@@ -19,6 +19,8 @@ namespace Microsoft.Tye.Hosting
     {
         private const string ProcessReplicaStore = "process";
 
+        private Dictionary<string, string> SupportedProperties = new Dictionary<string, string> { { "Configuration", "--configuration" } };
+
         private readonly ILogger _logger;
         private readonly ProcessRunnerOptions _options;
 
@@ -59,15 +61,21 @@ namespace Microsoft.Tye.Hosting
                     workingDirectory = project.ProjectFile.Directory.FullName;
                     args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
 
-                    var supportedProperties = new Dictionary<string, string> { { "Configuration", "--configuration" } };
-
                     if (project.Properties != null)
                     {
-                        foreach (var supportedProperty in supportedProperties)
+                        foreach (var supportedProperty in SupportedProperties)
                         {
                             if (project.Properties.TryGetValue(supportedProperty.Key, out var configuration))
                             {
                                 buildArgs += $" {supportedProperty.Value} {configuration}";
+                            }
+                        }
+
+                        foreach (var property in project.Properties)
+                        {
+                            if (!SupportedProperties.ContainsKey(property.Key))
+                            {
+                                buildArgs += $" /p:{property.Key} {property.Value}";
                             }
                         }
                     }
