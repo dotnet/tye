@@ -58,7 +58,7 @@ namespace Microsoft.Tye.Hosting
                     path = project.RunCommand;
                     workingDirectory = project.ProjectFile.Directory.FullName;
                     args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
-                    buildArgs = project.BuildArgs;
+                    buildArgs = project.BuildArgs ?? buildArgs;
                     service.Status.ProjectFilePath = project.ProjectFile.FullName;
                 }
                 else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
