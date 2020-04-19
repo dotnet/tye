@@ -49,5 +49,6 @@ namespace Microsoft.Tye
 
         // Used when running in a container locally.
         public List<VolumeBuilder> Volumes { get; } = new List<VolumeBuilder>();
+        public string? BuildArgs { get; set; }
     }
 }

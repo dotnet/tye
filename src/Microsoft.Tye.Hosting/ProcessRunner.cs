@@ -51,12 +51,14 @@ namespace Microsoft.Tye.Hosting
 
                 string path;
                 string args;
+                string buildArgs = string.Empty;
                 string workingDirectory;
                 if (serviceDescription.RunInfo is ProjectRunInfo project)
                 {
                     path = project.RunCommand;
                     workingDirectory = project.ProjectFile.Directory.FullName;
                     args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
+                    buildArgs = project.BuildArgs;
                     service.Status.ProjectFilePath = project.ProjectFile.FullName;
                 }
                 else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
@@ -90,9 +92,9 @@ namespace Microsoft.Tye.Hosting
                     // Sometimes building can fail because of file locking (like files being open in VS)
                     _logger.LogInformation("Building project {ProjectFile}", service.Status.ProjectFilePath);
 
-                    service.Logs.OnNext($"dotnet build \"{service.Status.ProjectFilePath}\" /nologo");
+                    service.Logs.OnNext($"dotnet build \"{service.Status.ProjectFilePath}\" {buildArgs} /nologo");
 
-                    var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: workingDirectory);
+                    var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" {buildArgs} /nologo", throwOnError: false, workingDirectory: workingDirectory);
 
                     service.Logs.OnNext(buildResult.StandardOutput);
 

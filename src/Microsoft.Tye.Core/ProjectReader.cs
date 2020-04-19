@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Definition;
@@ -151,13 +152,38 @@ namespace Microsoft.Tye
 
             ProjectInstance projectInstance;
 
+            var globalProperties = new Dictionary<string, string>();
+            var supportedProperties = new Dictionary<string, List<string>>
+                             {
+                                 { "Configuration", new List<string> { "--configuration", "-c" } }
+                             };
+
+            var projectBuildArgs = project.BuildArgs;
+            if (!string.IsNullOrEmpty(projectBuildArgs))
+            {
+                foreach (var supportedProperty in supportedProperties)
+                {
+                    foreach (var argument in supportedProperty.Value)
+                    {
+                        var argumentPattern = $"{argument}\\s+\"?([^\\s\"]+)";
+                        var match = Regex.Match(projectBuildArgs, argumentPattern, RegexOptions.IgnoreCase);
+                        if (match.Success)
+                        {
+                            globalProperties[supportedProperty.Key] = match.Groups[1].Value;
+                            break;
+                        }
+                    }
+                }
+            }
+
             try
             {
                 output.WriteDebugLine($"Loading project '{project.ProjectFile.FullName}'.");
                 var msbuildProject = Microsoft.Build.Evaluation.Project.FromFile(project.ProjectFile.FullName, new ProjectOptions()
-                {
-                    ProjectCollection = projectCollection,
-                });
+                                                                                                               {
+                                                                                                                   ProjectCollection = projectCollection,
+                                                                                                                   GlobalProperties = globalProperties
+                                                                                                               });
                 projectInstance = msbuildProject.CreateProjectInstance();
                 output.WriteDebugLine($"Loaded project '{project.ProjectFile.FullName}'.");
             }

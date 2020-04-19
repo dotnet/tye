@@ -45,6 +45,9 @@ namespace Tye.Serialization
                     case "project":
                         service.Project = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "buildArgs":
+                        service.BuildArgs = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     case "build":
                         if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var build))
                         {
