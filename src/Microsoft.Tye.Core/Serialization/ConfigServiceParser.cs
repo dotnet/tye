@@ -45,8 +45,12 @@ namespace Tye.Serialization
                     case "project":
                         service.Project = YamlParser.GetScalarValue(key, child.Value);
                         break;
-                    case "buildArgs":
-                        service.BuildArgs = YamlParser.GetScalarValue(key, child.Value);
+                    case "properties":
+                        if (child.Value.NodeType != YamlNodeType.Sequence)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
+                        }
+                        HandleServiceConfiguration((child.Value as YamlSequenceNode)!, service.Properties);
                         break;
                     case "build":
                         if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var build))

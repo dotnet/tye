@@ -14,7 +14,7 @@ namespace Microsoft.Tye.Hosting.Model
             ProjectFile = project.ProjectFile;
             Args = project.Args;
             Build = project.Build;
-            BuildArgs = project.BuildArgs;
+            Properties = project.Properties;
             TargetFramework = project.TargetFramework;
             TargetFrameworkName = project.TargetFrameworkName;
             TargetFrameworkVersion = project.TargetFrameworkVersion;
@@ -26,8 +26,8 @@ namespace Microsoft.Tye.Hosting.Model
             PublishOutputPath = project.PublishDir;
         }
 
-        public string? BuildArgs { get; set; }
-
+        public Dictionary<string, string> Properties { get; set; }
+        
         public string? Args { get; }
         public bool Build { get; }
         public FileInfo ProjectFile { get; }

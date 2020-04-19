@@ -58,7 +58,7 @@ namespace Microsoft.Tye
                     service = project;
 
                     project.Build = configService.Build ?? true;
-                    project.BuildArgs = configService.BuildArgs;
+                    project.Properties = configService.Properties.ToDictionary(cs => cs.Name, cs => cs.Value);
                     project.Args = configService.Args;
                     project.Replicas = configService.Replicas ?? 1;
 

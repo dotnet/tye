@@ -24,6 +24,6 @@ namespace Microsoft.Tye.ConfigModel
         public List<ConfigVolume> Volumes { get; set; } = new List<ConfigVolume>();
         [YamlMember(Alias = "env")]
         public List<ConfigConfigurationSource> Configuration { get; set; } = new List<ConfigConfigurationSource>();
-        public string? BuildArgs { get; set; }
+        public List<ConfigConfigurationSource> Properties { get; set; } = new List<ConfigConfigurationSource>();
     }
 }

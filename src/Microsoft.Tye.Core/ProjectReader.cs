@@ -27,7 +27,11 @@ namespace Microsoft.Tye
     public static class ProjectReader
     {
         private static object @lock = new object();
+        
         private static bool registered;
+
+        private static List<string> SupportedGlobalPropertiesFromProperties = new List<string> { "Configuration" };
+
 
         public static IEnumerable<FileInfo> EnumerateProjects(FileInfo solutionFile)
         {
@@ -153,25 +157,13 @@ namespace Microsoft.Tye
             ProjectInstance projectInstance;
 
             var globalProperties = new Dictionary<string, string>();
-            var supportedProperties = new Dictionary<string, List<string>>
-                             {
-                                 { "Configuration", new List<string> { "--configuration", "-c" } }
-                             };
-
-            var projectBuildArgs = project.BuildArgs;
-            if (!string.IsNullOrEmpty(projectBuildArgs))
+            if (project.Properties != null)
             {
-                foreach (var supportedProperty in supportedProperties)
+                foreach (var supportedProperty in SupportedGlobalPropertiesFromProperties)
                 {
-                    foreach (var argument in supportedProperty.Value)
+                    if(project.Properties.TryGetValue(supportedProperty, out var value))
                     {
-                        var argumentPattern = $"{argument}\\s+\"?([^\\s\"]+)";
-                        var match = Regex.Match(projectBuildArgs, argumentPattern, RegexOptions.IgnoreCase);
-                        if (match.Success)
-                        {
-                            globalProperties[supportedProperty.Key] = match.Groups[1].Value;
-                            break;
-                        }
+                        globalProperties[supportedProperty] = value;
                     }
                 }
             }

@@ -51,14 +51,27 @@ namespace Microsoft.Tye.Hosting
 
                 string path;
                 string args;
-                string buildArgs = string.Empty;
+                var buildArgs = string.Empty;
                 string workingDirectory;
                 if (serviceDescription.RunInfo is ProjectRunInfo project)
                 {
                     path = project.RunCommand;
                     workingDirectory = project.ProjectFile.Directory.FullName;
                     args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
-                    buildArgs = project.BuildArgs ?? buildArgs;
+
+                    var supportedProperties = new Dictionary<string, string> { { "Configuration", "--configuration" } };
+
+                    if(project.Properties != null)
+                    {
+                        foreach(var supportedProperty in supportedProperties)
+                        {
+                            if(project.Properties.TryGetValue(supportedProperty.Key, out var configuration))
+                            {
+                                buildArgs += $" {supportedProperty.Value} {configuration}";
+                            }
+                        }
+                    }
+                    
                     service.Status.ProjectFilePath = project.ProjectFile.FullName;
                 }
                 else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
