@@ -26,7 +26,7 @@ namespace Microsoft.Tye.Hosting.Model
             PublishOutputPath = project.PublishDir;
         }
 
-        public Dictionary<string, string> Properties { get; set; }
+        public Dictionary<string, string>? Properties { get; set; }
 
         public string? Args { get; }
         public bool Build { get; }
