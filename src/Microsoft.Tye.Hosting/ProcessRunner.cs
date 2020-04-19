@@ -75,7 +75,7 @@ namespace Microsoft.Tye.Hosting
                         {
                             if (!SupportedProperties.ContainsKey(property.Key))
                             {
-                                buildArgs += $" /p:{property.Key} {property.Value}";
+                                buildArgs += $" /p:{property.Key}={property.Value}";
                             }
                         }
                     }
