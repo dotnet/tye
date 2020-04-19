@@ -27,7 +27,7 @@ namespace Microsoft.Tye
     public static class ProjectReader
     {
         private static object @lock = new object();
-        
+
         private static bool registered;
 
         private static List<string> SupportedGlobalPropertiesFromProperties = new List<string> { "Configuration" };
@@ -161,7 +161,7 @@ namespace Microsoft.Tye
             {
                 foreach (var supportedProperty in SupportedGlobalPropertiesFromProperties)
                 {
-                    if(project.Properties.TryGetValue(supportedProperty, out var value))
+                    if (project.Properties.TryGetValue(supportedProperty, out var value))
                     {
                         globalProperties[supportedProperty] = value;
                     }

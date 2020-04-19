@@ -61,17 +61,17 @@ namespace Microsoft.Tye.Hosting
 
                     var supportedProperties = new Dictionary<string, string> { { "Configuration", "--configuration" } };
 
-                    if(project.Properties != null)
+                    if (project.Properties != null)
                     {
-                        foreach(var supportedProperty in supportedProperties)
+                        foreach (var supportedProperty in supportedProperties)
                         {
-                            if(project.Properties.TryGetValue(supportedProperty.Key, out var configuration))
+                            if (project.Properties.TryGetValue(supportedProperty.Key, out var configuration))
                             {
                                 buildArgs += $" {supportedProperty.Value} {configuration}";
                             }
                         }
                     }
-                    
+
                     service.Status.ProjectFilePath = project.ProjectFile.FullName;
                 }
                 else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
