@@ -179,11 +179,11 @@ namespace Microsoft.Tye
             try
             {
                 output.WriteDebugLine($"Loading project '{project.ProjectFile.FullName}'.");
-                var msbuildProject = Microsoft.Build.Evaluation.Project.FromFile(project.ProjectFile.FullName, new ProjectOptions()
-                                                                                                               {
-                                                                                                                   ProjectCollection = projectCollection,
-                                                                                                                   GlobalProperties = globalProperties
-                                                                                                               });
+                var msbuildProject = Microsoft.Build.Evaluation.Project.FromFile(project.ProjectFile.FullName, new ProjectOptions
+                {
+                    ProjectCollection = projectCollection,
+                    GlobalProperties = globalProperties
+                });
                 projectInstance = msbuildProject.CreateProjectInstance();
                 output.WriteDebugLine($"Loaded project '{project.ProjectFile.FullName}'.");
             }
