@@ -147,15 +147,24 @@ namespace Microsoft.Tye
         {
             var sw = Stopwatch.StartNew();
 
+            // Currently we only log at debug level.
+            var logger = new ConsoleLogger(
+                verbosity: LoggerVerbosity.Normal,
+                write: message => output.WriteDebug(message),
+                colorSet: null,
+                colorReset: null);
+
             // We need to isolate projects from each other for testing. MSBuild does not support
             // loading the same project twice in the same collection.
             var projectCollection = new ProjectCollection();
 
             ProjectInstance projectInstance;
+            Microsoft.Build.Evaluation.Project msbuildProject;
+
             try
             {
                 output.WriteDebugLine($"Loading project '{project.ProjectFile.FullName}'.");
-                var msbuildProject = Microsoft.Build.Evaluation.Project.FromFile(project.ProjectFile.FullName, new ProjectOptions
+                msbuildProject = Microsoft.Build.Evaluation.Project.FromFile(project.ProjectFile.FullName, new ProjectOptions()
                 {
                     ProjectCollection = projectCollection,
                     GlobalProperties = project.BuildProperties
@@ -168,18 +177,45 @@ namespace Microsoft.Tye
                 throw new CommandException($"Failed to load project: '{project.ProjectFile.FullName}'.", ex);
             }
 
-            // Currently we only log at debug level.
-            var logger = new ConsoleLogger(
-                verbosity: LoggerVerbosity.Normal,
-                write: message => output.WriteDebug(message),
-                colorSet: null,
-                colorReset: null);
-
             try
             {
                 AssemblyLoadContext.Default.Resolving += ResolveAssembly;
+
+                output.WriteDebugLine($"Restoring project '{project.ProjectFile.FullName}'.");
+
+                // Similar to what MSBuild does for restore:
+                // https://github.com/microsoft/msbuild/blob/3453beee039fb6f5ccc54ac783ebeced31fec472/src/MSBuild/XMake.cs#L1417
+                //
+                // We need to do restore as a separate operation
+                var restoreRequest = new BuildRequestData(
+                    projectInstance,
+                    targetsToBuild: new[] { "Restore" },
+                    hostServices: null,
+                    flags: BuildRequestDataFlags.ClearCachesAfterBuild | BuildRequestDataFlags.SkipNonexistentTargets | BuildRequestDataFlags.IgnoreMissingEmptyAndInvalidImports);
+
+                var parameters = new BuildParameters(projectCollection)
+                {
+                    Loggers = new[] { logger, },
+                };
+
+                // We don't really look at the result, because it's not clear we should halt totally
+                // if restore fails.
+                var restoreResult = BuildManager.DefaultBuildManager.Build(parameters, restoreRequest);
+                output.WriteDebugLine($"Restored project '{project.ProjectFile.FullName}'.");
+
+                msbuildProject.MarkDirty();
+                projectInstance = msbuildProject.CreateProjectInstance();
+
+                var targets = new List<string>()
+                {
+                    "ResolveReferences",
+                    "ResolvePackageDependenciesDesignTime",
+                    "PrepareResources",
+                    "GetAssemblyAttributes",
+                };
+
                 var result = projectInstance.Build(
-                    targets: new[] { "Restore", "ResolveReferences", "ResolvePackageDependenciesDesignTime", "PrepareResources", "GetAssemblyAttributes", },
+                    targets: targets.ToArray(),
                     loggers: new[] { logger, });
 
                 // If the build fails, we're not really blocked from doing our work.
@@ -191,8 +227,11 @@ namespace Microsoft.Tye
                 AssemblyLoadContext.Default.Resolving -= ResolveAssembly;
             }
 
-            // Reading both InformationalVersion and Version is more resilient in the face of build failures.
-            var version = projectInstance.GetProperty("InformationalVersion")?.EvaluatedValue ?? projectInstance.GetProperty("Version").EvaluatedValue;
+            // Reading a few different version properties to be more resilient.
+            var version =
+                projectInstance.GetProperty("AssemblyInformationalVersion")?.EvaluatedValue ??
+                projectInstance.GetProperty("InformationalVersion")?.EvaluatedValue ??
+                projectInstance.GetProperty("Version").EvaluatedValue;
             project.Version = version;
             output.WriteDebugLine($"Found application version: {version}");
 
@@ -256,7 +295,7 @@ namespace Microsoft.Tye
             // See: https://github.com/microsoft/MSBuildLocator/issues/86
             Assembly? ResolveAssembly(AssemblyLoadContext context, AssemblyName assemblyName)
             {
-                if (assemblyName.Name is object && assemblyName.Name.StartsWith("NuGet."))
+                if (assemblyName.Name is object)
                 {
                     var msbuildDirectory = Environment.GetEnvironmentVariable("MSBuildExtensionsPath")!;
                     var assemblyFilePath = Path.Combine(msbuildDirectory, assemblyName.Name + ".dll");
