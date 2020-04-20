@@ -16,7 +16,7 @@ The `tye cleanup` command will delete a deployed application from Kubernetes. `t
 
 - List all resources that are part of an application
 - Print the list of resources (what-if)
-- Offer a choice delete each resource (interactive)
+- Offer a choice to delete each resource (interactive)
 - Delete each resource (if applicable)
 
 `tye cleanup` operates in the current Kubernetes namespace. Use `kubectl config view --minify --output 'jsonpath={..namespace}'` to view the current namespace.
