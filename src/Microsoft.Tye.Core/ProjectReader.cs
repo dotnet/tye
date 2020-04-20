@@ -30,9 +30,6 @@ namespace Microsoft.Tye
 
         private static bool registered;
 
-        private static List<string> SupportedGlobalPropertiesFromProperties = new List<string> { "Configuration" };
-
-
         public static IEnumerable<FileInfo> EnumerateProjects(FileInfo solutionFile)
         {
             EnsureMSBuildRegistered(null, solutionFile);
@@ -155,26 +152,13 @@ namespace Microsoft.Tye
             var projectCollection = new ProjectCollection();
 
             ProjectInstance projectInstance;
-
-            var globalProperties = new Dictionary<string, string>();
-            if (project.Properties != null)
-            {
-                foreach (var supportedProperty in SupportedGlobalPropertiesFromProperties)
-                {
-                    if (project.Properties.TryGetValue(supportedProperty, out var value))
-                    {
-                        globalProperties[supportedProperty] = value;
-                    }
-                }
-            }
-
             try
             {
                 output.WriteDebugLine($"Loading project '{project.ProjectFile.FullName}'.");
                 var msbuildProject = Microsoft.Build.Evaluation.Project.FromFile(project.ProjectFile.FullName, new ProjectOptions
                 {
                     ProjectCollection = projectCollection,
-                    GlobalProperties = globalProperties
+                    GlobalProperties = project.Properties
                 });
                 projectInstance = msbuildProject.CreateProjectInstance();
                 output.WriteDebugLine($"Loaded project '{project.ProjectFile.FullName}'.");
