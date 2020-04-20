@@ -28,7 +28,6 @@ namespace Microsoft.Tye
                 },
             };
 
-
             command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool>((console, path, verbosity, interactive, whatIf) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
