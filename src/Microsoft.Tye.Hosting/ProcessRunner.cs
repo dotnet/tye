@@ -61,17 +61,17 @@ namespace Microsoft.Tye.Hosting
                     workingDirectory = project.ProjectFile.Directory.FullName;
                     args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
 
-                    if (project.Properties != null)
+                    if (project.BuildProperties != null)
                     {
                         foreach (var supportedProperty in SupportedProperties)
                         {
-                            if (project.Properties.TryGetValue(supportedProperty.Key, out var configuration))
+                            if (project.BuildProperties.TryGetValue(supportedProperty.Key, out var configuration))
                             {
                                 buildArgs += $" {supportedProperty.Value} {configuration}";
                             }
                         }
 
-                        foreach (var property in project.Properties)
+                        foreach (var property in project.BuildProperties)
                         {
                             if (!SupportedProperties.ContainsKey(property.Key))
                             {

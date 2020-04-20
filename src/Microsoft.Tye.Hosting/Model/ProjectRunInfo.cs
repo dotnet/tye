@@ -14,7 +14,7 @@ namespace Microsoft.Tye.Hosting.Model
             ProjectFile = project.ProjectFile;
             Args = project.Args;
             Build = project.Build;
-            Properties = project.Properties;
+            BuildProperties = project.BuildProperties;
             TargetFramework = project.TargetFramework;
             TargetFrameworkName = project.TargetFrameworkName;
             TargetFrameworkVersion = project.TargetFrameworkVersion;
@@ -26,7 +26,7 @@ namespace Microsoft.Tye.Hosting.Model
             PublishOutputPath = project.PublishDir;
         }
 
-        public Dictionary<string, string>? Properties { get; set; }
+        public Dictionary<string, string> BuildProperties { get; } = new Dictionary<string, string>();
 
         public string? Args { get; }
         public bool Build { get; }

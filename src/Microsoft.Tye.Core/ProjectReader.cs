@@ -158,7 +158,7 @@ namespace Microsoft.Tye
                 var msbuildProject = Microsoft.Build.Evaluation.Project.FromFile(project.ProjectFile.FullName, new ProjectOptions
                 {
                     ProjectCollection = projectCollection,
-                    GlobalProperties = project.Properties
+                    GlobalProperties = project.BuildProperties
                 });
                 projectInstance = msbuildProject.CreateProjectInstance();
                 output.WriteDebugLine($"Loaded project '{project.ProjectFile.FullName}'.");

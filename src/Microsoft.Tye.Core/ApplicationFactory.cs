@@ -58,18 +58,18 @@ namespace Microsoft.Tye
                     service = project;
 
                     project.Build = configService.Build ?? true;
-                    project.Properties = configService.Properties.ToDictionary(cs => cs.Name, cs => cs.Value);
                     project.Args = configService.Args;
+                    foreach (var buildProperty in configService.BuildProperties)
+                    {
+                        project.BuildProperties.Add(buildProperty.Name, buildProperty.Value);
+                    }
                     project.Replicas = configService.Replicas ?? 1;
 
                     await ProjectReader.ReadProjectDetailsAsync(output, project);
 
                     // We don't apply more container defaults here because we might need
                     // to prompt for the registry name.
-                    project.ContainerInfo = new ContainerInfo()
-                    {
-                        UseMultiphaseDockerfile = false,
-                    };
+                    project.ContainerInfo = new ContainerInfo() { UseMultiphaseDockerfile = false, };
 
                     // Do k8s by default.
                     project.ManifestInfo = new KubernetesManifestInfo();
@@ -91,16 +91,22 @@ namespace Microsoft.Tye
                     // Special handling of .dlls as executables (it will be executed as dotnet {dll})
                     if (Path.GetExtension(expandedExecutable) == ".dll")
                     {
-                        expandedExecutable = Path.GetFullPath(Path.Combine(builder.Source.Directory.FullName, expandedExecutable));
+                        expandedExecutable = Path.GetFullPath(
+                            Path.Combine(builder.Source.Directory.FullName, expandedExecutable));
                         workingDirectory = Path.GetDirectoryName(expandedExecutable)!;
                     }
 
                     var executable = new ExecutableServiceBuilder(configService.Name!, expandedExecutable)
                     {
                         Args = configService.Args,
-                        WorkingDirectory = configService.WorkingDirectory != null ?
-                        Path.GetFullPath(Path.Combine(builder.Source.Directory.FullName, Environment.ExpandEnvironmentVariables(configService.WorkingDirectory))) :
-                        workingDirectory,
+                        WorkingDirectory =
+                                             configService.WorkingDirectory != null
+                                                 ? Path.GetFullPath(
+                                                     Path.Combine(
+                                                         builder.Source.Directory.FullName,
+                                                         Environment.ExpandEnvironmentVariables(
+                                                             configService.WorkingDirectory)))
+                                                 : workingDirectory,
                         Replicas = configService.Replicas ?? 1
                     };
                     service = executable;
@@ -118,21 +124,12 @@ namespace Microsoft.Tye
                 builder.Services.Add(service);
 
                 // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
-                if (configService.Bindings.Count == 0 &&
-                    service is ProjectServiceBuilder project2 &&
-                    project2.IsAspNet)
+                if (configService.Bindings.Count == 0 && service is ProjectServiceBuilder project2 && project2.IsAspNet)
                 {
                     // HTTP is the default binding
-                    service.Bindings.Add(new BindingBuilder()
-                    {
-                        Protocol = "http"
-                    });
+                    service.Bindings.Add(new BindingBuilder() { Protocol = "http" });
 
-                    service.Bindings.Add(new BindingBuilder()
-                    {
-                        Name = "https",
-                        Protocol = "https"
-                    });
+                    service.Bindings.Add(new BindingBuilder() { Name = "https", Protocol = "https" });
                 }
                 else
                 {
@@ -160,10 +157,7 @@ namespace Microsoft.Tye
 
                 foreach (var configEnvVar in configService.Configuration)
                 {
-                    var envVar = new EnvironmentVariableBuilder(configEnvVar.Name)
-                    {
-                        Value = configEnvVar.Value,
-                    };
+                    var envVar = new EnvironmentVariableBuilder(configEnvVar.Name) { Value = configEnvVar.Value, };
                     if (service is ProjectServiceBuilder project)
                     {
                         project.EnvironmentVariables.Add(envVar);
@@ -211,6 +205,7 @@ namespace Microsoft.Tye
                     }
                 }
             }
+
 
             foreach (var configIngress in config.Ingress)
             {
