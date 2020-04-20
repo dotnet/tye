@@ -49,7 +49,7 @@ ingress:
 services:
   - name: appA
     project: ApplicationA/ApplicationA.csproj
-    properties:
+    buildProperties:
     - name: Configuration
     - value: Debug
     replicas: 2
