@@ -24,6 +24,8 @@
     <FileSignInfo Include="Serilog.Sinks.PeriodicBatching.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Serilog.Sinks.Seq.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Sln.dll" CertificateName="3PartySHA2" />
+    <!-- Despite the System. nomenclature, this is a non-MSFT .NET foundation project.-->
+    <FileSignInfo Include="System.Reactive.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="YamlDotNet.dll" CertificateName="3PartySHA2" />
   </ItemGroup>
 
