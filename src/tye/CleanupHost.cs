@@ -96,7 +96,7 @@ namespace Microsoft.Tye
                 {
                     resource.Kind = V1Deployment.KubeKind;
                 }
-                
+
                 resources.AddRange(response.Body.Items.Select(item => new Resource(item, item.Metadata, DeleteDeployment)));
                 output.WriteDebugLine($"Found {response.Body.Items.Count} matching deployments");
             }
@@ -118,7 +118,7 @@ namespace Microsoft.Tye
                 {
                     resource.Kind = V1Secret.KubeKind;
                 }
-                
+
                 resources.AddRange(response.Body.Items.Select(item => new Resource(item, item.Metadata, DeleteSecret)));
                 output.WriteDebugLine($"Found {response.Body.Items.Count} matching secrets");
 
@@ -140,7 +140,7 @@ namespace Microsoft.Tye
                 {
                     operation = Operations.None;
                 }
-                
+
                 if (whatIf && operation == Operations.Delete)
                 {
                     operation = Operations.Explain;
