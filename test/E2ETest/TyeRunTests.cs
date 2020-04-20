@@ -541,6 +541,42 @@ namespace E2ETest
             await host.StartAsync();
         }
 
+        [Fact]
+        public async Task MultiRepo_Works()
+        {
+            using var projectDirectory = CopyTestProjectDirectory(Path.Combine("multirepo"));
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "vote", "tye.yaml"));
+
+            // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
+            {
+                var votingUri = await GetServiceUrl(client, uri, "vote");
+                var workerUri = await GetServiceUrl(client, uri, "worker");
+
+                var votingResponse = await client.GetAsync(votingUri);
+                var workerResponse = await client.GetAsync(workerUri);
+
+                Assert.True(votingResponse.IsSuccessStatusCode);
+                Assert.Equal(HttpStatusCode.NotFound, workerResponse.StatusCode);
+
+                // results isn't running.
+                var resultsResponse = await client.GetAsync($"{uri}api/v1/services/results");
+                Assert.Equal(HttpStatusCode.NotFound, resultsResponse.StatusCode);
+            });
+        }
+
         private async Task<string> GetServiceUrl(HttpClient client, Uri uri, string serviceName)
         {
             var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceName}");

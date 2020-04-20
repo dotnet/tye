@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.Tye
 {
-    internal class TempDirectory : IDisposable
+    public class TempDirectory : IDisposable
     {
         public static TempDirectory Create(bool preferUserDirectoryOnMacOS = false)
         {
@@ -30,7 +30,7 @@ namespace Microsoft.Tye
             }
         }
 
-        internal TempDirectory(DirectoryInfo directoryInfo)
+        public TempDirectory(DirectoryInfo directoryInfo)
         {
             DirectoryInfo = directoryInfo;
 

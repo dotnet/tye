@@ -9,10 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\src\shared\TempDirectory.cs" Link="TempDirectory.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <!--
       The Microsoft.Build.Locator package takes care of dynamically loading these assemblies
       at runtime. We don't need/want to ship them, just to have them as references.

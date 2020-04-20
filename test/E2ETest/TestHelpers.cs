@@ -75,7 +75,7 @@ namespace E2ETest
             return directory;
         }
 
-        internal static TempDirectory CopyTestProjectDirectory(string projectName)
+        public static TempDirectory CopyTestProjectDirectory(string projectName)
         {
             var temp = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
             DirectoryCopy.Copy(GetTestProjectDirectory(projectName).FullName, temp.DirectoryPath);
