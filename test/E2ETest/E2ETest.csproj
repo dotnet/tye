@@ -39,6 +39,8 @@
     <None Remove="testassets\generate\single-project.yaml" />
     <None Remove="testassets\init\frontend-backend.yaml" />
     <None Remove="testassets\init\multi-project.yaml" />
+    <None Remove="testassets\projects\frontend-backend\tye-debug-configuration.yaml" />
+    <None Remove="testassets\projects\frontend-backend\tye-release-configuration.yaml" />
   </ItemGroup>
 
 </Project>
