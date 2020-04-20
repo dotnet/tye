@@ -15,7 +15,7 @@ using RabbitMQ.Client.Events;
 
 namespace Worker
 {
-    public class QueueWorker : IHostedService
+    public class QueueWorker : BackgroundService
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<QueueWorker> _logger;
@@ -26,7 +26,7 @@ namespace Worker
             _configuration = configuration;
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        protected async override Task ExecuteAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -51,6 +51,10 @@ namespace Worker
                     autoAck: true,
                     consumer: consumer);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(0, ex, "Failed to start listening to rabbit mq");
@@ -60,8 +64,7 @@ namespace Worker
 
         private async Task<IModel> ConnectAsync(CancellationToken cancellationToken)
         {
-            ExceptionDispatchInfo? edi = null;
-            for (var i = 0; i < 5; i++)
+            while (true)
             {
                 try
                 {
@@ -78,24 +81,13 @@ namespace Worker
                 }
                 catch (Exception ex)
                 {
-                    if (i == 4)
-                    {
-                        edi = ExceptionDispatchInfo.Capture(ex);
-                    }
-
                     _logger.LogError(0, ex, "Failed to start listening to rabbit mq");
                 }
 
+                // Rely on the Task.Delay to throw and exit the loop if we're still waiting for connection
+                // when shutdown happens.
                 await Task.Delay(5000, cancellationToken);
             }
-
-            edi!.Throw();
-            throw null; //unreachable
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
         }
     }
 }
