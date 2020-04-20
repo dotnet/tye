@@ -19,7 +19,7 @@ namespace Microsoft.Tye.Hosting
     {
         private const string ProcessReplicaStore = "process";
 
-        private Dictionary<string, string> SupportedProperties = new Dictionary<string, string> { { "Configuration", "--configuration" } };
+        private Dictionary<string, string> BuildPropertiesToOptionsMap = new Dictionary<string, string> { { "Configuration", "--configuration" } };
 
         private readonly ILogger _logger;
         private readonly ProcessRunnerOptions _options;
@@ -61,24 +61,23 @@ namespace Microsoft.Tye.Hosting
                     workingDirectory = project.ProjectFile.Directory.FullName;
                     args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
 
-                    if (project.BuildProperties != null)
+                    foreach (var supportedProperty in BuildPropertiesToOptionsMap)
                     {
-                        foreach (var supportedProperty in SupportedProperties)
+                        if (project.BuildProperties.TryGetValue(supportedProperty.Key, out var configuration))
                         {
-                            if (project.BuildProperties.TryGetValue(supportedProperty.Key, out var configuration))
-                            {
-                                buildArgs += $" {supportedProperty.Value} {configuration}";
-                            }
-                        }
-
-                        foreach (var property in project.BuildProperties)
-                        {
-                            if (!SupportedProperties.ContainsKey(property.Key))
-                            {
-                                buildArgs += $" /p:{property.Key}={property.Value}";
-                            }
+                            buildArgs += $" {supportedProperty.Value} {configuration}";
                         }
                     }
+
+                    foreach (var property in project.BuildProperties)
+                    {
+                        if (!BuildPropertiesToOptionsMap.ContainsKey(property.Key))
+                        {
+                            buildArgs += $" /p:{property.Key}={property.Value}";
+                        }
+                    }
+
+                    buildArgs = buildArgs.TrimStart();
 
                     service.Status.ProjectFilePath = project.ProjectFile.FullName;
                 }

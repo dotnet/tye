@@ -13,6 +13,8 @@ namespace Microsoft.Tye.Hosting
     {
         private readonly ILogger _logger;
 
+        private Dictionary<string, string> BuildPropertiesToOptionsMap = new Dictionary<string, string> { { "Configuration", "--configuration" } };
+
         public TransformProjectsIntoContainers(ILogger logger)
         {
             _logger = logger;
@@ -44,7 +46,26 @@ namespace Microsoft.Tye.Hosting
             // Sometimes building can fail because of file locking (like files being open in VS)
             _logger.LogInformation("Publishing project {ProjectFile}", service.Status.ProjectFilePath);
 
-            var publishCommand = $"publish \"{service.Status.ProjectFilePath}\" --framework {targetFramework} /nologo";
+            var buildArgs = string.Empty;
+            foreach (var supportedProperty in BuildPropertiesToOptionsMap)
+            {
+                if (project.BuildProperties.TryGetValue(supportedProperty.Key, out var configuration))
+                {
+                    buildArgs += $" {supportedProperty.Value} {configuration}";
+                }
+            }
+
+            foreach (var property in project.BuildProperties)
+            {
+                if (!BuildPropertiesToOptionsMap.ContainsKey(property.Key))
+                {
+                    buildArgs += $" /p:{property.Key}={property.Value}";
+                }
+            }
+
+            buildArgs = buildArgs.TrimStart();
+
+            var publishCommand = $"publish \"{service.Status.ProjectFilePath}\" --framework {targetFramework} {buildArgs} /nologo";
 
             service.Logs.OnNext($"dotnet {publishCommand}");
 
