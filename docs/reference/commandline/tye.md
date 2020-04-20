@@ -32,4 +32,4 @@ For example, [`tye run`](tye-run.md) runs an application. Each command defines i
 | [tye init](tye-init.md)                       | Scaffolds a tye.yaml file representing the application.             |
 | [tye run](tye-run.md)                         | Runs an application.                                                |
 | [tye deploy](tye-deploy.md)                   | Deploys an application.                                             |
-| [tye cleanup](tye-cleanup.md)                 | Deletes a deployed application.                                     |
+| [tye undeploy](tye-undeploy.md)               | Deletes a deployed application.                                     |

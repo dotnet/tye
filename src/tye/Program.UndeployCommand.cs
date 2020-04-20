@@ -14,9 +14,9 @@ namespace Microsoft.Tye
 {
     static partial class Program
     {
-        public static Command CreateCleanupCommand()
+        public static Command CreateUndeployCommand()
         {
-            var command = new Command("cleanup", "tear-down deployed application")
+            var command = new Command("undeploy", "delete deployed application")
             {
                 CommonArguments.Path_Required,
                 StandardOptions.Interactive,
@@ -36,7 +36,7 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                return CleanupHost.CleanupAsync(console, path, verbosity, interactive, whatIf);
+                return UndeployHost.UndeployAsync(console, path, verbosity, interactive, whatIf);
             });
 
             return command;

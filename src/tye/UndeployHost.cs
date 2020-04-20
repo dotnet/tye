@@ -16,9 +16,9 @@ using Newtonsoft.Json;
 
 namespace Microsoft.Tye
 {
-    public static class CleanupHost
+    public static class UndeployHost
     {
-        public static async Task CleanupAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive, bool whatIf)
+        public static async Task UndeployAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive, bool whatIf)
         {
             var output = new OutputContext(console, verbosity);
 
@@ -27,10 +27,10 @@ namespace Microsoft.Tye
             // We don't need to know anything about the services, just the application name.
             var application = ConfigFactory.FromFile(path);
 
-            await ExecuteCleanupAsync(output, application, interactive, whatIf);
+            await ExecuteUndeployAsync(output, application, interactive, whatIf);
         }
 
-        public static async Task ExecuteCleanupAsync(OutputContext output, ConfigApplication application, bool interactive, bool whatIf)
+        public static async Task ExecuteUndeployAsync(OutputContext output, ConfigApplication application, bool interactive, bool whatIf)
         {
             var config = KubernetesClientConfiguration.BuildDefaultConfig();
 
@@ -54,7 +54,7 @@ namespace Microsoft.Tye
             // - Legacy resources without an api group don't follow the same URL scheme as more modern 
             //   ones, and thus cannot be addressed using the custom resource APIs.
             //
-            // So solving 'cleanup' generically would involve doing a bunch of work to query things 
+            // So solving 'undeploy' generically would involve doing a bunch of work to query things 
             // generically, including going outside of what's provided by the SDK.
             //
             // - querying api-resources
