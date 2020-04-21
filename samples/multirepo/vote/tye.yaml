@@ -1,6 +1,0 @@
-name: VotingSample
-services:
-- name: vote
-  project: vote.csproj
-- name: worker
-  yaml: ../worker/tye.yaml

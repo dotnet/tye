@@ -1,6 +1,0 @@
-name: VotingSample
-services:
-- name: worker
-  project: ../worker/worker.csproj # we want this to reference the tye.yaml for that project.
-- name: results
-  project: results.csproj
