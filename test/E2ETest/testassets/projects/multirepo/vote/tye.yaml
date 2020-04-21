@@ -3,4 +3,4 @@ services:
 - name: vote
   project: vote.csproj
 - name: worker
-  yaml: ../worker/tye.yaml
+  include: ../worker/tye.yaml

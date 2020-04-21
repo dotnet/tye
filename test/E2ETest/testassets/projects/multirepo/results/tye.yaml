@@ -1,6 +1,6 @@
 name: VotingSample
 services:
-- name: worker
-  project: ../worker/worker.csproj # we want this to reference the tye.yaml for that project.
+- name: include
+  include: ../worker/tye.yaml
 - name: results
   project: results.csproj

@@ -125,9 +125,9 @@ namespace Microsoft.Tye
                         };
                         service = executable;
                     }
-                    else if (!string.IsNullOrEmpty(configService.Yaml))
+                    else if (!string.IsNullOrEmpty(configService.Import))
                     {
-                        var expandedYaml = Environment.ExpandEnvironmentVariables(configService.Yaml);
+                        var expandedYaml = Environment.ExpandEnvironmentVariables(configService.Import);
                         var nestedConfig = ConfigFactory.FromFile(new FileInfo(Path.Combine(config.Source.DirectoryName, expandedYaml)));
                         nestedConfig.Validate();
                         queue.Enqueue(nestedConfig);
