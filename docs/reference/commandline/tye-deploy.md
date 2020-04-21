@@ -19,6 +19,8 @@ The `tye deploy` command will deploy an application to Kubernetes. `tye deploy` 
 - Generate a Kubernetes Deployment and Service for each project.
 - Apply the generated Deployment and Service to your current Kubernetes context.
 
+`tye deploy` operates in the current Kubernetes namespace. Use `kubectl config view --minify --output 'jsonpath={..namespace}'` to view the current namespace.
+
 ## Arguments
 
 `PATH`
