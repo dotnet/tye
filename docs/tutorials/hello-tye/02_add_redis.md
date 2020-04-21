@@ -39,14 +39,14 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
            await cache.SetStringAsync("weather", weather, new DistributedCacheEntryOptions
            {
-               AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(15)
+               AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(5)
            });
        }
        return weather;
    }
    ```
 
-   This will store the weather data in Redis with an expiration time of 15 seconds.
+   This will store the weather data in Redis with an expiration time of 5 seconds.
 
 
 2. Add a package reference to `Microsoft.Extensions.Caching.StackExchangeRedis` in the backend project:
@@ -76,21 +76,21 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
    > :bulb: You should have already created `tye.yaml` in a previous step near the end of the deployment tutorial.
 
    ```yaml
-    name: microservice
-    registry: <registry_name>
-    services:
-    - name: backend
-      project: backend\backend.csproj
-    - name: frontend
-      project: frontend\frontend.csproj
-    - name: redis
-      image: redis
-      bindings:
-      - port: 6379
-        connectionString: "${host}:${port}" 
-    - name: redis-cli
-      image: redis
-      args: "redis-cli -h redis MONITOR"
+   name: microservice
+   registry: <registry_name>
+   services:
+   - name: backend
+     project: backend\backend.csproj
+   - name: frontend
+     project: frontend\frontend.csproj
+   - name: redis
+     image: redis
+     bindings:
+     - port: 6379
+       connectionString: "${host}:${port}" 
+   - name: redis-cli
+     image: redis
+     args: "redis-cli -h redis MONITOR"
    ```
 
     We've added 2 services to the `tye.yaml` file. The `redis` service itself and a `redis-cli` service that we will use to watch the data being sent to and retrieved from redis.
@@ -107,7 +107,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
    Navigate to <http://localhost:8000> to see the dashboard running. Now you will see both `redis` and the `redis-cli` running listed in the dashboard.
    
-   Navigate to the `frontend` application and verify that the data returned is the same after refreshing the page multiple times. New content will be loaded every 15 seconds, so if you wait that long and refresh again, you should see new data. You can also look at the `redis-cli` logs using the dashboard and see what data is being cached in redis.
+   Navigate to the `frontend` application and verify that the data returned is the same after refreshing the page multiple times. New content will be loaded every 5 seconds, so if you wait that long and refresh again, you should see new data. You can also look at the `redis-cli` logs using the dashboard and see what data is being cached in redis.
 
 ## Deploying redis
    
