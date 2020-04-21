@@ -161,6 +161,10 @@ namespace Microsoft.Tye
 
                     secret.Metadata = new V1ObjectMeta();
                     secret.Metadata.Name = secretInputBinding.Name;
+                    secret.Metadata.Labels = new Dictionary<string, string>()
+                    {
+                        ["app.kubernetes.io/part-of"] = application.Name,
+                    };
 
                     output.WriteDebugLine($"Creating secret '{secret.Metadata.Name}'.");
 
