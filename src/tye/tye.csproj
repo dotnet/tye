@@ -7,6 +7,7 @@
     <AssemblyName>tye</AssemblyName>
     <PackageId>Microsoft.Tye</PackageId>
     <ToolCommandName>tye</ToolCommandName>
+    <PackageVersion>0.2.0-dev-1</PackageVersion>
     <PackAsTool>true</PackAsTool>
   </PropertyGroup>
 

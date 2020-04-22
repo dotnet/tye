@@ -91,22 +91,16 @@ namespace Microsoft.Tye
                     // Special handling of .dlls as executables (it will be executed as dotnet {dll})
                     if (Path.GetExtension(expandedExecutable) == ".dll")
                     {
-                        expandedExecutable = Path.GetFullPath(
-                            Path.Combine(builder.Source.Directory.FullName, expandedExecutable));
+                        expandedExecutable = Path.GetFullPath(Path.Combine(builder.Source.Directory.FullName, expandedExecutable));
                         workingDirectory = Path.GetDirectoryName(expandedExecutable)!;
                     }
 
                     var executable = new ExecutableServiceBuilder(configService.Name!, expandedExecutable)
                     {
                         Args = configService.Args,
-                        WorkingDirectory =
-                                             configService.WorkingDirectory != null
-                                                 ? Path.GetFullPath(
-                                                     Path.Combine(
-                                                         builder.Source.Directory.FullName,
-                                                         Environment.ExpandEnvironmentVariables(
-                                                             configService.WorkingDirectory)))
-                                                 : workingDirectory,
+                        WorkingDirectory = configService.WorkingDirectory != null ?
+                        Path.GetFullPath(Path.Combine(builder.Source.Directory.FullName, Environment.ExpandEnvironmentVariables(configService.WorkingDirectory))) :
+                        workingDirectory,
                         Replicas = configService.Replicas ?? 1
                     };
                     service = executable;
@@ -124,7 +118,9 @@ namespace Microsoft.Tye
                 builder.Services.Add(service);
 
                 // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
-                if (configService.Bindings.Count == 0 && service is ProjectServiceBuilder project2 && project2.IsAspNet)
+                if (configService.Bindings.Count == 0 &&
+                    service is ProjectServiceBuilder project2 &&
+                    project2.IsAspNet)
                 {
                     // HTTP is the default binding
                     service.Bindings.Add(new BindingBuilder() { Protocol = "http" });

@@ -8,11 +8,6 @@ using Xunit.Sdk;
 
 namespace E2ETest
 {
-    using System;
-
-    using Xunit;
-    using Xunit.Sdk;
-
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     [XunitTestCaseDiscoverer("E2ETest." + nameof(ConditionalTheoryDiscoverer), "Microsoft.Tye.E2ETest")]
     public class ConditionalTheoryAttribute : TheoryAttribute

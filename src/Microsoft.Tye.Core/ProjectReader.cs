@@ -11,7 +11,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Definition;

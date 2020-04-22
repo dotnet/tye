@@ -9,11 +9,11 @@ using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
 {
+    using System.Linq;
+
     public class TransformProjectsIntoContainers : IApplicationProcessor
     {
         private readonly ILogger _logger;
-
-        private Dictionary<string, string> BuildPropertiesToOptionsMap = new Dictionary<string, string> { { "Configuration", "--configuration" } };
 
         public TransformProjectsIntoContainers(ILogger logger)
         {
@@ -46,24 +46,7 @@ namespace Microsoft.Tye.Hosting
             // Sometimes building can fail because of file locking (like files being open in VS)
             _logger.LogInformation("Publishing project {ProjectFile}", service.Status.ProjectFilePath);
 
-            var buildArgs = string.Empty;
-            foreach (var supportedProperty in BuildPropertiesToOptionsMap)
-            {
-                if (project.BuildProperties.TryGetValue(supportedProperty.Key, out var configuration))
-                {
-                    buildArgs += $" {supportedProperty.Value} {configuration}";
-                }
-            }
-
-            foreach (var property in project.BuildProperties)
-            {
-                if (!BuildPropertiesToOptionsMap.ContainsKey(property.Key))
-                {
-                    buildArgs += $" /p:{property.Key}={property.Value}";
-                }
-            }
-
-            buildArgs = buildArgs.TrimStart();
+            var buildArgs = project.BuildProperties.Aggregate(string.Empty, (current, property) => current + $" /p:{property.Key}={property.Value}").TrimStart();
 
             var publishCommand = $"publish \"{service.Status.ProjectFilePath}\" --framework {targetFramework} {buildArgs} /nologo";
 

@@ -19,8 +19,6 @@ namespace Microsoft.Tye.Hosting
     {
         private const string ProcessReplicaStore = "process";
 
-        private Dictionary<string, string> BuildPropertiesToOptionsMap = new Dictionary<string, string> { { "Configuration", "--configuration" } };
-
         private readonly ILogger _logger;
         private readonly ProcessRunnerOptions _options;
 
@@ -60,24 +58,7 @@ namespace Microsoft.Tye.Hosting
                     path = project.RunCommand;
                     workingDirectory = project.ProjectFile.Directory.FullName;
                     args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
-
-                    foreach (var supportedProperty in BuildPropertiesToOptionsMap)
-                    {
-                        if (project.BuildProperties.TryGetValue(supportedProperty.Key, out var configuration))
-                        {
-                            buildArgs += $" {supportedProperty.Value} {configuration}";
-                        }
-                    }
-
-                    foreach (var property in project.BuildProperties)
-                    {
-                        if (!BuildPropertiesToOptionsMap.ContainsKey(property.Key))
-                        {
-                            buildArgs += $" /p:{property.Key}={property.Value}";
-                        }
-                    }
-
-                    buildArgs = buildArgs.TrimStart();
+                    buildArgs = project.BuildProperties.Aggregate(string.Empty, (current, property) => current + $" /p:{property.Key}={property.Value}").TrimStart();
 
                     service.Status.ProjectFilePath = project.ProjectFile.FullName;
                 }
