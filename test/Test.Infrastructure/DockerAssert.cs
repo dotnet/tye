@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace E2ETest
+namespace Test.Infrastucture
 {
     public static class DockerAssert
     {

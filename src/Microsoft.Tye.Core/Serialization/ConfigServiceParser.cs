@@ -52,8 +52,8 @@ namespace Tye.Serialization
                         }
                         HandleBuildProperties((child.Value as YamlSequenceNode)!, service.BuildProperties);
                         break;
-                    case "import":
-                        service.Import = YamlParser.GetScalarValue(key, child.Value);
+                    case "include":
+                        service.Include = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     case "build":
                         if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var build))

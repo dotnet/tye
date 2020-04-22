@@ -15,10 +15,10 @@ using Microsoft.Tye;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
 using Microsoft.Tye.Hosting.Model.V1;
+using Test.Infrastucture;
 using Xunit;
 using Xunit.Abstractions;
-
-using static E2ETest.TestHelpers;
+using static Test.Infrastucture.TestHelpers;
 
 namespace E2ETest
 {

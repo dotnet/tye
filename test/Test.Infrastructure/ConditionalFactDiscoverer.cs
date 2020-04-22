@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 using Xunit.Sdk;
 
 // Do not change this namespace without changing the usage in ConditionalFactAttribute
-namespace E2ETest
+namespace Test.Infrastucture
 {
     internal class ConditionalFactDiscoverer : FactDiscoverer
     {

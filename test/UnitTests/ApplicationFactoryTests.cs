@@ -1,17 +1,9 @@
 ﻿using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using E2ETest;
 using Microsoft.Tye;
-using Microsoft.Tye.ConfigModel;
-using Tye;
-using Tye.Serialization;
+using Test.Infrastucture;
 using Xunit;
 using Xunit.Abstractions;
-using YamlDotNet.RepresentationModel;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-using static E2ETest.TestHelpers;
 
 namespace UnitTests
 {
@@ -25,27 +17,28 @@ namespace UnitTests
         }
 
         [Fact]
-        public async Task MultiRepo_Cycles()
+        public async Task CyclesStopImmediately()
         {
-            // tye.yaml
-            //  tye.yaml loops to first tye.yaml
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory(Path.Combine("single-project"));
+            var content = @"
+name: single-project
+services:
+- name: test-project
+  include: tye.yaml";
+            var yamlFile = Path.Combine(projectDirectory.DirectoryPath, "tye.yaml");
 
-            using var projectDirectory = CopyTestProjectDirectory(Path.Combine("single-project", "test-project"));
-
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "test-project.csproj"));
-
+            await File.WriteAllTextAsync(yamlFile, content);
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile));
+
+            Assert.Empty(application.Services);
         }
 
         [Fact]
         public async Task MultiRepo_RepeatedServices_FirstAppearanceWins()
         {
-            // tye.yaml
-            //  tye.yaml loops to first tye.yaml
-
-            using var projectDirectory = CopyTestProjectDirectory(Path.Combine("single-project", "test-project"));
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory(Path.Combine("single-project", "test-project"));
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "test-project.csproj"));
 

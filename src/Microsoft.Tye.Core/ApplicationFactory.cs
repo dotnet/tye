@@ -22,7 +22,7 @@ namespace Microsoft.Tye
             }
 
             var queue = new Queue<ConfigApplication>();
-            var visited = new HashSet<string>();
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             var rootConfig = ConfigFactory.FromFile(source);
             rootConfig.Validate();
@@ -34,12 +34,10 @@ namespace Microsoft.Tye
             while (queue.Count > 0)
             {
                 var config = queue.Dequeue();
-                if (visited.Contains(config.Source.FullName))
+                if (!visited.Add(config.Source.FullName))
                 {
                     continue;
                 }
-
-                visited.Add(config.Source.FullName);
 
                 if (config == rootConfig && !string.IsNullOrEmpty(config.Registry))
                 {
@@ -125,14 +123,15 @@ namespace Microsoft.Tye
                         };
                         service = executable;
                     }
-                    else if (!string.IsNullOrEmpty(configService.Import))
+                    else if (!string.IsNullOrEmpty(configService.Include))
                     {
-                        var expandedYaml = Environment.ExpandEnvironmentVariables(configService.Import);
+                        var expandedYaml = Environment.ExpandEnvironmentVariables(configService.Include);
                         var nestedConfig = ConfigFactory.FromFile(new FileInfo(Path.Combine(config.Source.DirectoryName, expandedYaml)));
                         nestedConfig.Validate();
                         queue.Enqueue(nestedConfig);
-                        // TODO do we need a service builder here?
+                        // TODO this will add a duplicated name for service here.
                         continue;
+                        //service = new ExternalServiceBuilder(configService.Name!);
                     }
                     else if (configService.External)
                     {

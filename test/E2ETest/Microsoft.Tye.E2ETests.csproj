@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Tye.Hosting\Microsoft.Tye.Hosting.csproj" />
+    <ProjectReference Include="..\Test.Infrastructure\Test.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Microsoft.Tye.Core\Microsoft.Tye.Core.csproj" />
     <ProjectReference Include="..\..\src\tye\tye.csproj" />
   </ItemGroup>
@@ -27,16 +28,6 @@
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Compile Remove="testassets\**\*" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="testassets\generate\frontend-backend.yaml" />
-    <None Remove="testassets\generate\multi-project.yaml" />
-    <None Remove="testassets\generate\single-project.yaml" />
-    <None Remove="testassets\init\frontend-backend.yaml" />
-    <None Remove="testassets\init\multi-project.yaml" />
-    <None Remove="testassets\projects\frontend-backend\tye-debug-configuration.yaml" />
-    <None Remove="testassets\projects\frontend-backend\tye-release-configuration.yaml" />
   </ItemGroup>
 
 </Project>

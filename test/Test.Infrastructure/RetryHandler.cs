@@ -8,7 +8,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace E2ETest
+namespace Test.Infrastucture
 {
     public class RetryHandler : DelegatingHandler
     {

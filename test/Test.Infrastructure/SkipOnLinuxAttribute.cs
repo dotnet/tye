@@ -3,18 +3,17 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using Microsoft.Tye;
+using System.Runtime.InteropServices;
 
-namespace E2ETest
+namespace Test.Infrastucture
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
-    internal class SkipIfDockerNotRunningAttribute : Attribute, ITestCondition
+    internal class SkipOnLinuxAttribute : Attribute, ITestCondition
     {
-        public SkipIfDockerNotRunningAttribute()
+        public SkipOnLinuxAttribute()
         {
-            // TODO Check performance of this.
-            IsMet = DockerDetector.Instance.IsDockerConnectedToDaemon.Value.GetAwaiter().GetResult();
-            SkipReason = "Docker is not installed or running.";
+            IsMet = !RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+            SkipReason = "This is linux. Here's a free bus-ticket to skipsville.";
         }
 
         public bool IsMet { get; }

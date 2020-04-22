@@ -4,7 +4,7 @@ using Serilog.Core;
 using Serilog.Events;
 using Xunit.Abstractions;
 
-namespace E2ETest
+namespace Test.Infrastucture
 {
     public class TestOutputLogEventSink : ILogEventSink, IConsole, IStandardStreamWriter
     {

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
-using E2ETest;
 using Microsoft.Tye.ConfigModel;
+using Test.Infrastucture;
 using Tye;
 using Tye.Serialization;
 using Xunit;

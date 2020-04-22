@@ -6,7 +6,7 @@ using System;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace E2ETest
+namespace Test.Infrastucture
 {
     public class SkippedTestCase : XunitTestCase
     {

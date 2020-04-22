@@ -6,10 +6,15 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Tye;
+using Test.Infrastucture;
 using Xunit;
 using Xunit.Abstractions;
+<<<<<<< HEAD
 using YamlDotNet.RepresentationModel;
 using static E2ETest.TestHelpers;
+=======
+using static Test.Infrastucture.TestHelpers;
+>>>>>>> 491b1aa... Refactor PR
 
 namespace E2ETest
 {

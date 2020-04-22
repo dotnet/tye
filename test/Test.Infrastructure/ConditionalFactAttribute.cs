@@ -6,7 +6,7 @@ using System;
 using Xunit;
 using Xunit.Sdk;
 
-namespace E2ETest
+namespace Test.Infrastucture
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     [XunitTestCaseDiscoverer("E2ETest." + nameof(ConditionalFactDiscoverer), "Microsoft.Tye.E2ETest")]
