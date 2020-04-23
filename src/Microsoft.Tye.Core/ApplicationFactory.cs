@@ -68,6 +68,12 @@ namespace Microsoft.Tye
                 foreach (var configService in config.Services)
                 {
                     ServiceBuilder service;
+                    if (root.Services.Any(s => s.Name == configService.Name))
+                    {
+                        // Don't add a service which has already been added by name
+                        continue;
+                    }
+
                     if (!string.IsNullOrEmpty(configService.Project))
                     {
                         var expandedProject = Environment.ExpandEnvironmentVariables(configService.Project);
@@ -128,10 +134,16 @@ namespace Microsoft.Tye
                         var expandedYaml = Environment.ExpandEnvironmentVariables(configService.Include);
                         var nestedConfig = ConfigFactory.FromFile(new FileInfo(Path.Combine(config.Source.DirectoryName, expandedYaml)));
                         nestedConfig.Validate();
+
+                        if (nestedConfig.Name != rootConfig.Name)
+                        {
+                            throw new CommandException($"Nested configuration must have the same \"name\" in the tye.yaml. Root config: {rootConfig.Source}, nested config: {nestedConfig.Source}");
+                        }
+
                         queue.Enqueue(nestedConfig);
-                        // TODO this will add a duplicated name for service here.
+
+
                         continue;
-                        //service = new ExternalServiceBuilder(configService.Name!);
                     }
                     else if (configService.External)
                     {
