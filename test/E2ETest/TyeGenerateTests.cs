@@ -6,10 +6,10 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Tye;
+using Test.Infrastucture;
 using Xunit;
 using Xunit.Abstractions;
-using YamlDotNet.RepresentationModel;
-using static E2ETest.TestHelpers;
+using static Test.Infrastucture.TestHelpers;
 
 namespace E2ETest
 {

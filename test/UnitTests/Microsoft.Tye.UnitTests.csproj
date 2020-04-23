@@ -21,6 +21,6 @@
     <ProjectReference Include="..\..\src\Microsoft.Tye.Hosting\Microsoft.Tye.Hosting.csproj" />
     <ProjectReference Include="..\..\src\Microsoft.Tye.Core\Microsoft.Tye.Core.csproj" />
     <ProjectReference Include="..\..\src\tye\tye.csproj" />
-    <ProjectReference Include="..\E2ETest\E2ETest.csproj" />
+    <ProjectReference Include="..\Test.Infrastructure\Test.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
