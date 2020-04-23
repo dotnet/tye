@@ -26,6 +26,7 @@ namespace Microsoft.Tye
     public static class ProjectReader
     {
         private static object @lock = new object();
+
         private static bool registered;
 
         public static IEnumerable<FileInfo> EnumerateProjects(FileInfo solutionFile)
@@ -165,6 +166,7 @@ namespace Microsoft.Tye
                 msbuildProject = Microsoft.Build.Evaluation.Project.FromFile(project.ProjectFile.FullName, new ProjectOptions()
                 {
                     ProjectCollection = projectCollection,
+                    GlobalProperties = project.BuildProperties
                 });
                 projectInstance = msbuildProject.CreateProjectInstance();
                 output.WriteDebugLine($"Loaded project '{project.ProjectFile.FullName}'.");

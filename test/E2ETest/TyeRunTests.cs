@@ -108,6 +108,48 @@ namespace E2ETest
             });
         }
 
+        [ConditionalTheory]
+        [SkipIfDockerNotRunning]
+        [InlineData("Debug")]
+        [InlineData("Release")]
+        public async Task FrontendBackendRunTestWithDockerAndBuildConfigurationAsProperty(string buildConfiguration)
+        {
+            using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, $"tye-{buildConfiguration.ToLower()}-configuration.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new[] { "--docker" }, async (app, uri) =>
+            {
+                // Make sure we're running containers
+                Assert.True(app.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
+
+                var frontendUri = await GetServiceUrl(client, uri, "frontend");
+                var backendUri = await GetServiceUrl(client, uri, "backend");
+
+                var backendResponse = await client.GetAsync(backendUri);
+                var frontendResponse = await client.GetAsync(frontendUri);
+
+                Assert.True(backendResponse.IsSuccessStatusCode);
+                Assert.True(frontendResponse.IsSuccessStatusCode);
+
+                Assert.True(app.Services.All(s => s.Value.Description.RunInfo != null && ((DockerRunInfo)s.Value.Description.RunInfo).VolumeMappings.Count > 0));
+
+                var outputFileInfos = app.Services.Select(s => new FileInfo((s.Value?.Description?.RunInfo as DockerRunInfo)?.VolumeMappings[0].Source ?? throw new InvalidOperationException())).ToList();
+
+                Assert.True(outputFileInfos.All(f => f.Directory?.Parent?.Parent?.Name == buildConfiguration));
+            });
+        }
+
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task FrontendProjectBackendDocker()

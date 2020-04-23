@@ -9,6 +9,8 @@ using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
 {
+    using System.Linq;
+
     public class TransformProjectsIntoContainers : IApplicationProcessor
     {
         private readonly ILogger _logger;
@@ -44,7 +46,9 @@ namespace Microsoft.Tye.Hosting
             // Sometimes building can fail because of file locking (like files being open in VS)
             _logger.LogInformation("Publishing project {ProjectFile}", service.Status.ProjectFilePath);
 
-            var publishCommand = $"publish \"{service.Status.ProjectFilePath}\" --framework {targetFramework} /nologo";
+            var buildArgs = project.BuildProperties.Aggregate(string.Empty, (current, property) => current + $" /p:{property.Key}={property.Value}").TrimStart();
+
+            var publishCommand = $"publish \"{service.Status.ProjectFilePath}\" --framework {targetFramework} {buildArgs} /nologo";
 
             service.Logs.OnNext($"dotnet {publishCommand}");
 

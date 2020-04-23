@@ -49,6 +49,9 @@ ingress:
 services:
   - name: appA
     project: ApplicationA/ApplicationA.csproj
+    buildProperties:
+    - name: Configuration
+    - value: Debug
     replicas: 2
     external: false
     image: abc
