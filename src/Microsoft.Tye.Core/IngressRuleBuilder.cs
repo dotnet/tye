@@ -8,6 +8,6 @@ namespace Microsoft.Tye
     {
         public string? Path { get; set; }
         public string? Host { get; set; }
-        public string? Service { get; set; }
+        public string Service { get; set; } = default!;
     }
 }
