@@ -26,6 +26,9 @@ namespace Microsoft.Tye
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
             metadata.Add("name", project.Name);
+            if (!String.IsNullOrEmpty(application.Namespace)) {
+                metadata.Add("namespace", application.Namespace);
+            }
 
             if (service.Annotations.Count > 0)
             {
@@ -104,6 +107,9 @@ namespace Microsoft.Tye
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
             metadata.Add("name", project.Name);
+            if (!String.IsNullOrEmpty(application.Namespace)) {
+                metadata.Add("namespace", application.Namespace);
+            }
 
             if (deployment.Annotations.Count > 0)
             {

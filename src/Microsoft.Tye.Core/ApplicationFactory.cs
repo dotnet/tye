@@ -28,7 +28,7 @@ namespace Microsoft.Tye
             rootConfig.Validate();
 
             var root = new ApplicationBuilder(source, rootConfig.Name ?? source.Directory.Name.ToLowerInvariant());
-
+            root.Namespace = rootConfig.Namespace;
             queue.Enqueue(rootConfig);
 
             while (queue.Count > 0)
