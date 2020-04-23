@@ -129,18 +129,21 @@ Now that we have two applications running, let's make them communicate. By defau
     dotnet add frontend/frontend.csproj package Microsoft.Tye.Extensions.Configuration  --version "0.1.0-*"
     ```
 
-5. Now register this client in `Startup.cs` class in `ConfigureServices` of the `frontend` project:
+5. Now register this client in `frontend` by adding the following to the existing `ConfigureServices` method to the existing `Startup.cs` file:
 
    ```C#
+   ...
    public void ConfigureServices(IServiceCollection services)
    {
        services.AddRazorPages();
-
+        /** Add the following to wire the client to the backend **/
        services.AddHttpClient<WeatherClient>(client =>
        {
             client.BaseAddress = Configuration.GetServiceUri("backend");
        });
+       /** End added code **/
    }
+   ...
    ```
 
    This will wire up the `WeatherClient` to use the correct URL for the `backend` service.
@@ -148,16 +151,20 @@ Now that we have two applications running, let's make them communicate. By defau
 6. Add a `Forecasts` property to the `Index` page model under `Pages\Index.cshtml.cs` in the `frontend` project.
 
     ```C#
+    ...
     public WeatherForecast[] Forecasts { get; set; }
+    ...
     ```
 
    Change the `OnGet` method to take the `WeatherClient` to call the `backend` service and store the result in the `Forecasts` property:
 
    ```C#
+   ...
    public async Task OnGet([FromServices]WeatherClient client)
    {
         Forecasts = await client.GetWeatherAsync();
    }
+   ...
    ```
 
 7. Change the `Index.cshtml` razor view to render the `Forecasts` property in the razor page:
@@ -201,8 +208,81 @@ Now that we have two applications running, let's make them communicate. By defau
 
 8.  Run the project with [`tye run`](/docs/reference/commandline/tye-run.md) and the `frontend` service should be able to successfully call the `backend` service!
 
-    When you visit the `frontend` service you should see a table of weather data. This data was produced randomly in the `backend` service. The fact that you're seeing it in a web UI in the `frontend` means that the services are able to communicate.
+    When you visit the `frontend` service you should see a table of weather data. This data was produced randomly in the `backend` service. The fact that you're seeing it in a web UI in the `frontend` means that the services are able to communicate. Unfortunately, this doesn't work out of the box on Linux
+    right now due to how self-signed certificates are handled, please see the workaround [below](#troubleshooting)
 
 ## Next Steps
 
 Now that you are able to run a multi-project application with [`tye run`](/docs/reference/commandline/tye-run.md), move on to [the next step (deploy)](01_deploy.md) to learn how to deploy this application to Kubernetes.
+
+
+## Troubleshooting
+
+### Certificate is invalid exception on Linux
+`dotnet dev-certs ...` doesn't fully work on Linux so you need to generate and trust your own certificate.
+
+#### Generate the certificate
+```sh
+# See https://stackoverflow.com/questions/55485511/how-to-run-dotnet-dev-certs-https-trust
+# for more details
+
+cat << EOF > localhost.conf
+[req]
+default_bits       = 2048
+default_keyfile    = localhost.key
+distinguished_name = req_distinguished_name
+req_extensions     = req_ext
+x509_extensions    = v3_ca
+
+[req_distinguished_name]
+commonName                  = Common Name (e.g. server FQDN or YOUR name)
+commonName_default          = localhost
+commonName_max              = 64
+
+[req_ext]
+subjectAltName = @alt_names
+
+[v3_ca]
+subjectAltName = @alt_names
+basicConstraints = critical, CA:false
+keyUsage = keyCertSign, cRLSign, digitalSignature,keyEncipherment
+
+[alt_names]
+DNS.1   = localhost
+DNS.2   = 127.0.0.1
+
+EOF
+
+# Generate certificate from config
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout localhost.key -out localhost.crt \
+    -config localhost.conf
+
+# Export pfx
+openssl pkcs12 -export -out localhost.pfx -inkey localhost.key -in localhost.crt
+
+# Import CA as trusted
+sudo cp localhost.crt /usr/local/share/ca-certificates/
+sudo update-ca-certificates 
+
+# Validate the certificate
+openssl verify localhost.crt
+```
+
+Once you have this working, copy `localhost.pfx` into the `backend` directory, then add the following
+to `appsettings.json`
+
+```json
+{
+  ...
+  "Kestrel": {
+    "Certificates": {
+      "Default": {
+        "Path": "localhost.pfx",
+        "Password": ""
+      }
+    }
+  }
+}
+```
+
+You may still get an untrusted warning with your browser but it will work with dotnet.
