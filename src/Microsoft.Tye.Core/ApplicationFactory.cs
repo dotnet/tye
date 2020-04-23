@@ -21,7 +21,7 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(source));
             }
 
-            var queue = new Queue<ConfigApplication>();
+            var queue = new Queue<(ConfigApplication, ApplicationBuilder)>();
             var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             var rootConfig = ConfigFactory.FromFile(source);
@@ -29,11 +29,13 @@ namespace Microsoft.Tye
 
             var root = new ApplicationBuilder(source, rootConfig.Name ?? source.Directory.Name.ToLowerInvariant());
             root.Namespace = rootConfig.Namespace;
-            queue.Enqueue(rootConfig);
+            queue.Enqueue((rootConfig, root));
 
             while (queue.Count > 0)
             {
-                var config = queue.Dequeue();
+                var item = queue.Dequeue();
+                var config = item.Item1;
+                var currentBuilder = item.Item2;
                 if (!visited.Add(config.Source.FullName))
                 {
                     continue;
@@ -41,12 +43,12 @@ namespace Microsoft.Tye
 
                 if (config == rootConfig && !string.IsNullOrEmpty(config.Registry))
                 {
-                    root.Registry = new ContainerRegistry(config.Registry);
+                    currentBuilder.Registry = new ContainerRegistry(config.Registry);
                 }
 
                 if (config == rootConfig)
                 {
-                    root.Network = rootConfig.Network;
+                    currentBuilder.Network = rootConfig.Network;
                 }
 
                 foreach (var configExtension in config.Extensions)
@@ -62,13 +64,13 @@ namespace Microsoft.Tye
                         extension.Data.Add(kvp.Key, kvp.Value);
                     }
 
-                    root.Extensions.Add(extension);
+                    currentBuilder.Extensions.Add(extension);
                 }
 
                 foreach (var configService in config.Services)
                 {
                     ServiceBuilder service;
-                    if (root.Services.Any(s => s.Name == configService.Name))
+                    if (currentBuilder.Services.Any(s => s.Name == configService.Name))
                     {
                         // Don't add a service which has already been added by name
                         continue;
@@ -140,10 +142,10 @@ namespace Microsoft.Tye
                             throw new CommandException($"Nested configuration must have the same \"name\" in the tye.yaml. Root config: {rootConfig.Source}, nested config: {nestedConfig.Source}");
                         }
 
-                        queue.Enqueue(nestedConfig);
+                        var builder = new ApplicationBuilder(nestedConfig.Source, configService.Name!);
+                        queue.Enqueue((nestedConfig, builder));
 
-
-                        continue;
+                        service = new TyeYamlServiceBuilder(configService.Name!, builder);
                     }
                     else if (configService.External)
                     {
@@ -155,90 +157,9 @@ namespace Microsoft.Tye
                         throw new CommandException("Unable to determine service type.");
                     }
 
-                    root.Services.Add(service);
+                    currentBuilder.Services.Add(service);
 
-                    // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
-                    if (configService.Bindings.Count == 0 &&
-                        service is ProjectServiceBuilder project2 &&
-                        project2.IsAspNet)
-                    {
-                        // HTTP is the default binding
-                        service.Bindings.Add(new BindingBuilder() { Protocol = "http" });
-                        service.Bindings.Add(new BindingBuilder() { Name = "https", Protocol = "https" });
-                    }
-                    else
-                    {
-                        foreach (var configBinding in configService.Bindings)
-                        {
-                            var binding = new BindingBuilder()
-                            {
-                                Name = configBinding.Name,
-                                ConnectionString = configBinding.ConnectionString,
-                                Host = configBinding.Host,
-                                ContainerPort = configBinding.ContainerPort,
-                                Port = configBinding.Port,
-                                Protocol = configBinding.Protocol,
-                            };
-
-                            // Assume HTTP for projects only (containers may be different)
-                            if (binding.ConnectionString == null && configService.Project != null)
-                            {
-                                binding.Protocol ??= "http";
-                            }
-
-                            service.Bindings.Add(binding);
-                        }
-                    }
-
-                    foreach (var configEnvVar in configService.Configuration)
-                    {
-                        var envVar = new EnvironmentVariableBuilder(configEnvVar.Name) { Value = configEnvVar.Value, };
-                        if (service is ProjectServiceBuilder project)
-                        {
-                            project.EnvironmentVariables.Add(envVar);
-                        }
-                        else if (service is ContainerServiceBuilder container)
-                        {
-                            container.EnvironmentVariables.Add(envVar);
-                        }
-                        else if (service is ExecutableServiceBuilder executable)
-                        {
-                            executable.EnvironmentVariables.Add(envVar);
-                        }
-                        else if (service is ExternalServiceBuilder)
-                        {
-                            throw new CommandException("External services do not support environment variables.");
-                        }
-                        else
-                        {
-                            throw new CommandException("Unable to determine service type.");
-                        }
-                    }
-
-                    foreach (var configVolume in configService.Volumes)
-                    {
-                        var volume = new VolumeBuilder(configVolume.Source, configVolume.Name, configVolume.Target);
-                        if (service is ProjectServiceBuilder project)
-                        {
-                            project.Volumes.Add(volume);
-                        }
-                        else if (service is ContainerServiceBuilder container)
-                        {
-                            container.Volumes.Add(volume);
-                        }
-                        else if (service is ExecutableServiceBuilder executable)
-                        {
-                            throw new CommandException("Executable services do not support volumes.");
-                        }
-                        else if (service is ExternalServiceBuilder)
-                        {
-                            throw new CommandException("External services do not support volumes.");
-                        }
-                        else
-                        {
-                            throw new CommandException("Unable to determine service type.");
-                        }
-                    }
+                    SetServiceInfo(configService, service);
                 }
 
                 foreach (var configIngress in config.Ingress)
@@ -246,7 +167,7 @@ namespace Microsoft.Tye
                     var ingress = new IngressBuilder(configIngress.Name!);
                     ingress.Replicas = configIngress.Replicas ?? 1;
 
-                    root.Ingress.Add(ingress);
+                    currentBuilder.Ingress.Add(ingress);
 
                     foreach (var configBinding in configIngress.Bindings)
                     {
@@ -272,7 +193,107 @@ namespace Microsoft.Tye
                 }
             }
 
+            //var appBuilderQueue = new Queue<ApplicationBuilder>();
+            //// Do a second pass through any nodes for TyeYamlServiceBuilders, and set the bindings there.
+            //while (queue.Count > 0)
+            //{
+            //    var currentBuilder = appBuilderQueue.Dequeue();
+            //    foreach (var service in currentBuilder.Services)
+            //    {
+            //        if (service is TyeYamlServiceBuilder builder)
+            //        {
+            //            CopyServiceInfo(builder.Builder.Services.Single(s => s.Name == service.Name), service);
+            //            appBuilderQueue.Enqueue(builder.Builder);
+            //        }
+            //    }
+            //}
             return root;
+        }
+
+        private static void SetServiceInfo(ConfigService configService, ServiceBuilder service)
+        {
+            // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
+            if (configService.Bindings.Count == 0 &&
+                service is ProjectServiceBuilder project2 &&
+                project2.IsAspNet)
+            {
+                // HTTP is the default binding
+                service.Bindings.Add(new BindingBuilder() { Protocol = "http" });
+                service.Bindings.Add(new BindingBuilder() { Name = "https", Protocol = "https" });
+            }
+            else
+            {
+                foreach (var configBinding in configService.Bindings)
+                {
+                    var binding = new BindingBuilder()
+                    {
+                        Name = configBinding.Name,
+                        ConnectionString = configBinding.ConnectionString,
+                        Host = configBinding.Host,
+                        ContainerPort = configBinding.ContainerPort,
+                        Port = configBinding.Port,
+                        Protocol = configBinding.Protocol,
+                    };
+
+                    // Assume HTTP for projects only (containers may be different)
+                    if (binding.ConnectionString == null && configService.Project != null)
+                    {
+                        binding.Protocol ??= "http";
+                    }
+
+                    service.Bindings.Add(binding);
+                }
+            }
+
+            foreach (var configEnvVar in configService.Configuration)
+            {
+                var envVar = new EnvironmentVariableBuilder(configEnvVar.Name) { Value = configEnvVar.Value, };
+                if (service is ProjectServiceBuilder project)
+                {
+                    project.EnvironmentVariables.Add(envVar);
+                }
+                else if (service is ContainerServiceBuilder container)
+                {
+                    container.EnvironmentVariables.Add(envVar);
+                }
+                else if (service is ExecutableServiceBuilder executable)
+                {
+                    executable.EnvironmentVariables.Add(envVar);
+                }
+                else if (service is ExternalServiceBuilder)
+                {
+                    throw new CommandException("External services do not support environment variables.");
+                }
+                else
+                {
+                    throw new CommandException("Unable to determine service type.");
+                }
+            }
+
+            foreach (var configVolume in configService.Volumes)
+            {
+                var volume = new VolumeBuilder(configVolume.Source, configVolume.Name, configVolume.Target);
+                if (service is ProjectServiceBuilder project)
+                {
+                    project.Volumes.Add(volume);
+                }
+                else if (service is ContainerServiceBuilder container)
+                {
+                    container.Volumes.Add(volume);
+                }
+                else if (service is ExecutableServiceBuilder executable)
+                {
+                    throw new CommandException("Executable services do not support volumes.");
+                }
+                else if (service is ExternalServiceBuilder)
+                {
+                    throw new CommandException("External services do not support volumes.");
+                }
+                else
+                {
+                    throw new CommandException("Unable to determine service type.");
+                }
+            }
         }
     }
 }
