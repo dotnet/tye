@@ -6,7 +6,7 @@ using System;
 using Xunit;
 using Xunit.Sdk;
 
-namespace E2ETest
+namespace Test.Infrastructure
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     [XunitTestCaseDiscoverer("Test.Infrastructure." + nameof(ConditionalTheoryDiscoverer), "Test.Infrastructure")]

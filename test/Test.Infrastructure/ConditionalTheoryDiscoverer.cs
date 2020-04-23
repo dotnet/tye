@@ -3,11 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using Test.Infrastructure;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace E2ETest
+namespace Test.Infrastructure
 {
     internal class ConditionalTheoryDiscoverer : TheoryDiscoverer
     {
