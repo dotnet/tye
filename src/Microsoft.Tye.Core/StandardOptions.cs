@@ -195,5 +195,18 @@ namespace Microsoft.Tye
                 };
             }
         }
+
+        public static Option Namespace
+        {
+            get
+            {
+                return new Option(new[] { "-n", "--namespace" })
+                {
+                    Description = "Specify the namespace for the deployment",
+                    Required = false,
+                    Argument = new Argument<string>(),
+                };
+            }
+        }
     }
 }
