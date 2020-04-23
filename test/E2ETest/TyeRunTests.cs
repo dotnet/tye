@@ -541,7 +541,8 @@ namespace E2ETest
             await host.StartAsync();
         }
 
-        [Fact]
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
         public async Task MultiRepo_Works()
         {
             using var projectDirectory = CopyTestProjectDirectory(Path.Combine("multirepo"));
