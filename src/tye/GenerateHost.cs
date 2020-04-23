@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
@@ -12,7 +13,7 @@ namespace Microsoft.Tye
 {
     public static class GenerateHost
     {
-        public static async Task GenerateAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive)
+        public static async Task GenerateAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive, string ns)
         {
             var output = new OutputContext(console, verbosity);
 
@@ -22,7 +23,10 @@ namespace Microsoft.Tye
             {
                 throw new CommandException($"No services found in \"{application.Source.Name}\"");
             }
-
+            if (!String.IsNullOrEmpty(ns))
+            {
+                application.Namespace = ns;
+            }
             await ExecuteGenerateAsync(output, application, environment: "production", interactive);
         }
 

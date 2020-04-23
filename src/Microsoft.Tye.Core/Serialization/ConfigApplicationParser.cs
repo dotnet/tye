@@ -20,6 +20,9 @@ namespace Tye.Serialization
                     case "name":
                         app.Name = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "namespace":
+                        app.Namespace = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     case "network":
                         app.Network = YamlParser.GetScalarValue(key, child.Value);
                         break;

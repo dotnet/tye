@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
@@ -21,6 +22,7 @@ namespace Microsoft.Tye
                 CommonArguments.Path_Required,
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
+                StandardOptions.Namespace,
             };
 
             command.AddOption(new Option(new[] { "-f", "--force" })
@@ -29,7 +31,7 @@ namespace Microsoft.Tye
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool>(async (console, path, verbosity, interactive, force) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool, string>(async (console, path, verbosity, interactive, force, @namespace) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -45,7 +47,10 @@ namespace Microsoft.Tye
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
                 }
-
+                if (!String.IsNullOrEmpty(@namespace))
+                {
+                    application.Namespace = @namespace;
+                }
                 await ExecuteDeployAsync(new OutputContext(console, verbosity), application, environment: "production", interactive, force);
             });
 
@@ -75,7 +80,7 @@ namespace Microsoft.Tye
                 new ValidateSecretStep() { Environment = environment, Interactive = interactive, Force = force, },
             };
 
-            steps.Add(new GenerateKubernetesManifestStep() { Environment = environment, });
+            steps.Add(new GenerateKubernetesManifestStep() { Environment = environment, Namespace = application.Namespace });
             steps.Add(new DeployServiceYamlStep() { Environment = environment, });
 
             ApplyRegistryAndDefaults(output, application, interactive, requireRegistry: true);
@@ -103,7 +108,12 @@ namespace Microsoft.Tye
                 await ApplicationYamlWriter.WriteAsync(output, writer, application);
             }
 
-            output.WriteDebugLine("Running 'kubectl apply'.");
+            string ns = $"namespace ${application.Namespace}";
+            if (String.IsNullOrEmpty(application.Namespace))
+            {
+                ns = "current namespace";
+            }
+            output.WriteDebugLine($"Running 'kubectl apply' in ${ns}");
             output.WriteCommandLine("kubectl", $"apply -f \"{tempFile.FilePath}\"");
             var capture = output.Capture();
             var exitCode = await Process.ExecuteAsync(
