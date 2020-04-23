@@ -5,8 +5,9 @@
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Tye;
+using Test.Infrastucture;
 using Xunit.Abstractions;
-using static E2ETest.TestHelpers;
+using static Test.Infrastucture.TestHelpers;
 
 namespace E2ETest
 {

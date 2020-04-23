@@ -1,0 +1,6 @@
+name: VotingSample
+services:
+- name: vote
+  project: vote.csproj
+- name: worker
+  include: ../worker/tye.yaml
