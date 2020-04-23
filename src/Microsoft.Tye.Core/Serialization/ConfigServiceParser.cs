@@ -45,6 +45,13 @@ namespace Tye.Serialization
                     case "project":
                         service.Project = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "buildProperties":
+                        if (child.Value.NodeType != YamlNodeType.Sequence)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
+                        }
+                        HandleBuildProperties((child.Value as YamlSequenceNode)!, service.BuildProperties);
+                        break;
                     case "build":
                         if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var build))
                         {
@@ -191,6 +198,17 @@ namespace Tye.Serialization
             }
         }
 
+        private static void HandleBuildProperties(YamlSequenceNode yamlSequenceNode, List<BuildProperty> buildProperties)
+        {
+            foreach (var child in yamlSequenceNode.Children)
+            {
+                YamlParser.ThrowIfNotYamlMapping(child);
+                var buildProperty = new BuildProperty();
+                HandleServiceBuildPropertyNameMapping((YamlMappingNode)child, buildProperty);
+                buildProperties.Add(buildProperty);
+            }
+        }
+
         private static void HandleServiceConfiguration(YamlSequenceNode yamlSequenceNode, List<ConfigConfigurationSource> configuration)
         {
             foreach (var child in yamlSequenceNode.Children)
@@ -215,6 +233,26 @@ namespace Tye.Serialization
                         break;
                     case "value":
                         config.Value = YamlParser.GetScalarValue(key, child.Value);
+                        break;
+                    default:
+                        throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
+                }
+            }
+        }
+
+        private static void HandleServiceBuildPropertyNameMapping(YamlMappingNode yamlMappingNode, BuildProperty buildProperty)
+        {
+            foreach (var child in yamlMappingNode!.Children)
+            {
+                var key = YamlParser.GetScalarValue(child.Key);
+
+                switch (key)
+                {
+                    case "name":
+                        buildProperty.Name = YamlParser.GetScalarValue(key, child.Value);
+                        break;
+                    case "value":
+                        buildProperty.Value = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));

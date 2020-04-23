@@ -59,16 +59,17 @@ namespace Microsoft.Tye
 
                     project.Build = configService.Build ?? true;
                     project.Args = configService.Args;
+                    foreach (var buildProperty in configService.BuildProperties)
+                    {
+                        project.BuildProperties.Add(buildProperty.Name, buildProperty.Value);
+                    }
                     project.Replicas = configService.Replicas ?? 1;
 
                     await ProjectReader.ReadProjectDetailsAsync(output, project);
 
                     // We don't apply more container defaults here because we might need
                     // to prompt for the registry name.
-                    project.ContainerInfo = new ContainerInfo()
-                    {
-                        UseMultiphaseDockerfile = false,
-                    };
+                    project.ContainerInfo = new ContainerInfo() { UseMultiphaseDockerfile = false, };
 
                     // Do k8s by default.
                     project.ManifestInfo = new KubernetesManifestInfo();
@@ -122,16 +123,9 @@ namespace Microsoft.Tye
                     project2.IsAspNet)
                 {
                     // HTTP is the default binding
-                    service.Bindings.Add(new BindingBuilder()
-                    {
-                        Protocol = "http"
-                    });
+                    service.Bindings.Add(new BindingBuilder() { Protocol = "http" });
 
-                    service.Bindings.Add(new BindingBuilder()
-                    {
-                        Name = "https",
-                        Protocol = "https"
-                    });
+                    service.Bindings.Add(new BindingBuilder() { Name = "https", Protocol = "https" });
                 }
                 else
                 {
@@ -159,10 +153,7 @@ namespace Microsoft.Tye
 
                 foreach (var configEnvVar in configService.Configuration)
                 {
-                    var envVar = new EnvironmentVariableBuilder(configEnvVar.Name)
-                    {
-                        Value = configEnvVar.Value,
-                    };
+                    var envVar = new EnvironmentVariableBuilder(configEnvVar.Name) { Value = configEnvVar.Value, };
                     if (service is ProjectServiceBuilder project)
                     {
                         project.EnvironmentVariables.Add(envVar);
@@ -210,6 +201,7 @@ namespace Microsoft.Tye
                     }
                 }
             }
+
 
             foreach (var configIngress in config.Ingress)
             {
