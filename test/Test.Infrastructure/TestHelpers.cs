@@ -14,7 +14,7 @@ using Microsoft.Tye.Hosting.Model;
 using Xunit;
 using Microsoft.Tye;
 
-namespace Test.Infrastucture
+namespace Test.Infrastructure
 {
     public static class TestHelpers
     {

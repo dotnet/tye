@@ -6,7 +6,7 @@ using Xunit;
 using Xunit.Abstractions;
 using YamlDotNet.RepresentationModel;
 
-namespace E2ETest
+namespace Test.Infrastructure
 {
     public static class YamlAssert
     {

@@ -6,10 +6,10 @@ using System;
 using Xunit;
 using Xunit.Sdk;
 
-namespace Test.Infrastucture
+namespace Test.Infrastructure
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    [XunitTestCaseDiscoverer("E2ETest." + nameof(ConditionalFactDiscoverer), "Microsoft.Tye.E2ETest")]
+    [XunitTestCaseDiscoverer("Test.Infrastructure." + nameof(ConditionalFactDiscoverer), "Test.Infrastructure")]
     public class ConditionalFactAttribute : FactAttribute
     {
     }
