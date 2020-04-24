@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Tye;
-using Test.Infrastucture;
+using Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
 

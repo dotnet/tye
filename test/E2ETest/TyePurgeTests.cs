@@ -11,10 +11,10 @@ using System.Threading.Tasks;
 using Microsoft.Tye;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
-using Test.Infrastucture;
+using Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
-using static Test.Infrastucture.TestHelpers;
+using static Test.Infrastructure.TestHelpers;
 
 namespace E2ETest
 {

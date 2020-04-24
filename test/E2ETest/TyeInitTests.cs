@@ -6,12 +6,12 @@ using System;
 using System.IO;
 using Microsoft.Tye;
 using Microsoft.Tye.ConfigModel;
-using Test.Infrastucture;
+using Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using static Test.Infrastucture.TestHelpers;
+using static Test.Infrastructure.TestHelpers;
 
 namespace E2ETest
 {

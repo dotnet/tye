@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Test.Infrastucture
+namespace Test.Infrastructure
 {
     public static class DockerAssert
     {
