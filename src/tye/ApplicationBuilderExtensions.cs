@@ -106,6 +106,8 @@ namespace Microsoft.Tye
                     }
                     else if (service is TyeYamlServiceBuilder tyeYaml)
                     {
+                        // putting this inside of tyeyamlruninfo isn't great.
+                        // make part of the application.
                         var innerServices = new Dictionary<string, Service>();
                         queue.Enqueue((tyeYaml.Builder, innerServices));
                         runInfo = new TyeYamlRunInfo(tyeYaml, innerServices);
