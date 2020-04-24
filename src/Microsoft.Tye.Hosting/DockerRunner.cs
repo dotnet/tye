@@ -244,6 +244,7 @@ namespace Microsoft.Tye.Hosting
                     status.Ports = ports.Select(p => p.Port);
 
                     // These are the ports that the application should use for binding
+                    var host = service.Address!.ToString();
 
                     // 1. Tell the docker container what port to bind to
                     portString = docker.Private ? "" : string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.ContainerPort ?? p.Port}"));
@@ -262,7 +263,7 @@ namespace Microsoft.Tye.Hosting
                     }
 
                     // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
-                    environment["PORT"] = string.Join(";", ports.Select(p => $"{p.ContainerPort ?? p.Port}"));
+                    environment["PORT"] = string.Join(";", ports.Select(p => $"{host}:{p.ContainerPort ?? p.Port}"));
 
                     // This the port for the container proxy (containerport:externalport)
                     environment["PROXY_PORT"] = string.Join(";", ports.Select(p => $"{p.ContainerPort ?? p.Port}:{p.ExternalPort}"));

@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net;
 using System.Reactive.Subjects;
 
 namespace Microsoft.Tye.Hosting.Model
@@ -69,5 +70,6 @@ namespace Microsoft.Tye.Hosting.Model
         public Subject<string> Logs { get; } = new Subject<string>();
 
         public Subject<ReplicaEvent> ReplicaEvents { get; } = new Subject<ReplicaEvent>();
+        public IPAddress? Address { get; set; }
     }
 }

@@ -44,12 +44,12 @@
                             {
                                 if (b.Protocol == "http" || b.Protocol == "https")
                                 {
-                                    var url = GetUrl(b);
+                                    var url = GetUrl(service, b);
                                     <span><a href="@url" target="_blank">@url</a></span>
                                 }
                                 else
                                 {
-                                    <span>@GetUrl(b)</span>
+                                    <span>@GetUrl(service, b)</span>
                                 }
                             }
                             else
@@ -77,9 +77,14 @@
 
     private List<IDisposable> _subscriptions = new List<IDisposable>();
 
-    string GetUrl(ServiceBinding b)
+    string GetUrl(Service service, ServiceBinding b)
     {
-        return $"{(b.Protocol ?? "tcp")}://{b.Host ?? "localhost"}:{b.Port}";
+        var url = $"{(b.Protocol ?? "tcp")}://{service.Address}";
+        if (b.Port != 80 && b.Port != 443)
+        {
+            url += $":{b.Port}";
+        }
+        return url;
     }
 
     protected override void OnInitialized()

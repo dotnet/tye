@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -168,10 +169,7 @@ namespace Microsoft.Tye.Hosting
 
                 if (hasPorts)
                 {
-                    // We need to bind to all interfaces on linux since the container -> host communication won't work
-                    // if we use the IP address to reach out of the host. This works fine on osx and windows
-                    // but doesn't work on linux.
-                    var host = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "*" : "localhost";
+                    var host = service.Address == IPAddress.Any ? "*" : service.Address!.ToString();
 
                     // These are the ports that the application should use for binding
 
@@ -235,7 +233,7 @@ namespace Microsoft.Tye.Hosting
                             {
                                 if (hasPorts)
                                 {
-                                    _logger.LogInformation("{ServiceName} running on process id {PID} bound to {Address}", replica, pid, string.Join(", ", ports.Select(p => $"{p.Protocol ?? "http"}://localhost:{p.Port}")));
+                                    _logger.LogInformation("{ServiceName} running on process id {PID} bound to {Address}", replica, pid, string.Join(", ", ports.Select(p => $"{p.Protocol ?? "http"}://{service.Address}:{p.Port}")));
                                 }
                                 else
                                 {

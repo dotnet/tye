@@ -9,20 +9,23 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Microsoft.Tye.Hosting.Model;
 using Microsoft.Extensions.Logging;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.Tye.Hosting
 {
-    public class PortAssigner : IApplicationProcessor
+    public class AddressAssigner : IApplicationProcessor
     {
         private readonly ILogger _logger;
 
-        public PortAssigner(ILogger logger)
+        public AddressAssigner(ILogger logger)
         {
             _logger = logger;
         }
 
         public Task StartAsync(Application application)
         {
+            // Nobody's going to have > 255 services right?
+            var octect = 0;
             foreach (var service in application.Services.Values)
             {
                 if (service.Description.RunInfo == null)
@@ -30,7 +33,9 @@ namespace Microsoft.Tye.Hosting
                     continue;
                 }
 
-                static int GetNextPort()
+                octect++;
+
+                static int GetNextPort(IPAddress address)
                 {
                     // Let the OS assign the next available port. Unless we cycle through all ports
                     // on a test run, the OS will always increment the port number when making these calls.
@@ -38,16 +43,53 @@ namespace Microsoft.Tye.Hosting
                     // a given port, and a new test is able to bind to the same port due to port
                     // reuse being enabled by default by the OS.
                     using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+                    socket.Bind(new IPEndPoint(address, 0));
                     return ((IPEndPoint)socket.LocalEndPoint).Port;
                 }
+
+                static bool IsPortAlreadyInUse(IPAddress address, int port)
+                {
+                    var endpoint = new IPEndPoint(address, port);
+                    try
+                    {
+                        using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                        socket.Bind(endpoint);
+                        return false;
+                    }
+                    catch (SocketException e) when (e.SocketErrorCode == SocketError.AddressAlreadyInUse)
+                    {
+                        return true;
+                    }
+                }
+
+                var httpUsed = false;
+                var httpsUsed = false;
+
+                // We need to bind to all interfaces on linux since the container -> host communication won't work
+                // if we use the IP address to reach out of the host. This works fine on osx and windows
+                // but doesn't work on linux.
+                var address = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? IPAddress.Any : IPAddress.Parse($"127.0.0.{octect}");
+                service.Address = address;
 
                 foreach (var binding in service.Description.Bindings)
                 {
                     // Auto assign a port
                     if (binding.Port == null)
                     {
-                        binding.Port = GetNextPort();
+                        if (!httpUsed && binding.Protocol == "http" && !IsPortAlreadyInUse(address, 80))
+                        {
+                            binding.Port = 80;
+                            httpUsed = true;
+                        }
+                        else if (!httpsUsed && binding.Protocol == "https" && !IsPortAlreadyInUse(address, 443))
+                        {
+                            binding.Port = 443;
+                            httpsUsed = true;
+                        }
+                        else
+                        {
+                            binding.Port = GetNextPort(address);
+                        }
                     }
 
                     if (service.Description.Replicas == 1)
@@ -60,7 +102,7 @@ namespace Microsoft.Tye.Hosting
                     for (var i = 0; i < service.Description.Replicas; i++)
                     {
                         // Reserve a port for each replica
-                        var port = GetNextPort();
+                        var port = GetNextPort(address);
                         binding.ReplicaPorts.Add(port);
                     }
 

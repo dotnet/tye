@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Tye;
 using Tye.Serialization;
 using YamlDotNet.Serialization;
@@ -106,7 +107,7 @@ namespace Microsoft.Tye.ConfigModel
                         throw new TyeYamlException(CoreStrings.FormatMultipleBindingWithSameName("service"));
                     }
 
-                    if (service.Bindings.Count(o => o.Port != null && o.Port == binding.Port) > 1)
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && service.Bindings.Count(o => o.Port != null && o.Port == binding.Port) > 1)
                     {
                         throw new TyeYamlException(CoreStrings.FormatMultipleBindingWithSamePort("service"));
                     }
@@ -166,7 +167,8 @@ namespace Microsoft.Tye.ConfigModel
                     {
                         throw new TyeYamlException(CoreStrings.IngressBindingMustBeHttpOrHttps);
                     }
-                    if (ingress.Bindings.Count(o => o.Port == binding.Port) > 1)
+
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && ingress.Bindings.Count(o => o.Port == binding.Port) > 1)
                     {
                         throw new TyeYamlException(CoreStrings.FormatMultipleBindingWithSamePort("ingress"));
                     }

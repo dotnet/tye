@@ -63,7 +63,7 @@ namespace Microsoft.Tye.Hosting
                                     // We need to bind to all interfaces on linux since the container -> host communication won't work
                                     // if we use the IP address to reach out of the host. This works fine on osx and windows
                                     // but doesn't work on linux.
-                                    var host = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? IPAddress.Any : IPAddress.Loopback;
+                                    var host = service.Address;
 
                                     sockets.Listen(host, binding.Port.Value, o =>
                                     {
