@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -45,20 +46,23 @@ namespace Microsoft.Tye.Hosting
 
         private async Task BuildAndRunProjects(Application application)
         {
+            var projectGroups = new Dictionary<string, ProjectGroup>();
+            var groupCount = 0;
+
             foreach (var service in application.Services.Values)
             {
                 var serviceDescription = service.Description;
 
                 string path;
                 string args;
-                var buildArgs = string.Empty;
+                var buildProperties = string.Empty;
                 string workingDirectory;
                 if (serviceDescription.RunInfo is ProjectRunInfo project)
                 {
                     path = project.RunCommand;
                     workingDirectory = project.ProjectFile.Directory.FullName;
                     args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
-                    buildArgs = project.BuildProperties.Aggregate(string.Empty, (current, property) => current + $" /p:{property.Key}={property.Value}").TrimStart();
+                    buildProperties = project.BuildProperties.Aggregate(string.Empty, (current, property) => current + $";{property.Key}={property.Value}").TrimStart(';');
 
                     service.Status.ProjectFilePath = project.ProjectFile.FullName;
                 }
@@ -90,34 +94,68 @@ namespace Microsoft.Tye.Hosting
                     project2.Build &&
                     _options.BuildProjects)
                 {
-                    // Sometimes building can fail because of file locking (like files being open in VS)
-                    _logger.LogInformation("Building project {ProjectFile}", service.Status.ProjectFilePath);
-
-                    service.Logs.OnNext($"dotnet build \"{service.Status.ProjectFilePath}\" {buildArgs} /nologo");
-
-                    var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" {buildArgs} /nologo", throwOnError: false, workingDirectory: workingDirectory);
-
-                    service.Logs.OnNext(buildResult.StandardOutput);
-
-                    if (buildResult.ExitCode != 0)
+                    if (!projectGroups.TryGetValue(buildProperties, out var projectGroup))
                     {
-                        _logger.LogInformation("Building {ProjectFile} failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, service.Status.ProjectFilePath, buildResult.ExitCode);
-                        return;
+                        projectGroup = new ProjectGroup("ProjectGroup" + groupCount);
+                        projectGroups[buildProperties] = projectGroup;
+                        groupCount++;
                     }
+
+                    projectGroup.Services.Add(service);
                 }
             }
 
-            foreach (var s in application.Services)
+            if (projectGroups.Count > 0)
             {
-                switch (s.Value.ServiceType)
+                using var directory = TempDirectory.Create();
+
+                var projectPath = Path.Combine(directory.DirectoryPath, Path.GetRandomFileName() + ".proj");
+
+                var sb = new StringBuilder();
+                sb.AppendLine(@"<Project DefaultTargets=""Build"">
+    <ItemGroup>");
+
+                foreach (var group in projectGroups)
                 {
-                    case ServiceType.Executable:
-                        LaunchService(application, s.Value);
-                        break;
-                    case ServiceType.Project:
-                        LaunchService(application, s.Value);
-                        break;
-                };
+                    foreach (var p in group.Value.Services)
+                    {
+                        sb.AppendLine($"        <{group.Value.GroupName} Include=\"{p.Status.ProjectFilePath}\" />");
+                    }
+                    sb.AppendLine(@"    </ItemGroup>");
+                }
+
+                sb.AppendLine($@"    <Target Name=""Build"">");
+                foreach (var group in projectGroups)
+                {
+                    sb.AppendLine($@"        <MsBuild Projects=""@({group.Value.GroupName})"" Properties=""{group.Key}"" BuildInParallel=""true"" />");
+                }
+
+                sb.AppendLine("    </Target>");
+                sb.AppendLine("</Project>");
+                File.WriteAllText(projectPath, sb.ToString());
+
+                _logger.LogInformation("Building projects");
+
+                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{projectPath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
+
+                if (buildResult.ExitCode != 0)
+                {
+                    _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
+                    return;
+                }
+
+                foreach (var s in application.Services)
+                {
+                    switch (s.Value.ServiceType)
+                    {
+                        case ServiceType.Executable:
+                            LaunchService(application, s.Value);
+                            break;
+                        case ServiceType.Project:
+                            LaunchService(application, s.Value);
+                            break;
+                    };
+                }
             }
         }
 
@@ -397,6 +435,16 @@ namespace Microsoft.Tye.Hosting
             public Task[] Tasks { get; }
 
             public CancellationTokenSource StoppedTokenSource { get; } = new CancellationTokenSource();
+        }
+
+        private class ProjectGroup
+        {
+            public ProjectGroup(string groupName)
+            {
+                GroupName = groupName;
+            }
+            public List<Service> Services { get; } = new List<Service>();
+            public string GroupName { get; }
         }
     }
 }
