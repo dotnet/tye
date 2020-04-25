@@ -11,7 +11,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Microsoft.Tye
 {
-    public sealed class DeployServiceYamlStep : ServiceExecutor.Step
+    public sealed class DeployServiceYamlStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Deploying Manifests...";
 

@@ -10,49 +10,33 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    public sealed class ServiceExecutor
+    public sealed class ApplicationExecutor
     {
         private readonly OutputContext output;
-        private readonly ApplicationBuilder application;
-        private readonly Step[] steps;
 
-        public ServiceExecutor(OutputContext output, ApplicationBuilder application, IEnumerable<Step> steps)
+        public ApplicationExecutor(OutputContext output)
         {
-            if (output is null)
-            {
-                throw new ArgumentNullException(nameof(output));
-            }
-
-            if (application is null)
-            {
-                throw new ArgumentNullException(nameof(application));
-            }
-
-            if (steps is null)
-            {
-                throw new ArgumentNullException(nameof(steps));
-            }
-
             this.output = output;
-            this.application = application;
-            this.steps = steps.ToArray();
         }
 
-        public async Task ExecuteAsync(ServiceBuilder service)
+        public List<ServiceStep> ServiceSteps { get; } = new List<ServiceStep>();
+
+        public async Task ExecuteAsync(ApplicationBuilder application)
         {
-            using var tracker = output.BeginStep($"Processing Service '{service.Name}'...");
-            for (var i = 0; i < steps.Length; i++)
+            foreach (var service in application.Services)
             {
-                var step = steps[i];
-
-                using var stepTracker = output.BeginStep(step.DisplayText);
-                await step.ExecuteAsync(output, application, service);
-                stepTracker.MarkComplete();
+                using var tracker = output.BeginStep($"Processing Service '{service.Name}'...");
+                foreach (var step in ServiceSteps)
+                {
+                    using var stepTracker = output.BeginStep(step.DisplayText);
+                    await step.ExecuteAsync(output, application, service);
+                    stepTracker.MarkComplete();
+                }
+                tracker.MarkComplete();
             }
-            tracker.MarkComplete();
         }
 
-        public abstract class Step
+        public abstract class ServiceStep
         {
             public abstract string DisplayText { get; }
 

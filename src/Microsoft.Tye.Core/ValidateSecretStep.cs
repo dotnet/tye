@@ -18,7 +18,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Microsoft.Tye
 {
-    public sealed class ValidateSecretStep : ServiceExecutor.Step
+    public sealed class ValidateSecretStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Validating Secrets...";
 

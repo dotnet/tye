@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Microsoft.Tye
 {
     // Used to publish a project when using a single-phase Dockerfile
-    public class PublishProjectStep : ServiceExecutor.Step
+    public class PublishProjectStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Publishing Project...";
 
