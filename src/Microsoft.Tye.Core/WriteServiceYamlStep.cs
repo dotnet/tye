@@ -37,7 +37,7 @@ namespace Microsoft.Tye
             File.Delete(outputFilePath);
 
             using var stream = File.OpenWrite(outputFilePath);
-            using var writer = new StreamWriter(stream, Encoding.UTF8, bufferSize: -1, leaveOpen: true);
+            using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), bufferSize: -1, leaveOpen: true);
             var yamlStream = new YamlStream(yaml.Select(y => y.Yaml));
             yamlStream.Save(writer, assignAnchors: false);
 
