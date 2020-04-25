@@ -33,12 +33,13 @@ namespace Microsoft.Tye
         public static async Task ExecuteGenerateAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive)
         {
             await application.ProcessExtensionsAsync(output, ExtensionContext.OperationKind.Deploy);
-            Program.ApplyRegistryAndDefaults(output, application, interactive, requireRegistry: false);
+            Program.ApplyRegistry(output, application, interactive, requireRegistry: false);
 
             var executor = new ApplicationExecutor(output)
             {
                 ServiceSteps =
                 {
+                    new ApplyContainerDefaultsStep(),
                     new CombineStep() { Environment = environment, },
                     new PublishProjectStep(),
                     new BuildDockerImageStep() { Environment = environment, }, // Make an image but don't push it
