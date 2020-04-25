@@ -83,7 +83,6 @@ namespace Microsoft.Tye
                     new PushDockerImageStep() { Environment = environment, },
                     new ValidateSecretStep() { Environment = environment, Interactive = interactive, Force = force, },
                     new GenerateKubernetesManifestStep() { Environment = environment, },
-                    new DeployServiceYamlStep() { Environment = environment, },
                 }
             };
             await executor.ExecuteAsync(application);
@@ -94,6 +93,16 @@ namespace Microsoft.Tye
         private static async Task DeployApplicationManifestAsync(OutputContext output, ApplicationBuilder application, string applicationName)
         {
             using var step = output.BeginStep("Deploying Application Manifests...");
+
+            if (!await KubectlDetector.Instance.IsKubectlInstalled.Value)
+            {
+                throw new CommandException($"Cannot apply manifests because kubectl is not installed.");
+            }
+
+            if (!await KubectlDetector.Instance.IsKubectlConnectedToCluster.Value)
+            {
+                throw new CommandException($"Cannot apply manifests for because kubectl is not connected to a cluster.");
+            }
 
             using var tempFile = TempFile.Create();
             output.WriteInfoLine($"Writing output to '{tempFile.FilePath}'.");
