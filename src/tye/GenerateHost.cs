@@ -37,7 +37,7 @@ namespace Microsoft.Tye
 
             var executor = new ApplicationExecutor(output)
             {
-                ServiceSteps = 
+                ServiceSteps =
                 {
                     new CombineStep() { Environment = environment, },
                     new PublishProjectStep(),
@@ -46,7 +46,7 @@ namespace Microsoft.Tye
                 },
             };
             await executor.ExecuteAsync(application);
-            
+
             await GenerateApplicationManifestAsync(output, application, environment);
         }
 
