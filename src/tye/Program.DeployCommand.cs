@@ -70,12 +70,13 @@ namespace Microsoft.Tye
             }
 
             await application.ProcessExtensionsAsync(output, ExtensionContext.OperationKind.Deploy);
-            ApplyRegistryAndDefaults(output, application, interactive, requireRegistry: true);
+            ApplyRegistry(output, application, interactive, requireRegistry: true);
 
             var executor = new ApplicationExecutor(output)
             {
                 ServiceSteps =
                 {
+                    new ApplyContainerDefaultsStep(),
                     new CombineStep() { Environment = environment, },
                     new PublishProjectStep(),
                     new BuildDockerImageStep() { Environment = environment, },
@@ -130,7 +131,7 @@ namespace Microsoft.Tye
             step.MarkComplete();
         }
 
-        internal static void ApplyRegistryAndDefaults(OutputContext output, ApplicationBuilder application, bool interactive, bool requireRegistry)
+        internal static void ApplyRegistry(OutputContext output, ApplicationBuilder application, bool interactive, bool requireRegistry)
         {
             if (application.Registry is null && interactive)
             {
@@ -147,14 +148,6 @@ namespace Microsoft.Tye
             else
             {
                 // No registry specified, and that's OK!
-            }
-
-            foreach (var service in application.Services)
-            {
-                if (service is ProjectServiceBuilder project && project.ContainerInfo is ContainerInfo container)
-                {
-                    DockerfileGenerator.ApplyContainerDefaults(application, project, container);
-                }
             }
         }
     }
