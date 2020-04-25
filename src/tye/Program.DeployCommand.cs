@@ -83,61 +83,15 @@ namespace Microsoft.Tye
                     new PushDockerImageStep() { Environment = environment, },
                     new ValidateSecretStep() { Environment = environment, Interactive = interactive, Force = force, },
                     new GenerateKubernetesManifestStep() { Environment = environment, },
+                },
+
+                ApplicationSteps =
+                {
+                    new DeployApplicationKubernetesManifestStep(),
                 }
             };
+
             await executor.ExecuteAsync(application);
-
-            await DeployApplicationManifestAsync(output, application, application.Source.Directory.Name);
-        }
-
-        private static async Task DeployApplicationManifestAsync(OutputContext output, ApplicationBuilder application, string applicationName)
-        {
-            using var step = output.BeginStep("Deploying Application Manifests...");
-
-            if (!await KubectlDetector.Instance.IsKubectlInstalled.Value)
-            {
-                throw new CommandException($"Cannot apply manifests because kubectl is not installed.");
-            }
-
-            if (!await KubectlDetector.Instance.IsKubectlConnectedToCluster.Value)
-            {
-                throw new CommandException($"Cannot apply manifests for because kubectl is not connected to a cluster.");
-            }
-
-            using var tempFile = TempFile.Create();
-            output.WriteInfoLine($"Writing output to '{tempFile.FilePath}'.");
-
-            {
-                await using var stream = File.OpenWrite(tempFile.FilePath);
-                await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
-
-                await ApplicationYamlWriter.WriteAsync(output, writer, application);
-            }
-
-            string ns = $"namespace ${application.Namespace}";
-            if (String.IsNullOrEmpty(application.Namespace))
-            {
-                ns = "current namespace";
-            }
-            output.WriteDebugLine($"Running 'kubectl apply' in ${ns}");
-            output.WriteCommandLine("kubectl", $"apply -f \"{tempFile.FilePath}\"");
-            var capture = output.Capture();
-            var exitCode = await Process.ExecuteAsync(
-                $"kubectl",
-                $"apply -f \"{tempFile.FilePath}\"",
-                System.Environment.CurrentDirectory,
-                stdOut: capture.StdOut,
-                stdErr: capture.StdErr);
-
-            output.WriteDebugLine($"Done running 'kubectl apply' exit code: {exitCode}");
-            if (exitCode != 0)
-            {
-                throw new CommandException("'kubectl apply' failed.");
-            }
-
-            output.WriteInfoLine($"Deployed application '{applicationName}'.");
-
-            step.MarkComplete();
         }
 
         internal static void ApplyRegistry(OutputContext output, ApplicationBuilder application, bool interactive, bool requireRegistry)
