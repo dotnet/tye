@@ -12,9 +12,6 @@ namespace Microsoft.Tye
 
         public string Environment { get; set; } = "production";
 
-        public string? Namespace { get; set; } = null;
-
-
         public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             if (SkipWithoutContainerOutput(output, service))
