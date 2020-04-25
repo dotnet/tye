@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    public sealed class BuildDockerImageStep : ServiceExecutor.Step
+    public sealed class BuildDockerImageStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Building Docker Image...";
 

@@ -2,13 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Tye.ConfigModel;
 
 namespace Microsoft.Tye
 {
@@ -55,22 +52,20 @@ namespace Microsoft.Tye
         private static async Task ExecutePushAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive, bool force)
         {
             await application.ProcessExtensionsAsync(output, ExtensionContext.OperationKind.Deploy);
-
-            var steps = new List<ServiceExecutor.Step>()
-            {
-                new CombineStep() { Environment = environment, },
-                new PublishProjectStep(),
-                new BuildDockerImageStep() { Environment = environment, },
-                new PushDockerImageStep() { Environment = environment, },
-            };
-
             ApplyRegistryAndDefaults(output, application, interactive, requireRegistry: true);
 
-            var executor = new ServiceExecutor(output, application, steps);
-            foreach (var service in application.Services)
+            var executor = new ApplicationExecutor(output)
             {
-                await executor.ExecuteAsync(service);
-            }
+                ServiceSteps = 
+                {
+                    new CombineStep() { Environment = environment, },
+                    new PublishProjectStep(),
+                    new BuildDockerImageStep() { Environment = environment, },
+                    new PushDockerImageStep() { Environment = environment, },
+                },
+            };
+
+            await executor.ExecuteAsync(application);
         }
     }
 }

@@ -26,21 +26,18 @@ namespace Microsoft.Tye
         public static async Task ExecuteBuildAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive)
         {
             await application.ProcessExtensionsAsync(output, ExtensionContext.OperationKind.Deploy);
-
-            var steps = new List<ServiceExecutor.Step>()
-            {
-                new CombineStep() { Environment = environment, },
-                new PublishProjectStep(),
-                new BuildDockerImageStep() { Environment = environment, },
-            };
-
             Program.ApplyRegistryAndDefaults(output, application, interactive, requireRegistry: false);
 
-            var executor = new ServiceExecutor(output, application, steps);
-            foreach (var service in application.Services)
+            var executor = new ApplicationExecutor(output)
             {
-                await executor.ExecuteAsync(service);
-            }
+                ServiceSteps =
+                {
+                    new CombineStep() { Environment = environment, },
+                    new PublishProjectStep(),
+                    new BuildDockerImageStep() { Environment = environment, },
+                },
+            };
+            await executor.ExecuteAsync(application);
         }
     }
 }

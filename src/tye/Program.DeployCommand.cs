@@ -70,26 +70,22 @@ namespace Microsoft.Tye
             }
 
             await application.ProcessExtensionsAsync(output, ExtensionContext.OperationKind.Deploy);
-
-            var steps = new List<ServiceExecutor.Step>()
-            {
-                new CombineStep() { Environment = environment, },
-                new PublishProjectStep(),
-                new BuildDockerImageStep() { Environment = environment, },
-                new PushDockerImageStep() { Environment = environment, },
-                new ValidateSecretStep() { Environment = environment, Interactive = interactive, Force = force, },
-            };
-
-            steps.Add(new GenerateKubernetesManifestStep() { Environment = environment, Namespace = application.Namespace });
-            steps.Add(new DeployServiceYamlStep() { Environment = environment, });
-
             ApplyRegistryAndDefaults(output, application, interactive, requireRegistry: true);
 
-            var executor = new ServiceExecutor(output, application, steps);
-            foreach (var service in application.Services)
+            var executor = new ApplicationExecutor(output)
             {
-                await executor.ExecuteAsync(service);
-            }
+                ServiceSteps =
+                {
+                    new CombineStep() { Environment = environment, },
+                    new PublishProjectStep(),
+                    new BuildDockerImageStep() { Environment = environment, },
+                    new PushDockerImageStep() { Environment = environment, },
+                    new ValidateSecretStep() { Environment = environment, Interactive = interactive, Force = force, },
+                    new GenerateKubernetesManifestStep() { Environment = environment, Namespace = application.Namespace },
+                    new DeployServiceYamlStep() { Environment = environment, },
+                }
+            };
+            await executor.ExecuteAsync(application);
 
             await DeployApplicationManifestAsync(output, application, application.Source.Directory.Name);
         }
