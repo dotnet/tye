@@ -19,6 +19,8 @@ namespace Microsoft.Tye
             this.output = output;
         }
 
+        public List<ApplicationStep> ApplicationSteps = new List<ApplicationStep>();
+
         public List<ServiceStep> ServiceSteps { get; } = new List<ServiceStep>();
 
         public async Task ExecuteAsync(ApplicationBuilder application)
@@ -34,6 +36,22 @@ namespace Microsoft.Tye
                 }
                 tracker.MarkComplete();
             }
+
+            {
+                foreach (var step in ApplicationSteps)
+                {
+                    using var stepTracker = output.BeginStep(step.DisplayText);
+                    await step.ExecuteAsync(output, application);
+                    stepTracker.MarkComplete();
+                }
+            }
+        }
+
+        public abstract class ApplicationStep
+        {
+            public abstract string DisplayText { get; }
+
+            public abstract Task ExecuteAsync(OutputContext output, ApplicationBuilder application);
         }
 
         public abstract class ServiceStep

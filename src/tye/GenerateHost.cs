@@ -45,28 +45,14 @@ namespace Microsoft.Tye
                     new BuildDockerImageStep() { Environment = environment, }, // Make an image but don't push it
                     new GenerateKubernetesManifestStep() { Environment = environment, },
                 },
+
+                ApplicationSteps =
+                {
+                    new GenerateApplicationKubernetesManifestStep() { Environment = environment, },
+                }
             };
+
             await executor.ExecuteAsync(application);
-
-            await GenerateApplicationManifestAsync(output, application, environment);
-        }
-
-        private static async Task GenerateApplicationManifestAsync(OutputContext output, ApplicationBuilder application, string environment)
-        {
-            using var step = output.BeginStep("Generating Application Manifests...");
-
-            var outputFilePath = Path.GetFullPath(Path.Combine(application.Source.DirectoryName, $"{application.Name}-generate-{environment}.yaml"));
-            output.WriteInfoLine($"Writing output to '{outputFilePath}'.");
-            {
-                File.Delete(outputFilePath);
-
-                await using var stream = File.OpenWrite(outputFilePath);
-                await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
-
-                await ApplicationYamlWriter.WriteAsync(output, writer, application);
-            }
-
-            step.MarkComplete();
         }
     }
 }
