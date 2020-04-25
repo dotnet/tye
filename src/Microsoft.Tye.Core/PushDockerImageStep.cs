@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    public sealed class PushDockerImageStep : ServiceExecutor.Step
+    public sealed class PushDockerImageStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Pushing Docker Image...";
 

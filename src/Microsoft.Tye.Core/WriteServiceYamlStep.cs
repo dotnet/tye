@@ -10,7 +10,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Microsoft.Tye
 {
-    internal sealed class WriteServiceYamlStep : ServiceExecutor.Step
+    internal sealed class WriteServiceYamlStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Writing Manifests...";
 

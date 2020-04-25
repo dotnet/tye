@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    internal sealed class GenerateOamComponentStep : ServiceExecutor.Step
+    internal sealed class GenerateOamComponentStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Generating Manifests...";
 

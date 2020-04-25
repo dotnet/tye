@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    public sealed class CombineStep : ServiceExecutor.Step
+    public sealed class CombineStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Compiling Services...";
 

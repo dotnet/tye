@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    internal sealed class GenerateHelmChartStep : ServiceExecutor.Step
+    internal sealed class GenerateHelmChartStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Generating Helm Chart...";
 
