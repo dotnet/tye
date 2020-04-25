@@ -81,7 +81,7 @@ namespace Microsoft.Tye
                     new BuildDockerImageStep() { Environment = environment, },
                     new PushDockerImageStep() { Environment = environment, },
                     new ValidateSecretStep() { Environment = environment, Interactive = interactive, Force = force, },
-                    new GenerateKubernetesManifestStep() { Environment = environment, Namespace = application.Namespace },
+                    new GenerateKubernetesManifestStep() { Environment = environment, },
                     new DeployServiceYamlStep() { Environment = environment, },
                 }
             };
