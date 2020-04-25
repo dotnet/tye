@@ -194,7 +194,7 @@ namespace Microsoft.Tye
 
             {
                 await using var stream = File.OpenWrite(tempFile.FilePath);
-                await using var writer = new StreamWriter(stream, Encoding.UTF8, bufferSize: -1, leaveOpen: true);
+                await using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), bufferSize: -1, leaveOpen: true);
                 var yamlStream = new YamlStream(yaml.Select(y => y.Yaml));
                 yamlStream.Save(writer, assignAnchors: false);
             }
