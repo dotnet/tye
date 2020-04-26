@@ -87,6 +87,7 @@ namespace Microsoft.Tye
 
                 IngressSteps =
                 {
+                    new ValidateIngressStep() { Environment = environment, Interactive = interactive, Force = force, },
                     new GenerateIngressKubernetesManifestStep(),
                 },
 

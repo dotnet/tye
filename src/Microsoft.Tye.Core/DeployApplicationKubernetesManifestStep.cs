@@ -24,7 +24,7 @@ namespace Microsoft.Tye
 
             if (!await KubectlDetector.Instance.IsKubectlConnectedToCluster.Value)
             {
-                throw new CommandException($"Cannot apply manifests for because kubectl is not connected to a cluster.");
+                throw new CommandException($"Cannot apply manifests because kubectl is not connected to a cluster.");
             }
 
             using var tempFile = TempFile.Create();
