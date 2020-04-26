@@ -248,6 +248,8 @@ This will list all of the resources of every type in the `ingress-nginx` namespa
 
 The main component is the `ingress-nginx-controller` service which both acts as the controller and the proxy. You can see from the listing above that it has a public IP of type `LoadBalancer` assigned. 
 
+> :warning: If you're using minikube you won't see output like the above. Instead you'll probably see an error that the `ingress-nginx` namespace doesn't exist. This is because `ingress-nginx` in a simplified form is bundled as part of minikube. You can see the controller by running `kubectl get pods -A`.
+
 ---
 
 When you're finished experimenting, run `tye undeploy` to delete the application from Kubernetes:
@@ -267,3 +269,5 @@ Deleting 'Ingress' 'ingress' ...
 ```
 kubectl delete -f https://aka.ms/tye/ingress/deploy
 ```
+
+> :warning: If you're using minikube this command won't remove anything, and may error out. This is because `ingress-nginx` in a simplified form is bundled as part of minikube. You can disable the controller by running `minikube addons disable ingress`.
