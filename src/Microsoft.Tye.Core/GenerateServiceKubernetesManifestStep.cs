@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    public sealed class GenerateKubernetesManifestStep : ApplicationExecutor.ServiceStep
+    public sealed class GenerateServiceKubernetesManifestStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Generating Manifests...";
 
         public string Environment { get; set; } = "production";
+
 
         public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
