@@ -455,8 +455,8 @@ namespace E2ETest
             await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
             {
                 var ingressUri = await GetServiceUrl(client, uri, "ingress");
-                var appAUri = await GetServiceUrl(client, uri, "appA");
-                var appBUri = await GetServiceUrl(client, uri, "appB");
+                var appAUri = await GetServiceUrl(client, uri, "app-a");
+                var appBUri = await GetServiceUrl(client, uri, "app-b");
 
                 var appAResponse = await client.GetAsync(appAUri);
                 var appBResponse = await client.GetAsync(appBUri);

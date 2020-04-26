@@ -11,18 +11,18 @@ ingress:
       - port: 8080
     rules:
       - path: /A
-        service: appA
+        service: app-a
       - path: /B
-        service: appB
+        service: app-b
       - host: a.example.com
-        service: appA
+        service: app-a
       - host: b.example.com
-        service: appB  
+        service: app-b 
 
 services:
-- name: appA
+- name: app-a
   project: ApplicationA/ApplicationA.csproj
   replicas: 2
-- name: appB
+- name: app-b
   project: ApplicationB/ApplicationB.csproj
   replicas: 2
