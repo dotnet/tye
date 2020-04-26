@@ -158,6 +158,8 @@ namespace Microsoft.Tye
                     throw new CommandException("'kubectl apply' failed.");
                 }
 
+                output.WriteInfoLine($"Waiting for ingress-nginx controller to start.");
+
                 // We need to then wait for the webhooks that are created by ingress-nginx to start. Deploying an ingress immediately
                 // after creating the controller will fail if the webhook isn't ready.
                 //
