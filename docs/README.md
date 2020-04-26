@@ -14,6 +14,7 @@
 
 | Topic | Description|
 |-------|------------|
+|**[Using Ingress](recipes/ingress.md)** | Using `tye` with an ingress for serving public traffic.
 |**[Using Dapr with Tye](recipes/dapr.md)** | Using `tye` for local development and deployment with a [Dapr](https://dapr.io) application.
 
 
