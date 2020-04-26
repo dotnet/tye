@@ -24,7 +24,7 @@ namespace Test.Infrastructure
 
             try
             {
-                Assert.Equal(yamlStream.Documents.Count, yamlStream.Documents.Count);
+                Assert.Equal(yamlStream.Documents.Count, otherYamlStream.Documents.Count);
 
                 for (var i = 0; i < yamlStream.Documents.Count; i++)
                 {
