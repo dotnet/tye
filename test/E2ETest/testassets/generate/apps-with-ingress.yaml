@@ -1,0 +1,146 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: app-a
+  labels:
+    app.kubernetes.io/name: 'app-a'
+    app.kubernetes.io/part-of: 'apps-with-ingress'
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: app-a
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: 'app-a'
+        app.kubernetes.io/part-of: 'apps-with-ingress'
+    spec:
+      containers:
+      - name: app-a
+        image: app-a:1.0.0
+        imagePullPolicy: Always
+        env:
+        - name: ASPNETCORE_URLS
+          value: 'http://*'
+        - name: PORT
+          value: '80'
+        - name: SERVICE__APP-B__PROTOCOL
+          value: 'http'
+        - name: SERVICE__APP-B__PORT
+          value: '80'
+        - name: SERVICE__APP-B__HOST
+          value: 'app-b'
+        ports:
+        - containerPort: 80
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app-a
+  labels:
+    app.kubernetes.io/name: 'app-a'
+    app.kubernetes.io/part-of: 'apps-with-ingress'
+spec:
+  selector:
+    app.kubernetes.io/name: app-a
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+...
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: app-b
+  labels:
+    app.kubernetes.io/name: 'app-b'
+    app.kubernetes.io/part-of: 'apps-with-ingress'
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: app-b
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: 'app-b'
+        app.kubernetes.io/part-of: 'apps-with-ingress'
+    spec:
+      containers:
+      - name: app-b
+        image: app-b:1.0.0
+        imagePullPolicy: Always
+        env:
+        - name: ASPNETCORE_URLS
+          value: 'http://*'
+        - name: PORT
+          value: '80'
+        - name: SERVICE__APP-A__PROTOCOL
+          value: 'http'
+        - name: SERVICE__APP-A__PORT
+          value: '80'
+        - name: SERVICE__APP-A__HOST
+          value: 'app-a'
+        ports:
+        - containerPort: 80
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app-b
+  labels:
+    app.kubernetes.io/name: 'app-b'
+    app.kubernetes.io/part-of: 'apps-with-ingress'
+spec:
+  selector:
+    app.kubernetes.io/name: app-b
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+...
+---
+kind: Ingress
+apiVersion: extensions/v1beta1
+metadata:
+  name: ingress
+  annotations:
+    kubernetes.io/ingress.class: 'nginx'
+    nginx.ingress.kubernetes.io/rewrite-target: '/$2'
+  labels:
+    app.kubernetes.io/part-of: 'apps-with-ingress'
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: app-a
+          servicePort: 80
+        path: /A(/|$)(.*)
+      - backend:
+          serviceName: app-b
+          servicePort: 80
+        path: /B(/|$)(.*)
+  - host: a.example.com
+    http:
+      paths:
+      - backend:
+          serviceName: app-a
+          servicePort: 80
+        path: /()(.*)
+  - host: b.example.com
+    http:
+      paths:
+      - backend:
+          serviceName: app-b
+          servicePort: 80
+        path: /()(.*)
+...
