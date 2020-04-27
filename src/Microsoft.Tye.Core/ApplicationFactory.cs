@@ -212,7 +212,88 @@ namespace Microsoft.Tye
 
                     root.Services.Add(service);
 
-                    SetServiceInfo(configService, service);
+                    // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
+                    if (configService.Bindings.Count == 0 &&
+                        service is ProjectServiceBuilder project2 &&
+                        project2.IsAspNet)
+                    {
+                        // HTTP is the default binding
+                        service.Bindings.Add(new BindingBuilder() { Protocol = "http" });
+                        service.Bindings.Add(new BindingBuilder() { Name = "https", Protocol = "https" });
+                    }
+                    else
+                    {
+                        foreach (var configBinding in configService.Bindings)
+                        {
+                            var binding = new BindingBuilder()
+                            {
+                                Name = configBinding.Name,
+                                ConnectionString = configBinding.ConnectionString,
+                                Host = configBinding.Host,
+                                ContainerPort = configBinding.ContainerPort,
+                                Port = configBinding.Port,
+                                Protocol = configBinding.Protocol,
+                            };
+
+                            // Assume HTTP for projects only (containers may be different)
+                            if (binding.ConnectionString == null && configService.Project != null)
+                            {
+                                binding.Protocol ??= "http";
+                            }
+
+                            service.Bindings.Add(binding);
+                        }
+                    }
+
+                    foreach (var configEnvVar in configService.Configuration)
+                    {
+                        var envVar = new EnvironmentVariableBuilder(configEnvVar.Name) { Value = configEnvVar.Value, };
+                        if (service is ProjectServiceBuilder project)
+                        {
+                            project.EnvironmentVariables.Add(envVar);
+                        }
+                        else if (service is ContainerServiceBuilder container)
+                        {
+                            container.EnvironmentVariables.Add(envVar);
+                        }
+                        else if (service is ExecutableServiceBuilder executable)
+                        {
+                            executable.EnvironmentVariables.Add(envVar);
+                        }
+                        else if (service is ExternalServiceBuilder)
+                        {
+                            throw new CommandException("External services do not support environment variables.");
+                        }
+                        else
+                        {
+                            throw new CommandException("Unable to determine service type.");
+                        }
+                    }
+
+                    foreach (var configVolume in configService.Volumes)
+                    {
+                        var volume = new VolumeBuilder(configVolume.Source, configVolume.Name, configVolume.Target);
+                        if (service is ProjectServiceBuilder project)
+                        {
+                            project.Volumes.Add(volume);
+                        }
+                        else if (service is ContainerServiceBuilder container)
+                        {
+                            container.Volumes.Add(volume);
+                        }
+                        else if (service is ExecutableServiceBuilder executable)
+                        {
+                            throw new CommandException("Executable services do not support volumes.");
+                        }
+                        else if (service is ExternalServiceBuilder)
+                        {
+                            throw new CommandException("External services do not support volumes.");
+                        }
+                        else
+                        {
+                            throw new CommandException("Unable to determine service type.");
+                        }
+                    }
                 }
 
                 foreach (var configIngress in config.Ingress)
@@ -247,92 +328,6 @@ namespace Microsoft.Tye
             }
 
             return root;
-        }
-
-        private static void SetServiceInfo(ConfigService configService, ServiceBuilder service)
-        {
-            // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
-            if (configService.Bindings.Count == 0 &&
-                service is ProjectServiceBuilder project2 &&
-                project2.IsAspNet)
-            {
-                // HTTP is the default binding
-                service.Bindings.Add(new BindingBuilder() { Protocol = "http" });
-                service.Bindings.Add(new BindingBuilder() { Name = "https", Protocol = "https" });
-            }
-            else
-            {
-                foreach (var configBinding in configService.Bindings)
-                {
-                    var binding = new BindingBuilder()
-                    {
-                        Name = configBinding.Name,
-                        ConnectionString = configBinding.ConnectionString,
-                        Host = configBinding.Host,
-                        ContainerPort = configBinding.ContainerPort,
-                        Port = configBinding.Port,
-                        Protocol = configBinding.Protocol,
-                    };
-
-                    // Assume HTTP for projects only (containers may be different)
-                    if (binding.ConnectionString == null && configService.Project != null)
-                    {
-                        binding.Protocol ??= "http";
-                    }
-
-                    service.Bindings.Add(binding);
-                }
-            }
-
-            foreach (var configEnvVar in configService.Configuration)
-            {
-                var envVar = new EnvironmentVariableBuilder(configEnvVar.Name) { Value = configEnvVar.Value, };
-                if (service is ProjectServiceBuilder project)
-                {
-                    project.EnvironmentVariables.Add(envVar);
-                }
-                else if (service is ContainerServiceBuilder container)
-                {
-                    container.EnvironmentVariables.Add(envVar);
-                }
-                else if (service is ExecutableServiceBuilder executable)
-                {
-                    executable.EnvironmentVariables.Add(envVar);
-                }
-                else if (service is ExternalServiceBuilder)
-                {
-                    throw new CommandException("External services do not support environment variables.");
-                }
-                else
-                {
-                    throw new CommandException("Unable to determine service type.");
-                }
-            }
-
-            foreach (var configVolume in configService.Volumes)
-            {
-                var volume = new VolumeBuilder(configVolume.Source, configVolume.Name, configVolume.Target);
-                if (service is ProjectServiceBuilder project)
-                {
-                    project.Volumes.Add(volume);
-                }
-                else if (service is ContainerServiceBuilder container)
-                {
-                    container.Volumes.Add(volume);
-                }
-                else if (service is ExecutableServiceBuilder executable)
-                {
-                    throw new CommandException("Executable services do not support volumes.");
-                }
-                else if (service is ExternalServiceBuilder)
-                {
-                    throw new CommandException("External services do not support volumes.");
-                }
-                else
-                {
-                    throw new CommandException("Unable to determine service type.");
-                }
-            }
         }
     }
 }

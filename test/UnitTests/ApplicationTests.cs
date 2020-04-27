@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Tye.Hosting;
-using Microsoft.Tye.Hosting.Diagnostics;
 using Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
