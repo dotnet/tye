@@ -6,7 +6,7 @@ using Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace UnitTests
+namespace Microsoft.Tye.UnitTests
 {
     public class ApplicationFactoryTests
     {
@@ -33,8 +33,7 @@ services:
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile));
 
-            Assert.Single(application.Services);
-            Assert.True(application.Services.Single() is ExternalServiceBuilder);
+            Assert.Equal(2, application.Services.Count);
         }
 
         [Fact]
@@ -55,7 +54,7 @@ services:
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile));
 
-            Assert.Equal(2, application.Services.Count);
+            Assert.Equal(5, application.Services.Count);
         }
 
         [Fact]
@@ -78,7 +77,7 @@ services:
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile));
 
-            Assert.Equal(3, application.Services.Count);
+            Assert.Equal(4, application.Services.Count);
             var redisService = application.Services.Single(s => s.Name == "redis");
 
             Assert.Equal("redis2", ((ContainerServiceBuilder)redisService).Image);
