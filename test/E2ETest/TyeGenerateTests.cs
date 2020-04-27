@@ -333,7 +333,7 @@ namespace E2ETest
             using var projectDirectory = TestHelpers.CopyTestProjectDirectory(applicationName);
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "results", "tye.yaml"));
-            
+
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -355,7 +355,7 @@ namespace E2ETest
                 await DockerAssert.DeleteDockerImagesAsync(output, otherProject);
             }
         }
-        
+
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task Generate_Ingress()
