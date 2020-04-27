@@ -343,6 +343,8 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, "results", $"VotingSample-generate-{environment}.yaml"));
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
+
                 YamlAssert.Equals(expectedContent, content, output);
                 await DockerAssert.AssertImageExistsAsync(output, projectName);
                 await DockerAssert.AssertImageExistsAsync(output, otherProject);

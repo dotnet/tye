@@ -29,8 +29,9 @@ namespace Microsoft.Tye
 
             var root = new ApplicationBuilder(source, rootConfig.Name ?? source.Directory.Name.ToLowerInvariant());
             root.Namespace = rootConfig.Namespace;
+
             var topLevelDeps = new List<string>();
-            queue.Enqueue((rootConfig, null));
+            queue.Enqueue((rootConfig, null!));
 
             while (queue.Count > 0)
             {
