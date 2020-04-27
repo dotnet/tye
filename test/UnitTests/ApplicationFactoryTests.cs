@@ -34,7 +34,7 @@ services:
             var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile));
 
             Assert.Single(application.Services);
-            Assert.True(application.Services.Single() is TyeYamlServiceBuilder);
+            Assert.True(application.Services.Single() is ExternalServiceBuilder);
         }
 
         [Fact]
@@ -56,10 +56,6 @@ services:
             var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile));
 
             Assert.Equal(2, application.Services.Count);
-
-            var voteService = application.Services.Single(s => s.Name == "vote");
-            var innerApp = ((TyeYamlServiceBuilder)voteService).Builder;
-            Assert.Equal(2, innerApp.Services.Count);
         }
 
         [Fact]

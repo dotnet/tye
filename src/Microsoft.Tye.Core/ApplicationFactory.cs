@@ -21,7 +21,7 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(source));
             }
 
-            var queue = new Queue<(ConfigApplication, ApplicationBuilder)>();
+            var queue = new Queue<(ConfigApplication, ServiceBuilder)>();
             var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             var rootConfig = ConfigFactory.FromFile(source);
@@ -29,13 +29,14 @@ namespace Microsoft.Tye
 
             var root = new ApplicationBuilder(source, rootConfig.Name ?? source.Directory.Name.ToLowerInvariant());
             root.Namespace = rootConfig.Namespace;
-            queue.Enqueue((rootConfig, root));
+            var topLevelDeps = new List<string>();
+            queue.Enqueue((rootConfig, null));
 
             while (queue.Count > 0)
             {
                 var item = queue.Dequeue();
                 var config = item.Item1;
-                var currentBuilder = item.Item2;
+                var parentServiceBuilder = item.Item2;
                 if (!visited.Add(config.Source.FullName))
                 {
                     continue;
@@ -43,12 +44,12 @@ namespace Microsoft.Tye
 
                 if (config == rootConfig && !string.IsNullOrEmpty(config.Registry))
                 {
-                    currentBuilder.Registry = new ContainerRegistry(config.Registry);
+                    root.Registry = new ContainerRegistry(config.Registry);
                 }
 
                 if (config == rootConfig)
                 {
-                    currentBuilder.Network = rootConfig.Network;
+                    root.Network = rootConfig.Network;
                 }
 
                 foreach (var configExtension in config.Extensions)
@@ -64,13 +65,13 @@ namespace Microsoft.Tye
                         extension.Data.Add(kvp.Key, kvp.Value);
                     }
 
-                    currentBuilder.Extensions.Add(extension);
+                    root.Extensions.Add(extension);
                 }
 
                 foreach (var configService in config.Services)
                 {
                     ServiceBuilder service;
-                    if (currentBuilder.Services.Any(s => s.Name == configService.Name))
+                    if (root.Services.Any(s => s.Name == configService.Name))
                     {
                         // Don't add a service which has already been added by name
                         continue;
@@ -142,10 +143,32 @@ namespace Microsoft.Tye
                             throw new CommandException($"Nested configuration must have the same \"name\" in the tye.yaml. Root config: {rootConfig.Source}, nested config: {nestedConfig.Source}");
                         }
 
-                        var builder = new ApplicationBuilder(nestedConfig.Source, configService.Name!);
-                        queue.Enqueue((nestedConfig, builder));
+                        service = new ExternalServiceBuilder(configService.Name!);
 
-                        service = new TyeYamlServiceBuilder(configService.Name!, builder);
+                        queue.Enqueue((nestedConfig, service));
+                        if (parentServiceBuilder != null)
+                        {
+                            parentServiceBuilder.Dependencies.Add(service.Name);
+                            foreach (var s in root.Services)
+                            {
+                                if (parentServiceBuilder.Dependencies.Contains(s.Name) && s.Name != service.Name)
+                                {
+                                    s.Dependencies.Add(service.Name);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            topLevelDeps.Add(service.Name);
+                            foreach (var s in root.Services)
+                            {
+                                if (topLevelDeps.Contains(s.Name) && s.Name != service.Name)
+                                {
+                                    s.Dependencies.Add(service.Name);
+                                }
+                            }
+                        }
+                        continue;
                     }
                     else if (configService.External)
                     {
@@ -157,7 +180,37 @@ namespace Microsoft.Tye
                         throw new CommandException("Unable to determine service type.");
                     }
 
-                    currentBuilder.Services.Add(service);
+                    if (parentServiceBuilder != null)
+                    {
+                        // Add all parent deps to current service
+                        // ex: 
+                        service.Dependencies.AddRange(parentServiceBuilder.Dependencies);
+
+                        parentServiceBuilder.Dependencies.Add(service.Name);
+
+                        foreach (var s in root.Services)
+                        {
+                            if (parentServiceBuilder.Dependencies.Contains(s.Name) && s.Name != service.Name)
+                            {
+                                s.Dependencies.Add(service.Name);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        service.Dependencies.AddRange(topLevelDeps);
+                        topLevelDeps.Add(service.Name);
+
+                        foreach (var s in root.Services)
+                        {
+                            if (topLevelDeps.Contains(s.Name) && s.Name != service.Name)
+                            {
+                                s.Dependencies.Add(service.Name);
+                            }
+                        }
+                    }
+
+                    root.Services.Add(service);
 
                     SetServiceInfo(configService, service);
                 }
@@ -167,7 +220,7 @@ namespace Microsoft.Tye
                     var ingress = new IngressBuilder(configIngress.Name!);
                     ingress.Replicas = configIngress.Replicas ?? 1;
 
-                    currentBuilder.Ingress.Add(ingress);
+                    root.Ingress.Add(ingress);
 
                     foreach (var configBinding in configIngress.Bindings)
                     {
@@ -193,20 +246,6 @@ namespace Microsoft.Tye
                 }
             }
 
-            //var appBuilderQueue = new Queue<ApplicationBuilder>();
-            //// Do a second pass through any nodes for TyeYamlServiceBuilders, and set the bindings there.
-            //while (queue.Count > 0)
-            //{
-            //    var currentBuilder = appBuilderQueue.Dequeue();
-            //    foreach (var service in currentBuilder.Services)
-            //    {
-            //        if (service is TyeYamlServiceBuilder builder)
-            //        {
-            //            CopyServiceInfo(builder.Builder.Services.Single(s => s.Name == service.Name), service);
-            //            appBuilderQueue.Enqueue(builder.Builder);
-            //        }
-            //    }
-            //}
             return root;
         }
 
