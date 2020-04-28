@@ -33,7 +33,7 @@ services:
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile));
 
-            Assert.Equal(2, application.Services.Count);
+            Assert.Empty(application.Services);
         }
 
         [Fact]
