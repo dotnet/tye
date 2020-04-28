@@ -21,7 +21,7 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(source));
             }
 
-            var queue = new Queue<(ConfigApplication, ServiceBuilder)>();
+            var queue = new Queue<(ConfigApplication, List<string>)>();
             var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             var rootConfig = ConfigFactory.FromFile(source);
@@ -30,14 +30,13 @@ namespace Microsoft.Tye
             var root = new ApplicationBuilder(source, rootConfig.Name ?? source.Directory.Name.ToLowerInvariant());
             root.Namespace = rootConfig.Namespace;
 
-            var topLevelDeps = new List<string>();
-            queue.Enqueue((rootConfig, null!));
+            queue.Enqueue((rootConfig, new List<string>()));
 
             while (queue.Count > 0)
             {
                 var item = queue.Dequeue();
                 var config = item.Item1;
-                var parentServiceBuilder = item.Item2;
+                var parentDependencies = item.Item2;
                 if (!visited.Add(config.Source.FullName))
                 {
                     continue;
@@ -146,29 +145,17 @@ namespace Microsoft.Tye
 
                         service = new ExternalServiceBuilder(configService.Name!);
 
-                        queue.Enqueue((nestedConfig, service));
-                        if (parentServiceBuilder != null)
+                        queue.Enqueue((nestedConfig, service.Dependencies));
+
+                        parentDependencies!.Add(service.Name);
+                        foreach (var s in root.Services)
                         {
-                            parentServiceBuilder.Dependencies.Add(service.Name);
-                            foreach (var s in root.Services)
+                            if (parentDependencies!.Contains(s.Name) && s.Name != service.Name)
                             {
-                                if (parentServiceBuilder.Dependencies.Contains(s.Name) && s.Name != service.Name)
-                                {
-                                    s.Dependencies.Add(service.Name);
-                                }
+                                s.Dependencies.Add(service.Name);
                             }
                         }
-                        else
-                        {
-                            topLevelDeps.Add(service.Name);
-                            foreach (var s in root.Services)
-                            {
-                                if (topLevelDeps.Contains(s.Name) && s.Name != service.Name)
-                                {
-                                    s.Dependencies.Add(service.Name);
-                                }
-                            }
-                        }
+
                         continue;
                     }
                     else if (configService.External)
@@ -181,33 +168,14 @@ namespace Microsoft.Tye
                         throw new CommandException("Unable to determine service type.");
                     }
 
-                    if (parentServiceBuilder != null)
+                    service.Dependencies.AddRange(parentDependencies);
+                    parentDependencies.Add(service.Name);
+
+                    foreach (var s in root.Services)
                     {
-                        // Add all parent deps to current service
-                        // ex: 
-                        service.Dependencies.AddRange(parentServiceBuilder.Dependencies);
-
-                        parentServiceBuilder.Dependencies.Add(service.Name);
-
-                        foreach (var s in root.Services)
+                        if (parentDependencies.Contains(s.Name) && s.Name != service.Name)
                         {
-                            if (parentServiceBuilder.Dependencies.Contains(s.Name) && s.Name != service.Name)
-                            {
-                                s.Dependencies.Add(service.Name);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        service.Dependencies.AddRange(topLevelDeps);
-                        topLevelDeps.Add(service.Name);
-
-                        foreach (var s in root.Services)
-                        {
-                            if (topLevelDeps.Contains(s.Name) && s.Name != service.Name)
-                            {
-                                s.Dependencies.Add(service.Name);
-                            }
+                            s.Dependencies.Add(service.Name);
                         }
                     }
 
