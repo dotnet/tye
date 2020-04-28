@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Tye;
 using Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
