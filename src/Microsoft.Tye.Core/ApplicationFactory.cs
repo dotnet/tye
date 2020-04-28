@@ -143,16 +143,14 @@ namespace Microsoft.Tye
                             throw new CommandException($"Nested configuration must have the same \"name\" in the tye.yaml. Root config: {rootConfig.Source}, nested config: {nestedConfig.Source}");
                         }
 
-                        service = new ExternalServiceBuilder(configService.Name!);
+                        queue.Enqueue((nestedConfig, new List<string>()));
 
-                        queue.Enqueue((nestedConfig, service.Dependencies));
-
-                        parentDependencies!.Add(service.Name);
+                        parentDependencies.Add(configService.Name);
                         foreach (var s in root.Services)
                         {
-                            if (parentDependencies!.Contains(s.Name) && s.Name != service.Name)
+                            if (parentDependencies.Contains(s.Name, StringComparer.OrdinalIgnoreCase) && !s.Name.Equals(configService.Name, StringComparison.OrdinalIgnoreCase))
                             {
-                                s.Dependencies.Add(service.Name);
+                                s.Dependencies.Add(configService.Name);
                             }
                         }
 
@@ -173,7 +171,7 @@ namespace Microsoft.Tye
 
                     foreach (var s in root.Services)
                     {
-                        if (parentDependencies.Contains(s.Name) && s.Name != service.Name)
+                        if (parentDependencies.Contains(s.Name, StringComparer.OrdinalIgnoreCase) && !s.Name.Equals(configService.Name, StringComparison.OrdinalIgnoreCase))
                         {
                             s.Dependencies.Add(service.Name);
                         }
