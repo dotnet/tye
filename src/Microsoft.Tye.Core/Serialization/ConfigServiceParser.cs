@@ -55,6 +55,9 @@ namespace Tye.Serialization
                     case "include":
                         service.Include = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "repository":
+                        service.Repository = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     case "build":
                         if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var build))
                         {

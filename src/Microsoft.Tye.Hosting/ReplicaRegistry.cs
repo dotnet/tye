@@ -101,7 +101,14 @@ namespace Microsoft.Tye.Hosting
         {
             if (Directory.Exists(_tyeFolderPath))
             {
-                Directory.Delete(_tyeFolderPath, true);
+                try
+                {
+                    Directory.Delete(_tyeFolderPath, true);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
             }
         }
     }

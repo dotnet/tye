@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.CommandLine.Invocation;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
@@ -137,6 +138,40 @@ namespace Microsoft.Tye
                     {
                         var expandedYaml = Environment.ExpandEnvironmentVariables(configService.Include);
                         var nestedConfig = ConfigFactory.FromFile(new FileInfo(Path.Combine(config.Source.DirectoryName, expandedYaml)));
+                        nestedConfig.Validate();
+
+                        if (nestedConfig.Name != rootConfig.Name)
+                        {
+                            throw new CommandException($"Nested configuration must have the same \"name\" in the tye.yaml. Root config: {rootConfig.Source}, nested config: {nestedConfig.Source}");
+                        }
+
+                        queue.Enqueue((nestedConfig, new HashSet<string>()));
+
+                        AddToRootServices(root, parentDependencies, configService, configService.Name);
+
+                        continue;
+                    }
+                    else if (!string.IsNullOrEmpty(configService.Repository))
+                    {
+                        // clone to .tye folder
+                        var path = Path.Join(rootConfig.Source.DirectoryName, ".tye", "deps");
+                        if (!Directory.Exists(path))
+                        {
+                            Directory.CreateDirectory(path);
+                        }
+
+                        var clonePath = Path.Combine(path, configService.Name);
+
+                        // may have already been cloned?
+                        await ProcessUtil.RunAsync("git", $"clone {configService.Repository} {clonePath}", workingDirectory: path, throwOnError: false);
+
+                        if (!ConfigFileFinder.TryFindSupportedFile(clonePath, out var file, out var errorMessage))
+                        {
+                            throw new CommandException(errorMessage!);
+                        }
+
+                        // pick different service type based on what is in the repo.
+                        var nestedConfig = ConfigFactory.FromFile(new FileInfo(file));
                         nestedConfig.Validate();
 
                         if (nestedConfig.Name != rootConfig.Name)
