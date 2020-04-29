@@ -79,7 +79,7 @@ services:
             var postgres = application.Services.Single(s => s.Name == "postgres");
             Assert.Equal(2, postgres.Dependencies.Count);
             Assert.Contains("worker", postgres.Dependencies);
-            Assert.Contains("vote", postgres.Dependencies);
+            Assert.Contains("redis", postgres.Dependencies);
         }
 
         [Fact]
