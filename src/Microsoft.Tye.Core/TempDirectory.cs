@@ -42,7 +42,22 @@ namespace Microsoft.Tye
 
         public void Dispose()
         {
-            Directory.Delete(DirectoryPath, recursive: true);
+            DeleteDirectory(DirectoryPath);
+        }
+
+        private void DeleteDirectory(string d)
+        {
+            foreach (var sub in Directory.EnumerateDirectories(d))
+            {
+                DeleteDirectory(sub);
+            }
+            foreach (var f in Directory.EnumerateFiles(d))
+            {
+                var fi = new FileInfo(f);
+                fi.Attributes = FileAttributes.Normal;
+                fi.Delete();
+            }
+            Directory.Delete(d);
         }
     }
 }

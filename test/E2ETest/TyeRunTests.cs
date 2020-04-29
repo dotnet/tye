@@ -577,11 +577,10 @@ namespace E2ETest
                 var resultsResponse = await client.GetAsync($"{uri}api/v1/services/results");
                 Assert.Equal(HttpStatusCode.NotFound, resultsResponse.StatusCode);
             });
-        }   
+        }
 
-        //[ConditionalFact]
-        //[SkipIfDockerNotRunning]
-        [Fact]
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
         public async Task MultiRepo_WorksWithCloning()
         {
             using var projectDirectory = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
