@@ -32,7 +32,7 @@ namespace Microsoft.Tye
             
             command.AddOption(new Option("--host")
             {
-                Description = "The host to run control plane on.",
+                Description = "The host to run control plane on and services.",
                 Argument = new Argument<string>("host", () => "127.0.0.1"),
                 Required = false
             });
