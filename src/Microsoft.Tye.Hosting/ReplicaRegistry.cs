@@ -103,28 +103,13 @@ namespace Microsoft.Tye.Hosting
             {
                 try
                 {
-                    DeleteDirectory(_tyeFolderPath);
+                    DirectoryExtesions.DeleteDirectory(_tyeFolderPath);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
                 }
             }
-        }
-
-        private void DeleteDirectory(string d)
-        {
-            foreach (var sub in Directory.EnumerateDirectories(d))
-            {
-                DeleteDirectory(sub);
-            }
-            foreach (var f in Directory.EnumerateFiles(d))
-            {
-                var fi = new FileInfo(f);
-                fi.Attributes = FileAttributes.Normal;
-                fi.Delete();
-            }
-            Directory.Delete(d);
         }
     }
 }

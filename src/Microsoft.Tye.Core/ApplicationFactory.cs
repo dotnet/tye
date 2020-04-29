@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine.Invocation;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
@@ -137,18 +136,11 @@ namespace Microsoft.Tye
                     else if (!string.IsNullOrEmpty(configService.Include))
                     {
                         var expandedYaml = Environment.ExpandEnvironmentVariables(configService.Include);
-                        var nestedConfig = ConfigFactory.FromFile(new FileInfo(Path.Combine(config.Source.DirectoryName, expandedYaml)));
-                        nestedConfig.Validate();
 
-                        if (nestedConfig.Name != rootConfig.Name)
-                        {
-                            throw new CommandException($"Nested configuration must have the same \"name\" in the tye.yaml. Root config: {rootConfig.Source}, nested config: {nestedConfig.Source}");
-                        }
-
+                        var nestedConfig = GetNestedConfig(rootConfig, Path.Combine(config.Source.DirectoryName, expandedYaml));
                         queue.Enqueue((nestedConfig, new HashSet<string>()));
 
                         AddToRootServices(root, parentDependencies, configService, configService.Name);
-
                         continue;
                     }
                     else if (!string.IsNullOrEmpty(configService.Repository))
@@ -162,8 +154,10 @@ namespace Microsoft.Tye
 
                         var clonePath = Path.Combine(path, configService.Name);
 
-                        // may have already been cloned?
-                        await ProcessUtil.RunAsync("git", $"clone {configService.Repository} {clonePath}", workingDirectory: path, throwOnError: false);
+                        if (!Directory.Exists(clonePath))
+                        {
+                            await ProcessUtil.RunAsync("git", $"clone {configService.Repository} {clonePath}", workingDirectory: path, throwOnError: false);
+                        }
 
                         if (!ConfigFileFinder.TryFindSupportedFile(clonePath, out var file, out var errorMessage))
                         {
@@ -171,13 +165,7 @@ namespace Microsoft.Tye
                         }
 
                         // pick different service type based on what is in the repo.
-                        var nestedConfig = ConfigFactory.FromFile(new FileInfo(file));
-                        nestedConfig.Validate();
-
-                        if (nestedConfig.Name != rootConfig.Name)
-                        {
-                            throw new CommandException($"Nested configuration must have the same \"name\" in the tye.yaml. Root config: {rootConfig.Source}, nested config: {nestedConfig.Source}");
-                        }
+                        var nestedConfig = GetNestedConfig(rootConfig, file);
 
                         queue.Enqueue((nestedConfig, new HashSet<string>()));
 
@@ -318,6 +306,19 @@ namespace Microsoft.Tye
             }
 
             return root;
+        }
+
+        private static ConfigApplication GetNestedConfig(ConfigApplication rootConfig, string? file)
+        {
+            var nestedConfig = ConfigFactory.FromFile(new FileInfo(file));
+            nestedConfig.Validate();
+
+            if (nestedConfig.Name != rootConfig.Name)
+            {
+                throw new CommandException($"Nested configuration must have the same \"name\" in the tye.yaml. Root config: {rootConfig.Source}, nested config: {nestedConfig.Source}");
+            }
+
+            return nestedConfig;
         }
 
         private static void AddToRootServices(ApplicationBuilder root, HashSet<string> parentDependencies, ConfigService configService, string serviceName)
