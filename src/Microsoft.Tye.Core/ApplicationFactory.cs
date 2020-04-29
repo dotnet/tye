@@ -342,7 +342,7 @@ namespace Microsoft.Tye
             // Iterate through all services and add the current services as a dependency (except ourselves)
             foreach (var s in root.Services)
             {
-                if (dependencies.Contains(s.Name, StringComparer.OrdinalIgnoreCase) 
+                if (dependencies.Contains(s.Name, StringComparer.OrdinalIgnoreCase)
                     && !s.Name.Equals(serviceName, StringComparison.OrdinalIgnoreCase))
                 {
                     s.Dependencies.Add(serviceName);
