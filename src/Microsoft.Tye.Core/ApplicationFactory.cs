@@ -159,7 +159,17 @@ namespace Microsoft.Tye
 
                         if (!Directory.Exists(clonePath))
                         {
-                            await ProcessUtil.RunAsync("git", $"clone {configService.Repository} {clonePath}", workingDirectory: path, throwOnError: false);
+                            if (!await GitDetector.Instance.IsGitInstalled.Value)
+                            {
+                                throw new CommandException($"Cannot clone repository {configService.Repository} because git is not installed. Please install git if you'd like to use \"repository\" in tye.yaml.");
+                            }
+
+                            var result = await ProcessUtil.RunAsync("git", $"clone {configService.Repository} {clonePath}", workingDirectory: path, throwOnError: false);
+
+                            if (result.ExitCode != 0)
+                            {
+                                throw new CommandException($"Failed to clone repository {configService.Repository} with exit code {result.ExitCode}.{Environment.NewLine}{result.StandardOutput}.");
+                            }
                         }
 
                         if (!ConfigFileFinder.TryFindSupportedFile(clonePath, out var file, out var errorMessage))
