@@ -5,7 +5,7 @@
 using System;
 using Microsoft.Tye;
 
-namespace Test.Infrastucture
+namespace Test.Infrastructure
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
     public class SkipIfDockerNotRunningAttribute : Attribute, ITestCondition

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    internal sealed class GenerateDockerfileStep : ServiceExecutor.Step
+    internal sealed class GenerateDockerfileStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Generating Dockerfile...";
 

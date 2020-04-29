@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Globalization;
 using System.Linq;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -11,7 +12,99 @@ namespace Microsoft.Tye
 {
     internal static class KubernetesManifestGenerator
     {
-        public static ServiceOutput CreateService(
+        public static KubernetesIngressOutput CreateIngress(
+            OutputContext output,
+            ApplicationBuilder application,
+            IngressBuilder ingress)
+        {
+            var root = new YamlMappingNode();
+
+            root.Add("kind", "Ingress");
+            root.Add("apiVersion", "extensions/v1beta1");
+
+            var metadata = new YamlMappingNode();
+            root.Add("metadata", metadata);
+            metadata.Add("name", ingress.Name);
+
+            var annotations = new YamlMappingNode();
+            metadata.Add("annotations", annotations);
+            annotations.Add("kubernetes.io/ingress.class", new YamlScalarNode("nginx") { Style = ScalarStyle.SingleQuoted, });
+            annotations.Add("nginx.ingress.kubernetes.io/rewrite-target", new YamlScalarNode("/$2") { Style = ScalarStyle.SingleQuoted, });
+
+            var labels = new YamlMappingNode();
+            metadata.Add("labels", labels);
+            labels.Add("app.kubernetes.io/part-of", new YamlScalarNode(application.Name) { Style = ScalarStyle.SingleQuoted, });
+
+            var spec = new YamlMappingNode();
+            root.Add("spec", spec);
+
+            if (ingress.Rules.Count > 0)
+            {
+                var rules = new YamlSequenceNode();
+                spec.Add("rules", rules);
+
+                // k8s ingress is grouped by host first, then grouped by path
+                foreach (var hostgroup in ingress.Rules.GroupBy(r => r.Host))
+                {
+                    var rule = new YamlMappingNode();
+                    rules.Add(rule);
+
+                    if (!string.IsNullOrEmpty(hostgroup.Key))
+                    {
+                        rule.Add("host", hostgroup.Key);
+                    }
+
+                    var http = new YamlMappingNode();
+                    rule.Add("http", http);
+
+                    var paths = new YamlSequenceNode();
+                    http.Add("paths", paths);
+
+                    foreach (var ingressRule in hostgroup)
+                    {
+                        var path = new YamlMappingNode();
+                        paths.Add(path);
+
+                        var backend = new YamlMappingNode();
+                        path.Add("backend", backend);
+                        backend.Add("serviceName", ingressRule.Service);
+
+                        var service = application.Services.FirstOrDefault(s => s.Name == ingressRule.Service);
+                        if (service is null)
+                        {
+                            throw new InvalidOperationException($"Could not resolve service '{ingressRule.Service}'.");
+                        }
+
+                        var binding = service.Bindings.FirstOrDefault(b => b.Name is null || b.Name == "http");
+                        if (binding is null)
+                        {
+                            throw new InvalidOperationException($"Could not resolve an http binding for service '{service.Name}'.");
+                        }
+
+                        backend.Add("servicePort", (binding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
+
+                        // Tye implements path matching similar to this example:
+                        // https://kubernetes.github.io/ingress-nginx/examples/rewrite/
+                        //
+                        // Therefore our rewrite-target is set to $2 - we want to make sure we have
+                        // two capture groups.
+                        if (string.IsNullOrEmpty(ingressRule.Path))
+                        {
+                            path.Add("path", "/()(.*)"); // () is an empty capture group.
+                        }
+                        else
+                        {
+                            var regex = $"{ingressRule.Path.TrimEnd('/')}(/|$)(.*)";
+                            path.Add("path", regex);
+                        }
+                    }
+                }
+            }
+
+            return new KubernetesIngressOutput(ingress.Name, new YamlDocument(root));
+        }
+
+        public static KubernetesServiceOutput CreateService(
             OutputContext output,
             ApplicationBuilder application,
             ProjectServiceBuilder project,
@@ -26,6 +119,11 @@ namespace Microsoft.Tye
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
             metadata.Add("name", project.Name);
+
+            if (!string.IsNullOrEmpty(application.Namespace))
+            {
+                metadata.Add("namespace", application.Namespace);
+            }
 
             if (service.Annotations.Count > 0)
             {
@@ -88,7 +186,7 @@ namespace Microsoft.Tye
             return new KubernetesServiceOutput(project.Name, new YamlDocument(root));
         }
 
-        public static ServiceOutput CreateDeployment(
+        public static KubernetesDeploymentOutput CreateDeployment(
             OutputContext output,
             ApplicationBuilder application,
             ProjectServiceBuilder project,
@@ -104,6 +202,10 @@ namespace Microsoft.Tye
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
             metadata.Add("name", project.Name);
+            if (!string.IsNullOrEmpty(application.Namespace))
+            {
+                metadata.Add("namespace", application.Namespace);
+            }
 
             if (deployment.Annotations.Count > 0)
             {

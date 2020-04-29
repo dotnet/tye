@@ -488,10 +488,11 @@ function GetNuGetPackageCachePath() {
   if ($env:NUGET_PACKAGES -eq $null) {
     # Use local cache on CI to ensure deterministic build,
     # use global cache in dev builds to avoid cost of downloading packages.
+    # For directory normalization, see also: https://github.com/NuGet/Home/issues/7968
     if ($useGlobalNuGetCache) {
-      $env:NUGET_PACKAGES = Join-Path $env:UserProfile '.nuget\packages'
+      $env:NUGET_PACKAGES = Join-Path $env:UserProfile '.nuget\packages\'
     } else {
-      $env:NUGET_PACKAGES = Join-Path $RepoRoot '.packages'
+      $env:NUGET_PACKAGES = Join-Path $RepoRoot '.packages\'
     }
   }
 
@@ -632,10 +633,12 @@ function MSBuild-Core() {
     }
   }
 
+  $env:ARCADE_BUILD_TOOL_COMMAND = "$($buildTool.Path) $cmdArgs"
+
   $exitCode = Exec-Process $buildTool.Path $cmdArgs
 
   if ($exitCode -ne 0) {
-    Write-PipelineTelemetryError Category 'Build' -Message 'Build failed.'
+    Write-PipelineTelemetryError -Category 'Build' -Message 'Build failed.'
 
     $buildLog = GetMSBuildBinaryLogCommandLineArgument $args
     if ($buildLog -ne $null) {

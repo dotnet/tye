@@ -6,10 +6,10 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Tye;
-using Test.Infrastucture;
+using Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
-using static Test.Infrastucture.TestHelpers;
+using static Test.Infrastructure.TestHelpers;
 
 namespace E2ETest
 {
@@ -315,6 +315,81 @@ namespace E2ETest
             finally
             {
                 await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+            }
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task Generate_DirectDependencyForEnvVars()
+        {
+            var applicationName = "multirepo";
+            var projectName = "results";
+            var otherProject = "worker";
+            var environment = "production";
+
+            await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+            await DockerAssert.DeleteDockerImagesAsync(output, otherProject);
+
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory(applicationName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "results", "tye.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            try
+            {
+                await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
+
+                // name of application is the folder
+                var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, "results", $"VotingSample-generate-{environment}.yaml"));
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
+
+                YamlAssert.Equals(expectedContent, content, output);
+                await DockerAssert.AssertImageExistsAsync(output, projectName);
+                await DockerAssert.AssertImageExistsAsync(output, otherProject);
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+                await DockerAssert.DeleteDockerImagesAsync(output, otherProject);
+            }
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task Generate_Ingress()
+        {
+            var applicationName = "apps-with-ingress";
+            var environment = "production";
+
+            await DockerAssert.DeleteDockerImagesAsync(output, "app-a");
+            await DockerAssert.DeleteDockerImagesAsync(output, "app-b");
+
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory(applicationName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            try
+            {
+                await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
+
+                // name of application is the folder
+                var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
+
+                YamlAssert.Equals(expectedContent, content, output);
+
+                await DockerAssert.AssertImageExistsAsync(output, "app-a");
+                await DockerAssert.AssertImageExistsAsync(output, "app-b");
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, "app-a");
+                await DockerAssert.DeleteDockerImagesAsync(output, "app-b");
             }
         }
     }

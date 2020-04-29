@@ -20,5 +20,7 @@ namespace Microsoft.Tye
         public List<IngressBindingBuilder> Bindings { get; set; } = new List<IngressBindingBuilder>();
 
         public List<IngressRuleBuilder> Rules { get; set; } = new List<IngressRuleBuilder>();
+
+        public List<IngressOutput> Outputs { get; } = new List<IngressOutput>();
     }
 }

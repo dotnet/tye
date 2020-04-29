@@ -10,7 +10,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Microsoft.Tye
 {
-    internal sealed class WriteServiceYamlStep : ServiceExecutor.Step
+    internal sealed class WriteServiceYamlStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Writing Manifests...";
 
@@ -37,7 +37,7 @@ namespace Microsoft.Tye
             File.Delete(outputFilePath);
 
             using var stream = File.OpenWrite(outputFilePath);
-            using var writer = new StreamWriter(stream, Encoding.UTF8, bufferSize: -1, leaveOpen: true);
+            using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), bufferSize: -1, leaveOpen: true);
             var yamlStream = new YamlStream(yaml.Select(y => y.Yaml));
             yamlStream.Save(writer, assignAnchors: false);
 

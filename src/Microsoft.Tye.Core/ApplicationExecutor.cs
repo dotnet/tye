@@ -10,49 +10,72 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    public sealed class ServiceExecutor
+    public sealed class ApplicationExecutor
     {
         private readonly OutputContext output;
-        private readonly ApplicationBuilder application;
-        private readonly Step[] steps;
 
-        public ServiceExecutor(OutputContext output, ApplicationBuilder application, IEnumerable<Step> steps)
+        public ApplicationExecutor(OutputContext output)
         {
-            if (output is null)
-            {
-                throw new ArgumentNullException(nameof(output));
-            }
-
-            if (application is null)
-            {
-                throw new ArgumentNullException(nameof(application));
-            }
-
-            if (steps is null)
-            {
-                throw new ArgumentNullException(nameof(steps));
-            }
-
             this.output = output;
-            this.application = application;
-            this.steps = steps.ToArray();
         }
 
-        public async Task ExecuteAsync(ServiceBuilder service)
+        public List<ApplicationStep> ApplicationSteps { get; } = new List<ApplicationStep>();
+
+        public List<IngressStep> IngressSteps { get; } = new List<IngressStep>();
+
+        public List<ServiceStep> ServiceSteps { get; } = new List<ServiceStep>();
+
+        public async Task ExecuteAsync(ApplicationBuilder application)
         {
-            using var tracker = output.BeginStep($"Processing Service '{service.Name}'...");
-            for (var i = 0; i < steps.Length; i++)
+            foreach (var service in application.Services)
             {
-                var step = steps[i];
-
-                using var stepTracker = output.BeginStep(step.DisplayText);
-                await step.ExecuteAsync(output, application, service);
-                stepTracker.MarkComplete();
+                using var tracker = output.BeginStep($"Processing Service '{service.Name}'...");
+                foreach (var step in ServiceSteps)
+                {
+                    using var stepTracker = output.BeginStep(step.DisplayText);
+                    await step.ExecuteAsync(output, application, service);
+                    stepTracker.MarkComplete();
+                }
+                tracker.MarkComplete();
             }
-            tracker.MarkComplete();
+
+            foreach (var ingress in application.Ingress)
+            {
+                using var tracker = output.BeginStep($"Processing Ingress '{ingress.Name}'...");
+                foreach (var step in IngressSteps)
+                {
+                    using var stepTracker = output.BeginStep(step.DisplayText);
+                    await step.ExecuteAsync(output, application, ingress);
+                    stepTracker.MarkComplete();
+                }
+                tracker.MarkComplete();
+            }
+
+            {
+                foreach (var step in ApplicationSteps)
+                {
+                    using var stepTracker = output.BeginStep(step.DisplayText);
+                    await step.ExecuteAsync(output, application);
+                    stepTracker.MarkComplete();
+                }
+            }
         }
 
-        public abstract class Step
+        public abstract class ApplicationStep
+        {
+            public abstract string DisplayText { get; }
+
+            public abstract Task ExecuteAsync(OutputContext output, ApplicationBuilder application);
+        }
+
+        public abstract class IngressStep
+        {
+            public abstract string DisplayText { get; }
+
+            public abstract Task ExecuteAsync(OutputContext output, ApplicationBuilder application, IngressBuilder ingres);
+        }
+
+        public abstract class ServiceStep
         {
             public abstract string DisplayText { get; }
 

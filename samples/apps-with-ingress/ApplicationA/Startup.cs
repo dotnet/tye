@@ -30,9 +30,13 @@ namespace ApplicationA
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("/", async context =>
+                endpoints.MapGet("/{**path}", async context =>
                 {
-                    await context.Response.WriteAsync("Hello from Application A " + Environment.GetEnvironmentVariable("APP_INSTANCE") ?? Environment.GetEnvironmentVariable("HOSTNAME"));
+                    var instance = Environment.GetEnvironmentVariable("APP_INSTANCE") ?? Environment.GetEnvironmentVariable("HOSTNAME");
+                    var text = 
+                        "Hello from Application A " + instance + Environment.NewLine +
+                        "Path is: " + context.Request.Path;
+                    await context.Response.WriteAsync(text);
                 });
             });
         }

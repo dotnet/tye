@@ -40,9 +40,9 @@ namespace Microsoft.Tye
             }
 
             await using var stream = File.OpenWrite(filePath);
-            await using var writer = new StreamWriter(stream, encoding: Encoding.UTF8, bufferSize: -1, leaveOpen: true);
+            await using var writer = new StreamWriter(stream, encoding: new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), bufferSize: -1, leaveOpen: true);
 
-            var entryPoint = Path.GetFileNameWithoutExtension(project.ProjectFile.Name);
+            var entryPoint = project.AssemblyName;
             output.WriteDebugLine($"Writing Dockerfile to '{filePath}'.");
             if (container.UseMultiphaseDockerfile ?? true)
             {

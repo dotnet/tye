@@ -18,7 +18,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Microsoft.Tye
 {
-    public sealed class ValidateSecretStep : ServiceExecutor.Step
+    public sealed class ValidateSecretStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Validating Secrets...";
 
@@ -181,46 +181,6 @@ namespace Microsoft.Tye
                     }
                 }
             }
-
-            var yaml = service.Outputs.OfType<IYamlManifestOutput>().ToArray();
-            if (yaml.Length == 0)
-            {
-                output.WriteDebugLine($"No yaml manifests found for service '{service.Name}'. Skipping.");
-                return;
-            }
-
-            using var tempFile = TempFile.Create();
-            output.WriteDebugLine($"Writing output to '{tempFile.FilePath}'.");
-
-            {
-                await using var stream = File.OpenWrite(tempFile.FilePath);
-                await using var writer = new StreamWriter(stream, Encoding.UTF8, bufferSize: -1, leaveOpen: true);
-                var yamlStream = new YamlStream(yaml.Select(y => y.Yaml));
-                yamlStream.Save(writer, assignAnchors: false);
-            }
-
-            // kubectl apply logic is implemented in the client in older versions of k8s. The capability
-            // to get the same behavior in the server isn't present in every version that's relevant.
-            //
-            // https://kubernetes.io/docs/reference/using-api/api-concepts/#server-side-apply
-            //
-            output.WriteDebugLine("Running 'kubectl apply'.");
-            output.WriteCommandLine("kubectl", $"apply -f \"{tempFile.FilePath}\"");
-            var capture = output.Capture();
-            var exitCode = await Process.ExecuteAsync(
-                $"kubectl",
-                $"apply -f \"{tempFile.FilePath}\"",
-                System.Environment.CurrentDirectory,
-                stdOut: capture.StdOut,
-                stdErr: capture.StdErr);
-
-            output.WriteDebugLine($"Done running 'kubectl apply' exit code: {exitCode}");
-            if (exitCode != 0)
-            {
-                throw new CommandException("'kubectl apply' failed.");
-            }
-
-            output.WriteInfoLine($"Deployed service '{service.Name}'.");
         }
     }
 }

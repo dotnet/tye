@@ -75,7 +75,7 @@ namespace Microsoft.Tye
                     resource.Kind = V1Service.KubeKind;
                 }
 
-                resources.AddRange(response.Body.Items.Select(item => new Resource(item, item.Metadata, DeleteService)));
+                resources.AddRange(response.Body.Items.Select(item => new Resource(item.Kind, item.Metadata, DeleteService)));
                 output.WriteDebugLine($"Found {response.Body.Items.Count} matching services");
             }
             catch (Exception ex)
@@ -97,7 +97,7 @@ namespace Microsoft.Tye
                     resource.Kind = V1Deployment.KubeKind;
                 }
 
-                resources.AddRange(response.Body.Items.Select(item => new Resource(item, item.Metadata, DeleteDeployment)));
+                resources.AddRange(response.Body.Items.Select(item => new Resource(item.Kind, item.Metadata, DeleteDeployment)));
                 output.WriteDebugLine($"Found {response.Body.Items.Count} matching deployments");
             }
             catch (Exception ex)
@@ -119,7 +119,7 @@ namespace Microsoft.Tye
                     resource.Kind = V1Secret.KubeKind;
                 }
 
-                resources.AddRange(response.Body.Items.Select(item => new Resource(item, item.Metadata, DeleteSecret)));
+                resources.AddRange(response.Body.Items.Select(item => new Resource(item.Kind, item.Metadata, DeleteSecret)));
                 output.WriteDebugLine($"Found {response.Body.Items.Count} matching secrets");
 
             }
@@ -130,13 +130,36 @@ namespace Microsoft.Tye
                 throw new CommandException("Unable connect to kubernetes.", ex);
             }
 
+            try
+            {
+                output.WriteDebugLine("Querying ingresses");
+                var response = await kubernetes.ListNamespacedIngressWithHttpMessagesAsync(
+                    config.Namespace,
+                    labelSelector: $"app.kubernetes.io/part-of={application.Name}");
+
+                foreach (var resource in response.Body.Items)
+                {
+                    resource.Kind = "Ingress";
+                }
+
+                resources.AddRange(response.Body.Items.Select(item => new Resource(item.Kind, item.Metadata, DeleteIngress)));
+                output.WriteDebugLine($"Found {response.Body.Items.Count} matching ingress");
+
+            }
+            catch (Exception ex)
+            {
+                output.WriteDebugLine("Failed to query ingress.");
+                output.WriteDebugLine(ex.ToString());
+                throw new CommandException("Unable connect to kubernetes.", ex);
+            }
+
             output.WriteInfoLine($"Found {resources.Count} resource(s).");
 
             var exceptions = new List<(Resource resource, HttpOperationException exception)>();
             foreach (var resource in resources)
             {
                 var operation = Operations.Delete;
-                if (interactive && !output.Confirm($"Delete {resource.Obj.Kind} '{resource.Metadata.Name}'?"))
+                if (interactive && !output.Confirm($"Delete {resource.Kind} '{resource.Metadata.Name}'?"))
                 {
                     operation = Operations.None;
                 }
@@ -148,25 +171,25 @@ namespace Microsoft.Tye
 
                 if (operation == Operations.None)
                 {
-                    output.WriteAlwaysLine($"Skipping '{resource.Obj.Kind}' '{resource.Metadata.Name}' ...");
+                    output.WriteAlwaysLine($"Skipping '{resource.Kind}' '{resource.Metadata.Name}' ...");
                 }
                 else if (operation == Operations.Explain)
                 {
-                    output.WriteAlwaysLine($"whatif: Deleting '{resource.Obj.Kind}' '{resource.Metadata.Name}' ...");
+                    output.WriteAlwaysLine($"whatif: Deleting '{resource.Kind}' '{resource.Metadata.Name}' ...");
                 }
                 else if (operation == Operations.Delete)
                 {
-                    output.WriteAlwaysLine($"Deleting '{resource.Obj.Kind}' '{resource.Metadata.Name}' ...");
+                    output.WriteAlwaysLine($"Deleting '{resource.Kind}' '{resource.Metadata.Name}' ...");
 
                     try
                     {
                         var response = await resource.Deleter(resource.Metadata.Name);
 
-                        output.WriteDebugLine($"Successfully deleted resource: '{resource.Obj.Kind}' '{resource.Metadata.Name}'.");
+                        output.WriteDebugLine($"Successfully deleted resource: '{resource.Kind}' '{resource.Metadata.Name}'.");
                     }
                     catch (HttpOperationException ex)
                     {
-                        output.WriteDebugLine($"Failed to delete resource: '{resource.Obj.Kind}' '{resource.Metadata.Name}'.");
+                        output.WriteDebugLine($"Failed to delete resource: '{resource.Kind}' '{resource.Metadata.Name}'.");
                         output.WriteDebugLine(ex.ToString());
                         exceptions.Add((resource, ex));
                     }
@@ -177,7 +200,7 @@ namespace Microsoft.Tye
             {
                 throw new CommandException(
                     $"Failed to delete some resources: " + Environment.NewLine + Environment.NewLine +
-                    string.Join(Environment.NewLine, exceptions.Select(e => $"\t'{e.resource.Obj.Kind}' '{e.resource.Metadata.Name}': {e.exception.Body}.")));
+                    string.Join(Environment.NewLine, exceptions.Select(e => $"\t'{e.resource.Kind}' '{e.resource.Metadata.Name}': {e.exception.Body}.")));
             }
 
             Task<Rest.HttpOperationResponse<V1Status>> DeleteService(string name)
@@ -194,6 +217,11 @@ namespace Microsoft.Tye
             {
                 return kubernetes!.DeleteNamespacedSecretWithHttpMessagesAsync(name, config!.Namespace);
             }
+
+            Task<Rest.HttpOperationResponse<V1Status>> DeleteIngress(string name)
+            {
+                return kubernetes!.DeleteNamespacedIngressWithHttpMessagesAsync(name, config!.Namespace);
+            }
         }
 
         private enum Operations
@@ -205,13 +233,13 @@ namespace Microsoft.Tye
 
         private readonly struct Resource
         {
-            public readonly IKubernetesObject Obj;
+            public readonly string Kind;
             public readonly V1ObjectMeta Metadata;
             public readonly Func<string, Task<Rest.HttpOperationResponse<V1Status>>> Deleter;
 
-            public Resource(IKubernetesObject obj, V1ObjectMeta metadata, Func<string, Task<Rest.HttpOperationResponse<V1Status>>> deleter)
+            public Resource(string kind, V1ObjectMeta metadata, Func<string, Task<Rest.HttpOperationResponse<V1Status>>> deleter)
             {
-                Obj = obj;
+                Kind = kind;
                 Metadata = metadata;
                 Deleter = deleter;
             }

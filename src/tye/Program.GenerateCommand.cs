@@ -21,13 +21,14 @@ namespace Microsoft.Tye
                 CommonArguments.Path_Required,
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
+                StandardOptions.Namespace,
             };
 
             // This is a super-secret VIP-only command! It's useful for testing, but we're 
             // not documenting it right now.
             command.IsHidden = true;
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool>((console, path, verbosity, interactive) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, string>((console, path, verbosity, interactive, @namespace) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -35,7 +36,7 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                return GenerateHost.GenerateAsync(console, path, verbosity, interactive);
+                return GenerateHost.GenerateAsync(console, path, verbosity, interactive, @namespace);
             });
 
             return command;

@@ -6,7 +6,7 @@ using Xunit;
 using Xunit.Abstractions;
 using YamlDotNet.RepresentationModel;
 
-namespace E2ETest
+namespace Test.Infrastructure
 {
     public static class YamlAssert
     {
@@ -24,7 +24,7 @@ namespace E2ETest
 
             try
             {
-                Assert.Equal(yamlStream.Documents.Count, yamlStream.Documents.Count);
+                Assert.Equal(yamlStream.Documents.Count, otherYamlStream.Documents.Count);
 
                 for (var i = 0; i < yamlStream.Documents.Count; i++)
                 {

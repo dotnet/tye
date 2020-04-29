@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
@@ -21,6 +22,7 @@ namespace Microsoft.Tye
                 CommonArguments.Path_Required,
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
+                StandardOptions.Namespace,
             };
 
             command.AddOption(new Option(new[] { "-f", "--force" })
@@ -29,7 +31,7 @@ namespace Microsoft.Tye
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool>(async (console, path, verbosity, interactive, force) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool, string>(async (console, path, verbosity, interactive, force, @namespace) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -45,7 +47,10 @@ namespace Microsoft.Tye
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
                 }
-
+                if (!String.IsNullOrEmpty(@namespace))
+                {
+                    application.Namespace = @namespace;
+                }
                 await ExecuteDeployAsync(new OutputContext(console, verbosity), application, environment: "production", interactive, force);
             });
 
@@ -65,66 +70,37 @@ namespace Microsoft.Tye
             }
 
             await application.ProcessExtensionsAsync(output, ExtensionContext.OperationKind.Deploy);
+            ApplyRegistry(output, application, interactive, requireRegistry: true);
 
-            var steps = new List<ServiceExecutor.Step>()
+            var executor = new ApplicationExecutor(output)
             {
-                new CombineStep() { Environment = environment, },
-                new PublishProjectStep(),
-                new BuildDockerImageStep() { Environment = environment, },
-                new PushDockerImageStep() { Environment = environment, },
-                new ValidateSecretStep() { Environment = environment, Interactive = interactive, Force = force, },
+                ServiceSteps =
+                {
+                    new ApplyContainerDefaultsStep(),
+                    new CombineStep() { Environment = environment, },
+                    new PublishProjectStep(),
+                    new BuildDockerImageStep() { Environment = environment, },
+                    new PushDockerImageStep() { Environment = environment, },
+                    new ValidateSecretStep() { Environment = environment, Interactive = interactive, Force = force, },
+                    new GenerateServiceKubernetesManifestStep() { Environment = environment, },
+                },
+
+                IngressSteps =
+                {
+                    new ValidateIngressStep() { Environment = environment, Interactive = interactive, Force = force, },
+                    new GenerateIngressKubernetesManifestStep(),
+                },
+
+                ApplicationSteps =
+                {
+                    new DeployApplicationKubernetesManifestStep(),
+                }
             };
 
-            steps.Add(new GenerateKubernetesManifestStep() { Environment = environment, });
-            steps.Add(new DeployServiceYamlStep() { Environment = environment, });
-
-            ApplyRegistryAndDefaults(output, application, interactive, requireRegistry: true);
-
-            var executor = new ServiceExecutor(output, application, steps);
-            foreach (var service in application.Services)
-            {
-                await executor.ExecuteAsync(service);
-            }
-
-            await DeployApplicationManifestAsync(output, application, application.Source.Directory.Name);
+            await executor.ExecuteAsync(application);
         }
 
-        private static async Task DeployApplicationManifestAsync(OutputContext output, ApplicationBuilder application, string applicationName)
-        {
-            using var step = output.BeginStep("Deploying Application Manifests...");
-
-            using var tempFile = TempFile.Create();
-            output.WriteInfoLine($"Writing output to '{tempFile.FilePath}'.");
-
-            {
-                await using var stream = File.OpenWrite(tempFile.FilePath);
-                await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
-
-                await ApplicationYamlWriter.WriteAsync(output, writer, application);
-            }
-
-            output.WriteDebugLine("Running 'kubectl apply'.");
-            output.WriteCommandLine("kubectl", $"apply -f \"{tempFile.FilePath}\"");
-            var capture = output.Capture();
-            var exitCode = await Process.ExecuteAsync(
-                $"kubectl",
-                $"apply -f \"{tempFile.FilePath}\"",
-                System.Environment.CurrentDirectory,
-                stdOut: capture.StdOut,
-                stdErr: capture.StdErr);
-
-            output.WriteDebugLine($"Done running 'kubectl apply' exit code: {exitCode}");
-            if (exitCode != 0)
-            {
-                throw new CommandException("'kubectl apply' failed.");
-            }
-
-            output.WriteInfoLine($"Deployed application '{applicationName}'.");
-
-            step.MarkComplete();
-        }
-
-        internal static void ApplyRegistryAndDefaults(OutputContext output, ApplicationBuilder application, bool interactive, bool requireRegistry)
+        internal static void ApplyRegistry(OutputContext output, ApplicationBuilder application, bool interactive, bool requireRegistry)
         {
             if (application.Registry is null && interactive)
             {
@@ -141,14 +117,6 @@ namespace Microsoft.Tye
             else
             {
                 // No registry specified, and that's OK!
-            }
-
-            foreach (var service in application.Services)
-            {
-                if (service is ProjectServiceBuilder project && project.ContainerInfo is ContainerInfo container)
-                {
-                    DockerfileGenerator.ApplyContainerDefaults(application, project, container);
-                }
             }
         }
     }

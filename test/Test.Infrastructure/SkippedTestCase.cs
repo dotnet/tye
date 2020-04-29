@@ -6,7 +6,7 @@ using System;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Test.Infrastucture
+namespace Test.Infrastructure
 {
     public class SkippedTestCase : XunitTestCase
     {

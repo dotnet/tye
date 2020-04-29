@@ -4,10 +4,11 @@
 
 using System;
 using System.CommandLine;
+using System.Linq;
 using Tye.Serialization;
 using YamlDotNet.RepresentationModel;
 
-namespace E2ETest
+namespace Test.Infrastructure
 {
     public class EqualityYamlNodeVisitor
     {
@@ -96,7 +97,13 @@ namespace E2ETest
 
             if (node.Children.Count < otherNode.Children.Count)
             {
-                throw new TyeYamlException($"Extra children in actual yaml mapping, Expected: ({node.Start.Line}, {node.Start.Column}). Actual: ({otherNode.Start.Line}, {otherNode.Start.Column}).");
+                throw new TyeYamlException(
+$@"Extra children in actual yaml mapping:
+    Expected: ({node.Start.Line}, {node.Start.Column})
+{string.Join(Environment.NewLine, node.Children.Select(kvp => $"      " + kvp.Key.ToString() + ": ..."))}
+    
+    Actual: ({otherNode.Start.Line}, {otherNode.Start.Column})
+{string.Join(Environment.NewLine, otherNode.Children.Select(kvp => $"      " + kvp.Key.ToString() + ": ..."))}");
             }
         }
 

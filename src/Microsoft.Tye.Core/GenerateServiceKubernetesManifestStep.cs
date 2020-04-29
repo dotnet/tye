@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    public sealed class GenerateKubernetesManifestStep : ServiceExecutor.Step
+    public sealed class GenerateServiceKubernetesManifestStep : ApplicationExecutor.ServiceStep
     {
         public override string DisplayText => "Generating Manifests...";
 

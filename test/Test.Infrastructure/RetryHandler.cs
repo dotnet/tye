@@ -8,7 +8,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Test.Infrastucture
+namespace Test.Infrastructure
 {
     public class RetryHandler : DelegatingHandler
     {

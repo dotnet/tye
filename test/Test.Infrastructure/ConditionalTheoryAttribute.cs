@@ -6,10 +6,10 @@ using System;
 using Xunit;
 using Xunit.Sdk;
 
-namespace E2ETest
+namespace Test.Infrastructure
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    [XunitTestCaseDiscoverer("E2ETest." + nameof(ConditionalTheoryDiscoverer), "Microsoft.Tye.E2ETest")]
+    [XunitTestCaseDiscoverer("Test.Infrastructure." + nameof(ConditionalTheoryDiscoverer), "Test.Infrastructure")]
     public class ConditionalTheoryAttribute : TheoryAttribute
     {
     }
