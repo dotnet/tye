@@ -19,5 +19,6 @@ namespace Microsoft.Tye.Hosting.Model
         public int Replicas { get; set; } = 1;
         public List<ServiceBinding> Bindings { get; } = new List<ServiceBinding>();
         public List<EnvironmentVariable> Configuration { get; } = new List<EnvironmentVariable>();
+        public List<string> Dependencies { get; } = new List<string>();
     }
 }

@@ -210,6 +210,7 @@ namespace E2ETest
 
             var outputFileName = project.AssemblyName + ".dll";
             var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/sdk:{project.TargetFrameworkVersion}");
+            container.Dependencies.AddRange(project.Dependencies);
             container.Volumes.Add(new VolumeBuilder(project.PublishDir, name: null, target: "/app"));
             container.Args = $"dotnet /app/{outputFileName} {project.Args}";
             container.Bindings.AddRange(project.Bindings);

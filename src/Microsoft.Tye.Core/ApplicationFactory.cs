@@ -21,7 +21,7 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(source));
             }
 
-            var queue = new Queue<ConfigApplication>();
+            var queue = new Queue<(ConfigApplication, HashSet<string>)>();
             var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             var rootConfig = ConfigFactory.FromFile(source);
@@ -29,11 +29,14 @@ namespace Microsoft.Tye
 
             var root = new ApplicationBuilder(source, rootConfig.Name ?? source.Directory.Name.ToLowerInvariant());
             root.Namespace = rootConfig.Namespace;
-            queue.Enqueue(rootConfig);
+
+            queue.Enqueue((rootConfig, new HashSet<string>()));
 
             while (queue.Count > 0)
             {
-                var config = queue.Dequeue();
+                var item = queue.Dequeue();
+                var config = item.Item1;
+                var parentDependencies = item.Item2;
                 if (!visited.Add(config.Source.FullName))
                 {
                     continue;
@@ -70,6 +73,7 @@ namespace Microsoft.Tye
                     ServiceBuilder service;
                     if (root.Services.Any(s => s.Name == configService.Name))
                     {
+                        AddToRootServices(root, parentDependencies, configService, configService.Name);
                         // Don't add a service which has already been added by name
                         continue;
                     }
@@ -140,8 +144,9 @@ namespace Microsoft.Tye
                             throw new CommandException($"Nested configuration must have the same \"name\" in the tye.yaml. Root config: {rootConfig.Source}, nested config: {nestedConfig.Source}");
                         }
 
-                        queue.Enqueue(nestedConfig);
+                        queue.Enqueue((nestedConfig, new HashSet<string>()));
 
+                        AddToRootServices(root, parentDependencies, configService, configService.Name);
 
                         continue;
                     }
@@ -154,6 +159,11 @@ namespace Microsoft.Tye
                     {
                         throw new CommandException("Unable to determine service type.");
                     }
+
+                    service.Dependencies.AddRange(parentDependencies);
+                    parentDependencies.Add(service.Name);
+
+                    AddToRootServices(root, parentDependencies, configService, service.Name);
 
                     root.Services.Add(service);
 
@@ -273,6 +283,18 @@ namespace Microsoft.Tye
             }
 
             return root;
+        }
+
+        private static void AddToRootServices(ApplicationBuilder root, HashSet<string> parentDependencies, ConfigService configService, string serviceName)
+        {
+            parentDependencies.Add(serviceName);
+            foreach (var s in root.Services)
+            {
+                if (parentDependencies.Contains(s.Name, StringComparer.OrdinalIgnoreCase) && !s.Name.Equals(configService.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    s.Dependencies.Add(serviceName);
+                }
+            }
         }
     }
 }

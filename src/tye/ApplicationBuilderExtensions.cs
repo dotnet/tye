@@ -31,6 +31,7 @@ namespace Microsoft.Tye
         public static Application ToHostingApplication(this ApplicationBuilder application)
         {
             var services = new Dictionary<string, Service>();
+
             foreach (var service in application.Services)
             {
                 RunInfo? runInfo;
@@ -104,7 +105,9 @@ namespace Microsoft.Tye
                 {
                     Replicas = replicas,
                 };
+
                 description.Configuration.AddRange(env);
+                description.Dependencies.AddRange(service.Dependencies);
 
                 foreach (var binding in service.Bindings)
                 {

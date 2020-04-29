@@ -1,0 +1,113 @@
+﻿kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: results
+  labels:
+    app.kubernetes.io/name: 'results'
+    app.kubernetes.io/part-of: 'VotingSample'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: results
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: 'results'
+        app.kubernetes.io/part-of: 'VotingSample'
+    spec:
+      containers:
+      - name: results
+        image: results:1.0.0
+        imagePullPolicy: Always
+        env:
+        - name: ASPNETCORE_URLS
+          value: 'http://*'
+        - name: PORT
+          value: '80'
+        - name: SERVICE__WORKER__PROTOCOL
+          value: 'http'
+        - name: SERVICE__WORKER__PORT
+          value: '80'
+        - name: SERVICE__WORKER__HOST
+          value: 'worker'
+        ports:
+        - containerPort: 80
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: results
+  labels:
+    app.kubernetes.io/name: 'results'
+    app.kubernetes.io/part-of: 'VotingSample'
+spec:
+  selector:
+    app.kubernetes.io/name: results
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+...
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: worker
+  labels:
+    app.kubernetes.io/name: 'worker'
+    app.kubernetes.io/part-of: 'VotingSample'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: 'worker'
+        app.kubernetes.io/part-of: 'VotingSample'
+    spec:
+      containers:
+      - name: worker
+        image: worker:1.0.0
+        imagePullPolicy: Always
+        env:
+        - name: ASPNETCORE_URLS
+          value: 'http://*'
+        - name: PORT
+          value: '80'
+        - name: CONNECTIONSTRINGS__REDIS
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-redis-secret'
+              key: 'connectionstring'
+        - name: CONNECTIONSTRINGS__POSTGRES
+          valueFrom:
+            secretKeyRef:
+              name: 'binding-production-postgres-secret'
+              key: 'connectionstring'
+        ports:
+        - containerPort: 80
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: worker
+  labels:
+    app.kubernetes.io/name: 'worker'
+    app.kubernetes.io/part-of: 'VotingSample'
+spec:
+  selector:
+    app.kubernetes.io/name: worker
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+...
