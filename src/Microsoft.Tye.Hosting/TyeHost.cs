@@ -168,9 +168,10 @@ namespace Microsoft.Tye.Hosting
 
         private void ConfigureApplication(WebApplication app)
         {
+            var host = ComputeHost(app);
             var port = ComputePort(app);
 
-            app.Listen($"http://127.0.0.1:{port}");
+            app.Listen($"http://{host}:{port}");
 
             app.UseDeveloperExceptionPage();
 
@@ -186,6 +187,17 @@ namespace Microsoft.Tye.Hosting
 
             app.MapBlazorHub();
             app.MapFallbackToPage("/_Host");
+        }
+
+        private string ComputeHost(WebApplication app)
+        {
+            var host = app.Configuration["host"];
+            if (string.IsNullOrEmpty(host))
+            {
+                host = "127.0.0.1";
+            }
+
+            return host;
         }
 
         private int ComputePort(WebApplication app)

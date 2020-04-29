@@ -28,7 +28,7 @@ namespace Microsoft.Tye
             }
         }
 
-        public static Application ToHostingApplication(this ApplicationBuilder application)
+        public static Application ToHostingApplication(this ApplicationBuilder application, string host = "127.0.0.1")
         {
             var services = new Dictionary<string, Service>();
             foreach (var service in application.Services)
@@ -111,7 +111,7 @@ namespace Microsoft.Tye
                     description.Bindings.Add(new ServiceBinding()
                     {
                         ConnectionString = binding.ConnectionString,
-                        Host = binding.Host,
+                        Host = binding.Host ?? host,
                         ContainerPort = binding.ContainerPort,
                         Name = binding.Name,
                         Port = binding.Port,
@@ -122,6 +122,7 @@ namespace Microsoft.Tye
                 services.Add(service.Name, new Service(description));
             }
 
+            
             // Ingress get turned into services for hosting
             foreach (var ingress in application.Ingress)
             {

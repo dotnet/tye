@@ -29,6 +29,13 @@ namespace Microsoft.Tye
                 Description = "Do not build project files before running.",
                 Required = false
             });
+            
+            command.AddOption(new Option("--host")
+            {
+                Description = "The host to run control plane on.",
+                Argument = new Argument<string>("host", () => "127.0.0.1"),
+                Required = false
+            });
 
             command.AddOption(new Option("--port")
             {
@@ -70,7 +77,7 @@ namespace Microsoft.Tye
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, string[]>(async (console, path, debug) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, string, string[]>(async (console, path, host, debug) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -93,8 +100,9 @@ namespace Microsoft.Tye
 
                 output.WriteInfoLine("Launching Tye Host...");
                 output.WriteInfoLine(string.Empty);
-                await using var host = new TyeHost(application.ToHostingApplication(), args, debug);
-                await host.RunAsync();
+
+                await using var tyeHost = new TyeHost(application.ToHostingApplication(host), args, debug);
+                await tyeHost.RunAsync();
             });
 
             return command;
