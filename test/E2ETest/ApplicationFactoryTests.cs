@@ -55,6 +55,31 @@ services:
             var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile));
 
             Assert.Equal(5, application.Services.Count);
+
+            var vote = application.Services.Single(s => s.Name == "vote");
+            Assert.Equal(2, vote.Dependencies.Count);
+            Assert.Contains("worker", vote.Dependencies);
+            Assert.Contains("redis", vote.Dependencies);
+
+            var results = application.Services.Single(s => s.Name == "results");
+            Assert.Single(results.Dependencies);
+            Assert.Contains("worker", results.Dependencies);
+
+            var worker = application.Services.Single(s => s.Name == "worker");
+            Assert.Equal(2, worker.Dependencies.Count);
+            Assert.Contains("redis", worker.Dependencies);
+            Assert.Contains("postgres", worker.Dependencies);
+
+            var redis = application.Services.Single(s => s.Name == "redis");
+            Assert.Equal(3, redis.Dependencies.Count);
+            Assert.Contains("postgres", redis.Dependencies);
+            Assert.Contains("worker", redis.Dependencies);
+            Assert.Contains("vote", redis.Dependencies);
+
+            var postgres = application.Services.Single(s => s.Name == "postgres");
+            Assert.Equal(2, postgres.Dependencies.Count);
+            Assert.Contains("worker", postgres.Dependencies);
+            Assert.Contains("vote", postgres.Dependencies);
         }
 
         [Fact]

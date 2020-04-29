@@ -103,7 +103,7 @@ namespace Microsoft.Tye.Hosting
             {
                 try
                 {
-                    DirectoryExtesions.DeleteDirectory(_tyeFolderPath);
+                    DirectoryExtensions.DeleteDirectory(_tyeFolderPath);
                 }
                 catch (Exception ex)
                 {

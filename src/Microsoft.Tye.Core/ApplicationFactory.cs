@@ -36,7 +36,9 @@ namespace Microsoft.Tye
             {
                 var item = queue.Dequeue();
                 var config = item.Item1;
-                var parentDependencies = item.Item2;
+
+                // dependencies represents a set of all dependencies
+                var dependencies = item.Item2;
                 if (!visited.Add(config.Source.FullName))
                 {
                     continue;
@@ -73,8 +75,9 @@ namespace Microsoft.Tye
                     ServiceBuilder service;
                     if (root.Services.Any(s => s.Name == configService.Name))
                     {
-                        AddToRootServices(root, parentDependencies, configService, configService.Name);
-                        // Don't add a service which has already been added by name
+                        // Even though this service has already created a service, we still need
+                        // to update dependency information
+                        AddToRootServices(root, dependencies, configService.Name);
                         continue;
                     }
 
@@ -140,7 +143,7 @@ namespace Microsoft.Tye
                         var nestedConfig = GetNestedConfig(rootConfig, Path.Combine(config.Source.DirectoryName, expandedYaml));
                         queue.Enqueue((nestedConfig, new HashSet<string>()));
 
-                        AddToRootServices(root, parentDependencies, configService, configService.Name);
+                        AddToRootServices(root, dependencies, configService.Name);
                         continue;
                     }
                     else if (!string.IsNullOrEmpty(configService.Repository))
@@ -169,7 +172,7 @@ namespace Microsoft.Tye
 
                         queue.Enqueue((nestedConfig, new HashSet<string>()));
 
-                        AddToRootServices(root, parentDependencies, configService, configService.Name);
+                        AddToRootServices(root, dependencies, configService.Name);
 
                         continue;
                     }
@@ -183,10 +186,10 @@ namespace Microsoft.Tye
                         throw new CommandException("Unable to determine service type.");
                     }
 
-                    service.Dependencies.AddRange(parentDependencies);
-                    parentDependencies.Add(service.Name);
+                    // Add dependencies to ourself before adding ourself to avoid self reference
+                    service.Dependencies.UnionWith(dependencies);
 
-                    AddToRootServices(root, parentDependencies, configService, service.Name);
+                    AddToRootServices(root, dependencies, service.Name);
 
                     root.Services.Add(service);
 
@@ -321,12 +324,16 @@ namespace Microsoft.Tye
             return nestedConfig;
         }
 
-        private static void AddToRootServices(ApplicationBuilder root, HashSet<string> parentDependencies, ConfigService configService, string serviceName)
+        private static void AddToRootServices(ApplicationBuilder root, HashSet<string> dependencies, string serviceName)
         {
-            parentDependencies.Add(serviceName);
+            // Add ourselves in the set of all current dependencies.
+            dependencies.Add(serviceName);
+
+            // Iterate through all services and add the current services as a dependency (except ourselves)
             foreach (var s in root.Services)
             {
-                if (parentDependencies.Contains(s.Name, StringComparer.OrdinalIgnoreCase) && !s.Name.Equals(configService.Name, StringComparison.OrdinalIgnoreCase))
+                if (dependencies.Contains(s.Name, StringComparer.OrdinalIgnoreCase) 
+                    && !s.Name.Equals(serviceName, StringComparison.OrdinalIgnoreCase))
                 {
                     s.Dependencies.Add(serviceName);
                 }
