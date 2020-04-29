@@ -29,7 +29,7 @@ namespace Microsoft.Tye
                 Description = "Do not build project files before running.",
                 Required = false
             });
-            
+
             command.AddOption(new Option("--host")
             {
                 Description = "The host to run control plane on and services.",
