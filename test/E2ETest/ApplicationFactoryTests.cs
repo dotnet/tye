@@ -6,7 +6,7 @@ using Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace UnitTests
+namespace E2ETest
 {
     public class ApplicationFactoryTests
     {

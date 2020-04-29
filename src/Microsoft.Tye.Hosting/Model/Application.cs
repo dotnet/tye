@@ -132,8 +132,10 @@ namespace Microsoft.Tye.Hosting.Model
         {
             var bindings = new List<EffectiveBinding>();
 
-            foreach (var s in Services.Values)
+            foreach (var serv in service.Description.Dependencies)
             {
+                var s = Services[serv];
+
                 foreach (var b in s.Description.Bindings)
                 {
                     var protocol = b.Protocol;

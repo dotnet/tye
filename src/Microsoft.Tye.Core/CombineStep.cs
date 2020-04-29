@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
@@ -51,12 +52,9 @@ namespace Microsoft.Tye
             var bindings = new ComputedBindings();
             service.Outputs.Add(bindings);
 
-            foreach (var other in application.Services)
+            foreach (var o in service.Dependencies)
             {
-                if (object.ReferenceEquals(service, other))
-                {
-                    continue;
-                }
+                var other = application.Services.Single(a => a.Name == o);
 
                 foreach (var binding in other.Bindings)
                 {

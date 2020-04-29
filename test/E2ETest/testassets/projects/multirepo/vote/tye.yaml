@@ -4,3 +4,8 @@ services:
   project: vote.csproj
 - name: worker
   include: ../worker/tye.yaml
+- name: redis
+  image: redis
+  bindings:
+    - port: 6379
+      connectionString: ${host}:${port}
