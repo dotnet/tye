@@ -24,6 +24,11 @@ namespace Microsoft.Tye.Hosting.Model
 
                 CachedLogs.Enqueue(entry);
             });
+
+            ReplicaEvents.Subscribe(entry =>
+            {
+                entry.Replica.State = entry.State;
+            });
         }
 
         public ServiceDescription Description { get; }

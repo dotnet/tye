@@ -100,11 +100,10 @@ namespace Test.Infrastructure
             return temp;
         }
 
-        public static async Task StartHostAndWaitForReplicasToStart(TyeHost host)
+        public static async Task DoOperationAndWaitForNReplicasToStart(TyeHost host, int n, Func<TyeHost, Task> operation)
         {
             var startedTask = new TaskCompletionSource<bool>();
             var alreadyStarted = 0;
-            var totalReplicas = host.Application.Services.Sum(s => s.Value.Description.Replicas);
 
             void OnReplicaChange(ReplicaEvent ev)
             {
@@ -117,14 +116,14 @@ namespace Test.Infrastructure
                     Interlocked.Decrement(ref alreadyStarted);
                 }
 
-                if (alreadyStarted == totalReplicas)
+                if (alreadyStarted == n)
                 {
                     startedTask.TrySetResult(true);
                 }
             }
 
             var servicesStateObserver = host.Application.Services.Select(srv => srv.Value.ReplicaEvents.Subscribe(OnReplicaChange)).ToList();
-            await host.StartAsync();
+            await operation(host);
 
             using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);
             try
@@ -143,25 +142,14 @@ namespace Test.Infrastructure
             }
         }
 
-        public static async Task PurgeHostAndWaitForGivenReplicasToStop(TyeHost host, string[] replicas)
+        public static async Task DoOperationAndWaitForNReplicasToStop(TyeHost host, int n, string[]? replicas, Func<TyeHost, Task> operation)
         {
-            static async Task Purge(TyeHost host)
-            {
-                var logger = host.DashboardWebApplication!.Logger;
-                var replicaRegistry = new ReplicaRegistry(host.Application.ContextDirectory, logger);
-                var processRunner = new ProcessRunner(logger, replicaRegistry, new ProcessRunnerOptions());
-                var dockerRunner = new DockerRunner(logger, replicaRegistry);
-
-                await processRunner.StartAsync(new Application(new FileInfo(host.Application.Source), new Dictionary<string, Service>()));
-                await dockerRunner.StartAsync(new Application(new FileInfo(host.Application.Source), new Dictionary<string, Service>()));
-            }
-
             var stoppedTask = new TaskCompletionSource<bool>();
-            var remaining = replicas.Length;
+            var remaining = n;
 
             void OnReplicaChange(ReplicaEvent ev)
             {
-                if (replicas.Contains(ev.Replica.Name) && ev.State == ReplicaState.Stopped)
+                if ((replicas == null || replicas.Contains(ev.Replica.Name)) && ev.State == ReplicaState.Stopped)
                 {
                     Interlocked.Decrement(ref remaining);
                 }
@@ -175,7 +163,7 @@ namespace Test.Infrastructure
             var servicesStateObserver = host.Application.Services.Select(srv => srv.Value.ReplicaEvents.Subscribe(OnReplicaChange)).ToList();
 
             // We purge existing replicas by restarting the host which will initiate the purging process
-            await Purge(host);
+            await operation(host);
 
             using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);
             try
@@ -192,6 +180,90 @@ namespace Test.Infrastructure
                     observer.Dispose();
                 }
             }
+        }
+
+        /// <summary>
+        /// Performs a given operation and waits for *only* the replicas in the given array to restart
+        /// </summary>
+        /// <param name="host">Tye Host</param>
+        /// <param name="replicas">Array of Replicas that should restart</param>
+        /// <param name="waitUntilSuccess">how long to wait to check that only the given replicas restart, and no other, before returning</param>
+        /// <param name="operation">An operation to perform before waiting for the replicas to restart</param>
+        /// <returns>true if only the replicas in the given array were restarted, false if otherwise</returns>
+        public static async Task<bool> DoOperationAndWaitForReplicasToRestart(TyeHost host, string[] replicas, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
+        {
+            var restartedTask = new TaskCompletionSource<bool>();
+            var remaining = replicas.Length;
+            var alreadyStarted = 0;
+
+            void OnReplicaChange(ReplicaEvent ev)
+            {
+                if (ev.State == ReplicaState.Started)
+                {
+                    Interlocked.Increment(ref alreadyStarted);
+                }
+                else if (ev.State == ReplicaState.Stopped)
+                {
+                    if (replicas.Contains(ev.Replica.Name))
+                    {
+                        Interlocked.Decrement(ref remaining);
+                    }
+                    else
+                    {
+                        restartedTask.SetResult(false);
+                    }
+                }
+
+                if (remaining == 0 && alreadyStarted == replicas.Length)
+                {
+                    Task.Delay(waitUntilSuccess)
+                        .ContinueWith(_ =>
+                        {
+                            if (!restartedTask.Task.IsCompleted)
+                            {
+                                restartedTask.SetResult(true);
+                            }
+                        });
+                }
+            }
+            
+            var servicesStateObserver = host.Application.Services.Select(srv => srv.Value.ReplicaEvents.Subscribe(OnReplicaChange)).ToList();
+
+            await operation(host);
+            
+            using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);
+            try
+            {
+                await using (cancellation.Token.Register(() => restartedTask.TrySetCanceled()))
+                {
+                    return await restartedTask.Task;
+                }
+            }
+            finally
+            {
+                foreach (var observer in servicesStateObserver)
+                {
+                    observer.Dispose();
+                }
+            } 
+        }
+        
+        public static Task StartHostAndWaitForReplicasToStart(TyeHost host) => DoOperationAndWaitForNReplicasToStart(host, host.Application.Services.Sum(s => s.Value.Description.Replicas), h => h.StartAsync());
+
+        public static async Task PurgeHostAndWaitForGivenReplicasToStop(TyeHost host, string[] replicas)
+        {
+            static async Task Purge(TyeHost host)
+            {
+                var logger = host.DashboardWebApplication!.Logger;
+                var replicaRegistry = new ReplicaRegistry(host.Application.ContextDirectory, logger);
+                var processRunner = new ProcessRunner(logger, replicaRegistry, new ProcessRunnerOptions());
+                var dockerRunner = new DockerRunner(logger, replicaRegistry);
+
+                await processRunner.StartAsync(new Application(new FileInfo(host.Application.Source), new Dictionary<string, Service>()));
+                await dockerRunner.StartAsync(new Application(new FileInfo(host.Application.Source), new Dictionary<string, Service>()));
+            }
+
+            await DoOperationAndWaitForNReplicasToStop(host, replicas.Length, replicas, Purge);
         }
     }
 }
