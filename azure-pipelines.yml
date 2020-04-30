@@ -158,8 +158,7 @@ stages:
           inputs:
             dockerVersion: 19.03.5
             releaseType: stable
-        - script: sudo service docker restart
-          displayName: StartDocker
+        - script: /Users/runner/hostedtoolcache/docker-stable/19.3.5/x64/docker version
         - script: docker version
           displayName: TestDocker
         - script: eng/common/cibuild.sh
