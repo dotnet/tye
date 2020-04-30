@@ -160,6 +160,8 @@ stages:
             releaseType: stable
         - script: docker --version
           displayName: TestDocker
+        - script: sudo dockerd
+          displayName: startDocker
         - script: docker images
           displayName: AnotherTestDocker
         - script: eng/common/cibuild.sh
