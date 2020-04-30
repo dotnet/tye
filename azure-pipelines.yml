@@ -78,9 +78,9 @@ stages:
         - task: DockerInstaller@0
           displayName: Docker Installer
           inputs:
-            dockerVersion: 17.09.0-ce
+            dockerVersion: 19.03.5
             releaseType: stable
-        - script: docker --version
+        - script: docker version
           displayName: TestDocker
         - script: eng\common\cibuild.cmd -configuration $(_BuildConfig) -prepareMachine $(_OfficialBuildArgs)
           displayName: Build and Publish
@@ -156,12 +156,12 @@ stages:
         - task: DockerInstaller@0
           displayName: Docker Installer
           inputs:
-            dockerVersion: 17.09.0-ce
+            dockerVersion: 19.03.5
             releaseType: stable
-        - script: docker --version
+        - script: docker version
           displayName: TestDocker
-        # - script: sudo dockerd
-          # displayName: startDocker
+        - script: docker 
+          displayName: startDocker
         - script: sudo docker images
           displayName: AnotherTestDocker
         - script: eng/common/cibuild.sh
