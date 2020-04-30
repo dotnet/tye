@@ -158,12 +158,10 @@ stages:
           inputs:
             dockerVersion: 19.03.5
             releaseType: stable
+        - script: sudo service docker restart
+          displayName: StartDocker
         - script: docker version
           displayName: TestDocker
-        - script: docker 
-          displayName: startDocker
-        - script: sudo docker images
-          displayName: AnotherTestDocker
         - script: eng/common/cibuild.sh
             --configuration $(_BuildConfig)
             --prepareMachine
