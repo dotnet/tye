@@ -1,3 +1,7 @@
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.IO;
 using System.Linq;
@@ -26,7 +30,7 @@ namespace E2ETest
         {
             _output = output;
             _sink = new TestOutputLogEventSink(output);
-            
+
             _options = new JsonSerializerOptions()
             {
                 PropertyNameCaseInsensitive = true,
@@ -48,24 +52,24 @@ namespace E2ETest
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            var handler = new HttpClientHandler {ServerCertificateCustomValidationCallback = (a, b, c, d) => true, AllowAutoRedirect = false};
+            var handler = new HttpClientHandler { ServerCertificateCustomValidationCallback = (a, b, c, d) => true, AllowAutoRedirect = false };
 
             var client = new HttpClient(new RetryHandler(handler));
 
-            await RunHostingApplication(application, docker ? new[] {"--docker"} : Array.Empty<string>(), async (host, uri) =>
-            {
-                var replicaToStop = host.Application.Services["frontend"].Replicas.First();
-                Assert.Equal(ReplicaState.Started, replicaToStop.Value.State);
-                
-                Assert.True(await DoOperationAndWaitForReplicasToRestart(host, new[] {replicaToStop.Key}, TimeSpan.FromSeconds(1), _ =>
-                {
-                    replicaToStop.Value.StoppingTokenSource.Cancel();
-                    return Task.CompletedTask;
-                }));
+            await RunHostingApplication(application, docker ? new[] { "--docker" } : Array.Empty<string>(), async (host, uri) =>
+              {
+                  var replicaToStop = host.Application.Services["frontend"].Replicas.First();
+                  Assert.Equal(ReplicaState.Started, replicaToStop.Value.State);
 
-                Assert.Equal(ReplicaState.Removed, replicaToStop.Value.State);
-                Assert.True(host.Application.Services.SelectMany(s => s.Value.Replicas).All(r => r.Value.State == ReplicaState.Started));
-            });
+                  Assert.True(await DoOperationAndWaitForReplicasToRestart(host, new[] { replicaToStop.Key }, TimeSpan.FromSeconds(1), _ =>
+                  {
+                      replicaToStop.Value.StoppingTokenSource.Cancel();
+                      return Task.CompletedTask;
+                  }));
+
+                  Assert.Equal(ReplicaState.Removed, replicaToStop.Value.State);
+                  Assert.True(host.Application.Services.SelectMany(s => s.Value.Replicas).All(r => r.Value.State == ReplicaState.Started));
+              });
         }
 
         private async Task<string> GetServiceUrl(HttpClient client, Uri uri, string serviceName)
@@ -75,7 +79,7 @@ namespace E2ETest
             var binding = service.Description!.Bindings.Where(b => b.Protocol == "http").Single();
             return $"{binding.Protocol ?? "http"}://localhost:{binding.Port}";
         }
-        
+
         private async Task RunHostingApplication(ApplicationBuilder application, string[] args, Func<TyeHost, Uri, Task> execute)
         {
             await using var host = new TyeHost(application.ToHostingApplication(), args)

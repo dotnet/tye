@@ -226,11 +226,11 @@ namespace Test.Infrastructure
                         });
                 }
             }
-            
+
             var servicesStateObserver = host.Application.Services.Select(srv => srv.Value.ReplicaEvents.Subscribe(OnReplicaChange)).ToList();
 
             await operation(host);
-            
+
             using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);
             try
             {
@@ -245,9 +245,9 @@ namespace Test.Infrastructure
                 {
                     observer.Dispose();
                 }
-            } 
+            }
         }
-        
+
         public static Task StartHostAndWaitForReplicasToStart(TyeHost host) => DoOperationAndWaitForNReplicasToStart(host, host.Application.Services.Sum(s => s.Value.Description.Replicas), h => h.StartAsync());
 
         public static async Task PurgeHostAndWaitForGivenReplicasToStop(TyeHost host, string[] replicas)
