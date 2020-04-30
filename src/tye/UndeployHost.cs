@@ -12,13 +12,12 @@ using k8s;
 using k8s.Models;
 using Microsoft.Rest;
 using Microsoft.Tye.ConfigModel;
-using Newtonsoft.Json;
 
 namespace Microsoft.Tye
 {
     public static class UndeployHost
     {
-        public static async Task UndeployAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive, bool whatIf)
+        public static async Task UndeployAsync(IConsole console, FileInfo path, Verbosity verbosity, string @namespace, bool interactive, bool whatIf)
         {
             var output = new OutputContext(console, verbosity);
 
@@ -26,18 +25,25 @@ namespace Microsoft.Tye
 
             // We don't need to know anything about the services, just the application name.
             var application = ConfigFactory.FromFile(path);
+            if (!String.IsNullOrEmpty(@namespace))
+            {
+                application.Namespace = @namespace;
+            }
 
-            await ExecuteUndeployAsync(output, application, interactive, whatIf);
+            await ExecuteUndeployAsync(output, application, @namespace, interactive, whatIf);
         }
 
-        public static async Task ExecuteUndeployAsync(OutputContext output, ConfigApplication application, bool interactive, bool whatIf)
+        public static async Task ExecuteUndeployAsync(OutputContext output, ConfigApplication application, string @namespace, bool interactive, bool whatIf)
         {
             var config = KubernetesClientConfiguration.BuildDefaultConfig();
 
             // Workaround for https://github.com/kubernetes-client/csharp/issues/372
             var store = await KubernetesClientConfiguration.LoadKubeConfigAsync();
             var context = store.Contexts.Where(c => c.Name == config.CurrentContext).FirstOrDefault();
-            config.Namespace ??= context?.ContextDetails?.Namespace;
+
+            // Use namespace of application, or current context, or 'default'
+            config.Namespace = application.Namespace;
+            config.Namespace ??= context?.ContextDetails?.Namespace ?? "default";
 
             var kubernetes = new Kubernetes(config);
 
