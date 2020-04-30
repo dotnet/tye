@@ -13,12 +13,13 @@ using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
 using Xunit;
 using Microsoft.Tye;
+using System.Diagnostics;
 
 namespace Test.Infrastructure
 {
     public static class TestHelpers
     {
-        private static readonly TimeSpan WaitForServicesTimeout = TimeSpan.FromSeconds(20);
+        private static readonly TimeSpan WaitForServicesTimeout = Debugger.IsAttached ? TimeSpan.FromMinutes(5) : TimeSpan.FromSeconds(20);
 
         // https://github.com/dotnet/aspnetcore/blob/5a0526dfd991419d5bce0d8ea525b50df2e37b04/src/Testing/src/TestPathUtilities.cs
         // This can get into a bad pattern for having crazy paths in places. Eventually, especially if we use helix,

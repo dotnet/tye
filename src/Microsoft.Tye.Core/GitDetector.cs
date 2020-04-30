@@ -22,7 +22,7 @@ namespace Microsoft.Tye
         {
             try
             {
-                var result = await ProcessUtil.RunAsync("git", "", throwOnError: false);
+                var result = await ProcessUtil.RunAsync("git", "--version", throwOnError: false);
                 return result.ExitCode == 0;
             }
             catch (Exception)

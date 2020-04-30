@@ -168,7 +168,7 @@ namespace Microsoft.Tye
 
                             if (result.ExitCode != 0)
                             {
-                                throw new CommandException($"Failed to clone repository {configService.Repository} with exit code {result.ExitCode}.{Environment.NewLine}{result.StandardOutput}.");
+                                throw new CommandException($"Failed to clone repository {configService.Repository} with exit code {result.ExitCode}.{Environment.NewLine}{result.StandardError}{result.StandardOutput}.");
                             }
                         }
 
