@@ -56,13 +56,16 @@ namespace Microsoft.Tye
                     // Workaround for https://github.com/kubernetes-client/csharp/issues/372
                     var store = await KubernetesClientConfiguration.LoadKubeConfigAsync();
                     var context = store.Contexts.Where(c => c.Name == config.CurrentContext).FirstOrDefault();
-                    config.Namespace ??= context?.ContextDetails?.Namespace;
+
+                    // Use namespace of application, or current context, or 'default'
+                    config.Namespace = application.Namespace;
+                    config.Namespace ??= context?.ContextDetails?.Namespace ?? "default";
 
                     var kubernetes = new Kubernetes(config);
 
                     try
                     {
-                        var result = await kubernetes.ReadNamespacedSecretWithHttpMessagesAsync(secretInputBinding.Name, config.Namespace ?? "default");
+                        var result = await kubernetes.ReadNamespacedSecretWithHttpMessagesAsync(secretInputBinding.Name, config.Namespace);
                         output.WriteInfoLine($"Found existing secret '{secretInputBinding.Name}'.");
                         continue;
                     }
@@ -89,7 +92,7 @@ namespace Microsoft.Tye
                             $"The secret '{secretInputBinding.Name}' used for service '{secretInputBinding.Service.Name}' is missing from the deployment environment. " +
                             $"Rerun the command with --interactive to specify the value interactively, or with --force to skip validation. Alternatively " +
                             $"use the following command to manually create the secret." + System.Environment.NewLine +
-                            $"kubectl create secret generic {secretInputBinding.Name} --from-literal=connectionstring=<value>");
+                            $"kubectl create secret generic {secretInputBinding.Name} --namespace {config.Namespace} --from-literal=connectionstring=<value>");
                     }
 
                     if (!Interactive && secretInputBinding is SecretUrlInputBinding)
@@ -98,7 +101,7 @@ namespace Microsoft.Tye
                             $"The secret '{secretInputBinding.Name}' used for service '{secretInputBinding.Service.Name}' is missing from the deployment environment. " +
                             $"Rerun the command with --interactive to specify the value interactively, or with --force to skip validation. Alternatively " +
                             $"use the following command to manually create the secret." + System.Environment.NewLine +
-                            $"kubectl create secret generic {secretInputBinding.Name} --from-literal=protocol=<value> --from-literal=host=<value> --from-literal=port=<value>");
+                            $"kubectl create secret generic {secretInputBinding.Name} --namespace {config.Namespace} --from-literal=protocol=<value> --from-literal=host=<value> --from-literal=port=<value>");
                     }
 
                     V1Secret secret;
@@ -110,7 +113,7 @@ namespace Microsoft.Tye
                         {
                             output.WriteAlwaysLine($"Skipping creation of secret for '{secretInputBinding.Service.Name}'. This may prevent creation of pods until secrets are created.");
                             output.WriteAlwaysLine($"Manually create a secret with:");
-                            output.WriteAlwaysLine($"kubectl create secret generic {secretInputBinding.Name} --from-literal=connectionstring=<value>");
+                            output.WriteAlwaysLine($"kubectl create secret generic {secretInputBinding.Name} --namespace {config.Namespace} --from-literal=connectionstring=<value>");
                             continue;
                         }
 
@@ -143,7 +146,7 @@ namespace Microsoft.Tye
                         {
                             output.WriteAlwaysLine($"Skipping creation of secret for '{secretInputBinding.Service.Name}'. This may prevent creation of pods until secrets are created.");
                             output.WriteAlwaysLine($"Manually create a secret with:");
-                            output.WriteAlwaysLine($"kubectl create secret generic {secretInputBinding.Name} -from-literal=protocol=<value> --from-literal=host=<value> --from-literal=port=<value>");
+                            output.WriteAlwaysLine($"kubectl create secret generic {secretInputBinding.Name} --namespace {config.Namespace} --from-literal=protocol=<value> --from-literal=host=<value> --from-literal=port=<value>");
                             continue;
                         }
 
@@ -170,7 +173,7 @@ namespace Microsoft.Tye
 
                     try
                     {
-                        await kubernetes.CreateNamespacedSecretWithHttpMessagesAsync(secret, config.Namespace ?? "default");
+                        await kubernetes.CreateNamespacedSecretWithHttpMessagesAsync(secret, config.Namespace);
                         output.WriteInfoLine($"Created secret '{secret.Metadata.Name}'.");
                     }
                     catch (Exception ex)

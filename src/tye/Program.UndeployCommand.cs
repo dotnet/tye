@@ -19,6 +19,7 @@ namespace Microsoft.Tye
             var command = new Command("undeploy", "delete deployed application")
             {
                 CommonArguments.Path_Required,
+                StandardOptions.Namespace,
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
 
@@ -28,7 +29,7 @@ namespace Microsoft.Tye
                 },
             };
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool>((console, path, verbosity, interactive, whatIf) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, string, bool, bool>((console, path, verbosity, @namespace, interactive, whatIf) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -36,7 +37,7 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                return UndeployHost.UndeployAsync(console, path, verbosity, interactive, whatIf);
+                return UndeployHost.UndeployAsync(console, path, verbosity, @namespace, interactive, whatIf);
             });
 
             return command;

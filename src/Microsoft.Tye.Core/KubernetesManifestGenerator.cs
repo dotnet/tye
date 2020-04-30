@@ -25,6 +25,10 @@ namespace Microsoft.Tye
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
             metadata.Add("name", ingress.Name);
+            if (!string.IsNullOrEmpty(application.Namespace))
+            {
+                metadata.Add("namespace", application.Namespace);
+            }
 
             var annotations = new YamlMappingNode();
             metadata.Add("annotations", annotations);
