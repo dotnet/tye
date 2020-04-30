@@ -75,6 +75,11 @@ stages:
         steps:
         - checkout: self
           clean: true
+        - task: DockerInstaller@0
+          displayName: Docker Installer
+          inputs:
+            dockerVersion: 17.09.0-ce
+            releaseType: stable
         - script: eng\common\cibuild.cmd -configuration $(_BuildConfig) -prepareMachine $(_OfficialBuildArgs)
           displayName: Build and Publish
         - task: PublishBuildArtifacts@1
@@ -146,6 +151,11 @@ stages:
         steps:
         - checkout: self
           clean: true
+        - task: DockerInstaller@0
+          displayName: Docker Installer
+          inputs:
+            dockerVersion: 17.09.0-ce
+            releaseType: stable
         - script: eng/common/cibuild.sh
             --configuration $(_BuildConfig)
             --prepareMachine
