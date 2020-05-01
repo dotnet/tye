@@ -153,11 +153,11 @@ stages:
         steps:
         - checkout: self
           clean: true
-        - task: DockerInstaller@0
-          displayName: Docker Installer
-          inputs:
-            dockerVersion: 19.03.5
-            releaseType: stable
+        # - task: DockerInstaller@0
+        #   displayName: Docker Installer
+        #   inputs:
+        #     dockerVersion: 19.03.5
+        #     releaseType: stable
         - script: ./installdockermac.sh
           displayName: installdocker
         - script: eng/common/cibuild.sh
