@@ -158,7 +158,7 @@ stages:
           inputs:
             dockerVersion: 19.03.5
             releaseType: stable
-        - script: installdockermac.sh
+        - script: ./installdockermac.sh
           displayName: installdocker
         - script: eng/common/cibuild.sh
             --configuration $(_BuildConfig)
