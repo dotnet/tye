@@ -153,12 +153,11 @@ stages:
         steps:
         - checkout: self
           clean: true
-        - task: DockerInstaller@0
-          displayName: Docker Installer
-          inputs:
-            dockerVersion: 19.03.5
-            releaseType: stable
-        - script: /Users/runner/hostedtoolcache/docker-stable/19.3.5/x64/docker version
+        # - task: DockerInstaller@0
+        #   displayName: Docker Installer
+        #   inputs:
+        #     dockerVersion: 19.03.5
+        #     releaseType: stable
         - script: docker version
           displayName: TestDocker
         - script: eng/common/cibuild.sh
