@@ -78,8 +78,8 @@ stages:
         - task: DockerInstaller@0
           displayName: Docker Installer
           inputs:
-            dockerVersion: 19.03.5
-            releaseType: edge
+            dockerVersion: 17.09.0-ce
+            releaseType: stable
         - script: docker version
           displayName: TestDocker
         - script: eng\common\cibuild.cmd -configuration $(_BuildConfig) -prepareMachine $(_OfficialBuildArgs)
