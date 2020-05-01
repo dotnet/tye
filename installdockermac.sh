@@ -14,7 +14,7 @@ set +x
 sleep 5
 # if the script appears to hang for more than 3 minutes comment above `set +x` or try to run the command inside the loop to see the output, like 'do sleep 1; sudo docker system info; done'
 n=0
-until [ $n -ge 60 ]
+until [ $n -ge 300 ]
     do
     sleep 1
     sudo docker system info
