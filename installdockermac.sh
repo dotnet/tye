@@ -13,7 +13,13 @@ echo "Waiting for docker system info to respond (which means the service is avai
 set +x
 sleep 5
 # if the script appears to hang for more than 3 minutes comment above `set +x` or try to run the command inside the loop to see the output, like 'do sleep 1; sudo docker system info; done'
-sudo /Applications/Docker.app/Contents/Resources/bin/docker system info 
+n=0
+until [ $n -ge 60 ]
+    do
+    sleep 1
+    sudo docker system info
+    n=$[$n+1]
+done
 echo "Docker is ready and available"
 set -x
 sudo docker ps
