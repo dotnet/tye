@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Microsoft.Tye
 {
-    public static class DirectoryExtensions
+    internal static class DirectoryExtensions
     {
         // Calling Directory.Delete causes an exception for .git folders:
         //     System.UnauthorizedAccessException : Access to the path '17a475ecca365c678e907bd4c73e4c65b341c6' is denied.
