@@ -11,8 +11,6 @@ namespace Microsoft.Tye
 {
     internal static class CommonArguments
     {
-        private static readonly string[] FileFormats = new[] { "tye.yaml", "tye.yml", "*.csproj", "*.fsproj", "*.sln" };
-
         public static Argument<FileInfo> Path_Optional
         {
             get
@@ -39,32 +37,6 @@ namespace Microsoft.Tye
             }
         }
 
-        public static bool TryFindSupportedFile(string directoryPath, out string? filePath, out string? errorMessage)
-        {
-            foreach (var format in FileFormats)
-            {
-                var files = Directory.GetFiles(directoryPath, format);
-
-                if (files.Length == 1)
-                {
-                    errorMessage = null;
-                    filePath = files[0];
-                    return true;
-                }
-
-                if (files.Length > 1)
-                {
-                    errorMessage = $"More than one matching file was found in directory '{directoryPath}'.";
-                    filePath = default;
-                    return false;
-                }
-            }
-
-            errorMessage = $"No project project file or solution was found in directory '{directoryPath}'.";
-            filePath = default;
-            return false;
-        }
-
         static FileInfo TryParsePath(ArgumentResult result, bool required)
         {
             var token = result.Tokens.Count switch
@@ -86,7 +58,7 @@ namespace Microsoft.Tye
 
             if (Directory.Exists(token))
             {
-                if (TryFindSupportedFile(token, out var filePath, out var errorMessage))
+                if (ConfigFileFinder.TryFindSupportedFile(token, out var filePath, out var errorMessage))
                 {
                     return new FileInfo(filePath);
                 }

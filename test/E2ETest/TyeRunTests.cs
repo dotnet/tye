@@ -210,7 +210,7 @@ namespace E2ETest
 
             var outputFileName = project.AssemblyName + ".dll";
             var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/sdk:{project.TargetFrameworkVersion}");
-            container.Dependencies.AddRange(project.Dependencies);
+            container.Dependencies.UnionWith(project.Dependencies);
             container.Volumes.Add(new VolumeBuilder(project.PublishDir, name: null, target: "/app"));
             container.Args = $"dotnet /app/{outputFileName} {project.Args}";
             container.Bindings.AddRange(project.Bindings);
@@ -576,6 +576,47 @@ namespace E2ETest
                 // results isn't running.
                 var resultsResponse = await client.GetAsync($"{uri}api/v1/services/results");
                 Assert.Equal(HttpStatusCode.NotFound, resultsResponse.StatusCode);
+            });
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task MultiRepo_WorksWithCloning()
+        {
+            using var projectDirectory = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
+
+            var content = @"
+name: VotingSample
+services:
+- name: vote
+  repository: https://github.com/jkotalik/TyeMultiRepoVoting
+- name: results
+  repository: https://github.com/jkotalik/TyeMultiRepoResults";
+            var yamlFile = Path.Combine(projectDirectory.DirectoryPath, "tye.yaml");
+            await File.WriteAllTextAsync(yamlFile, content);
+
+            // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile));
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, Array.Empty<string>(), async (app, uri) =>
+            {
+                var votingUri = await GetServiceUrl(client, uri, "vote");
+                var workerUri = await GetServiceUrl(client, uri, "worker");
+
+                var votingResponse = await client.GetAsync(votingUri);
+                var workerResponse = await client.GetAsync(workerUri);
+
+                Assert.True(votingResponse.IsSuccessStatusCode);
+                Assert.Equal(HttpStatusCode.NotFound, workerResponse.StatusCode);
             });
         }
 

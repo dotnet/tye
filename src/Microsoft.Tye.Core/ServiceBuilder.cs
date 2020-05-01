@@ -16,6 +16,6 @@ namespace Microsoft.Tye
         // TODO: this is temporary while refactoring
         public List<ServiceOutput> Outputs { get; } = new List<ServiceOutput>();
 
-        public List<string> Dependencies { get; } = new List<string>();
+        public HashSet<string> Dependencies { get; } = new HashSet<string>();
     }
 }
