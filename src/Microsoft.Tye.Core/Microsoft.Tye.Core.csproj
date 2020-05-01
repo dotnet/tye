@@ -37,6 +37,7 @@
   <ItemGroup>
     <Compile Include="..\shared\KubectlDetector.cs" Link="KubectlDetector.cs" />
     <Compile Include="..\shared\TempFile.cs" Link="TempFile.cs" />
+    <Compile Include="..\shared\DirectoryExtensions.cs" Link="DirectoryExtensions.cs" />
   </ItemGroup>
 
 </Project>
