@@ -125,7 +125,6 @@ namespace Microsoft.Tye
                 services.Add(service.Name, new Service(description));
             }
 
-
             // Ingress get turned into services for hosting
             foreach (var ingress in application.Ingress)
             {
