@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Microsoft.AspNetCore.Routing.Matching
 {
-    internal sealed class IngressHostMatcherPolicy : MatcherPolicy, IEndpointSelectorPolicy
+    public sealed class IngressHostMatcherPolicy : MatcherPolicy, IEndpointSelectorPolicy
     {
         private const string WildcardHost = "*";
         private const string WildcardPrefix = "*.";

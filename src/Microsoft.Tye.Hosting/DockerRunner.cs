@@ -52,7 +52,9 @@ namespace Microsoft.Tye.Hosting
             var proxies = new List<Service>();
             foreach (var service in application.Services.Values)
             {
-                if (service.Description.RunInfo is DockerRunInfo || service.Description.Bindings.Count == 0)
+                if (service.Description.RunInfo is DockerRunInfo || 
+                    service.Description.RunInfo is IngressRunInfo || 
+                    service.Description.Bindings.Count == 0)
                 {
                     continue;
                 }

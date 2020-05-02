@@ -29,9 +29,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Tye.Proxy", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Tye.Extensions.Configuration.Tests", "test\Microsoft.Tye.Extensions.Configuration.Tests\Microsoft.Tye.Extensions.Configuration.Tests.csproj", "{FCE7C889-16D1-42E7-A514-EA096E9D41A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Infrastructure", "test\Test.Infrastructure\Test.Infrastructure.csproj", "{F9A7C801-26F3-4D20-B084-2A6A6343E869}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Infrastructure", "test\Test.Infrastructure\Test.Infrastructure.csproj", "{F9A7C801-26F3-4D20-B084-2A6A6343E869}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tye-diag-agent", "src\tye-diag-agent\tye-diag-agent.csproj", "{7173D2B6-B102-4DCA-8000-5DAE684BFC13}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tye-diag-agent", "src\tye-diag-agent\tye-diag-agent.csproj", "{7173D2B6-B102-4DCA-8000-5DAE684BFC13}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Tye.HttpProxy", "src\Microsoft.Tye.HttpProxy\Microsoft.Tye.HttpProxy.csproj", "{CACCDF7E-70FF-43DB-A822-91BADCED8E13}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -199,6 +201,18 @@ Global
 		{7173D2B6-B102-4DCA-8000-5DAE684BFC13}.Release|x64.Build.0 = Release|Any CPU
 		{7173D2B6-B102-4DCA-8000-5DAE684BFC13}.Release|x86.ActiveCfg = Release|Any CPU
 		{7173D2B6-B102-4DCA-8000-5DAE684BFC13}.Release|x86.Build.0 = Release|Any CPU
+		{CACCDF7E-70FF-43DB-A822-91BADCED8E13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CACCDF7E-70FF-43DB-A822-91BADCED8E13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CACCDF7E-70FF-43DB-A822-91BADCED8E13}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CACCDF7E-70FF-43DB-A822-91BADCED8E13}.Debug|x64.Build.0 = Debug|Any CPU
+		{CACCDF7E-70FF-43DB-A822-91BADCED8E13}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CACCDF7E-70FF-43DB-A822-91BADCED8E13}.Debug|x86.Build.0 = Debug|Any CPU
+		{CACCDF7E-70FF-43DB-A822-91BADCED8E13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CACCDF7E-70FF-43DB-A822-91BADCED8E13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CACCDF7E-70FF-43DB-A822-91BADCED8E13}.Release|x64.ActiveCfg = Release|Any CPU
+		{CACCDF7E-70FF-43DB-A822-91BADCED8E13}.Release|x64.Build.0 = Release|Any CPU
+		{CACCDF7E-70FF-43DB-A822-91BADCED8E13}.Release|x86.ActiveCfg = Release|Any CPU
+		{CACCDF7E-70FF-43DB-A822-91BADCED8E13}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -217,6 +231,7 @@ Global
 		{FCE7C889-16D1-42E7-A514-EA096E9D41A7} = {F19B02EB-A372-417A-B2C2-EA0D5A3C76D5}
 		{F9A7C801-26F3-4D20-B084-2A6A6343E869} = {F19B02EB-A372-417A-B2C2-EA0D5A3C76D5}
 		{7173D2B6-B102-4DCA-8000-5DAE684BFC13} = {8C662D59-A3CB-466F-8E85-A8E6BA5E7601}
+		{CACCDF7E-70FF-43DB-A822-91BADCED8E13} = {8C662D59-A3CB-466F-8E85-A8E6BA5E7601}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D8002603-BB27-4500-BF86-274A8E72D302}

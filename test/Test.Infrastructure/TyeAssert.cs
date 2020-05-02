@@ -16,13 +16,14 @@ namespace Test.Infrastructure
             Assert.Equal(expected.Registry, actual.Registry);
             Assert.Equal(expected.Network, actual.Network);
 
-            foreach (var ingress in actual.Ingress)
+
+            var ingress = actual.Ingress;
+            var otherIngress = expected.Ingress;
+            Assert.True(ingress == null && otherIngress == null ||
+                        ingress != null && otherIngress != null);
+
+            if (ingress != null && otherIngress != null)
             {
-                var otherIngress = expected
-                    .Ingress
-                    .Where(o => o.Name == ingress.Name)
-                    .Single();
-                Assert.NotNull(otherIngress);
                 Assert.Equal(otherIngress.Replicas, ingress.Replicas);
 
                 foreach (var rule in ingress.Rules)

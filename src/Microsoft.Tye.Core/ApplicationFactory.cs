@@ -289,22 +289,31 @@ namespace Microsoft.Tye
                     }
                 }
 
-                foreach (var configIngress in config.Ingress)
+                if (config.Ingress != null)
                 {
+                    var configIngress = config.Ingress;
+
                     var ingress = new IngressBuilder(configIngress.Name!);
+                    root.Ingress = ingress;
                     ingress.Replicas = configIngress.Replicas ?? 1;
 
-                    root.Ingress.Add(ingress);
-
-                    foreach (var configBinding in configIngress.Bindings)
+                    if (configIngress.Bindings.Count > 0)
                     {
-                        var binding = new IngressBindingBuilder()
+                        foreach (var configBinding in configIngress.Bindings)
                         {
-                            Name = configBinding.Name,
-                            Port = configBinding.Port,
-                            Protocol = configBinding.Protocol ?? "http",
-                        };
-                        ingress.Bindings.Add(binding);
+                            var binding = new IngressBindingBuilder()
+                            {
+                                Name = configBinding.Name,
+                                Port = configBinding.Port,
+                                Protocol = configBinding.Protocol ?? "http",
+                            };
+                            ingress.Bindings.Add(binding);
+                        }
+                    }
+                    else
+                    {
+                        ingress.Bindings.Add(new IngressBindingBuilder() { Protocol = "http" });
+                        ingress.Bindings.Add(new IngressBindingBuilder() { Name = "https", Protocol = "https" });
                     }
 
                     foreach (var configRule in configIngress.Rules)

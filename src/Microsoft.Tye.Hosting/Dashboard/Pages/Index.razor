@@ -36,7 +36,11 @@
                     }
                 </td>
                 <td>
-                    @if (service.Description.Bindings.Any())
+                    @if (service.Description.RunInfo!.Private)
+                    {
+                        <p>Cluster IP</p>
+                    }
+                    else if (service.Description.Bindings.Any())
                     {
                         foreach (var b in service.Description.Bindings)
                         {

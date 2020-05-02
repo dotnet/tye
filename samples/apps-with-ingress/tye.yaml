@@ -6,18 +6,18 @@
 #
 name: apps-with-ingress
 ingress:
-  - name: ingress
-    bindings:
-      - port: 8080
-    rules:
-      - path: /A
-        service: app-a
-      - path: /B
-        service: app-b
-      - host: a.example.com
-        service: app-a
-      - host: b.example.com
-        service: app-b 
+  name: ingress
+  bindings:
+    - port: 8080
+  rules:
+  - path: /A
+    service: app-a
+  - path: /B
+    service: app-b
+  - host: a.example.com
+    service: app-a
+  - host: b.example.com
+    service: app-b 
 
 services:
 - name: app-a

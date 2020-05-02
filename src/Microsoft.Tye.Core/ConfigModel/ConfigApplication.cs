@@ -34,7 +34,7 @@ namespace Microsoft.Tye.ConfigModel
 
         public List<ConfigService> Services { get; set; } = new List<ConfigService>();
 
-        public List<ConfigIngress> Ingress { get; set; } = new List<ConfigIngress>();
+        public ConfigIngress? Ingress { get; set; }
 
         public void Validate()
         {
@@ -137,7 +137,9 @@ namespace Microsoft.Tye.ConfigModel
                 }
             }
 
-            foreach (var ingress in config.Ingress)
+            var ingress = config.Ingress;
+
+            if (ingress != null)
             {
                 context = new ValidationContext(ingress);
                 if (!Validator.TryValidateObject(ingress, context, results, validateAllProperties: true))

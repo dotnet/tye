@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.AspNetCore.Routing.Matching
 {
-    internal class IngressHostMetadata
+    public class IngressHostMetadata
     {
         public IngressHostMetadata(params string[] hosts)
         {

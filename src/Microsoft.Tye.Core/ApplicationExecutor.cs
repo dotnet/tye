@@ -39,7 +39,8 @@ namespace Microsoft.Tye
                 tracker.MarkComplete();
             }
 
-            foreach (var ingress in application.Ingress)
+            var ingress = application.Ingress;
+            if (ingress != null)
             {
                 using var tracker = output.BeginStep($"Processing Ingress '{ingress.Name}'...");
                 foreach (var step in IngressSteps)

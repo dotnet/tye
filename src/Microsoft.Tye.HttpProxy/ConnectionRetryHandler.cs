@@ -10,9 +10,9 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.Tye.Hosting
+namespace System.Net.Http
 {
-    internal class ConnectionRetryHandler : DelegatingHandler
+    public class ConnectionRetryHandler : DelegatingHandler
     {
         private static readonly int MaxRetries = 3;
         private static readonly TimeSpan InitialRetryDelay = TimeSpan.FromMilliseconds(1000);

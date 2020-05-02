@@ -17,7 +17,10 @@ namespace Microsoft.Tye
             var yaml = new List<IYamlManifestOutput>();
 
             yaml.AddRange(application.Services.SelectMany(s => s.Outputs.OfType<IYamlManifestOutput>()));
-            yaml.AddRange(application.Ingress.SelectMany(i => i.Outputs.OfType<IYamlManifestOutput>()));
+            if (application.Ingress != null)
+            {
+                yaml.AddRange(application.Ingress.Outputs.OfType<IYamlManifestOutput>());
+            }
 
             if (yaml.Count == 0)
             {

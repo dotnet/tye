@@ -82,6 +82,8 @@ namespace Microsoft.Tye.Hosting
                         service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
                     }
 
+                    _logger.LogInformation("Ingress bound to {Addresses}", string.Join(", ", addresses));
+
                     builder.Server.UseUrls(addresses.ToArray());
                     var webApp = builder.Build();
 
@@ -94,8 +96,6 @@ namespace Microsoft.Tye.Hosting
                         {
                             continue;
                         }
-
-                        _logger.LogInformation("Processing ingress rule: Path:{Path}, Host:{Host}, Service:{Service}", rule.Path, rule.Host, rule.Service);
 
                         var targetServiceDescription = target.Description;
 
@@ -113,14 +113,11 @@ namespace Microsoft.Tye.Hosting
 
                         // For each of the target service replicas, get the base URL
                         // based on the replica port
-                        for (int i = 0; i < targetServiceDescription.Replicas; i++)
+                        foreach (var port in targetBinding.ReplicaPorts)
                         {
-                            var port = targetBinding.ReplicaPorts[i];
                             var url = $"{targetBinding.Protocol}://localhost:{port}";
                             uris.Add(new Uri(url));
                         }
-
-                        _logger.LogInformation("Service {ServiceName} is using {Urls}", targetServiceDescription.Name, string.Join(",", uris.Select(u => u.ToString())));
 
                         // The only load balancing strategy here is round robin
                         long count = 0;
@@ -130,7 +127,7 @@ namespace Microsoft.Tye.Hosting
 
                             var uri = new UriBuilder(uris[next])
                             {
-                                Path = (string)context.Request.RouteValues["path"]
+                                Path = (string)context.Request.RouteValues["path"] ?? "/"
                             };
 
                             return context.ProxyRequest(invoker, uri.Uri);

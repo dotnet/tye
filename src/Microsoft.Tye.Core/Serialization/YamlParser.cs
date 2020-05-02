@@ -63,10 +63,10 @@ namespace Tye.Serialization
                 service.Volumes ??= new List<ConfigVolume>();
             }
 
-            foreach (var ingress in app.Ingress)
+            if (app.Ingress != null)
             {
-                ingress.Bindings ??= new List<ConfigIngressBinding>();
-                ingress.Rules ??= new List<ConfigIngressRule>();
+                app.Ingress.Bindings ??= new List<ConfigIngressBinding>();
+                app.Ingress.Rules ??= new List<ConfigIngressRule>();
             }
 
             return app;

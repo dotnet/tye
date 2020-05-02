@@ -273,7 +273,7 @@ namespace Microsoft.Tye.Hosting
                             errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
                             onStart: pid =>
                             {
-                                if (hasPorts)
+                                if (hasPorts && !serviceDescription.RunInfo!.Private)
                                 {
                                     _logger.LogInformation("{ServiceName} running on process id {PID} bound to {Address}", replica, pid, string.Join(", ", ports.Select(p => $"{p.Protocol ?? "http"}://localhost:{p.Port}")));
                                 }

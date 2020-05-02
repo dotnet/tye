@@ -30,8 +30,10 @@ namespace Tye.Serialization
                         app.Registry = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     case "ingress":
-                        YamlParser.ThrowIfNotYamlSequence(key, child.Value);
-                        ConfigIngressParser.HandleIngress((child.Value as YamlSequenceNode)!, app.Ingress);
+                        YamlParser.ThrowIfNotYamlMapping(child.Value);
+                        var ingress = new ConfigIngress();
+                        ConfigIngressParser.HandleIngressMapping((child.Value as YamlMappingNode)!, ingress);
+                        app.Ingress = ingress;
                         break;
                     case "services":
                         YamlParser.ThrowIfNotYamlSequence(key, child.Value);

@@ -1,7 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,9 +32,87 @@ namespace Microsoft.Tye.Hosting
                 {
                     tasks.Add(TransformProjectToContainer(s, project));
                 }
+                else if (s.Description.RunInfo is IngressRunInfo ingress)
+                {
+                    tasks.Add(TransformIngressToContainer(application, s, ingress));
+                }
             }
 
             return Task.WhenAll(tasks);
+        }
+
+        private Task TransformIngressToContainer(Application application, Service service, IngressRunInfo ingress)
+        {
+            // Inject a proxy per non-container service. This allows the container to use normal host names within the
+            // container network to talk to services on the host
+            var ingressRunInfo = new DockerRunInfo($"mcr.microsoft.com/dotnet/core/aspnet:3.1", "dotnet Microsoft.Tye.HttpProxy.dll")
+            {
+                WorkingDirectory = "/app",
+                IsAspNet = true
+            };
+
+            var proxyLocation = Path.GetDirectoryName(typeof(Microsoft.Tye.HttpProxy.Program).Assembly.Location);
+            ingressRunInfo.VolumeMappings.Add(new DockerVolume(proxyLocation, name: null, target: "/app"));
+
+            int ruleIndex = 0;
+            foreach (var rule in ingress.Rules)
+            {
+                if (!application.Services.TryGetValue(rule.Service, out var target))
+                {
+                    continue;
+                }
+
+                var targetServiceDescription = target.Description;
+
+                var uris = new List<Uri>();
+
+                // HTTP before HTTPS (this might change once we figure out certs...)
+                var targetBinding = targetServiceDescription.Bindings.FirstOrDefault(b => b.Protocol == "http") ??
+                                    targetServiceDescription.Bindings.FirstOrDefault(b => b.Protocol == "https");
+
+                if (targetBinding == null)
+                {
+                    _logger.LogInformation("Service {ServiceName} does not have any HTTP or HTTPs bindings", targetServiceDescription.Name);
+                    continue;
+                }
+
+                // For each of the target service replicas, get the base URL
+                // based on the replica port
+                foreach (var port in targetBinding.ReplicaPorts)
+                {
+                    var url = $"{targetBinding.Protocol}://localhost:{port}";
+                    uris.Add(new Uri(url));
+                }
+
+                // TODO: Use Yarp
+                // Configuration schema
+                //    "Rules": 
+                //    {
+                //         "0": 
+                //         {
+                //           "Host": null,
+                //           "Path": null,
+                //           "Service": "frontend",
+                //           "Port": 10067",
+                //           "Protocol": http
+                //         }
+                //    }
+
+                var rulePrefix = $"Rules__{ruleIndex}__";
+
+                service.Description.Configuration.Add(new EnvironmentVariable($"{rulePrefix}Host", rule.Host));
+                service.Description.Configuration.Add(new EnvironmentVariable($"{rulePrefix}Path", rule.Path));
+                service.Description.Configuration.Add(new EnvironmentVariable($"{rulePrefix}Service", rule.Service));
+                service.Description.Configuration.Add(new EnvironmentVariable($"{rulePrefix}Port", (targetBinding.ContainerPort ?? targetBinding.Port).ToString()));
+                service.Description.Configuration.Add(new EnvironmentVariable($"{rulePrefix}Protocol", targetBinding.Protocol));
+
+                ruleIndex++;
+            }
+
+
+            service.Description.RunInfo = ingressRunInfo;
+
+            return Task.CompletedTask;
         }
 
         private async Task TransformProjectToContainer(Service service, ProjectRunInfo project)

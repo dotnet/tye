@@ -10,18 +10,7 @@ namespace Tye.Serialization
 {
     public static class ConfigIngressParser
     {
-        public static void HandleIngress(YamlSequenceNode yamlSequenceNode, List<ConfigIngress> ingress)
-        {
-            foreach (var child in yamlSequenceNode.Children)
-            {
-                YamlParser.ThrowIfNotYamlMapping(child);
-                var configIngress = new ConfigIngress();
-                HandleIngressMapping((YamlMappingNode)child, configIngress);
-                ingress.Add(configIngress);
-            }
-        }
-
-        private static void HandleIngressMapping(YamlMappingNode yamlMappingNode, ConfigIngress configIngress)
+        public static void HandleIngressMapping(YamlMappingNode yamlMappingNode, ConfigIngress configIngress)
         {
             foreach (var child in yamlMappingNode!.Children)
             {

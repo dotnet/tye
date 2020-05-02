@@ -27,7 +27,7 @@ namespace Microsoft.Tye
 
         public List<ServiceBuilder> Services { get; } = new List<ServiceBuilder>();
 
-        public List<IngressBuilder> Ingress { get; } = new List<IngressBuilder>();
+        public IngressBuilder? Ingress { get; set; }
 
         public string? Network { get; set; }
     }

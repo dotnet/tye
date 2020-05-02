@@ -6,5 +6,6 @@ namespace Microsoft.Tye.Hosting.Model
 {
     public abstract class RunInfo
     {
+        public bool Private { get; set; }
     }
 }
