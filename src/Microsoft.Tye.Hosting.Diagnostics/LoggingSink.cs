@@ -75,7 +75,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
                 {
                     argsJson = exceptionJson;
                     exceptionJson = eventName;
-                    eventName = null;
+                    eventName = null!;
                 }
 
                 if (string.IsNullOrEmpty(argsJson))
