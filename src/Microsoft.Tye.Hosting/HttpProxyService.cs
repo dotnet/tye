@@ -127,7 +127,7 @@ namespace Microsoft.Tye.Hosting
 
                             var uri = new UriBuilder(uris[next])
                             {
-                                Path = (string)context.Request.RouteValues["path"] ?? "/"
+                                Path = rule.PreservePath ? context.Request.Path.ToString() : (string)context.Request.RouteValues["path"] ?? "/"
                             };
 
                             return context.ProxyRequest(invoker, uri.Uri);

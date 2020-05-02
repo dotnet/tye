@@ -44,6 +44,7 @@ namespace Microsoft.Tye.HttpProxy
                 {
                     var host = rule["Host"];
                     var path = rule["Path"];
+                    var preservePath = rule.GetSection("PreservePath").Get<bool>();
                     var service = rule["Service"];
                     var port = rule["Port"];
                     var protocol = rule["Protocol"];
@@ -54,7 +55,7 @@ namespace Microsoft.Tye.HttpProxy
                     {
                         var uri = new UriBuilder(url)
                         {
-                            Path = (string)context.Request.RouteValues["path"] ?? "/"
+                            Path = preservePath ? context.Request.Path.ToString() : (string)context.Request.RouteValues["path"] ?? "/"
                         };
 
                         return context.ProxyRequest(invoker, uri.Uri);

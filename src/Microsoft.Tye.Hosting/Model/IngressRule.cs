@@ -11,15 +11,17 @@ namespace Microsoft.Tye.Hosting.Model
 {
     public class IngressRule
     {
-        public IngressRule(string? host, string? path, string service)
+        public IngressRule(string? host, string? path, string service, bool preservePath)
         {
             Host = host;
             Path = path;
             Service = service;
+            PreservePath = preservePath;
         }
 
         public string? Host { get; }
         public string? Path { get; }
+        public bool PreservePath { get; set; }
         public string Service { get; }
     }
 }

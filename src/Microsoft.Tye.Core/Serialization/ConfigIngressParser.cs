@@ -79,6 +79,13 @@ namespace Tye.Serialization
                     case "path":
                         rule.Path = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "preservePath":
+                        if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var preservePath))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeABoolean(key));
+                        }
+                        rule.PreservePath = preservePath;
+                        break;
                     case "service":
                         rule.Service = YamlParser.GetScalarValue(key, child.Value);
                         break;

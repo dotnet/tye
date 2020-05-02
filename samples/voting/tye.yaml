@@ -1,4 +1,15 @@
 name: VotingSample
+
+ingress:
+  name: ingress
+  rules:
+    - path: /vote
+      preservePath: true
+      service: vote
+    - path: /results
+      preservePath: true
+      service: results
+
 services:
 - name: vote
   project: vote/vote.csproj

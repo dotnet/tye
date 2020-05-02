@@ -102,6 +102,7 @@ namespace Microsoft.Tye.Hosting
 
                 service.Description.Configuration.Add(new EnvironmentVariable($"{rulePrefix}Host", rule.Host));
                 service.Description.Configuration.Add(new EnvironmentVariable($"{rulePrefix}Path", rule.Path));
+                service.Description.Configuration.Add(new EnvironmentVariable($"{rulePrefix}PreservePath", rule.PreservePath.ToString()));
                 service.Description.Configuration.Add(new EnvironmentVariable($"{rulePrefix}Service", rule.Service));
                 service.Description.Configuration.Add(new EnvironmentVariable($"{rulePrefix}Port", (targetBinding.ContainerPort ?? targetBinding.Port).ToString()));
                 service.Description.Configuration.Add(new EnvironmentVariable($"{rulePrefix}Protocol", targetBinding.Protocol));

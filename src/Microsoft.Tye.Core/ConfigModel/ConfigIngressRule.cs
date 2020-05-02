@@ -10,6 +10,7 @@ namespace Microsoft.Tye.ConfigModel
     {
         public string? Path { get; set; }
         public string? Host { get; set; }
+        public bool PreservePath { get; set; }
 
         [Required]
         public string? Service { get; set; }

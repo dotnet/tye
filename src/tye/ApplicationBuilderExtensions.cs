@@ -41,7 +41,7 @@ namespace Microsoft.Tye
 
                 foreach (var rule in ingress.Rules)
                 {
-                    rules.Add(new IngressRule(rule.Host, rule.Path, rule.Service!));
+                    rules.Add(new IngressRule(rule.Host, rule.Path, rule.Service!, rule.PreservePath));
                 }
 
                 var runInfo = new IngressRunInfo(rules);
@@ -63,6 +63,9 @@ namespace Microsoft.Tye
 
                 services.Add(ingress.Name, new Service(description));
             }
+
+            // If there's an ingress then the service is private
+            var privateService = ingress != null;
 
             foreach (var service in application.Services)
             {
