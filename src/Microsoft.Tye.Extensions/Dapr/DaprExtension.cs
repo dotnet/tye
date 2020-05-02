@@ -12,8 +12,6 @@ namespace Microsoft.Tye.Extensions.Dapr
 {
     internal sealed class DaprExtension : Extension
     {
-        public override string Name => "dapr";
-
         public override Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
         {
             // If we're getting called then the user configured dapr in their tye.yaml.
