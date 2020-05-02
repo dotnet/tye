@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "tye_diag_agent": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

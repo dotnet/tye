@@ -14,48 +14,73 @@ namespace Microsoft.Tye.Extensions.Zipkin
     {
         public override Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
         {
-            if (context.Operation == ExtensionContext.OperationKind.LocalRun)
+            if (context.Application.Services.Any(s => s.Name == "zipkin"))
             {
-                if (context.Application.Services.Any(s => s.Name == "zipkin"))
+                context.Output.WriteDebugLine("zipkin service already configured. Skipping...");
+            }
+            else
+            {
+                context.Output.WriteDebugLine("Injecting zipkin service...");
+                var service = new ContainerServiceBuilder("zipkin", "openzipkin/zipkin")
                 {
-                    context.Output.WriteDebugLine("zipkin service already configured. Skipping...");
-                }
-                else
-                {
-                    context.Output.WriteDebugLine("Injecting zipkin service...");
-
-                    var service = new ContainerServiceBuilder("zipkin", "openzipkin/zipkin")
+                    Bindings =
                     {
-                        Bindings =
+                        new BindingBuilder()
                         {
-                            new BindingBuilder()
-                            {
-                                Port = 9411,
-                                ContainerPort = 9411,
-                                Protocol = "http",
-                            },
+                            Port = 9411,
+                            ContainerPort = 9411,
+                            Protocol = "http",
                         },
-                    };
-                    context.Application.Services.Add(service);
+                    },
+                };
+                context.Application.Services.Add(service);
 
-                    foreach (var s in context.Application.Services)
+                foreach (var s in context.Application.Services)
+                {
+                    if (object.ReferenceEquals(s, service))
                     {
-                        if (object.ReferenceEquals(s, service))
-                        {
-                            continue;
-                        }
+                        continue;
+                    }
 
-                        // make zipkin available as a dependency of everything.
-                        if (!s.Dependencies.Contains(service.Name))
-                        {
-                            s.Dependencies.Add(service.Name);
-                        }
+                    // make zipkin available as a dependency of everything.
+                    if (!s.Dependencies.Contains(service.Name))
+                    {
+                        s.Dependencies.Add(service.Name);
                     }
                 }
+            }
 
+            if (context.Operation == ExtensionContext.OperationKind.LocalRun)
+            {
                 if (context.Options!.DistributedTraceProvider is null)
                 {
+                    // For local development we hardcode the port and hostname
                     context.Options.DistributedTraceProvider = "zipkin=http://localhost:9411";
+                }
+            }
+            else if (context.Operation == ExtensionContext.OperationKind.Deploy)
+            {
+                foreach (var project in context.Application.Services.OfType<ProjectServiceBuilder>())
+                {
+                    // Bring your rain boots.
+                    project.RelocateDiagnosticsDomainSockets = true;
+
+                    var sidecar = new SidecarBuilder("tye-diag-agent", "rynowak/tye-diag-agent", "0.1")
+                    {
+                        Args =
+                        {
+                            "--kubernetes=true",
+                            "--provider:0=zipkin=service:zipkin",
+                            $"--service={project.Name}",
+                            $"--assemblyName={project.AssemblyName}",
+                        },
+                        Dependencies =
+                        {
+                            // Inject the zipkin service discovery variables
+                            "zipkin",
+                        },
+                    };
+                    project.Sidecars.Add(sidecar);
                 }
             }
 
