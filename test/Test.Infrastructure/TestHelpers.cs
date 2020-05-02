@@ -120,7 +120,7 @@ namespace Test.Infrastructure
 
                 if (alreadyStarted == totalReplicas)
                 {
-                    startedTask.TrySetResult(true);
+                    startedTask!.TrySetResult(true);
                 }
             }
 
@@ -169,7 +169,7 @@ namespace Test.Infrastructure
 
                 if (remaining == 0)
                 {
-                    stoppedTask.TrySetResult(true);
+                    stoppedTask!.TrySetResult(true);
                 }
             }
 

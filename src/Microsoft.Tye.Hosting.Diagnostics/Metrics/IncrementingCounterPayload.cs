@@ -10,8 +10,8 @@ namespace Microsoft.Tye.Hosting.Diagnostics.Metrics
     {
         public IncrementingCounterPayload(IDictionary<string, object> payloadFields)
         {
-            Name = payloadFields["Name"].ToString();
-            Value = payloadFields["Increment"].ToString();
+            Name = payloadFields["Name"].ToString()!;
+            Value = payloadFields["Increment"].ToString()!;
         }
 
         public string Name { get; }
