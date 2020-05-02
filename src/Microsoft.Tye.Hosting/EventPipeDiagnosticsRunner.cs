@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Tye.Hosting.Diagnostics;
 using Microsoft.Tye.Hosting.Model;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace Microsoft.Tye.Hosting
 {
@@ -71,15 +72,17 @@ namespace Microsoft.Tye.Hosting
                             StoppingTokenSource = cts,
                             Thread = new Thread(() =>
                             {
-                                // TODO: Finding the application name requires msbuild knowledge
-                                _diagnosticsCollector.ProcessEvents(
-                                    Path.GetFileNameWithoutExtension(process.Service.Status.ProjectFilePath),
+                                var replicaInfo = new ReplicaInfo(
+                                    (processes) => processes.FirstOrDefault(p => p.Id == process.Pid!.Value),
+
+                                    // TODO: Finding the application name requires msbuild knowledge
+                                    Path.GetFileNameWithoutExtension(process.Service.Status.ProjectFilePath)!,
                                     process.Service.Description.Name,
-                                    process.Pid!.Value,
                                     replica.Name,
-                                    replica.Metrics,
-                                    cts.Token);
-                            })
+                                    replica.Metrics);
+
+                                _diagnosticsCollector.Collect(replicaInfo, cts.Token);
+                            }),
                         };
 
                         replica.Items[typeof(DiagnosticsState)] = state;

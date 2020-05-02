@@ -5,8 +5,14 @@
     <Description>Diagnostics collector and exporter for .NET Core applications.</Description>
     <AssemblyName>Microsoft.Tye.Hosting.Diagnostics</AssemblyName>
     <PackageId>Microsoft.Tye.Hosting.Diagnostics</PackageId>
-    <Nullable>disable</Nullable>
   </PropertyGroup>
+
+  <!--
+    This project is separate from hosting INTENTIONALLY so that we can have a relatively
+    small and separate of dependencies for diagnostics sinks. So, avoid putting diagnostics
+    things into the build/deploy code, and avoid putting build/deploy dependencies
+    into the diagnostics code.
+  -->
 
   <ItemGroup Label="Pinned">
     <!--
