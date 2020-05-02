@@ -13,27 +13,14 @@ namespace Microsoft.Tye.Hosting.Diagnostics
         public (string Key, string Value) DistributedTraceProvider { get; set; }
         public (string Key, string Value) MetricsProvider { get; set; }
 
-        public static DiagnosticOptions FromConfiguration(IConfiguration configuration)
+        public static (string, string) GetProvider(string text)
         {
-            return new DiagnosticOptions
-            {
-                LoggingProvider = GetProvider(configuration, "logs"),
-                DistributedTraceProvider = GetProvider(configuration, "dtrace"),
-                MetricsProvider = GetProvider(configuration, "metrics")
-            };
-        }
-
-        private static (string, string) GetProvider(IConfiguration configuration, string providerName)
-        {
-            var providerString = configuration[providerName];
-
-            if (string.IsNullOrEmpty(providerString))
+            if (string.IsNullOrEmpty(text))
             {
                 return (null, null);
             }
 
-            var pair = providerString.Split('=');
-
+            var pair = text.Split('=');
             if (pair.Length < 2)
             {
                 return (pair[0].Trim(), null);
