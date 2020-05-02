@@ -38,7 +38,7 @@ namespace E2ETest
             var tyeDir = new DirectoryInfo(Path.Combine(projectDirectory.DirectoryPath, ".tye"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
-            var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
+            var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
                 Sink = _sink,
             };
@@ -76,7 +76,7 @@ namespace E2ETest
             var tyeDir = new DirectoryInfo(Path.Combine(projectDirectory.DirectoryPath, ".tye"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
-            var host = new TyeHost(application.ToHostingApplication(), Array.Empty<string>())
+            var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
                 Sink = _sink,
             };
