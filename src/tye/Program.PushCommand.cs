@@ -51,7 +51,7 @@ namespace Microsoft.Tye
 
         private static async Task ExecutePushAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive, bool force)
         {
-            await application.ProcessExtensionsAsync(output, ExtensionContext.OperationKind.Deploy);
+            await application.ProcessExtensionsAsync(options: null, output, ExtensionContext.OperationKind.Deploy);
             ApplyRegistry(output, application, interactive, requireRegistry: true);
 
             var executor = new ApplicationExecutor(output)

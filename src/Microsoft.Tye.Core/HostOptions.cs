@@ -3,9 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using Microsoft.Tye.Hosting.Diagnostics;
 
-namespace Microsoft.Tye.Hosting
+namespace Microsoft.Tye
 {
     public class HostOptions
     {
@@ -13,9 +12,13 @@ namespace Microsoft.Tye.Hosting
 
         public List<string> Debug { get; } = new List<string>();
 
-        public DiagnosticOptions Diagnostics { get; } = new DiagnosticOptions();
+        public (string Key, string Value) DistributedTraceProvider { get; set; }
 
         public bool Docker { get; set; }
+
+        public (string Key, string Value) LoggingProvider { get; set; }
+
+        public (string Key, string Value) MetricsProvider { get; set; }
 
         public bool NoBuild { get; set; }
 

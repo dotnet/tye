@@ -248,10 +248,17 @@ namespace Microsoft.Tye.Hosting
 
         private static AggregateApplicationProcessor CreateApplicationProcessor(ReplicaRegistry replicaRegistry, HostOptions options, Microsoft.Extensions.Logging.ILogger logger)
         {
-            var diagnosticsCollector = new DiagnosticsCollector(logger, options.Diagnostics);
+            var diagnostics = new DiagnosticOptions()
+            {
+                DistributedTraceProvider = options.DistributedTraceProvider,
+                LoggingProvider = options.LoggingProvider,
+                MetricsProvider = options.MetricsProvider,
+            };
+
+            var diagnosticsCollector = new DiagnosticsCollector(logger, diagnostics);
 
             // Print out what providers were selected and their values
-            options.Diagnostics.DumpDiagnostics(logger);
+            diagnostics.DumpDiagnostics(logger);
 
             var processors = new List<IApplicationProcessor>
             {
