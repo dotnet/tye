@@ -14,27 +14,49 @@ namespace Microsoft.Tye.Extensions.Zipkin
     {
         public override Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
         {
-            if (context.Application.Services.Any(s => s.Name == "zipkin"))
-            {
-                context.Output.WriteDebugLine("Zipkin service already configured. Skipping...");
-                return Task.CompletedTask;
-            }
-
             if (context.Operation == ExtensionContext.OperationKind.LocalRun)
             {
-                var service = new ContainerServiceBuilder("zipkin", "openzipkin/zipkin")
+                if (context.Application.Services.Any(s => s.Name == "zipkin"))
                 {
-                    Bindings =
+                    context.Output.WriteDebugLine("zipkin service already configured. Skipping...");
+                }
+                else
+                {
+                    context.Output.WriteDebugLine("Injecting zipkin service...");
+
+                    var service = new ContainerServiceBuilder("zipkin", "openzipkin/zipkin")
                     {
-                        new BindingBuilder()
+                        Bindings =
                         {
-                            Port = 9411,
-                            ContainerPort = 9411,
-                            Protocol = "http",
+                            new BindingBuilder()
+                            {
+                                Port = 9411,
+                                ContainerPort = 9411,
+                                Protocol = "http",
+                            },
                         },
-                    },
-                };
-                context.Application.Services.Add(service);
+                    };
+                    context.Application.Services.Add(service);
+
+                    foreach (var s in context.Application.Services)
+                    {
+                        if (object.ReferenceEquals(s, service))
+                        {
+                            continue;
+                        }
+
+                        // make zipkin available as a dependency of everything.
+                        if (!s.Dependencies.Contains(service.Name))
+                        {
+                            s.Dependencies.Add(service.Name);
+                        }
+                    }
+                }
+
+                if (context.Options!.DistributedTraceProvider.Key is null)
+                {
+                    context.Options.DistributedTraceProvider = ("zipkin", "http://localhost:9411");
+                }
             }
 
             return Task.CompletedTask;
