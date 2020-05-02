@@ -8,8 +8,6 @@ namespace Microsoft.Tye
 {
     public abstract class Extension
     {
-        public abstract string Name { get; }
-
         public abstract Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config);
     }
 }
