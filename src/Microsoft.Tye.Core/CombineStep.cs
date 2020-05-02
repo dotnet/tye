@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -49,12 +50,22 @@ namespace Microsoft.Tye
             // some duplication with the code in m8s (Application.cs) for populating environments.
             //
             // service.Service.Bindings is the bindings OUT - this step computes bindings IN.
-            var bindings = new ComputedBindings();
-            service.Outputs.Add(bindings);
+            service.Outputs.Add(ComputeBindings(application, service.Dependencies));
 
-            foreach (var o in service.Dependencies)
+            foreach (var sidecar in project.Sidecars)
             {
-                var other = application.Services.Single(a => a.Name == o);
+                sidecar.Outputs.Add(ComputeBindings(application, sidecar.Dependencies));
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private ComputedBindings ComputeBindings(ApplicationBuilder application, IEnumerable<string> dependencies)
+        {
+            var bindings = new ComputedBindings();
+            foreach (var dependency in dependencies)
+            {
+                var other = application.Services.Single(a => a.Name == dependency);
 
                 foreach (var binding in other.Bindings)
                 {
@@ -126,7 +137,7 @@ namespace Microsoft.Tye
                 }
             }
 
-            return Task.CompletedTask;
+            return bindings;
         }
     }
 }
