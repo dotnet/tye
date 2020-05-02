@@ -12,8 +12,6 @@ namespace Microsoft.Tye.Extensions.Zipkin
 {
     internal sealed class ZipkinExtension : Extension
     {
-        public override string Name => "zipkin";
-
         public override Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
         {
             if (context.Application.Services.Any(s => s.Name == "zipkin"))
