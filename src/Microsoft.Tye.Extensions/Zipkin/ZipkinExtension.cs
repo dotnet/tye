@@ -53,9 +53,9 @@ namespace Microsoft.Tye.Extensions.Zipkin
                     }
                 }
 
-                if (context.Options!.DistributedTraceProvider.Key is null)
+                if (context.Options!.DistributedTraceProvider is null)
                 {
-                    context.Options.DistributedTraceProvider = ("zipkin", "http://localhost:9411");
+                    context.Options.DistributedTraceProvider = "zipkin=http://localhost:9411";
                 }
             }
 

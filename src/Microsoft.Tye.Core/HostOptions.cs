@@ -12,13 +12,13 @@ namespace Microsoft.Tye
 
         public List<string> Debug { get; } = new List<string>();
 
-        public (string Key, string Value) DistributedTraceProvider { get; set; }
+        public string? DistributedTraceProvider { get; set; }
 
         public bool Docker { get; set; }
 
-        public (string Key, string Value) LoggingProvider { get; set; }
+        public string? LoggingProvider { get; set; }
 
-        public (string Key, string Value) MetricsProvider { get; set; }
+        public string? MetricsProvider { get; set; }
 
         public bool NoBuild { get; set; }
 

@@ -10,8 +10,8 @@ namespace Microsoft.Tye.Hosting.Diagnostics.Metrics
     {
         public CounterPayload(IDictionary<string, object> payloadFields)
         {
-            Name = payloadFields["Name"].ToString();
-            Value = payloadFields["Mean"].ToString();
+            Name = payloadFields["Name"].ToString()!;
+            Value = payloadFields["Mean"].ToString()!;
         }
 
         public string Name { get; }

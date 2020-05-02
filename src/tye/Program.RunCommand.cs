@@ -99,9 +99,10 @@ namespace Microsoft.Tye
                     NoBuild = args.NoBuild,
                     Port = args.Port,
 
-                    DistributedTraceProvider = DiagnosticOptions.GetProvider(args.Dtrace),
-                    LoggingProvider = DiagnosticOptions.GetProvider(args.Logs),
-                    MetricsProvider = DiagnosticOptions.GetProvider(args.Metrics),
+                    // parsed later by the diagnostics code
+                    DistributedTraceProvider = args.Dtrace,
+                    LoggingProvider = args.Logs,
+                    MetricsProvider = args.Metrics,
                 };
                 options.Debug.AddRange(args.Debug);
 
