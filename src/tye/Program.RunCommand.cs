@@ -92,13 +92,6 @@ namespace Microsoft.Tye
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
                 }
 
-                await application.ProcessExtensionsAsync(output, ExtensionContext.OperationKind.LocalRun);
-
-                InitializeThreadPoolSettings(application.Services.Count);
-
-                output.WriteInfoLine("Launching Tye Host...");
-                output.WriteInfoLine(string.Empty);
-
                 var options = new HostOptions()
                 {
                     Dashboard = args.Dashboard,
@@ -106,14 +99,18 @@ namespace Microsoft.Tye
                     NoBuild = args.NoBuild,
                     Port = args.Port,
 
-                    Diagnostics =
-                    {
-                        DistributedTraceProvider = DiagnosticOptions.GetProvider(args.Dtrace),
-                        LoggingProvider = DiagnosticOptions.GetProvider(args.Logs),
-                        MetricsProvider = DiagnosticOptions.GetProvider(args.Metrics),
-                    },
+                    DistributedTraceProvider = DiagnosticOptions.GetProvider(args.Dtrace),
+                    LoggingProvider = DiagnosticOptions.GetProvider(args.Logs),
+                    MetricsProvider = DiagnosticOptions.GetProvider(args.Metrics),
                 };
                 options.Debug.AddRange(args.Debug);
+
+                await application.ProcessExtensionsAsync(options, output, ExtensionContext.OperationKind.LocalRun);
+
+                InitializeThreadPoolSettings(application.Services.Count);
+
+                output.WriteInfoLine("Launching Tye Host...");
+                output.WriteInfoLine(string.Empty);
 
                 await using var host = new TyeHost(application.ToHostingApplication(), options);
                 await host.RunAsync();

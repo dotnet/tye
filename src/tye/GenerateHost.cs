@@ -32,7 +32,7 @@ namespace Microsoft.Tye
 
         public static async Task ExecuteGenerateAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive)
         {
-            await application.ProcessExtensionsAsync(output, ExtensionContext.OperationKind.Deploy);
+            await application.ProcessExtensionsAsync(options: null, output, ExtensionContext.OperationKind.Deploy);
             Program.ApplyRegistry(output, application, interactive, requireRegistry: false);
 
             var executor = new ApplicationExecutor(output)
