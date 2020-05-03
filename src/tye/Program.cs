@@ -11,6 +11,7 @@ using System.CommandLine.IO;
 using System.CommandLine.Parsing;
 using System.Reflection;
 using System.Threading.Tasks;
+using Tye.Serialization;
 
 namespace Microsoft.Tye
 {
@@ -25,7 +26,7 @@ namespace Microsoft.Tye
 
             command.AddCommand(CreateInitCommand());
             command.AddCommand(CreateGenerateCommand());
-            command.AddCommand(CreateRunCommand(args));
+            command.AddCommand(CreateRunCommand());
             command.AddCommand(CreateBuildCommand());
             command.AddCommand(CreatePushCommand());
             command.AddCommand(CreateDeployCommand());
@@ -76,6 +77,16 @@ namespace Microsoft.Tye
                 {
                     context.Console.Error.WriteLine();
                     context.Console.Error.WriteLine(command.InnerException.ToString());
+                }
+            }
+            else if (exception is TyeYamlException yaml)
+            {
+                context.Console.Error.WriteLine($"{yaml.Message}");
+
+                if (yaml.InnerException != null)
+                {
+                    context.Console.Error.WriteLine();
+                    context.Console.Error.WriteLine(yaml.InnerException.ToString());
                 }
             }
             else

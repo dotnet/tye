@@ -42,7 +42,7 @@ namespace Microsoft.Tye
 
         public void Dispose()
         {
-            Directory.Delete(DirectoryPath, recursive: true);
+            DirectoryExtensions.DeleteDirectory(DirectoryPath);
         }
     }
 }

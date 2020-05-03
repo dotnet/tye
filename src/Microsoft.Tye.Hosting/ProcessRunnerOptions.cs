@@ -14,14 +14,14 @@ namespace Microsoft.Tye.Hosting
         public string[]? ServicesToDebug { get; set; }
         public bool DebugAllServices { get; set; }
 
-        public static ProcessRunnerOptions FromArgs(string[] args, string[] servicesToDebug)
+        public static ProcessRunnerOptions FromHostOptions(HostOptions options)
         {
             return new ProcessRunnerOptions
             {
-                BuildProjects = !args.Contains("--no-build"),
-                DebugMode = args.Contains("--debug"),
-                ServicesToDebug = servicesToDebug,
-                DebugAllServices = servicesToDebug?.Contains("*", StringComparer.OrdinalIgnoreCase) ?? false
+                BuildProjects = !options.NoBuild,
+                DebugMode = options.Debug.Any(),
+                ServicesToDebug = options.Debug.ToArray(),
+                DebugAllServices = options.Debug?.Contains("*", StringComparer.OrdinalIgnoreCase) ?? false
             };
         }
     }

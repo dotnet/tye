@@ -11,89 +11,109 @@ using System.Threading;
 using Microsoft.Tye.ConfigModel;
 using Microsoft.Tye.Extensions;
 using Microsoft.Tye.Hosting;
+using Microsoft.Tye.Hosting.Diagnostics;
 
 namespace Microsoft.Tye
 {
     static partial class Program
     {
-        private static Command CreateRunCommand(string[] args)
+        private static Command CreateRunCommand()
         {
             var command = new Command("run", "run the application")
             {
                 CommonArguments.Path_Required,
+
+                new Option("--no-build")
+                {
+                    Description = "Do not build project files before running.",
+                    Required = false
+                },
+                new Option("--port")
+                {
+                    Description = "The port to run control plane on.",
+                    Argument = new Argument<int?>("port"),
+                    Required = false
+                },
+                new Option("--logs")
+                {
+                    Description = "Write structured application logs to the specified log provider. Supported providers are 'console', 'elastic' (Elasticsearch), 'ai' (ApplicationInsights), 'seq'.",
+                    Argument = new Argument<string>("logs"),
+                    Required = false
+                },
+                new Option("--dtrace")
+                {
+                    Description = "Write distributed traces to the specified tracing provider. Supported providers are 'zipkin'.",
+                    Argument = new Argument<string>("trace"),
+                    Required = false,
+                },
+                new Option("--metrics")
+                {
+                    Description = "Write metrics to the specified metrics provider.",
+                    Argument = new Argument<string>("metrics"),
+                    Required = false
+                },
+                new Option("--debug")
+                {
+                    Argument = new Argument<string[]>("service")
+                    {
+                        Arity = ArgumentArity.ZeroOrMore,
+                    },
+                    Description = "Wait for debugger attach to specific service. Specify \"*\" to wait for all services.",
+                    Required = false
+                },
+                new Option("--docker")
+                {
+                    Description = "Run projects as docker containers.",
+                    Required = false
+                },
+                new Option("--dashboard")
+                {
+                    Description = "Launch dashboard on run.",
+                    Required = false
+                },
+
+                StandardOptions.Verbosity,
             };
 
-            // TODO: We'll need to support a --build-args
-            command.AddOption(new Option("--no-build")
-            {
-                Description = "Do not build project files before running.",
-                Required = false
-            });
-
-            command.AddOption(new Option("--port")
-            {
-                Description = "The port to run control plane on.",
-                Argument = new Argument<int>("port"),
-                Required = false
-            });
-
-            command.AddOption(new Option("--logs")
-            {
-                Description = "Write structured application logs to the specified log providers. Supported providers are console, elastic (Elasticsearch), ai (ApplicationInsights), seq.",
-                Argument = new Argument<string>("logs"),
-                Required = false
-            });
-
-            command.AddOption(new Option("--dtrace")
-            {
-                Description = "Write distributed traces to the specified providers. Supported providers are zipkin.",
-                Argument = new Argument<string>("logs"),
-                Required = false
-            });
-
-            command.AddOption(new Option("--debug")
-            {
-                Argument = new Argument<string[]>("service"),
-                Description = "Wait for debugger attach to specific service. Specify \"*\" to wait for all services.",
-                Required = false
-            });
-
-            command.AddOption(new Option("--docker")
-            {
-                Description = "Run projects as docker containers.",
-                Required = false
-            });
-
-            command.AddOption(new Option("--dashboard")
-            {
-                Description = "Launch dashboard on run.",
-                Required = false
-            });
-
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, string[]>(async (console, path, debug) =>
+            command.Handler = CommandHandler.Create<RunCommandArguments>(async args =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
-                if (path is null)
+                if (args.Path is null)
                 {
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                var output = new OutputContext(console, Verbosity.Info);
+                var output = new OutputContext(args.Console, Verbosity.Info);
 
                 output.WriteInfoLine("Loading Application Details...");
-                var application = await ApplicationFactory.CreateAsync(output, path);
+                var application = await ApplicationFactory.CreateAsync(output, args.Path);
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
                 }
 
-                await application.ProcessExtensionsAsync(output, ExtensionContext.OperationKind.LocalRun);
+                var options = new HostOptions()
+                {
+                    Dashboard = args.Dashboard,
+                    Docker = args.Docker,
+                    NoBuild = args.NoBuild,
+                    Port = args.Port,
+
+                    // parsed later by the diagnostics code
+                    DistributedTraceProvider = args.Dtrace,
+                    LoggingProvider = args.Logs,
+                    MetricsProvider = args.Metrics,
+                };
+                options.Debug.AddRange(args.Debug);
+
+                await application.ProcessExtensionsAsync(options, output, ExtensionContext.OperationKind.LocalRun);
 
                 InitializeThreadPoolSettings(application.Services.Count);
 
                 output.WriteInfoLine("Launching Tye Host...");
                 output.WriteInfoLine(string.Empty);
-                await using var host = new TyeHost(application.ToHostingApplication(), args, debug);
+
+                await using var host = new TyeHost(application.ToHostingApplication(), options);
                 await host.RunAsync();
             });
 
@@ -113,6 +133,31 @@ namespace Microsoft.Tye
             ThreadPool.SetMinThreads(Math.Max(workerThreads, serviceCount * 4), completionPortThreads);
 
             // We use serviceCount * 4 because we currently launch multiple processes per service, this gives the dashboard some breathing room
+        }
+
+        // We have too many options to use the lambda form with each option as a parameter.
+        // This is slightly cleaner anyway.
+        private class RunCommandArguments
+        {
+            public IConsole Console { get; set; } = default!;
+
+            public bool Dashboard { get; set; }
+
+            public string[] Debug { get; set; } = Array.Empty<string>();
+
+            public string Dtrace { get; set; } = default!;
+
+            public bool Docker { get; set; }
+
+            public string Logs { get; set; } = default!;
+
+            public string Metrics { get; set; } = default!;
+
+            public bool NoBuild { get; set; }
+
+            public FileInfo Path { get; set; } = default!;
+
+            public int? Port { get; set; }
         }
     }
 }

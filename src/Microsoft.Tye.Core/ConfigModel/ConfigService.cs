@@ -16,6 +16,7 @@ namespace Microsoft.Tye.ConfigModel
         public string? Image { get; set; }
         public string? Project { get; set; }
         public string? Include { get; set; }
+        public string? Repository { get; set; }
         public bool? Build { get; set; }
         public string? Executable { get; set; }
         public string? WorkingDirectory { get; set; }

@@ -38,6 +38,7 @@ namespace Microsoft.Tye
         public string PublishDir { get; set; } = default!;
         public string IntermediateOutputPath { get; set; } = default!;
         public bool IsAspNet { get; set; }
+        public bool RelocateDiagnosticsDomainSockets { get; set; }
 
         // Data used for building containers
         public ContainerInfo? ContainerInfo { get; set; }
@@ -51,6 +52,8 @@ namespace Microsoft.Tye
         public List<VolumeBuilder> Volumes { get; } = new List<VolumeBuilder>();
 
         public Dictionary<string, string> BuildProperties { get; } = new Dictionary<string, string>();
+
+        public List<SidecarBuilder> Sidecars { get; } = new List<SidecarBuilder>();
 
         public ProbeBuilder? Liveness { get; set; }
         public ProbeBuilder? Readiness { get; set; }

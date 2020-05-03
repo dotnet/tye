@@ -55,7 +55,7 @@ namespace E2ETest
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            await RunHostingApplication(application, docker ? new[] { "--docker" } : Array.Empty<string>(), async (host, uri) =>
+            await RunHostingApplication(application, new HostOptions(){Docker = docker}, async (host, uri) =>
               {
                   var replicaToStop = host.Application.Services["frontend"].Replicas.First();
                   Assert.Contains(replicaToStop.Value.State, startedOrHigher);
@@ -74,9 +74,9 @@ namespace E2ETest
               });
         }
 
-        private async Task RunHostingApplication(ApplicationBuilder application, string[] args, Func<TyeHost, Uri, Task> execute)
+        private async Task RunHostingApplication(ApplicationBuilder application, HostOptions options, Func<TyeHost, Uri, Task> execute)
         {
-            await using var host = new TyeHost(application.ToHostingApplication(), args)
+            await using var host = new TyeHost(application.ToHostingApplication(), options)
             {
                 Sink = _sink,
             };

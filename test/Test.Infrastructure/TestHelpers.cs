@@ -13,12 +13,13 @@ using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
 using Xunit;
 using Microsoft.Tye;
+using System.Diagnostics;
 
 namespace Test.Infrastructure
 {
     public static class TestHelpers
     {
-        private static readonly TimeSpan WaitForServicesTimeout = TimeSpan.FromSeconds(20);
+        private static readonly TimeSpan WaitForServicesTimeout = Debugger.IsAttached ? TimeSpan.FromMinutes(5) : TimeSpan.FromSeconds(20);
 
         // https://github.com/dotnet/aspnetcore/blob/5a0526dfd991419d5bce0d8ea525b50df2e37b04/src/Testing/src/TestPathUtilities.cs
         // This can get into a bad pattern for having crazy paths in places. Eventually, especially if we use helix,
@@ -114,7 +115,7 @@ namespace Test.Infrastructure
             {
                 if (restOfReplicas != null && restOfReplicas.Contains(ev.Replica.Name))
                 {
-                    changedTask.TrySetResult(false);
+                    changedTask!.TrySetResult(false);
                 }
                 else if ((replicasToChange == null || replicasToChange.Contains(ev.Replica.Name)) && ev.State == desiredState)
                 {
@@ -126,9 +127,9 @@ namespace Test.Infrastructure
                     Task.Delay(waitUntilSuccess)
                         .ContinueWith(_ =>
                         {
-                            if (!changedTask.Task.IsCompleted)
+                            if (!changedTask!.Task.IsCompleted)
                             {
-                                changedTask.TrySetResult(true);
+                                changedTask!.TrySetResult(true);
                             }
                         });
                 }
@@ -180,7 +181,7 @@ namespace Test.Infrastructure
                     }
                     else if (restOfReplicas.Contains(ev.Replica.Name))
                     {
-                        restartedTask.SetResult(false);
+                        restartedTask!.SetResult(false);
                     }
                 }
 
@@ -189,9 +190,9 @@ namespace Test.Infrastructure
                     Task.Delay(waitUntilSuccess)
                         .ContinueWith(_ =>
                         {
-                            if (!restartedTask.Task.IsCompleted)
+                            if (!restartedTask!.Task.IsCompleted)
                             {
-                                restartedTask.SetResult(true);
+                                restartedTask!.SetResult(true);
                             }
                         });
                 }

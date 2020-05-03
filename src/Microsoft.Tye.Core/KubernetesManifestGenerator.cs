@@ -274,6 +274,36 @@ namespace Microsoft.Tye
             spec = new YamlMappingNode();
             template.Add("spec", spec);
 
+            if (project.Sidecars.Count > 0)
+            {
+                // Share process namespace when we have sidecars. So we can list other processes.
+                // see: https://kubernetes.io/docs/tasks/configure-pod-container/share-process-namespace/#understanding-process-namespace-sharing
+                spec.Add("shareProcessNamespace", new YamlScalarNode("true") { Style = ScalarStyle.Plain });
+            }
+
+            if (project.RelocateDiagnosticsDomainSockets)
+            {
+                // Our diagnostics functionality uses $TMPDIR to locate other dotnet processes through
+                // eventpipe. see: https://github.com/dotnet/diagnostics/blob/master/documentation/design-docs/ipc-protocol.md#transport
+                //
+                // In order for diagnostics features to 'find' each other, we need to make $TMPDIR into
+                // something shared.
+                //
+                // see: https://kubernetes.io/docs/tasks/access-application-cluster/communicate-containers-same-pod-shared-volume/
+                project.EnvironmentVariables.Add(new EnvironmentVariableBuilder("TMPDIR")
+                {
+                    Value = "/var/tye/diagnostics",
+                });
+
+                foreach (var sidecar in project.Sidecars)
+                {
+                    sidecar.EnvironmentVariables.Add(new EnvironmentVariableBuilder("TMPDIR")
+                    {
+                        Value = "/var/tye/diagnostics",
+                    });
+                }
+            }
+
             var containers = new YamlSequenceNode();
             spec.Add("containers", containers);
 
@@ -292,7 +322,7 @@ namespace Microsoft.Tye
                     project.Bindings.Any(b => b.Protocol == "http" || b.Protocol is null) ||
 
                     // We generate environment variables for other services if there dependencies
-                    (bindings is object && bindings.Bindings.Any()))
+                    bindings?.Bindings.Count > 0)
                 {
                     var env = new YamlSequenceNode();
                     container.Add("env", env);
@@ -308,88 +338,21 @@ namespace Microsoft.Tye
 
                     if (bindings is object)
                     {
-                        foreach (var binding in bindings.Bindings.OfType<EnvironmentVariableInputBinding>())
-                        {
-                            env.Add(new YamlMappingNode()
-                            {
-                                { "name", binding.Name },
-                                { "value", new YamlScalarNode(binding.Value) { Style = ScalarStyle.SingleQuoted, } },
-                            });
-                        }
+                        AddEnvironmentVariablesForComputedBindings(env, bindings);
+                    }
 
-                        foreach (var binding in bindings.Bindings.OfType<SecretInputBinding>())
-                        {
-                            //- name: SECRET_USERNAME
-                            //  valueFrom:
-                            //    secretKeyRef:
-                            //      name: mysecret
-                            //      key: username
+                    if (project.RelocateDiagnosticsDomainSockets)
+                    {
+                        // volumeMounts:
+                        // - name: shared-data
+                        //   mountPath: /usr/share/nginx/html
+                        var volumeMounts = new YamlSequenceNode();
+                        container.Add("volumeMounts", volumeMounts);
 
-                            if (binding is SecretConnectionStringInputBinding connectionStringBinding)
-                            {
-                                env.Add(new YamlMappingNode()
-                                {
-                                    { "name", connectionStringBinding.KeyName },
-                                    { "valueFrom", new YamlMappingNode()
-                                        {
-                                            { "secretKeyRef", new YamlMappingNode()
-                                                {
-                                                    { "name", new YamlScalarNode(binding.Name) { Style = ScalarStyle.SingleQuoted } },
-                                                    { "key", new YamlScalarNode("connectionstring") { Style = ScalarStyle.SingleQuoted } },
-                                                }
-                                            },
-                                        }
-                                    },
-                                });
-                            }
-                            else if (binding is SecretUrlInputBinding urlBinding)
-                            {
-                                env.Add(new YamlMappingNode()
-                                {
-                                    { "name", $"{urlBinding.KeyNameBase}__PROTOCOL" },
-                                    { "valueFrom", new YamlMappingNode()
-                                        {
-                                            { "secretKeyRef", new YamlMappingNode()
-                                                {
-                                                    { "name", new YamlScalarNode(binding.Name) { Style = ScalarStyle.SingleQuoted } },
-                                                    { "key", new YamlScalarNode("protocol") { Style = ScalarStyle.SingleQuoted } },
-                                                }
-                                            },
-                                        }
-                                    },
-                                });
-
-                                env.Add(new YamlMappingNode()
-                                {
-                                    { "name", $"{urlBinding.KeyNameBase}__HOST" },
-                                    { "valueFrom", new YamlMappingNode()
-                                        {
-                                            { "secretKeyRef", new YamlMappingNode()
-                                                {
-                                                    { "name", new YamlScalarNode(binding.Name) { Style = ScalarStyle.SingleQuoted } },
-                                                    { "key", new YamlScalarNode("host") { Style = ScalarStyle.SingleQuoted } },
-                                                }
-                                            },
-                                        }
-                                    },
-                                });
-
-                                env.Add(new YamlMappingNode()
-                                {
-                                    { "name", $"{urlBinding.KeyNameBase}__PORT" },
-                                    { "valueFrom", new YamlMappingNode()
-                                        {
-                                            { "secretKeyRef", new YamlMappingNode()
-                                                {
-                                                    { "name", new YamlScalarNode(binding.Name) { Style = ScalarStyle.SingleQuoted } },
-                                                    { "key", new YamlScalarNode("port") { Style = ScalarStyle.SingleQuoted } },
-                                                }
-                                            },
-                                        }
-                                    },
-                                });
-                            }
-                        }
+                        var volumeMount = new YamlMappingNode();
+                        volumeMounts.Add(volumeMount);
+                        volumeMount.Add("name", "tye-diagnostics");
+                        volumeMount.Add("mountPath", "/var/tye/diagnostics");
                     }
                 }
 
@@ -417,7 +380,129 @@ namespace Microsoft.Tye
                 }
             }
 
+            foreach (var sidecar in project.Sidecars)
+            {
+                var container = new YamlMappingNode();
+                containers.Add(container);
+                container.Add("name", sidecar.Name); // NOTE: to really support multiple images we'd need to generate unique names.
+                container.Add("image", $"{sidecar.ImageName}:{sidecar.ImageTag}");
+                container.Add("imagePullPolicy", "Always"); // helps avoid problems with development + weak versioning
+
+                if (sidecar.Args.Count > 0)
+                {
+                    var args = new YamlSequenceNode();
+                    container.Add("args", args);
+
+                    foreach (var arg in sidecar.Args)
+                    {
+                        args.Add(new YamlScalarNode(arg) { Style = ScalarStyle.SingleQuoted, });
+                    }
+                }
+
+                var sidecarBindings = sidecar.Outputs.OfType<ComputedBindings>().FirstOrDefault();
+                if (sidecar.EnvironmentVariables.Count > 0 || sidecarBindings?.Bindings.Count > 0)
+                {
+                    var env = new YamlSequenceNode();
+                    container.Add("env", env);
+
+                    foreach (var kvp in sidecar.EnvironmentVariables)
+                    {
+                        env.Add(new YamlMappingNode()
+                        {
+                            { "name", kvp.Name },
+                            { "value", new YamlScalarNode(kvp.Value) { Style = ScalarStyle.SingleQuoted, } },
+                        });
+                    }
+
+                    if (sidecarBindings is object)
+                    {
+                        AddEnvironmentVariablesForComputedBindings(env, sidecarBindings);
+                    }
+                }
+
+                if (project.RelocateDiagnosticsDomainSockets)
+                {
+                    // volumeMounts:
+                    // - name: shared-data
+                    //   mountPath: /usr/share/nginx/html
+                    var volumeMounts = new YamlSequenceNode();
+                    container.Add("volumeMounts", volumeMounts);
+
+                    var volumeMount = new YamlMappingNode();
+                    volumeMounts.Add(volumeMount);
+                    volumeMount.Add("name", "tye-diagnostics");
+                    volumeMount.Add("mountPath", "/var/tye/diagnostics");
+                }
+            }
+
+            if (project.RelocateDiagnosticsDomainSockets)
+            {
+                // volumes:
+                // - name: shared-data
+                //   emptyDir: {}
+                var volumes = new YamlSequenceNode();
+                spec.Add("volumes", volumes);
+
+                var volume = new YamlMappingNode();
+                volumes.Add(volume);
+                volume.Add("name", "tye-diagnostics");
+                volume.Add("emptyDir", new YamlMappingNode());
+            }
+
             return new KubernetesDeploymentOutput(project.Name, new YamlDocument(root));
+        }
+
+        private static void AddEnvironmentVariablesForComputedBindings(YamlSequenceNode env, ComputedBindings bindings)
+        {
+            foreach (var binding in bindings.Bindings.OfType<EnvironmentVariableInputBinding>())
+            {
+                env.Add(new YamlMappingNode()
+                {
+                    { "name", binding.Name },
+                    { "value", new YamlScalarNode(binding.Value) { Style = ScalarStyle.SingleQuoted, } },
+                });
+            }
+
+            foreach (var binding in bindings.Bindings.OfType<SecretInputBinding>())
+            {
+                //- name: SECRET_USERNAME
+                //  valueFrom:
+                //    secretKeyRef:
+                //      name: mysecret
+                //      key: username
+
+                if (binding is SecretConnectionStringInputBinding connectionStringBinding)
+                {
+                    AddSecret(env, connectionStringBinding.KeyName, binding.Name, "connectionstring");
+
+                }
+                else if (binding is SecretUrlInputBinding urlBinding)
+                {
+                    AddSecret(env, $"{urlBinding.KeyNameBase}__PROTOCOL", binding.Name, "protocol");
+                    AddSecret(env, $"{urlBinding.KeyNameBase}__HOST", binding.Name, "host");
+                    AddSecret(env, $"{urlBinding.KeyNameBase}__PORT", binding.Name, "port");
+                }
+            }
+
+            static void AddSecret(YamlSequenceNode env, string name, string secret, string key)
+            {
+                env.Add(new YamlMappingNode()
+                {
+                    { "name", name },
+                    {
+                        "valueFrom", new YamlMappingNode()
+                        {
+                            {
+                                "secretKeyRef", new YamlMappingNode()
+                                {
+                                    { "name", new YamlScalarNode(secret) { Style = ScalarStyle.SingleQuoted } },
+                                    { "key", new YamlScalarNode(key) { Style = ScalarStyle.SingleQuoted } },
+                                }
+                            },
+                        }
+                    },
+                });
+            }
         }
     }
 }
