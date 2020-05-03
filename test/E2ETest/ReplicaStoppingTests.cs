@@ -25,6 +25,9 @@ namespace E2ETest
         private readonly ITestOutputHelper _output;
         private readonly TestOutputLogEventSink _sink;
         private readonly JsonSerializerOptions _options;
+        
+        private static readonly ReplicaState?[] startedOrHigher = new ReplicaState?[] {ReplicaState.Started, ReplicaState.Healthy, ReplicaState.Ready};
+        private static readonly ReplicaState?[] stoppedOrLower = new ReplicaState?[] {ReplicaState.Stopped, ReplicaState.Removed};
 
         public ReplicaStoppingTests(ITestOutputHelper output)
         {
@@ -52,32 +55,23 @@ namespace E2ETest
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            var handler = new HttpClientHandler { ServerCertificateCustomValidationCallback = (a, b, c, d) => true, AllowAutoRedirect = false };
-
-            var client = new HttpClient(new RetryHandler(handler));
-
             await RunHostingApplication(application, docker ? new[] { "--docker" } : Array.Empty<string>(), async (host, uri) =>
               {
                   var replicaToStop = host.Application.Services["frontend"].Replicas.First();
-                  Assert.Equal(ReplicaState.Started, replicaToStop.Value.State);
+                  Assert.Contains(replicaToStop.Value.State, startedOrHigher);
 
-                  Assert.True(await DoOperationAndWaitForReplicasToRestart(host, new[] { replicaToStop.Key }, TimeSpan.FromSeconds(1), _ =>
+                  var replicasToRestart = new[] {replicaToStop.Key};
+                  var restOfReplicas = host.Application.Services.SelectMany(s => s.Value.Replicas).Select(r => r.Value.Name).Where(r => r != replicaToStop.Key).ToArray();
+                  
+                  Assert.True(await DoOperationAndWaitForReplicasToRestart(host, replicasToRestart.ToHashSet(), restOfReplicas.ToHashSet(), TimeSpan.FromSeconds(1), _ =>
                   {
                       replicaToStop.Value.StoppingTokenSource.Cancel();
                       return Task.CompletedTask;
                   }));
 
-                  Assert.Equal(ReplicaState.Removed, replicaToStop.Value.State);
-                  Assert.True(host.Application.Services.SelectMany(s => s.Value.Replicas).All(r => r.Value.State == ReplicaState.Started));
+                  Assert.Contains(replicaToStop.Value.State, stoppedOrLower);
+                  Assert.True(host.Application.Services.SelectMany(s => s.Value.Replicas).All(r => startedOrHigher.Contains(r.Value.State)));
               });
-        }
-
-        private async Task<string> GetServiceUrl(HttpClient client, Uri uri, string serviceName)
-        {
-            var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceName}");
-            var service = JsonSerializer.Deserialize<V1Service>(serviceResult, _options);
-            var binding = service.Description!.Bindings.Where(b => b.Protocol == "http").Single();
-            return $"{binding.Protocol ?? "http"}://localhost:{binding.Port}";
         }
 
         private async Task RunHostingApplication(ApplicationBuilder application, string[] args, Func<TyeHost, Uri, Task> execute)
