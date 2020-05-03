@@ -10,5 +10,7 @@ namespace Microsoft.Tye.Hosting.Model
         Added,
         Started,
         Stopped,
+        Healthy,
+        Ready
     }
 }
