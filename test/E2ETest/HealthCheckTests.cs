@@ -64,7 +64,7 @@ namespace E2ETest
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions(){Docker = docker})
+            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions() { Docker = docker })
             {
                 Sink = _sink,
             };
@@ -84,7 +84,7 @@ namespace E2ETest
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions(){Docker = docker})
+            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions() { Docker = docker })
             {
                 Sink = _sink,
             };
@@ -104,7 +104,7 @@ namespace E2ETest
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions(){Docker = docker})
+            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions() { Docker = docker })
             {
                 Sink = _sink,
             };

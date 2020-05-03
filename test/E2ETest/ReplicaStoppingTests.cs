@@ -55,23 +55,23 @@ namespace E2ETest
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            await RunHostingApplication(application, new HostOptions(){Docker = docker}, async (host, uri) =>
-              {
-                  var replicaToStop = host.Application.Services["frontend"].Replicas.First();
-                  Assert.Contains(replicaToStop.Value.State, startedOrHigher);
+            await RunHostingApplication(application, new HostOptions() { Docker = docker }, async (host, uri) =>
+                 {
+                     var replicaToStop = host.Application.Services["frontend"].Replicas.First();
+                     Assert.Contains(replicaToStop.Value.State, startedOrHigher);
 
-                  var replicasToRestart = new[] { replicaToStop.Key };
-                  var restOfReplicas = host.Application.Services.SelectMany(s => s.Value.Replicas).Select(r => r.Value.Name).Where(r => r != replicaToStop.Key).ToArray();
+                     var replicasToRestart = new[] { replicaToStop.Key };
+                     var restOfReplicas = host.Application.Services.SelectMany(s => s.Value.Replicas).Select(r => r.Value.Name).Where(r => r != replicaToStop.Key).ToArray();
 
-                  Assert.True(await DoOperationAndWaitForReplicasToRestart(host, replicasToRestart.ToHashSet(), restOfReplicas.ToHashSet(), TimeSpan.FromSeconds(1), _ =>
-                  {
-                      replicaToStop.Value.StoppingTokenSource.Cancel();
-                      return Task.CompletedTask;
-                  }));
+                     Assert.True(await DoOperationAndWaitForReplicasToRestart(host, replicasToRestart.ToHashSet(), restOfReplicas.ToHashSet(), TimeSpan.FromSeconds(1), _ =>
+                     {
+                         replicaToStop.Value.StoppingTokenSource.Cancel();
+                         return Task.CompletedTask;
+                     }));
 
-                  Assert.Contains(replicaToStop.Value.State, stoppedOrLower);
-                  Assert.True(host.Application.Services.SelectMany(s => s.Value.Replicas).All(r => startedOrHigher.Contains(r.Value.State)));
-              });
+                     Assert.Contains(replicaToStop.Value.State, stoppedOrLower);
+                     Assert.True(host.Application.Services.SelectMany(s => s.Value.Replicas).All(r => startedOrHigher.Contains(r.Value.State)));
+                 });
         }
 
         private async Task RunHostingApplication(ApplicationBuilder application, HostOptions options, Func<TyeHost, Uri, Task> execute)
