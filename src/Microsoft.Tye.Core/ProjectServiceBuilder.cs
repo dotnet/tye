@@ -51,5 +51,8 @@ namespace Microsoft.Tye
         public List<VolumeBuilder> Volumes { get; } = new List<VolumeBuilder>();
 
         public Dictionary<string, string> BuildProperties { get; } = new Dictionary<string, string>();
+
+        public ProbeBuilder? Liveness { get; set; }
+        public ProbeBuilder? Readiness { get; set; }
     }
 }

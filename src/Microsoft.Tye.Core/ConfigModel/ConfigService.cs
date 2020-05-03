@@ -26,5 +26,7 @@ namespace Microsoft.Tye.ConfigModel
         [YamlMember(Alias = "env")]
         public List<ConfigConfigurationSource> Configuration { get; set; } = new List<ConfigConfigurationSource>();
         public List<BuildProperty> BuildProperties { get; set; } = new List<BuildProperty>();
+        public ConfigProbe? Liveness { get; set; }
+        public ConfigProbe? Readiness { get; set; }
     }
 }

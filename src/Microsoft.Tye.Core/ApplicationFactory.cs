@@ -93,6 +93,9 @@ namespace Microsoft.Tye
                         }
                         project.Replicas = configService.Replicas ?? 1;
 
+                        project.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
+                        project.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
+
                         await ProjectReader.ReadProjectDetailsAsync(output, project);
 
                         // We don't apply more container defaults here because we might need
@@ -110,6 +113,9 @@ namespace Microsoft.Tye
                             Replicas = configService.Replicas ?? 1
                         };
                         service = container;
+                        
+                        container.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
+                        container.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
                     }
                     else if (!string.IsNullOrEmpty(configService.Executable))
                     {
@@ -132,6 +138,9 @@ namespace Microsoft.Tye
                             Replicas = configService.Replicas ?? 1
                         };
                         service = executable;
+                        
+                        executable.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
+                        executable.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
                     }
                     else if (!string.IsNullOrEmpty(configService.Include))
                     {
@@ -296,5 +305,18 @@ namespace Microsoft.Tye
                 }
             }
         }
+
+        private static ProbeBuilder GetProbeBuilder(ConfigProbe config) => new ProbeBuilder()
+        {
+            Http = config.Http != null ? GetHttpProbeBuilder(config.Http) : null,
+            InitialDelay = config.InitialDelay,
+            Period = config.Period
+        };
+
+        private static HttpProbeBuilder GetHttpProbeBuilder(ConfigHttpProbe config) => new HttpProbeBuilder()
+        {
+            Path = config.Path,
+            Headers = config.Headers
+        };
     }
 }
