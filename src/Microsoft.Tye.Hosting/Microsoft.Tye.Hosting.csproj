@@ -32,4 +32,8 @@
     <ProjectReference Include="..\Microsoft.Tye.Proxy\Microsoft.Tye.Proxy.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\shared\DirectoryExtensions.cs" Link="DirectoryExtensions.cs" />
+  </ItemGroup>
+
 </Project>

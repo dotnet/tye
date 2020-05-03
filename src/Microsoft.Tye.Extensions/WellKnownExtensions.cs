@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Tye.Extensions.Dapr;
+using Microsoft.Tye.Extensions.Zipkin;
 
 namespace Microsoft.Tye.Extensions
 {
@@ -13,6 +14,7 @@ namespace Microsoft.Tye.Extensions
         public static IReadOnlyDictionary<string, Extension> Extensions = new Dictionary<string, Extension>(StringComparer.InvariantCultureIgnoreCase)
         {
             { "dapr", new DaprExtension() },
+            { "zipkin", new ZipkinExtension() },
         };
     }
 }

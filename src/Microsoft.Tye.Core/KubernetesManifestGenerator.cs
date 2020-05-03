@@ -25,6 +25,10 @@ namespace Microsoft.Tye
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
             metadata.Add("name", ingress.Name);
+            if (!string.IsNullOrEmpty(application.Namespace))
+            {
+                metadata.Add("namespace", application.Namespace);
+            }
 
             var annotations = new YamlMappingNode();
             metadata.Add("annotations", annotations);
@@ -88,7 +92,7 @@ namespace Microsoft.Tye
                         //
                         // Therefore our rewrite-target is set to $2 - we want to make sure we have
                         // two capture groups.
-                        if (string.IsNullOrEmpty(ingressRule.Path))
+                        if (string.IsNullOrEmpty(ingressRule.Path) || ingressRule.Path == "/")
                         {
                             path.Add("path", "/()(.*)"); // () is an empty capture group.
                         }

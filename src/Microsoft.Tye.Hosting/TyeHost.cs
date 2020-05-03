@@ -36,21 +36,13 @@ namespace Microsoft.Tye.Hosting
         private AggregateApplicationProcessor? _processor;
 
         private readonly Application _application;
-        private readonly string[] _args;
-        private readonly string[] _servicesToDebug;
-
+        private readonly HostOptions _options;
         private ReplicaRegistry? _replicaRegistry;
 
-        public TyeHost(Application application, string[] args)
-            : this(application, args, new string[0])
-        {
-        }
-
-        public TyeHost(Application application, string[] args, string[] servicesToDebug)
+        public TyeHost(Application application, HostOptions options)
         {
             _application = application;
-            _args = args;
-            _servicesToDebug = servicesToDebug;
+            _options = options;
         }
 
         public Application Application => _application;
@@ -78,7 +70,7 @@ namespace Microsoft.Tye.Hosting
 
         public async Task<WebApplication> StartAsync()
         {
-            var app = BuildWebApplication(_application, _args, Sink);
+            var app = BuildWebApplication(_application, _options, Sink);
             DashboardWebApplication = app;
 
             _logger = app.Logger;
@@ -88,11 +80,9 @@ namespace Microsoft.Tye.Hosting
 
             ConfigureApplication(app);
 
-            var configuration = app.Configuration;
-
             _replicaRegistry = new ReplicaRegistry(_application.ContextDirectory, _logger);
 
-            _processor = CreateApplicationProcessor(_replicaRegistry, _args, _servicesToDebug, _logger, configuration);
+            _processor = CreateApplicationProcessor(_replicaRegistry, _options, _logger);
 
             await app.StartAsync();
 
@@ -100,7 +90,7 @@ namespace Microsoft.Tye.Hosting
 
             await _processor.StartAsync(_application);
 
-            if (_args.Contains("--dashboard"))
+            if (_options.Dashboard)
             {
                 OpenDashboard(app.Addresses.First());
             }
@@ -108,12 +98,16 @@ namespace Microsoft.Tye.Hosting
             return app;
         }
 
-        private static WebApplication BuildWebApplication(
-            Application application,
-            string[] args,
-            ILogEventSink? sink)
+        private static WebApplication BuildWebApplication(Application application, HostOptions options, ILogEventSink? sink)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            var args = new List<string>();
+            if (options.Port.HasValue)
+            {
+                args.Add("--port");
+                args.Add(options.Port.Value.ToString(CultureInfo.InvariantCulture));
+            }
+
+            var builder = WebApplication.CreateBuilder(args.ToArray());
 
             // Logging for this application
             builder.Host.UseSerilog((context, configuration) =>
@@ -264,13 +258,19 @@ namespace Microsoft.Tye.Hosting
             return false;
         }
 
-        private static AggregateApplicationProcessor CreateApplicationProcessor(ReplicaRegistry replicaRegistry, string[] args, string[] servicesToDebug, Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
+        private static AggregateApplicationProcessor CreateApplicationProcessor(ReplicaRegistry replicaRegistry, HostOptions options, Microsoft.Extensions.Logging.ILogger logger)
         {
-            var diagnosticOptions = DiagnosticOptions.FromConfiguration(configuration);
-            var diagnosticsCollector = new DiagnosticsCollector(logger, diagnosticOptions);
+            var diagnostics = new DiagnosticOptions()
+            {
+                DistributedTraceProvider = options.DistributedTraceProvider,
+                LoggingProvider = options.LoggingProvider,
+                MetricsProvider = options.MetricsProvider,
+            };
+
+            var diagnosticsCollector = new DiagnosticsCollector(logger, diagnostics);
 
             // Print out what providers were selected and their values
-            diagnosticOptions.DumpDiagnostics(logger);
+            diagnostics.DumpDiagnostics(logger);
 
             var processors = new List<IApplicationProcessor>
             {
@@ -280,11 +280,11 @@ namespace Microsoft.Tye.Hosting
                 new HttpProxyService(logger),
                 new DockerImagePuller(logger),
                 new DockerRunner(logger, replicaRegistry),
-                new ProcessRunner(logger, replicaRegistry, ProcessRunnerOptions.FromArgs(args, servicesToDebug))
+                new ProcessRunner(logger, replicaRegistry, ProcessRunnerOptions.FromHostOptions(options))
             };
 
             // If the docker command is specified then transform the ProjectRunInfo into DockerRunInfo
-            if (args.Contains("--docker"))
+            if (options.Docker)
             {
                 processors.Insert(0, new TransformProjectsIntoContainers(logger));
             }
