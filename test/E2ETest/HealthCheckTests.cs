@@ -53,10 +53,8 @@ namespace E2ETest
             _options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         }
 
-        [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task ServiceWithoutLivenessReadinessShouldDefaultToReadyTests(bool docker)
+        [Fact]
+        public async Task ServiceWithoutLivenessReadinessShouldDefaultToReadyTests()
         {
             using var projectDirectory = CopyTestProjectDirectory("health-checks");
 
@@ -64,7 +62,7 @@ namespace E2ETest
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions() { Docker = docker })
+            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
                 Sink = _sink,
             };
@@ -73,10 +71,8 @@ namespace E2ETest
             await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Ready, replicasToBeReady.Count, replicasToBeReady, null, TimeSpan.Zero, h => h.StartAsync());
         }
 
-        [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task ServiceWithoutLivenessShouldDefaultToHealthyTests(bool docker)
+        [Fact]
+        public async Task ServiceWithoutLivenessShouldDefaultToHealthyTests()
         {
             using var projectDirectory = CopyTestProjectDirectory("health-checks");
 
@@ -84,7 +80,7 @@ namespace E2ETest
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions() { Docker = docker })
+            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
                 Sink = _sink,
             };
@@ -93,10 +89,8 @@ namespace E2ETest
             await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, replicasToBeHealthy.Count, replicasToBeHealthy, null, TimeSpan.Zero, h => h.StartAsync());
         }
 
-        [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task ServiceWithoutReadinessShouldDefaultToReadyWhenHealthyTests(bool docker)
+        [Fact]
+        public async Task ServiceWithoutReadinessShouldDefaultToReadyWhenHealthyTests()
         {
             using var projectDirectory = CopyTestProjectDirectory("health-checks");
 
@@ -104,7 +98,7 @@ namespace E2ETest
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions() { Docker = docker })
+            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
                 Sink = _sink,
             };
