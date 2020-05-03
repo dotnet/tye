@@ -113,7 +113,7 @@ namespace Microsoft.Tye
                             Replicas = configService.Replicas ?? 1
                         };
                         service = container;
-                        
+
                         container.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
                         container.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
                     }
@@ -138,7 +138,7 @@ namespace Microsoft.Tye
                             Replicas = configService.Replicas ?? 1
                         };
                         service = executable;
-                        
+
                         executable.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
                         executable.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
                     }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,9 +21,9 @@ namespace E2ETest
         private readonly ITestOutputHelper _output;
         private readonly TestOutputLogEventSink _sink;
         private readonly JsonSerializerOptions _options;
-        
-        private static readonly ReplicaState?[] startedOrHigher = new ReplicaState?[] {ReplicaState.Started, ReplicaState.Healthy, ReplicaState.Ready};
-        private static readonly ReplicaState?[] stoppedOrLower = new ReplicaState?[] {ReplicaState.Stopped, ReplicaState.Removed};
+
+        private static readonly ReplicaState?[] startedOrHigher = new ReplicaState?[] { ReplicaState.Started, ReplicaState.Healthy, ReplicaState.Ready };
+        private static readonly ReplicaState?[] stoppedOrLower = new ReplicaState?[] { ReplicaState.Stopped, ReplicaState.Removed };
 
         private static HttpClient _client;
 
@@ -34,10 +34,10 @@ namespace E2ETest
                 ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
                 AllowAutoRedirect = false
             };
-            
+
             _client = new HttpClient(new RetryHandler(handler));
         }
-        
+
         public HealthCheckTests(ITestOutputHelper output)
         {
             _output = output;
@@ -64,7 +64,7 @@ namespace E2ETest
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            await using var host = new TyeHost(application.ToHostingApplication(), docker ? new[] {"--docker"} : Array.Empty<string>())
+            await using var host = new TyeHost(application.ToHostingApplication(), docker ? new[] { "--docker" } : Array.Empty<string>())
             {
                 Sink = _sink,
             };
@@ -84,11 +84,11 @@ namespace E2ETest
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            await using var host = new TyeHost(application.ToHostingApplication(), docker ? new[] {"--docker"} : Array.Empty<string>())
+            await using var host = new TyeHost(application.ToHostingApplication(), docker ? new[] { "--docker" } : Array.Empty<string>())
             {
                 Sink = _sink,
             };
-            
+
             var replicasToBeHealthy = host.Application.Services["readiness"].Replicas.Select(r => r.Value.Name).ToHashSet();
             await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, replicasToBeHealthy.Count, replicasToBeHealthy, null, TimeSpan.Zero, h => h.StartAsync());
         }
@@ -104,15 +104,15 @@ namespace E2ETest
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            await using var host = new TyeHost(application.ToHostingApplication(), docker ? new[] {"--docker"} : Array.Empty<string>())
+            await using var host = new TyeHost(application.ToHostingApplication(), docker ? new[] { "--docker" } : Array.Empty<string>())
             {
                 Sink = _sink,
             };
-            
+
             var replicasNamesToBeReady = host.Application.Services["liveness"].Replicas.Select(r => r.Value.Name).ToHashSet();
             var replicasToBeReady = host.Application.Services["liveness"].Replicas.Select(r => r.Value);
             await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Started, replicasNamesToBeReady.Count, replicasNamesToBeReady, null, TimeSpan.Zero, h => h.StartAsync());
-            
+
             await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Ready, replicasNamesToBeReady.Count, replicasNamesToBeReady, null, TimeSpan.Zero, async _ =>
             {
                 await Task.WhenAll(host.Application.Services["liveness"].Replicas.Select(r => r.Value).Select(r => SetHealthyReadyInReplica(r, healthy: true)));

@@ -106,7 +106,7 @@ namespace Test.Infrastructure
             {
                 throw new ArgumentException($"{nameof(restOfReplicas)} and {nameof(restOfReplicas)} can't overlap");
             }
-            
+
             var changedTask = new TaskCompletionSource<bool>();
             var remaining = n;
 
@@ -133,11 +133,11 @@ namespace Test.Infrastructure
                         });
                 }
             }
-            
+
             var servicesStateObserver = host.Application.Services.Select(srv => srv.Value.ReplicaEvents.Subscribe(OnReplicaChange)).ToList();
 
             await operation(host);
-            
+
             using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);
             try
             {
@@ -161,7 +161,7 @@ namespace Test.Infrastructure
             {
                 throw new ArgumentException($"{nameof(replicasToRestart)} and {nameof(restOfReplicas)} can't overlap");
             }
-            
+
             var restartedTask = new TaskCompletionSource<bool>();
             var remaining = replicasToRestart.Count;
             var alreadyStarted = 0;
@@ -219,7 +219,7 @@ namespace Test.Infrastructure
         }
 
         public static Task StartHostAndWaitForReplicasToStart(TyeHost host, ReplicaState desiredState = ReplicaState.Started) => DoOperationAndWaitForReplicasToChangeState(host, desiredState, host.Application.Services.Sum(s => s.Value.Description.Replicas), null, null, TimeSpan.Zero, h => h.StartAsync());
-        
+
         public static async Task PurgeHostAndWaitForGivenReplicasToStop(TyeHost host, string[] replicas)
         {
             static async Task Purge(TyeHost host)

@@ -249,7 +249,7 @@ namespace Tye.Serialization
                         {
                             var name = YamlParser.GetScalarValue("name", header);
                             var value = YamlParser.GetScalarValue("value", header);
-                            
+
                             probe.Headers.Add(new KeyValuePair<string, object>(name, value));
                         }
 

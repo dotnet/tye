@@ -1,4 +1,4 @@
-namespace Microsoft.Tye.ConfigModel
+﻿namespace Microsoft.Tye.ConfigModel
 {
     public class ConfigProbe
     {

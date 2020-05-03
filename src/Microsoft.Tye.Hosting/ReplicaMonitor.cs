@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Reactive.Subjects;
@@ -19,7 +19,7 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
             _states = new ConcurrentDictionary<string, ReplicaMonitorState>();
         }
-        
+
         public Task StartAsync(Application application)
         {
             foreach (var service in application.Services.Values)
@@ -87,7 +87,7 @@ namespace Microsoft.Tye.Hosting
             {
                 _replica = replica;
                 _logger = logger;
-                
+
                 _stateChangeLocker = new object();
 
                 Init();
@@ -144,10 +144,10 @@ namespace Microsoft.Tye.Hosting
                             break;
                     }
                 });
-                
+
                 _livenessProber.Start();
             }
-            
+
             private void StartReadinessProbe(Probe probe)
             {
                 // currently only HTTP is available
@@ -172,10 +172,10 @@ namespace Microsoft.Tye.Hosting
                             break;
                     }
                 });
-                
+
                 _readinessProber.Start();
             }
-            
+
             private void MoveToHealthy(ReplicaState from)
             {
                 _logger.LogInformation("replica {name} is moving to an healthy state", _replica.Name);
@@ -231,11 +231,11 @@ namespace Microsoft.Tye.Hosting
             {
                 ProbeResults = new Subject<bool>();
             }
-            
+
             public Subject<bool> ProbeResults { get; }
 
             public abstract void Start();
-            
+
             public abstract void Dispose();
         }
 
@@ -286,7 +286,7 @@ namespace Microsoft.Tye.Hosting
                     {
                         var protocol = binding.Protocol ?? "http";
                         var address = $"{protocol}://localhost:{binding.Port}{_httpProbeSettings.Path}";
-                        
+
                         var req = new HttpRequestMessage(HttpMethod.Get, address);
                         foreach (var header in _httpProbeSettings.Headers)
                         {
@@ -300,7 +300,7 @@ namespace Microsoft.Tye.Hosting
                             return;
                         }
                     }
-                    
+
                     ProbeResults.OnNext(true);
                 }
                 catch (HttpRequestException)

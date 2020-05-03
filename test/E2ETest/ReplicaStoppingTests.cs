@@ -25,9 +25,9 @@ namespace E2ETest
         private readonly ITestOutputHelper _output;
         private readonly TestOutputLogEventSink _sink;
         private readonly JsonSerializerOptions _options;
-        
-        private static readonly ReplicaState?[] startedOrHigher = new ReplicaState?[] {ReplicaState.Started, ReplicaState.Healthy, ReplicaState.Ready};
-        private static readonly ReplicaState?[] stoppedOrLower = new ReplicaState?[] {ReplicaState.Stopped, ReplicaState.Removed};
+
+        private static readonly ReplicaState?[] startedOrHigher = new ReplicaState?[] { ReplicaState.Started, ReplicaState.Healthy, ReplicaState.Ready };
+        private static readonly ReplicaState?[] stoppedOrLower = new ReplicaState?[] { ReplicaState.Stopped, ReplicaState.Removed };
 
         public ReplicaStoppingTests(ITestOutputHelper output)
         {
@@ -60,9 +60,9 @@ namespace E2ETest
                   var replicaToStop = host.Application.Services["frontend"].Replicas.First();
                   Assert.Contains(replicaToStop.Value.State, startedOrHigher);
 
-                  var replicasToRestart = new[] {replicaToStop.Key};
+                  var replicasToRestart = new[] { replicaToStop.Key };
                   var restOfReplicas = host.Application.Services.SelectMany(s => s.Value.Replicas).Select(r => r.Value.Name).Where(r => r != replicaToStop.Key).ToArray();
-                  
+
                   Assert.True(await DoOperationAndWaitForReplicasToRestart(host, replicasToRestart.ToHashSet(), restOfReplicas.ToHashSet(), TimeSpan.FromSeconds(1), _ =>
                   {
                       replicaToStop.Value.StoppingTokenSource.Cancel();
