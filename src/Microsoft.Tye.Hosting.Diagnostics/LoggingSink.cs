@@ -26,7 +26,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
 
         public IDisposable Attach(EventPipeEventSource source, ReplicaInfo replicaInfo)
         {
-            using var loggerFactory = LoggerFactory.Create(builder => ConfigureLogging(replicaInfo.Service, replicaInfo.Replica, builder));
+            var loggerFactory = LoggerFactory.Create(builder => ConfigureLogging(replicaInfo.Service, replicaInfo.Replica, builder));
 
             var lastFormattedMessage = "";
 
