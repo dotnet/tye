@@ -28,6 +28,9 @@
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Compile Remove="testassets\**\*" />
+    <Content Update="testassets\projects\health-checks\tye.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
