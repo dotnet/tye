@@ -240,6 +240,14 @@ namespace Tye.Serialization
                     case "path":
                         probe.Path = YamlParser.GetScalarValue("path", child.Value);
                         break;
+                    case "timeout":
+                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var timeout))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
+                        }
+
+                        probe.Timeout = timeout;
+                        break;
                     case "headers":
                         probe.Headers = new List<KeyValuePair<string, object>>();
                         var headersNode = child.Value as YamlSequenceNode;
@@ -268,7 +276,7 @@ namespace Tye.Serialization
             foreach (var child in yamlMappingNode.Children)
             {
                 var key = YamlParser.GetScalarValue(child.Key);
-                
+
                 switch (key)
                 {
                     case "name":
@@ -290,7 +298,7 @@ namespace Tye.Serialization
             {
                 throw new TyeYamlException(yamlMappingNode.Start, CoreStrings.FormatExpectedYamlScalar("value"));
             }
-            
+
             headers.Add(new KeyValuePair<string, object>(name, value));
         }
 

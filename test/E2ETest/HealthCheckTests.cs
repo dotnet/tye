@@ -67,7 +67,7 @@ namespace E2ETest
                 Sink = _sink,
             };
 
-            await StartHostAndWaitForReplicasToStart(host, new[] {"none"}, ReplicaState.Ready);
+            await StartHostAndWaitForReplicasToStart(host, new[] { "none" }, ReplicaState.Ready);
         }
 
         [Fact]
@@ -83,8 +83,8 @@ namespace E2ETest
             {
                 Sink = _sink,
             };
-            
-            await StartHostAndWaitForReplicasToStart(host, new[] {"readiness"}, ReplicaState.Healthy);
+
+            await StartHostAndWaitForReplicasToStart(host, new[] { "readiness" }, ReplicaState.Healthy);
         }
 
         [Fact]
@@ -100,8 +100,8 @@ namespace E2ETest
             {
                 Sink = _sink,
             };
-            
-            await StartHostAndWaitForReplicasToStart(host, new[] {"readiness"}, ReplicaState.Healthy);
+
+            await StartHostAndWaitForReplicasToStart(host, new[] { "readiness" }, ReplicaState.Healthy);
 
             var replicas = host.Application.Services["readiness"].Replicas.Select(r => r.Value).ToList();
             await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Ready, replicas.Count, replicas.Select(r => r.Name).ToHashSet(), null, TimeSpan.Zero, async _ =>
@@ -123,8 +123,8 @@ namespace E2ETest
             {
                 Sink = _sink,
             };
-            
-            await StartHostAndWaitForReplicasToStart(host, new[] {"liveness"}, ReplicaState.Started);
+
+            await StartHostAndWaitForReplicasToStart(host, new[] { "liveness" }, ReplicaState.Started);
 
             var replicasToBecomeReady = host.Application.Services["liveness"].Replicas.Select(r => r.Value);
             var replicasNamesToBecomeReady = replicasToBecomeReady.Select(r => r.Name).ToHashSet();
@@ -149,18 +149,18 @@ namespace E2ETest
             };
 
             SetReplicasInitialState(host, true, true);
-            
-            await StartHostAndWaitForReplicasToStart(host, new[] {"all"}, ReplicaState.Ready);
+
+            await StartHostAndWaitForReplicasToStart(host, new[] { "all" }, ReplicaState.Ready);
 
             var replicasToBecomeReady = host.Application.Services["all"].Replicas.Select(r => r.Value).ToList();
             var replicasNamesToBecomeReady = replicasToBecomeReady.Select(r => r.Name).ToHashSet();
 
             var randomReplica = replicasToBecomeReady[new Random().Next(0, replicasToBecomeReady.Count)];
 
-            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] {randomReplica.Name}.ToHashSet(), replicasNamesToBecomeReady.Where(r => r != randomReplica.Name).ToHashSet(), TimeSpan.FromSeconds(1), async _ =>
-            {
-                await SetHealthyReadyInReplica(randomReplica, ready: false);
-            });
+            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] { randomReplica.Name }.ToHashSet(), replicasNamesToBecomeReady.Where(r => r != randomReplica.Name).ToHashSet(), TimeSpan.FromSeconds(1), async _ =>
+              {
+                  await SetHealthyReadyInReplica(randomReplica, ready: false);
+              });
         }
 
         [Fact]
@@ -178,21 +178,21 @@ namespace E2ETest
             };
 
             SetReplicasInitialState(host, true, true);
-            
-            await StartHostAndWaitForReplicasToStart(host, new[] {"all"}, ReplicaState.Ready);
+
+            await StartHostAndWaitForReplicasToStart(host, new[] { "all" }, ReplicaState.Ready);
 
             var replicasToBecomeReady = host.Application.Services["all"].Replicas.Select(r => r.Value).ToList();
             var replicasNamesToBecomeReady = replicasToBecomeReady.Select(r => r.Name).ToHashSet();
-            
+
             var randomReplica = replicasToBecomeReady[new Random().Next(0, replicasToBecomeReady.Count)];
-            
+
             outputContext.WriteInfoLine("from test: random replica: (" + randomReplica.Name + ", " + randomReplica.State + ")");
             outputContext.WriteInfoLine("from test: all: " + string.Join(", ", replicasToBecomeReady.Select(r => "(" + r.Name + ", " + r.State + ")")));
 
-            await DoOperationAndWaitForReplicasToRestart(host, new[] {randomReplica.Name}.ToHashSet(), replicasNamesToBecomeReady.Where(r => r != randomReplica.Name).ToHashSet(), TimeSpan.FromSeconds(1), async _ =>
-            {
-                await SetHealthyReadyInReplica(randomReplica, healthy: false);
-            });
+            await DoOperationAndWaitForReplicasToRestart(host, new[] { randomReplica.Name }.ToHashSet(), replicasNamesToBecomeReady.Where(r => r != randomReplica.Name).ToHashSet(), TimeSpan.FromSeconds(1), async _ =>
+              {
+                  await SetHealthyReadyInReplica(randomReplica, healthy: false);
+              });
         }
 
         [Fact]
@@ -210,8 +210,8 @@ namespace E2ETest
             };
 
             SetReplicasInitialState(host, true, true);
-            
-            await StartHostAndWaitForReplicasToStart(host, new[] {"all"}, ReplicaState.Ready);
+
+            await StartHostAndWaitForReplicasToStart(host, new[] { "all" }, ReplicaState.Ready);
 
             var res = await _client.GetAsync($"http://localhost:{host.Application.Services["all"].Description.Bindings.First().Port}/livenessHeaders");
             Assert.True(res.IsSuccessStatusCode);
@@ -219,7 +219,7 @@ namespace E2ETest
             var headers = JsonSerializer.Deserialize<Dictionary<string, string>>(await res.Content.ReadAsStringAsync());
             Assert.Equal("value1", headers["name1"]);
             Assert.Equal("value2", headers["name2"]);
-            
+
             res = await _client.GetAsync($"http://localhost:{host.Application.Services["all"].Description.Bindings.First().Port}/readinessHeaders");
             Assert.True(res.IsSuccessStatusCode);
 
@@ -263,12 +263,12 @@ namespace E2ETest
             {
                 if (healthy.HasValue)
                 {
-                    host.Application.Services[service].Description.Configuration.Add(new EnvironmentVariable("healthy") {Value = "true"});
+                    host.Application.Services[service].Description.Configuration.Add(new EnvironmentVariable("healthy") { Value = "true" });
                 }
 
                 if (ready.HasValue)
                 {
-                    host.Application.Services[service].Description.Configuration.Add(new EnvironmentVariable("ready") {Value = "true"});
+                    host.Application.Services[service].Description.Configuration.Add(new EnvironmentVariable("ready") { Value = "true" });
                 }
             }
         }

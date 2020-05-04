@@ -237,7 +237,7 @@ namespace Test.Infrastructure
                 {
                     throw new ArgumentException($"not all services given in {nameof(services)} exist");
                 }
-                
+
                 await DoOperationAndWaitForReplicasToChangeState(host, desiredState, host.Application.Services.Where(s => services.Contains(s.Value.Description.Name)).Sum(s => s.Value.Description.Replicas), services.ToHashSet(), null, ev => ev.Replica.Service.Description.Name, TimeSpan.Zero, h => h.StartAsync());
             }
         }
