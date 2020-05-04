@@ -3,7 +3,7 @@
 @implements IDisposable
 
 <h1>Services</h1>
-<table class="table">
+<table class="table service-table">
     <thead>
         <tr>
             <th>Name</th>
@@ -25,7 +25,7 @@
                 <td>
                     @service.ServiceType
                 </td>
-                <td>
+                <td class="source-project">
                     @if (service.Description.RunInfo is ProjectRunInfo project)
                     {
                         <p>@project.ProjectFile.FullName</p>
