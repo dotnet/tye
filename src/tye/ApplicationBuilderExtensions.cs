@@ -188,7 +188,8 @@ namespace Microsoft.Tye
             Http = builder.Http != null ? new HttpProbe()
             {
                 Path = builder.Http.Path,
-                Headers = builder.Http.Headers
+                Headers = builder.Http.Headers,
+                Timeout = TimeSpan.FromSeconds(builder.Http.Timeout)
             } : null,
             InitialDelay = TimeSpan.FromSeconds(builder.InitialDelay),
             Period = TimeSpan.FromSeconds(builder.Period)

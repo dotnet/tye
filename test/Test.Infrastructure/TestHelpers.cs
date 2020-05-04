@@ -101,11 +101,11 @@ namespace Test.Infrastructure
             return temp;
         }
 
-        public static async Task<bool> DoOperationAndWaitForReplicasToChangeState(TyeHost host, ReplicaState desiredState, int n, HashSet<string>? replicasToChange, HashSet<string>? restOfReplicas, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
+        public static async Task<bool> DoOperationAndWaitForReplicasToChangeState(TyeHost host, ReplicaState desiredState, int n, HashSet<string>? toChange, HashSet<string>? rest, Func<ReplicaEvent, string> entitySelector, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
         {
-            if (replicasToChange != null && restOfReplicas != null && restOfReplicas.Overlaps(replicasToChange))
+            if (toChange != null && rest != null && rest.Overlaps(toChange))
             {
-                throw new ArgumentException($"{nameof(restOfReplicas)} and {nameof(restOfReplicas)} can't overlap");
+                throw new ArgumentException($"{nameof(toChange)} and {nameof(rest)} can't overlap");
             }
 
             var changedTask = new TaskCompletionSource<bool>();
@@ -113,11 +113,11 @@ namespace Test.Infrastructure
 
             void OnReplicaChange(ReplicaEvent ev)
             {
-                if (restOfReplicas != null && restOfReplicas.Contains(ev.Replica.Name))
+                if (rest != null && rest.Contains(entitySelector(ev)))
                 {
                     changedTask!.TrySetResult(false);
                 }
-                else if ((replicasToChange == null || replicasToChange.Contains(ev.Replica.Name)) && ev.State == desiredState)
+                else if ((toChange == null || toChange.Contains(entitySelector(ev))) && ev.State == desiredState)
                 {
                     Interlocked.Decrement(ref remaining);
                 }
@@ -129,7 +129,7 @@ namespace Test.Infrastructure
                         {
                             if (!changedTask!.Task.IsCompleted)
                             {
-                                changedTask!.TrySetResult(true);
+                                changedTask!.TrySetResult(remaining == 0);
                             }
                         });
                 }
@@ -156,15 +156,15 @@ namespace Test.Infrastructure
             }
         }
 
-        public static async Task<bool> DoOperationAndWaitForReplicasToRestart(TyeHost host, HashSet<string> replicasToRestart, HashSet<string> restOfReplicas, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
+        public static async Task<bool> DoOperationAndWaitForReplicasToRestart(TyeHost host, HashSet<string> toRestart, HashSet<string>? rest, Func<ReplicaEvent, string> entitySelector, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
         {
-            if (restOfReplicas.Overlaps(replicasToRestart))
+            if (rest != null && rest.Overlaps(toRestart))
             {
-                throw new ArgumentException($"{nameof(replicasToRestart)} and {nameof(restOfReplicas)} can't overlap");
+                throw new ArgumentException($"{nameof(toRestart)} and {nameof(rest)} can't overlap");
             }
 
             var restartedTask = new TaskCompletionSource<bool>();
-            var remaining = replicasToRestart.Count;
+            var remaining = toRestart.Count;
             var alreadyStarted = 0;
 
             void OnReplicaChange(ReplicaEvent ev)
@@ -175,24 +175,24 @@ namespace Test.Infrastructure
                 }
                 else if (ev.State == ReplicaState.Stopped)
                 {
-                    if (replicasToRestart.Contains(ev.Replica.Name))
+                    if (toRestart.Contains(entitySelector(ev)))
                     {
                         Interlocked.Decrement(ref remaining);
                     }
-                    else if (restOfReplicas.Contains(ev.Replica.Name))
+                    else if (rest != null && rest.Contains(entitySelector(ev)))
                     {
                         restartedTask!.SetResult(false);
                     }
                 }
 
-                if (remaining == 0 && alreadyStarted == replicasToRestart.Count)
+                if (remaining == 0 && alreadyStarted == toRestart.Count)
                 {
                     Task.Delay(waitUntilSuccess)
                         .ContinueWith(_ =>
                         {
                             if (!restartedTask!.Task.IsCompleted)
                             {
-                                restartedTask!.SetResult(true);
+                                restartedTask!.SetResult(remaining == 0 && alreadyStarted == toRestart.Count);
                             }
                         });
                 }
@@ -219,7 +219,28 @@ namespace Test.Infrastructure
             }
         }
 
-        public static Task StartHostAndWaitForReplicasToStart(TyeHost host, ReplicaState desiredState = ReplicaState.Started) => DoOperationAndWaitForReplicasToChangeState(host, desiredState, host.Application.Services.Sum(s => s.Value.Description.Replicas), null, null, TimeSpan.Zero, h => h.StartAsync());
+        public static Task<bool> DoOperationAndWaitForReplicasToChangeState(TyeHost host, ReplicaState desiredState, int n, HashSet<string>? toChange, HashSet<string>? rest, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
+            => DoOperationAndWaitForReplicasToChangeState(host, desiredState, n, toChange, rest, ev => ev.Replica.Name, waitUntilSuccess, operation);
+
+        public static Task<bool> DoOperationAndWaitForReplicasToRestart(TyeHost host, HashSet<string> toRestart, HashSet<string>? rest, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
+            => DoOperationAndWaitForReplicasToRestart(host, toRestart, rest, ev => ev.Replica.Name, waitUntilSuccess, operation);
+
+        public static async Task StartHostAndWaitForReplicasToStart(TyeHost host, string[]? services = null, ReplicaState desiredState = ReplicaState.Started)
+        {
+            if (services == null)
+            {
+                await DoOperationAndWaitForReplicasToChangeState(host, desiredState, host.Application.Services.Sum(s => s.Value.Description.Replicas), null, null, TimeSpan.Zero, h => h.StartAsync());
+            }
+            else
+            {
+                if (services.Any(s => !host.Application.Services.ContainsKey(s)))
+                {
+                    throw new ArgumentException($"not all services given in {nameof(services)} exist");
+                }
+                
+                await DoOperationAndWaitForReplicasToChangeState(host, desiredState, host.Application.Services.Where(s => services.Contains(s.Value.Description.Name)).Sum(s => s.Value.Description.Replicas), services.ToHashSet(), null, ev => ev.Replica.Service.Description.Name, TimeSpan.Zero, h => h.StartAsync());
+            }
+        }
 
         public static async Task PurgeHostAndWaitForGivenReplicasToStop(TyeHost host, string[] replicas)
         {

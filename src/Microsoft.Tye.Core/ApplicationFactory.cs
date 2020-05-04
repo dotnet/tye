@@ -369,7 +369,8 @@ namespace Microsoft.Tye
         private static HttpProbeBuilder GetHttpProbeBuilder(ConfigHttpProbe config) => new HttpProbeBuilder()
         {
             Path = config.Path,
-            Headers = config.Headers
+            Headers = config.Headers,
+            Timeout = config.Timeout
         };
     }
 }

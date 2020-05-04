@@ -88,6 +88,8 @@ namespace Microsoft.Tye.Hosting
                 _replica = replica;
                 _logger = logger;
 
+                _currentState = ReplicaState.Started;
+                _lastStateChange = DateTime.Now;
                 _stateChangeLocker = new object();
 
                 Init();

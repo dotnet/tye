@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -19,14 +20,30 @@ namespace api
     {
         private static string _randomId = Guid.NewGuid().ToString();
 
-        private static bool _healthy = true;
+        private static bool _healthy = false;
         private static bool _ready = false;
+
+        private static Dictionary<string, string> _livenessHeaders;
+        private static Dictionary<string, string> _readinessHeaders;
         
         private static object _locker = new object();
         
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+
+            var healthyEnv = Environment.GetEnvironmentVariable("healthy");
+            var readyEnv = Environment.GetEnvironmentVariable("ready");
+            
+            if (healthyEnv != null)
+            {
+                _healthy = bool.Parse(healthyEnv);
+            }
+
+            if (readyEnv != null)
+            {
+                _ready = bool.Parse(readyEnv);
+            }
         }
 
         public IConfiguration Configuration { get; }
@@ -63,12 +80,16 @@ namespace api
 
                 endpoints.MapGet("/healthy", async ctx =>
                 {
+                    _livenessHeaders = ctx.Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString());
+                    
                     ctx.Response.StatusCode = _healthy ? 200 : 500;
                     await ctx.Response.WriteAsync(ctx.Response.StatusCode.ToString());
                 });
 
                 endpoints.MapGet("/ready", async ctx =>
                 {
+                    _readinessHeaders = ctx.Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString());
+                    
                     ctx.Response.StatusCode = _ready ? 200 : 500;
                     await ctx.Response.WriteAsync(ctx.Response.StatusCode.ToString());
                 });
@@ -88,6 +109,16 @@ namespace api
                     }
 
                     await ctx.Response.WriteAsync(_randomId);
+                });
+                
+                endpoints.MapGet("/livenessHeaders", async ctx =>
+                {
+                    await ctx.Response.WriteAsync(JsonSerializer.Serialize(_livenessHeaders));
+                });
+
+                endpoints.MapGet("/readinessHeaders", async ctx =>
+                {
+                    await ctx.Response.WriteAsync(JsonSerializer.Serialize(_readinessHeaders));
                 });
             });
         }
