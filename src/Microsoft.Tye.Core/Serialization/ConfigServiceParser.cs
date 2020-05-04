@@ -250,10 +250,7 @@ namespace Tye.Serialization
 
                         foreach (var header in headersNode.Children)
                         {
-                            var name = YamlParser.GetScalarValue("name", header);
-                            var value = YamlParser.GetScalarValue("value", header);
-
-                            probe.Headers.Add(new KeyValuePair<string, object>(name, value));
+                            HandleServiceProbeHttpHeader((YamlMappingNode)header, probe.Headers);
                         }
 
                         break;
@@ -261,6 +258,40 @@ namespace Tye.Serialization
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
             }
+        }
+
+        private static void HandleServiceProbeHttpHeader(YamlMappingNode yamlMappingNode, List<KeyValuePair<string, object>> headers)
+        {
+            string? name = null;
+            object? value = null;
+
+            foreach (var child in yamlMappingNode.Children)
+            {
+                var key = YamlParser.GetScalarValue(child.Key);
+                
+                switch (key)
+                {
+                    case "name":
+                        name = YamlParser.GetScalarValue("name", child.Value);
+                        break;
+                    case "value":
+                        value = YamlParser.GetScalarValue("value", child.Value);
+                        break;
+                    default:
+                        throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
+                }
+            }
+
+            if (name is null)
+            {
+                throw new TyeYamlException(yamlMappingNode.Start, CoreStrings.FormatExpectedYamlScalar("name"));
+            }
+            else if (value is null)
+            {
+                throw new TyeYamlException(yamlMappingNode.Start, CoreStrings.FormatExpectedYamlScalar("value"));
+            }
+            
+            headers.Add(new KeyValuePair<string, object>(name, value));
         }
 
         private static void HandleServiceVolumeNameMapping(YamlMappingNode yamlMappingNode, ConfigVolume volume)
