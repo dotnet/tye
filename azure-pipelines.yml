@@ -78,7 +78,7 @@ stages:
         - task: DockerInstaller@0
           displayName: Docker Installer
           inputs:
-            dockerVersion: 18.06.1-ce
+            dockerVersion: 17.09.0-ce
             releaseType: stable
         - script: docker version
         # - script: startdocker.cmd
