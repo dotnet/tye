@@ -78,10 +78,11 @@ stages:
         - task: DockerInstaller@0
           displayName: Docker Installer
           inputs:
-            dockerVersion: 17.09.0-ce
+            dockerVersion: 18.06.1-ce
             releaseType: stable
-        - script: startdocker.cmd
-          displayName: run
+        - script: docker version
+        # - script: startdocker.cmd
+          # displayName: run
         - script: eng\common\cibuild.cmd -configuration $(_BuildConfig) -prepareMachine $(_OfficialBuildArgs)
           displayName: Build and Publish
         - task: PublishBuildArtifacts@1
