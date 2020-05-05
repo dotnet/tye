@@ -19,7 +19,7 @@ namespace Microsoft.Tye
             { "zipkin", new WellKnownProvider("zipkin", ProviderKind.Tracing, "dtrace: Using Zipkin at URL {URL}") },
         };
 
-        public static bool TryParse(string text, ProviderKind kind, [MaybeNullWhen(false)] out DiagnosticsProvider provider)
+        public static bool TryParse(string text, [MaybeNullWhen(false)] out DiagnosticsProvider provider)
         {
             if (string.IsNullOrEmpty(text))
             {
@@ -30,19 +30,18 @@ namespace Microsoft.Tye
             var pair = text.Split('=');
             if (pair.Length < 2)
             {
-                provider = new DiagnosticsProvider(pair[0].Trim().ToLowerInvariant(), null, kind);
+                provider = new DiagnosticsProvider(pair[0].Trim().ToLowerInvariant(), null);
                 return true;
             }
 
-            provider = new DiagnosticsProvider(pair[0].Trim().ToLowerInvariant(), pair[1].Trim().ToLowerInvariant(), kind);
+            provider = new DiagnosticsProvider(pair[0].Trim().ToLowerInvariant(), pair[1].Trim().ToLowerInvariant());
             return true;
         }
 
-        public DiagnosticsProvider(string key, string? value, ProviderKind kind)
+        public DiagnosticsProvider(string key, string? value)
         {
             Key = key;
             Value = value;
-            Kind = kind;
         }
 
         public string Key { get; }
@@ -50,8 +49,6 @@ namespace Microsoft.Tye
         public bool HasValue => !string.IsNullOrEmpty(Value);
 
         public string? Value { get; }
-
-        public ProviderKind Kind { get; }
 
         public enum ProviderKind
         {

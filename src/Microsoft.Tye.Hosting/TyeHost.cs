@@ -255,13 +255,13 @@ namespace Microsoft.Tye.Hosting
             };
 
             if (options.LoggingProvider is string &&
-                DiagnosticsProvider.TryParse(options.LoggingProvider, DiagnosticsProvider.ProviderKind.Logging, out var logging))
+                DiagnosticsProvider.TryParse(options.LoggingProvider, out var logging))
             {
                 diagnosticsCollector.LoggingSink = new LoggingSink(logger, logging);
             }
 
             if (options.DistributedTraceProvider is string &&
-                DiagnosticsProvider.TryParse(options.DistributedTraceProvider, DiagnosticsProvider.ProviderKind.Tracing, out var tracing))
+                DiagnosticsProvider.TryParse(options.DistributedTraceProvider, out var tracing))
             {
                 diagnosticsCollector.TracingSink = new TracingSink(logger, tracing);
             }
@@ -357,7 +357,7 @@ namespace Microsoft.Tye.Hosting
 
             foreach (var text in providerText)
             {
-                if (DiagnosticsProvider.TryParse(text, DiagnosticsProvider.ProviderKind.Unknown, out var provider))
+                if (DiagnosticsProvider.TryParse(text, out var provider))
                 {
                     if (DiagnosticsProvider.WellKnownProviders.TryGetValue(provider.Key, out var wellKnown))
                     {

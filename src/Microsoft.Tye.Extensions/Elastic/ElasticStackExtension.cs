@@ -29,14 +29,13 @@ namespace Microsoft.Tye.Extensions.Elastic
                     {
                         new BindingBuilder()
                         {
-                            Name = "kibbana",
+                            Name = "kibana",
                             Port = 5601,
                             ContainerPort = 5601,
                             Protocol = "http",
                         },
                         new BindingBuilder()
                         {
-                            Name = "elastic",
                             Port = 9200,
                             ContainerPort = 9200,
                             Protocol = "http",
@@ -78,7 +77,20 @@ namespace Microsoft.Tye.Extensions.Elastic
             }
             else if (context.Operation == ExtensionContext.OperationKind.Deploy)
             {
-                // TODO: support this :)
+                // For deployments, remove the kibana binding. We don't need to talk to it,
+                // so don't make the user specify it.
+                var elastic = context.Application.Services.Single(s => s.Name == "elastic");
+                var kibana = elastic.Bindings.Single(b => b.Name == "kibana");
+                elastic.Bindings.Remove(kibana);
+
+                foreach (var project in context.Application.Services.OfType<ProjectServiceBuilder>())
+                {
+                    var sidecar = DiagnosticAgent.GetOrAddSidecar(project);
+
+                    // Use service discovery to find elastic
+                    sidecar.Args.Add("--provider:elastic=service:elastic");
+                    sidecar.Dependencies.Add("elastic");
+                }
             }
 
             return Task.CompletedTask;
