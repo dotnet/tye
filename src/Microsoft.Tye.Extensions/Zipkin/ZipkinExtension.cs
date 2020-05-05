@@ -62,25 +62,11 @@ namespace Microsoft.Tye.Extensions.Zipkin
             {
                 foreach (var project in context.Application.Services.OfType<ProjectServiceBuilder>())
                 {
-                    // Bring your rain boots.
-                    project.RelocateDiagnosticsDomainSockets = true;
+                    var sidecar = DiagnosticAgent.GetOrAddSidecar(project);
 
-                    var sidecar = new SidecarBuilder("tye-diag-agent", "rynowak/tye-diag-agent", "0.1")
-                    {
-                        Args =
-                        {
-                            "--kubernetes=true",
-                            "--provider:0=zipkin=service:zipkin",
-                            $"--service={project.Name}",
-                            $"--assemblyName={project.AssemblyName}",
-                        },
-                        Dependencies =
-                        {
-                            // Inject the zipkin service discovery variables
-                            "zipkin",
-                        },
-                    };
-                    project.Sidecars.Add(sidecar);
+                    // Use service discovery to find zipkin
+                    sidecar.Args.Add("--provider:zipkin=service:zipkin");
+                    sidecar.Dependencies.Add("zipkin");
                 }
             }
 
