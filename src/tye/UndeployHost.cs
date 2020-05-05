@@ -37,14 +37,6 @@ namespace Microsoft.Tye
         {
             var config = KubernetesClientConfiguration.BuildDefaultConfig();
 
-            // Workaround for https://github.com/kubernetes-client/csharp/issues/372
-            var store = await KubernetesClientConfiguration.LoadKubeConfigAsync();
-            var context = store.Contexts.Where(c => c.Name == config.CurrentContext).FirstOrDefault();
-
-            // Use namespace of application, or current context, or 'default'
-            config.Namespace = application.Namespace;
-            config.Namespace ??= context?.ContextDetails?.Namespace ?? "default";
-
             var kubernetes = new Kubernetes(config);
 
             // Due to some limitations in the k8s SDK we currently have a hardcoded list of resource
