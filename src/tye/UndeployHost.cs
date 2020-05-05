@@ -38,6 +38,9 @@ namespace Microsoft.Tye
             var config = KubernetesClientConfiguration.BuildDefaultConfig();
 
             var kubernetes = new Kubernetes(config);
+            
+            // If namespace is null, set it to default
+            config.Namespace ??= "default";
 
             // Due to some limitations in the k8s SDK we currently have a hardcoded list of resource
             // types that we handle deletes for. If we start adding extensibility for the *kinds* of

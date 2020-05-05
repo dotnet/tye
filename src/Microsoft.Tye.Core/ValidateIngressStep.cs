@@ -56,6 +56,9 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"Validating ingress class '{ingressClass}'.");
             var config = KubernetesClientConfiguration.BuildDefaultConfig();
 
+            // If namespace is null, set it to default
+            config.Namespace ??= "default";
+
             var kubernetes = new Kubernetes(config);
 
             // Looking for a deployment using a standard label.
@@ -102,7 +105,7 @@ namespace Microsoft.Tye
 
             output.WriteAlwaysLine(
                 "Tye can deploy the ingress-nginx controller for you. This will be a basic deployment suitable for " +
-                "experimentation and development. Your production needs, or requirments may differ depending on your Kubernetes distribution. " +
+                "experimentation and development. Your production needs, or requirements may differ depending on your Kubernetes distribution. " +
                 "See: https://aka.ms/tye/ingress for documentation.");
             if (!output.Confirm($"Deploy ingress-nginx"))
             {
