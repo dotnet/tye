@@ -30,17 +30,17 @@ namespace Microsoft.Tye
                         var section = configuration.GetSection("provider");
                         foreach (var child in section.GetChildren())
                         {
-                            if (!DiagnosticsProvider.TryParse(child.Value, DiagnosticsProvider.ProviderKind.Unknown, out var provider))
-                            {
-                                throw new InvalidOperationException("Could not parse diagnostics provider: " + child.Value);
-                            }
-
                             // The value used to connect to the service should be accessible with Tye service discovery.
-                            if (provider.Value is string && provider.Value.StartsWith("service:"))
+                            DiagnosticsProvider provider;
+                            if (child.Value is string && child.Value.StartsWith("service:"))
                             {
-                                var service = provider.Value.Substring("service:".Length);
+                                var service = child.Value.Substring("service:".Length);
                                 var value = configuration.GetServiceUri(service)?.AbsoluteUri ?? configuration.GetConnectionString(service);
-                                provider = new DiagnosticsProvider(provider.Key, value, provider.Kind);
+                                provider = new DiagnosticsProvider(child.Key, value);
+                            }
+                            else
+                            {
+                                provider = new DiagnosticsProvider(child.Key, child.Value);
                             }
 
                             options.Providers.Add(provider);
