@@ -8,6 +8,7 @@
     <FileSignInfo Include="Bedrock.Framework.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Elasticsearch.Net.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="FeatherHttp.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Fractions.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="KubernetesClient.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="OpenTelemetry.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="OpenTelemetry.Api.dll" CertificateName="3PartySHA2" />
