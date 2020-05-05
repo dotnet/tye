@@ -23,6 +23,9 @@ namespace api
         private static bool _healthy = false;
         private static bool _ready = false;
 
+        private static int _healthyDelay = 0;
+        private static int _readyDelay = 0;
+
         private static Dictionary<string, string> _livenessHeaders;
         private static Dictionary<string, string> _readinessHeaders;
         
@@ -80,6 +83,11 @@ namespace api
 
                 endpoints.MapGet("/healthy", async ctx =>
                 {
+                    if (_healthyDelay != 0)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(_healthyDelay));
+                    }
+                    
                     _livenessHeaders = ctx.Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString());
                     
                     ctx.Response.StatusCode = _healthy ? 200 : 500;
@@ -88,6 +96,11 @@ namespace api
 
                 endpoints.MapGet("/ready", async ctx =>
                 {
+                    if (_readyDelay != 0)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(_readyDelay));
+                    }
+                    
                     _readinessHeaders = ctx.Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString());
                     
                     ctx.Response.StatusCode = _ready ? 200 : 500;
@@ -106,6 +119,16 @@ namespace api
                     if (query.ContainsKey("ready"))
                     {
                         _ready = bool.Parse(query["ready"]);
+                    }
+
+                    if (query.ContainsKey("healthyDelay"))
+                    {
+                        _healthyDelay = int.Parse(query["healthyDelay"]);
+                    }
+
+                    if (query.ContainsKey("readyDelay"))
+                    {
+                        _readyDelay = int.Parse(query["readyDelay"]);
                     }
 
                     await ctx.Response.WriteAsync(_randomId);

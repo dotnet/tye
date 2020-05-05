@@ -2,10 +2,11 @@
 
 namespace Microsoft.Tye
 {
-    public class HttpProbeBuilder
+    public class HttpProberBuilder
     {
         public string Path { get; set; } = default!;
-        public int Timeout { get; set; }
+        public int? Port { get; set; }
+        public string? Protocol { get; set; }
         public List<KeyValuePair<string, object>> Headers { get; set; } = new List<KeyValuePair<string, object>>();
     }
 }

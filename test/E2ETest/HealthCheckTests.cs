@@ -58,7 +58,7 @@ namespace E2ETest
         {
             using var projectDirectory = CopyTestProjectDirectory("health-checks");
 
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-none.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -75,7 +75,7 @@ namespace E2ETest
         {
             using var projectDirectory = CopyTestProjectDirectory("health-checks");
 
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-readiness.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -92,7 +92,7 @@ namespace E2ETest
         {
             using var projectDirectory = CopyTestProjectDirectory("health-checks");
 
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-readiness.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -104,10 +104,10 @@ namespace E2ETest
             await StartHostAndWaitForReplicasToStart(host, new[] { "readiness" }, ReplicaState.Healthy);
 
             var replicas = host.Application.Services["readiness"].Replicas.Select(r => r.Value).ToList();
-            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Ready, replicas.Count, replicas.Select(r => r.Name).ToHashSet(), null, TimeSpan.Zero, async _ =>
+            Assert.True(await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Ready, replicas.Count, replicas.Select(r => r.Name).ToHashSet(), null, TimeSpan.Zero, async _ =>
             {
                 await Task.WhenAll(replicas.Select(r => SetHealthyReadyInReplica(r, ready: true)));
-            });
+            }));
         }
 
         [Fact]
@@ -115,7 +115,7 @@ namespace E2ETest
         {
             using var projectDirectory = CopyTestProjectDirectory("health-checks");
 
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-liveness.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -128,10 +128,10 @@ namespace E2ETest
 
             var replicasToBecomeReady = host.Application.Services["liveness"].Replicas.Select(r => r.Value);
             var replicasNamesToBecomeReady = replicasToBecomeReady.Select(r => r.Name).ToHashSet();
-            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Ready, replicasNamesToBecomeReady.Count, replicasNamesToBecomeReady, null, TimeSpan.Zero, async _ =>
+            Assert.True(await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Ready, replicasNamesToBecomeReady.Count, replicasNamesToBecomeReady, null, TimeSpan.Zero, async _ =>
             {
                 await Task.WhenAll(replicasToBecomeReady.Select(r => SetHealthyReadyInReplica(r, healthy: true)));
-            });
+            }));
         }
 
         [Fact]
@@ -139,7 +139,7 @@ namespace E2ETest
         {
             using var projectDirectory = CopyTestProjectDirectory("health-checks");
 
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-all.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -157,10 +157,10 @@ namespace E2ETest
 
             var randomReplica = replicasToBecomeReady[new Random().Next(0, replicasToBecomeReady.Count)];
 
-            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] { randomReplica.Name }.ToHashSet(), replicasNamesToBecomeReady.Where(r => r != randomReplica.Name).ToHashSet(), TimeSpan.FromSeconds(1), async _ =>
+            Assert.True(await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] { randomReplica.Name }.ToHashSet(), replicasNamesToBecomeReady.Where(r => r != randomReplica.Name).ToHashSet(), TimeSpan.FromSeconds(1), async _ =>
               {
                   await SetHealthyReadyInReplica(randomReplica, ready: false);
-              });
+              }));
         }
 
         [Fact]
@@ -168,7 +168,7 @@ namespace E2ETest
         {
             using var projectDirectory = CopyTestProjectDirectory("health-checks");
 
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-all.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -186,13 +186,45 @@ namespace E2ETest
 
             var randomReplica = replicasToBecomeReady[new Random().Next(0, replicasToBecomeReady.Count)];
 
-            outputContext.WriteInfoLine("from test: random replica: (" + randomReplica.Name + ", " + randomReplica.State + ")");
-            outputContext.WriteInfoLine("from test: all: " + string.Join(", ", replicasToBecomeReady.Select(r => "(" + r.Name + ", " + r.State + ")")));
-
-            await DoOperationAndWaitForReplicasToRestart(host, new[] { randomReplica.Name }.ToHashSet(), replicasNamesToBecomeReady.Where(r => r != randomReplica.Name).ToHashSet(), TimeSpan.FromSeconds(1), async _ =>
+            Assert.True(await DoOperationAndWaitForReplicasToRestart(host, new[] { randomReplica.Name }.ToHashSet(), replicasNamesToBecomeReady.Where(r => r != randomReplica.Name).ToHashSet(), TimeSpan.FromSeconds(1), async _ =>
               {
                   await SetHealthyReadyInReplica(randomReplica, healthy: false);
-              });
+              }));
+        }
+
+        [Fact]
+        public async Task ProbeShouldRespectTimeoutTests()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("health-checks");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-all.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
+            {
+                Sink = _sink,
+            };
+
+            SetReplicasInitialState(host, true, true);
+
+            await StartHostAndWaitForReplicasToStart(host, new[] { "all" }, ReplicaState.Ready);
+
+            var replicasToBecomeReady = host.Application.Services["all"].Replicas.Select(r => r.Value).ToList();
+            var replicasNamesToBecomeReady = replicasToBecomeReady.Select(r => r.Name).ToHashSet();
+
+            var randomNumber = new Random().Next(0, replicasToBecomeReady.Count);
+            var randomReplica1 = replicasToBecomeReady[randomNumber];
+            var randomReplica2 = replicasToBecomeReady[(randomNumber + 1) % replicasToBecomeReady.Count];
+
+            Assert.True(await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] { randomReplica1.Name }.ToHashSet(), replicasNamesToBecomeReady.Where(r => r != randomReplica1.Name).ToHashSet(), TimeSpan.FromSeconds(2), async _ =>
+               {
+                   await Task.WhenAll(new[]
+                   {
+                    SetHealthyReadyInReplica(randomReplica1, readyDelay: 2),
+                    SetHealthyReadyInReplica(randomReplica2, readyDelay: 1)
+                   });
+               }));
         }
 
         [Fact]
@@ -200,7 +232,7 @@ namespace E2ETest
         {
             using var projectDirectory = CopyTestProjectDirectory("health-checks");
 
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-all.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -228,7 +260,7 @@ namespace E2ETest
             Assert.Equal("value4", headers["name4"]);
         }
 
-        private async Task SetHealthyReadyInReplica(ReplicaStatus replica, bool? healthy = null, bool? ready = null)
+        private async Task SetHealthyReadyInReplica(ReplicaStatus replica, bool? healthy = null, bool? ready = null, int? healthyDelay = null, int? readyDelay = null)
         {
             var query = new List<string>();
 
@@ -240,6 +272,16 @@ namespace E2ETest
             if (ready.HasValue)
             {
                 query.Add("ready=" + ready);
+            }
+
+            if (healthyDelay.HasValue)
+            {
+                query.Add("healthyDelay=" + healthyDelay.Value);
+            }
+
+            if (readyDelay.HasValue)
+            {
+                query.Add("readyDelay=" + readyDelay.Value);
             }
 
             await _client.GetAsync($"http://localhost:{replica.Ports.First()}/set?" + string.Join("&", query));

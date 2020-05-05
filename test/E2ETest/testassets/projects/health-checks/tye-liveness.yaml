@@ -1,0 +1,17 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: health-checks
+services:
+  - name: liveness
+    project: api/api.csproj
+    replicas: 3
+    bindings:
+      - port: 8002
+    liveness:
+      http:
+        path: /healthy
+      initialDelay: 5
+      period: 1
+      timeout: 1
+      successThreshold: 1
+      failureThreshold: 1

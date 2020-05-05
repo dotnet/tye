@@ -204,13 +204,18 @@ namespace Tye.Serialization
                 switch (key)
                 {
                     case "http":
-                        probe.Http = new ConfigHttpProbe();
-                        HandleServiceProbeHttp((YamlMappingNode)child.Value, probe.Http!);
+                        probe.Http = new ConfigHttpProber();
+                        HandleServiceHttpProber((YamlMappingNode)child.Value, probe.Http!);
                         break;
                     case "initialDelay":
                         if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var initialDelay))
                         {
                             throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
+                        }
+
+                        if (initialDelay < 0)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBePositive(key));
                         }
 
                         probe.InitialDelay = initialDelay;
@@ -221,7 +226,51 @@ namespace Tye.Serialization
                             throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
                         }
 
+                        if (period < 1)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeGreaterThanZero(key));
+                        }
+
                         probe.Period = period;
+                        break;
+                    case "timeout":
+                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var timeout))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
+                        }
+
+                        if (timeout < 1)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeGreaterThanZero(key));
+                        }
+
+                        probe.Timeout = timeout;
+                        break;
+                    case "successThreshold":
+                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var successThreshold))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
+                        }
+
+                        if (successThreshold < 1)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeGreaterThanZero(key));
+                        }
+
+                        probe.SuccessThreshold = successThreshold;
+                        break;
+                    case "failureThreshold":
+                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var failureThreshold))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
+                        }
+
+                        if (failureThreshold < 1)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeGreaterThanZero(key));
+                        }
+
+                        probe.FailureThreshold = failureThreshold;
                         break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
@@ -229,7 +278,7 @@ namespace Tye.Serialization
             }
         }
 
-        private static void HandleServiceProbeHttp(YamlMappingNode yamlMappingNode, ConfigHttpProbe probe)
+        private static void HandleServiceHttpProber(YamlMappingNode yamlMappingNode, ConfigHttpProber prober)
         {
             foreach (var child in yamlMappingNode.Children)
             {
@@ -238,18 +287,21 @@ namespace Tye.Serialization
                 switch (key)
                 {
                     case "path":
-                        probe.Path = YamlParser.GetScalarValue("path", child.Value);
+                        prober.Path = YamlParser.GetScalarValue("path", child.Value);
                         break;
-                    case "timeout":
-                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var timeout))
+                    case "port":
+                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var port))
                         {
                             throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
                         }
 
-                        probe.Timeout = timeout;
+                        prober.Port = port;
+                        break;
+                    case "protocol":
+                        prober.Path = YamlParser.GetScalarValue("protocol", child.Value);
                         break;
                     case "headers":
-                        probe.Headers = new List<KeyValuePair<string, object>>();
+                        prober.Headers = new List<KeyValuePair<string, object>>();
                         var headersNode = child.Value as YamlSequenceNode;
                         if (headersNode is null)
                         {
@@ -258,7 +310,7 @@ namespace Tye.Serialization
 
                         foreach (var header in headersNode.Children)
                         {
-                            HandleServiceProbeHttpHeader((YamlMappingNode)header, probe.Headers);
+                            HandleServiceProbeHttpHeader((YamlMappingNode)header, prober.Headers);
                         }
 
                         break;

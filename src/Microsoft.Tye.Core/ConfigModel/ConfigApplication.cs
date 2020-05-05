@@ -135,6 +135,15 @@ namespace Microsoft.Tye.ConfigModel
                             string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
                     }
                 }
+
+                var probes = new[] { (Name: "liveness", Probe: service.Liveness), (Name: "readiness", Probe: service.Readiness) }.Where(p => p.Probe != null).ToArray();
+                foreach (var probe in probes)
+                {
+                    if (probe.Probe!.Http is null)
+                    {
+                        throw new TyeYamlException(CoreStrings.FormatProberRequired(probe.Name));
+                    }
+                }
             }
 
             foreach (var ingress in config.Ingress)

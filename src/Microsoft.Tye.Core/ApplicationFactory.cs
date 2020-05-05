@@ -361,16 +361,20 @@ namespace Microsoft.Tye
 
         private static ProbeBuilder GetProbeBuilder(ConfigProbe config) => new ProbeBuilder()
         {
-            Http = config.Http != null ? GetHttpProbeBuilder(config.Http) : null,
+            Http = config.Http != null ? GetHttpProberBuilder(config.Http) : null,
             InitialDelay = config.InitialDelay,
-            Period = config.Period
+            Period = config.Period,
+            Timeout = config.Timeout,
+            SuccessThreshold = config.SuccessThreshold,
+            FailureThreshold = config.FailureThreshold
         };
 
-        private static HttpProbeBuilder GetHttpProbeBuilder(ConfigHttpProbe config) => new HttpProbeBuilder()
+        private static HttpProberBuilder GetHttpProberBuilder(ConfigHttpProber config) => new HttpProberBuilder()
         {
             Path = config.Path,
             Headers = config.Headers,
-            Timeout = config.Timeout
+            Port = config.Port,
+            Protocol = config.Protocol
         };
     }
 }

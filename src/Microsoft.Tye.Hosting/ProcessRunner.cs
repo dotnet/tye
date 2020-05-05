@@ -249,7 +249,7 @@ namespace Microsoft.Tye.Hosting
                     if (hasPorts)
                     {
                         status.Ports = ports.Select(p => p.Port);
-                        status.Bindings = ports.Select(p => new ReplicaBinding() { Port = p.Port, Protocol = p.Protocol }).ToList();
+                        status.Bindings = ports.Select(p => new ReplicaBinding() { Port = p.Port, ExternalPort = p.ExternalPort, Protocol = p.Protocol }).ToList();
                     }
 
                     // TODO clean this up.

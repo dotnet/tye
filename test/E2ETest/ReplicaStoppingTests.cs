@@ -47,15 +47,15 @@ namespace E2ETest
         [Fact]
         public async Task MultiProjectStoppingTests()
         {
-            using var projectDirectory = CopyTestProjectDirectory("multi-project");
+            using var projectDirectory = CopyTestProjectDirectory("health-checks");
 
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-none.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             await RunHostingApplication(application, new HostOptions(), async (host, uri) =>
             {
-                var replicaToStop = host.Application.Services["frontend"].Replicas.First();
+                var replicaToStop = host.Application.Services["none"].Replicas.First();
                 Assert.Contains(replicaToStop.Value.State, startedOrHigher);
 
                 var replicasToRestart = new[] { replicaToStop.Key };

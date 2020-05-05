@@ -185,14 +185,18 @@ namespace Microsoft.Tye
 
         private static Probe GetProbeFromBuilder(ProbeBuilder builder) => new Probe()
         {
-            Http = builder.Http != null ? new HttpProbe()
+            Http = builder.Http != null ? new HttpProber()
             {
                 Path = builder.Http.Path,
                 Headers = builder.Http.Headers,
-                Timeout = TimeSpan.FromSeconds(builder.Http.Timeout)
+                Port = builder.Http.Port,
+                Protocol = builder.Http.Protocol
             } : null,
             InitialDelay = TimeSpan.FromSeconds(builder.InitialDelay),
-            Period = TimeSpan.FromSeconds(builder.Period)
+            Period = TimeSpan.FromSeconds(builder.Period),
+            Timeout = TimeSpan.FromSeconds(builder.Timeout),
+            SuccessThreshold = builder.SuccessThreshold,
+            FailureThreshold = builder.FailureThreshold
         };
     }
 }

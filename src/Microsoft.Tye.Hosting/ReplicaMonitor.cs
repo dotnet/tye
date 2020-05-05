@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Net.Http;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -127,21 +128,41 @@ namespace Microsoft.Tye.Hosting
                     return;
                 }
 
-                _livenessProber = new HttpProber(_replica, probe, probe.Http);
+                _livenessProber = new HttpProber(_replica, "liveness", probe, probe.Http, _logger);
+
+                var failureThreshold = probe.FailureThreshold;
+                var failures = 0;
+                var dead = false;
 
                 _livenessProberObserver = _livenessProber.ProbeResults.Subscribe(entry =>
                 {
-                    (var currentState, _) = ReadCurrentState();
-                    switch ((entry, currentState, moveToOnSuccess))
+                    if (dead)
                     {
-                        case (false, _, _):
+                        return;
+                    }
+
+                    if (entry)
+                    {
+                        // Reset failures count on success
+                        failures = 0;
+                    }
+
+                    (var currentState, _) = ReadCurrentState();
+                    var failuresPastThreshold = failures >= failureThreshold;
+                    switch ((entry, currentState, moveToOnSuccess, failuresPastThreshold))
+                    {
+                        case (false, _, _, true):
+                            dead = true;
                             Kill();
                             break;
-                        case (true, ReplicaState.Started, ReplicaState.Ready):
-                        case (true, ReplicaState.Healthy, ReplicaState.Ready):
+                        case (false, _, _, false):
+                            Interlocked.Increment(ref failures);
+                            break;
+                        case (true, ReplicaState.Started, ReplicaState.Ready, _):
+                        case (true, ReplicaState.Healthy, ReplicaState.Ready, _):
                             MoveToReady();
                             break;
-                        case (true, ReplicaState.Started, ReplicaState.Healthy):
+                        case (true, ReplicaState.Started, ReplicaState.Healthy, _):
                             MoveToHealthy(from: ReplicaState.Started);
                             break;
                     }
@@ -159,18 +180,43 @@ namespace Microsoft.Tye.Hosting
                     return;
                 }
 
-                _readinessProber = new HttpProber(_replica, probe, probe.Http);
+                _readinessProber = new HttpProber(_replica, "readiness", probe, probe.Http, _logger);
+
+                var successThreshold = probe.SuccessThreshold;
+                var failureThreshold = probe.FailureThreshold;
+
+                var successes = 0;
+                var failures = 0;
 
                 _readinessProberObserver = _readinessProber.ProbeResults.Subscribe(entry =>
                 {
-                    (var currentState, _) = ReadCurrentState();
-                    switch ((entry, currentState))
+                    if (entry)
                     {
-                        case (false, ReplicaState.Ready):
+                        // Reset failures count on success
+                        failures = 0;
+                    }
+                    else
+                    {
+                        // Reset successes count on failure
+                        successes = 0;
+                    }
+
+                    (var currentState, _) = ReadCurrentState();
+                    var successesPastThreshold = successes >= successThreshold;
+                    var failuresPastThreshold = failures >= failureThreshold;
+                    switch ((entry, currentState, failuresPastThreshold, successesPastThreshold))
+                    {
+                        case (false, ReplicaState.Ready, true, _):
                             MoveToHealthy(from: ReplicaState.Ready);
                             break;
-                        case (true, ReplicaState.Healthy):
+                        case (false, ReplicaState.Ready, false, _):
+                            Interlocked.Increment(ref failures);
+                            break;
+                        case (true, ReplicaState.Healthy, _, true):
                             MoveToReady();
+                            break;
+                        case (true, ReplicaState.Healthy, _, false):
+                            Interlocked.Increment(ref successes);
                             break;
                     }
                 });
@@ -251,21 +297,33 @@ namespace Microsoft.Tye.Hosting
             }
 
             private ReplicaStatus _replica;
+            private ReplicaBinding? _selectedBinding;
+            private string _probeName;
             private Probe _probe;
-            private HttpProbe _httpProbeSettings;
+            private Model.HttpProber _httpProberSettings;
 
             private Timer _probeTimer;
             private CancellationTokenSource _cts;
 
-            public HttpProber(ReplicaStatus replica, Probe probe, HttpProbe httpProbeSettings)
+            private ILogger _logger;
+
+            private bool _lastStatus;
+
+            public HttpProber(ReplicaStatus replica, string probeName, Probe probe, Model.HttpProber httpProberSettings, ILogger logger)
                 : base()
             {
                 _replica = replica;
+                _selectedBinding = null;
+                _probeName = probeName;
                 _probe = probe;
-                _httpProbeSettings = httpProbeSettings;
+                _httpProberSettings = httpProberSettings;
 
                 _probeTimer = new Timer(DoProbe, null, Timeout.Infinite, Timeout.Infinite);
                 _cts = new CancellationTokenSource();
+
+                _logger = logger;
+
+                _lastStatus = true;
             }
 
             private void DoProbe(object? state)
@@ -283,31 +341,35 @@ namespace Microsoft.Tye.Hosting
 
                 try
                 {
-                    //TOOD: port selection
-                    foreach (var binding in _replica.Bindings)
+                    var protocol = _selectedBinding.Protocol;
+                    var address = $"{protocol}://localhost:{_selectedBinding.Port}{_httpProberSettings.Path}";
+
+                    using var timeoutCts = new CancellationTokenSource(_probe.Timeout);
+                    var req = new HttpRequestMessage(HttpMethod.Get, address);
+                    foreach (var header in _httpProberSettings.Headers)
                     {
-                        var protocol = binding.Protocol ?? "http";
-                        var address = $"{protocol}://localhost:{binding.Port}{_httpProbeSettings.Path}";
-
-                        var req = new HttpRequestMessage(HttpMethod.Get, address);
-                        foreach (var header in _httpProbeSettings.Headers)
-                        {
-                            req.Headers.Add(header.Key, header.Value.ToString());
-                        }
-
-                        var res = await _httpClient.SendAsync(req);
-                        if (!res.IsSuccessStatusCode)
-                        {
-                            ProbeResults.OnNext(false);
-                            return;
-                        }
+                        req.Headers.Add(header.Key, header.Value.ToString());
                     }
 
-                    ProbeResults.OnNext(true);
+                    var res = await _httpClient.SendAsync(req, timeoutCts.Token);
+                    if (!res.IsSuccessStatusCode)
+                    {
+                        ShowWarning($"replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to a failed status ({res.StatusCode})");
+                        Send(false);
+                        return;
+                    }
+
+                    Send(true);
                 }
-                catch (HttpRequestException)
+                catch (HttpRequestException ex)
                 {
-                    ProbeResults.OnNext(false);
+                    ShowWarning($"replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to an http exception", ex);
+                    Send(false);
+                }
+                catch (TaskCanceledException)
+                {
+                    ShowWarning($"replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to timeout");
+                    Send(false);
                 }
                 finally
                 {
@@ -321,8 +383,48 @@ namespace Microsoft.Tye.Hosting
                 }
             }
 
+            private void Send(bool status)
+            {
+                ProbeResults.OnNext(status);
+                _lastStatus = status;
+            }
+
+            private void ShowWarning(string message, Exception? ex = null)
+            {
+                if (!_lastStatus)
+                {
+                    return;
+                }
+
+                if (ex != null)
+                {
+                    _logger.LogWarning(ex, message);
+                }
+                else
+                {
+                    _logger.LogWarning(message);
+                }
+            }
+
             public override void Start()
             {
+                Func<ReplicaBinding, bool> bindingClosure = (_httpProberSettings.Port.HasValue, _httpProberSettings.Protocol != null) switch
+                {
+                    (false, false) => _ => true,
+                    (true, false) => r => r.ExternalPort == _httpProberSettings.Port!.Value,
+                    (false, true) => r => r.Protocol == _httpProberSettings.Protocol!,
+                    (true, true) => r => r.ExternalPort == _httpProberSettings.Port!.Value && r.Protocol == _httpProberSettings.Protocol!
+                };
+
+                var selectedBindings = _replica.Bindings.Where(bindingClosure);
+                if (selectedBindings.Count() == 0)
+                {
+                    _logger.LogWarning($"no suitable binding was found for replica {_replica.Name} for probe '{_probeName}'");
+                    return;
+                }
+
+                _selectedBinding = selectedBindings.First();
+
                 try
                 {
                     _probeTimer.Change(_probe.InitialDelay, Timeout.InfiniteTimeSpan);

@@ -141,6 +141,9 @@
   <data name="MultipleBindingWithSamePort" xml:space="preserve">
     <value>Cannot have multiple {0} bindings with the same port.</value>
   </data>
+    <data name="ProberRequired" xml:space="preserve">
+        <value>A prober must be configured for the {0} probe.</value>
+    </data>
   <data name="MustBeABoolean" xml:space="preserve">
     <value>"{value}" must be a boolean value (true/false).</value>
   </data>
@@ -150,6 +153,9 @@
   <data name="MustBePositive" xml:space="preserve">
     <value>"{value}" value cannot be negative.</value>
   </data>
+    <data name="MustBeGreaterThanZero" xml:space="preserve">
+        <value>"{value}" value must be greater than zero.</value>
+    </data>
   <data name="ProjectImageExecutableExclusive" xml:space="preserve">
     <value>Cannot have both "{0}" and "{1}" set for a service. Only one of project, image, and executable can be set for a given service.</value>
   </data>
