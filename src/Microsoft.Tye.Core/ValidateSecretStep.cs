@@ -55,7 +55,7 @@ namespace Microsoft.Tye
 
                     // If namespace is null, set it to default
                     config.Namespace ??= "default";
-                    
+
                     var kubernetes = new Kubernetes(config);
 
                     try

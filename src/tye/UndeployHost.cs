@@ -38,7 +38,7 @@ namespace Microsoft.Tye
             var config = KubernetesClientConfiguration.BuildDefaultConfig();
 
             var kubernetes = new Kubernetes(config);
-            
+
             // If namespace is null, set it to default
             config.Namespace ??= "default";
 
