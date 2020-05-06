@@ -622,6 +622,38 @@ services:
             });
         }
 
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task DockerFileTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("dockerfile");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var frontendUri = await GetServiceUrl(client, uri, "frontend");
+                var backendUri = await GetServiceUrl(client, uri, "backend");
+
+                var backendResponse = await client.GetAsync(backendUri);
+                var frontendResponse = await client.GetAsync(frontendUri);
+
+                Assert.True(backendResponse.IsSuccessStatusCode);
+                Assert.True(frontendResponse.IsSuccessStatusCode);
+            });
+        }
+
         private async Task<string> GetServiceUrl(HttpClient client, Uri uri, string serviceName)
         {
             var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceName}");

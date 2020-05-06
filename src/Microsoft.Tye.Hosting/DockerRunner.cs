@@ -195,6 +195,22 @@ namespace Microsoft.Tye.Hosting
             var volumes = "";
             var workingDirectory = docker.WorkingDirectory != null ? $"-w {docker.WorkingDirectory}" : "";
             var hostname = "host.docker.internal";
+            var dockerImage = docker.Image ?? service.Description.Name;
+
+            if (docker.DockerFile != null)
+            {
+                // Build docker image first.
+                // TODO replace version
+                var exitCode = await ProcessUtil.RunAsync(
+                    $"docker",
+                    $"build \"{docker.DockerFile.DirectoryName}\" -t {dockerImage} -f \"{docker.DockerFile}\"",
+                    docker.WorkingDirectory);
+
+                if (exitCode.ExitCode != 0)
+                {
+                    throw new CommandException("'docker build' failed.");
+                }
+            }
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
@@ -297,7 +313,7 @@ namespace Microsoft.Tye.Hosting
                     }
                 }
 
-                var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {docker.Image} {docker.Args ?? ""}";
+                var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {dockerImage} {docker.Args ?? ""}";
 
                 _logger.LogInformation("Running image {Image} for {Replica}", docker.Image, replica);
 

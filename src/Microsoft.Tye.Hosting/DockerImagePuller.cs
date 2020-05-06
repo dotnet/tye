@@ -24,7 +24,7 @@ namespace Microsoft.Tye.Hosting
 
             foreach (var s in application.Services)
             {
-                if (s.Value.Description.RunInfo is DockerRunInfo docker)
+                if (s.Value.Description.RunInfo is DockerRunInfo docker && docker.DockerFile == null)
                 {
                     images.Add(docker.Image);
                 }
