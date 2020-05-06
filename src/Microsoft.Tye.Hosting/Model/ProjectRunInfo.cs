@@ -24,6 +24,8 @@ namespace Microsoft.Tye.Hosting.Model
             RunCommand = project.RunCommand;
             RunArguments = project.RunArguments;
             PublishOutputPath = project.PublishDir;
+            ContainerBaseImage = project.ContainerInfo.BaseImageName;
+            ContainerBaseTag = project.ContainerInfo.BaseImageTag;
         }
 
         public Dictionary<string, string> BuildProperties { get; } = new Dictionary<string, string>();
@@ -45,6 +47,9 @@ namespace Microsoft.Tye.Hosting.Model
 
         public string RunCommand { get; }
         public string RunArguments { get; }
+
+        public string ContainerBaseTag { get; set; } = default!;
+        public string ContainerBaseImage { get; set; } = default!;
 
         // This exists for running projects as containers
         public List<DockerVolume> VolumeMappings { get; } = new List<DockerVolume>();

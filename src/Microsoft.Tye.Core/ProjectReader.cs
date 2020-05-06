@@ -268,6 +268,10 @@ namespace Microsoft.Tye
             project.Frameworks.AddRange(sharedFrameworks.Select(s => new Framework(s)));
             output.WriteDebugLine($"Found shared frameworks: {string.Join(", ", sharedFrameworks)}");
 
+            // determine container base image
+            project.ContainerInfo.BaseImageName = projectInstance.GetPropertyValue("ContainerBaseImage");
+            project.ContainerInfo.BaseImageTag = projectInstance.GetPropertyValue("ContainerBaseTag");
+
             bool PropertyIsTrue(string property)
             {
                 return projectInstance.GetPropertyValue(property) is string s && !string.IsNullOrEmpty(s) && bool.Parse(s);

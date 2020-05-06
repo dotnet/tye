@@ -86,7 +86,9 @@ namespace Microsoft.Tye.Hosting
 
         private static string DetermineContainerImage(ProjectRunInfo project)
         {
-            return $"mcr.microsoft.com/dotnet/core/sdk:{project.TargetFrameworkVersion}";
+            var baseImage = string.IsNullOrEmpty(project.ContainerBaseImage) ? "mcr.microsoft.com/dotnet/core/sdk" : project.ContainerBaseImage;
+            var imageTag = string.IsNullOrEmpty(project.ContainerBaseTag) ? project.TargetFrameworkVersion : project.ContainerBaseTag;
+            return $"{baseImage}:{imageTag}";
         }
 
         public Task StopAsync(Application application)

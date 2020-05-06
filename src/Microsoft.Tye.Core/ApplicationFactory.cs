@@ -96,11 +96,11 @@ namespace Microsoft.Tye
                         }
                         project.Replicas = configService.Replicas ?? 1;
 
-                        await ProjectReader.ReadProjectDetailsAsync(output, project);
-
                         // We don't apply more container defaults here because we might need
                         // to prompt for the registry name.
                         project.ContainerInfo = new ContainerInfo() { UseMultiphaseDockerfile = false, };
+
+                        await ProjectReader.ReadProjectDetailsAsync(output, project);
 
                         // Do k8s by default.
                         project.ManifestInfo = new KubernetesManifestInfo();
