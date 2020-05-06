@@ -165,10 +165,10 @@ namespace E2ETest
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
-            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/sdk:{project.TargetFrameworkVersion}");
+            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}");
             container.Volumes.Add(new VolumeBuilder(project.PublishDir, name: null, target: "/app"));
             container.Args = $"dotnet /app/{outputFileName} {project.Args}";
-            container.Bindings.AddRange(project.Bindings);
+            container.Bindings.AddRange(project.Bindings.Where(b => b.Protocol != "https"));
 
             await ProcessUtil.RunAsync("dotnet", $"publish \"{project.ProjectFile.FullName}\" /nologo", outputDataReceived: _sink.WriteLine, errorDataReceived: _sink.WriteLine);
             application.Services.Add(container);
@@ -209,11 +209,12 @@ namespace E2ETest
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
-            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/sdk:{project.TargetFrameworkVersion}");
+            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}");
             container.Dependencies.UnionWith(project.Dependencies);
             container.Volumes.Add(new VolumeBuilder(project.PublishDir, name: null, target: "/app"));
             container.Args = $"dotnet /app/{outputFileName} {project.Args}";
-            container.Bindings.AddRange(project.Bindings);
+            // We're not setting up the dev cert here
+            container.Bindings.AddRange(project.Bindings.Where(b => b.Protocol != "https"));
 
             await ProcessUtil.RunAsync("dotnet", $"publish \"{project.ProjectFile.FullName}\" /nologo", outputDataReceived: _sink.WriteLine, errorDataReceived: _sink.WriteLine);
             application.Services.Add(container);

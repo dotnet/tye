@@ -2,22 +2,25 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
 {
-    using System.Linq;
-
     public class TransformProjectsIntoContainers : IApplicationProcessor
     {
         private readonly ILogger _logger;
+        private Lazy<TempDirectory> _certificateDirectory;
 
         public TransformProjectsIntoContainers(ILogger logger)
         {
             _logger = logger;
+            _certificateDirectory = new Lazy<TempDirectory>(() => TempDirectory.Create());
         }
 
         public Task StartAsync(Application application)
@@ -80,18 +83,84 @@ namespace Microsoft.Tye.Hosting
             // Make volume mapping works when running as a container
             dockerRunInfo.VolumeMappings.AddRange(project.VolumeMappings);
 
+            // This is .NET specific
+            var userSecretStore = GetUserSecretsPathFromSecrets();
+
+            if (!string.IsNullOrEmpty(userSecretStore))
+            {
+                // Map the user secrets on this drive to user secrets
+                dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: userSecretStore, name: null, target: "/root/.microsoft/usersecrets:ro"));
+            }
+
+            // Default to development environment
+            serviceDescription.Configuration.Add(new EnvironmentVariable("DOTNET_ENVIRONMENT", "Development"));
+
+            // Remove the color codes from the console output
+            serviceDescription.Configuration.Add(new EnvironmentVariable("DOTNET_LOGGING__CONSOLE__DISABLECOLORS", "true"));
+
+            if (project.IsAspNet)
+            {
+                serviceDescription.Configuration.Add(new EnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development"));
+                serviceDescription.Configuration.Add(new EnvironmentVariable("ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS", "true"));
+            }
+
+            // If we have an https binding then export the dev cert and mount the volume into the container
+            if (serviceDescription.Bindings.Any(b => string.Equals(b.Protocol, "https", StringComparison.OrdinalIgnoreCase)))
+            {
+                // We export the developer certificate from this machine
+                var certPassword = Guid.NewGuid().ToString();
+                var certificateDirectory = _certificateDirectory.Value;
+                var certificateFilePath = Path.Combine(certificateDirectory.DirectoryPath, project.AssemblyName + ".pfx");
+                await ProcessUtil.RunAsync("dotnet", $"dev-certs https -ep {certificateFilePath} -p {certPassword}");
+                serviceDescription.Configuration.Add(new EnvironmentVariable("Kestrel__Certificates__Development__Password", certPassword));
+
+                // Certificate Path: https://github.com/dotnet/aspnetcore/blob/a9d702624a02ad4ebf593d9bf9c1c69f5702a6f5/src/Servers/Kestrel/Core/src/KestrelConfigurationLoader.cs#L419
+                dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: certificateDirectory.DirectoryPath, name: null, target: "/root/.aspnet/https:ro"));
+            }
+
             // Change the project into a container info
             serviceDescription.RunInfo = dockerRunInfo;
         }
 
         private static string DetermineContainerImage(ProjectRunInfo project)
         {
-            return $"mcr.microsoft.com/dotnet/core/sdk:{project.TargetFrameworkVersion}";
+            var baseImage = project.IsAspNet ? "mcr.microsoft.com/dotnet/core/aspnet" : "mcr.microsoft.com/dotnet/core/runtime";
+
+            return $"{baseImage}:{project.TargetFrameworkVersion}";
         }
 
         public Task StopAsync(Application application)
         {
+            if (_certificateDirectory.IsValueCreated)
+            {
+                _certificateDirectory.Value.Dispose();
+            }
+
             return Task.CompletedTask;
+        }
+
+        private static string? GetUserSecretsPathFromSecrets()
+        {
+            // This is the logic used to determine the user secrets path
+            // See https://github.com/dotnet/extensions/blob/64140f90157fec1bfd8aeafdffe8f30308ccdf41/src/Configuration/Config.UserSecrets/src/PathHelper.cs#L27
+            const string userSecretsFallbackDir = "DOTNET_USER_SECRETS_FALLBACK_DIR";
+
+            // For backwards compat, this checks env vars first before using Env.GetFolderPath
+            var appData = Environment.GetEnvironmentVariable("APPDATA");
+            var root = appData                                                                   // On Windows it goes to %APPDATA%\Microsoft\UserSecrets\
+                       ?? Environment.GetEnvironmentVariable("HOME")                             // On Mac/Linux it goes to ~/.microsoft/usersecrets/
+                       ?? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
+                       ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+                       ?? Environment.GetEnvironmentVariable(userSecretsFallbackDir);            // this fallback is an escape hatch if everything else fails
+
+            if (string.IsNullOrEmpty(root))
+            {
+                return null;
+            }
+
+            return !string.IsNullOrEmpty(appData)
+                ? Path.Combine(root, "Microsoft", "UserSecrets")
+                : Path.Combine(root, ".microsoft", "usersecrets");
         }
     }
 }
