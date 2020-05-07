@@ -341,7 +341,7 @@ namespace Microsoft.Tye.Hosting
 
                 try
                 {
-                    var protocol = _selectedBinding.Protocol;
+                    var protocol = _selectedBinding!.Protocol;
                     var address = $"{protocol}://localhost:{_selectedBinding.Port}{_httpProberSettings.Path}";
 
                     using var timeoutCts = new CancellationTokenSource(_probe.Timeout);

@@ -288,7 +288,7 @@ namespace E2ETest
 
             Assert.Equal(randomReplicaPort3, randomReplicaPort2);
         }
-        
+
         [Fact]
         public async Task IngressShouldNotProxyToNonReadyReplicasTests()
         {
@@ -306,7 +306,7 @@ namespace E2ETest
             SetReplicasInitialState(host, true, true);
 
             await StartHostAndWaitForReplicasToStart(host, new[] { "ingress-svc" }, ReplicaState.Ready);
-            
+
             var replicasToBecomeReady = host.Application.Services["ingress-svc"].Replicas.Select(r => r.Value).ToList();
             var ingressBinding = host.Application.Services.First(s => s.Value.Description.RunInfo is IngressRunInfo).Value.Description.Bindings.First();
             var uniqueIdUrl = $"{ingressBinding.Protocol}://localhost:{ingressBinding.Port}/api/id";
@@ -317,28 +317,28 @@ namespace E2ETest
             var firstReplica = replicasToBecomeReady.First();
             var secondReplica = replicasToBecomeReady.Skip(1).First();
 
-            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] {firstReplica.Name}.ToHashSet(), null, TimeSpan.Zero, async _ =>
-            {
-                await SetHealthyReadyInReplica(firstReplica, ready: false);
-            });
+            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] { firstReplica.Name }.ToHashSet(), null, TimeSpan.Zero, async _ =>
+              {
+                  await SetHealthyReadyInReplica(firstReplica, ready: false);
+              });
 
             uniqueIds = await ProbeNumberOfUniqueReplicas(uniqueIdUrl);
             Assert.Equal(1, uniqueIds);
-            
-            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] {secondReplica.Name}.ToHashSet(), null, TimeSpan.Zero, async _ =>
-            {
-                await SetHealthyReadyInReplica(secondReplica, ready: false);
-            });
-            
+
+            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] { secondReplica.Name }.ToHashSet(), null, TimeSpan.Zero, async _ =>
+              {
+                  await SetHealthyReadyInReplica(secondReplica, ready: false);
+              });
+
             var res = await _client.GetAsync(uniqueIdUrl);
             Assert.Equal(HttpStatusCode.BadGateway, res.StatusCode);
-            
-            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Ready, 2, new[] {firstReplica.Name, secondReplica.Name}.ToHashSet(), null, TimeSpan.Zero, async _ =>
-            {
-                await SetHealthyReadyInReplica(firstReplica, ready: true);
-                await SetHealthyReadyInReplica(secondReplica, ready: true);
-            });
-            
+
+            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Ready, 2, new[] { firstReplica.Name, secondReplica.Name }.ToHashSet(), null, TimeSpan.Zero, async _ =>
+              {
+                  await SetHealthyReadyInReplica(firstReplica, ready: true);
+                  await SetHealthyReadyInReplica(secondReplica, ready: true);
+              });
+
             uniqueIds = await ProbeNumberOfUniqueReplicas(uniqueIdUrl);
             Assert.Equal(2, uniqueIds);
         }

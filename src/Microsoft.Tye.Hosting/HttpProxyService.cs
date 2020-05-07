@@ -186,7 +186,7 @@ namespace Microsoft.Tye.Hosting
                     disposable.Dispose();
                 }
             }
-            
+
             foreach (var webApp in _webApplications)
             {
                 try
@@ -203,7 +203,7 @@ namespace Microsoft.Tye.Hosting
                 }
             }
         }
-        
+
         private void RegisterListener(Service service)
         {
             if (!service.Items.ContainsKey(typeof(Subscription)))
