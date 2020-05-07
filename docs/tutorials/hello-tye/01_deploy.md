@@ -133,6 +133,20 @@ Tye has a optional configuration file (`tye.yaml`) to allow customizing settings
 
     > :question: This step may not make much sense if you're using `tye.yaml` to store a personal Dockerhub username. A more typical use case would storing the name of a private registry for use in a CI/CD system.
 
+## Undeploying the application
+
+After deploying and playing around with the application, you may want to remove all resources associated from the Kubernetes cluster. You can remove resources by running:
+
+```text
+tye undeploy
+```
+
+This will remove all deployed resources. If you'd like to see what resources would be deleted, you can run:
+
+```text
+tye undeploy --what-if
+```
+
 ## Next Steps
 
 Now that you are able to deploy an application to Kubernetes, learn how to add a non-project dependency to tye with [the next step (add Redis)](02_add_redis.md).

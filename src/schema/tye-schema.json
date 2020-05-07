@@ -17,6 +17,25 @@
             "description": "The Kubernetes namespace to use.",
             "type": "string"
         },
+        "network": {
+            "description": "The Docker network to use.",
+            "type": "string"
+        },
+        "ingress": {
+            "description": "The application's ingresses.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "$ref": "#/definitions/ingress"
+            }
+        },
+        "extensions": {
+            "description": "Extensions to be added to tye.",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/extension"
+            }
+        },
         "services": {
             "description": "The application's services.",
             "type": "array",
@@ -286,6 +305,66 @@
                 "name"
             ]
         },
+        "ingress": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "The ingress name.",
+                    "type": "string"
+                },
+                "bindings": {
+                    "description": "Bindings for the ingress in local development.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ingress-binding"
+                    }
+                },
+                "rules": {
+                    "description": "Rules for ingress routing.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ingress-rule"
+                    }
+                }
+            }
+        },
+        "ingress-binding": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "The binding name.",
+                    "type": "string"
+                },
+                "port": {
+                    "description": "The binding port.",
+                    "type": "integer"
+                },
+                "protocol": {
+                    "description": "The protocol used by the binding",
+                    "type": "string"
+                }
+            }
+        },
+        "ingress-rule": {
+            "type": "object",
+            "properties": {
+                "service": {
+                    "description": "The service to route traffic when the rule matches.",
+                    "type": "string"
+                },
+                "path": {
+                    "description": "The path prefix to match.",
+                    "type": "string"
+                },
+                "host": {
+                    "description": "The hostname to match.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "service"
+            ]
+        },
         "project": {
             "type": "object",
             "properties": {
@@ -334,6 +413,19 @@
             "required": [
                 "name",
                 "project"
+            ]
+        },
+        "extension":
+        {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "Extension name.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name"
             ]
         }
     }
