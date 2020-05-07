@@ -144,6 +144,9 @@
     <data name="ProberRequired" xml:space="preserve">
         <value>A prober must be configured for the {0} probe.</value>
     </data>
+    <data name="SuccessThresholdMustBeOne" xml:space="preserve">
+        <value>successThreshold for {0} probe must be one.</value>
+    </data>
   <data name="MustBeABoolean" xml:space="preserve">
     <value>"{value}" must be a boolean value (true/false).</value>
   </data>
