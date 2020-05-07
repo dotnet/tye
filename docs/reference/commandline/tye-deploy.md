@@ -27,6 +27,12 @@ The `tye deploy` command will deploy an application to Kubernetes. `tye deploy` 
 
 > :bulb: Use `kubectl config view --minify --output 'jsonpath={..namespace}'` to view the current namespace.
 
+> :warning: The `tye deploy` command requires access to a remote container registry. Images will be tagged using the registry configured in `tye.yaml` (if present), or using a registry supplied interactively at the command line. 
+
+> :bulb: The `tye deploy` command uses Docker's credentials for pushing to the remote container registry. Make sure Docker is configured to push to your registry before running `tye deploy`.
+
+> :bulb: The `tye deploy` command uses your local Kubernetes context to access the Kubernetes cluster. Make sure `kubectl` is configured to manage your cluster before running `tye deploy`.
+
 ## Arguments
 
 `PATH`
@@ -68,7 +74,7 @@ If a directory path is specified, `tye deploy` will default to using these files
 - Deploy an application with interactive input:
 
     ```text
-    tye run --interactive
+    tye deploy --interactive
     ```
 
 - Deploy an application, increasing log verbosity to Debug.
