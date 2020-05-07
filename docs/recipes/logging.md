@@ -1,7 +1,5 @@
 # Logging with Elastic stack
 
-> :warning: This recipe refers to features that are only available in our CI builds at the moment. These features will be part of the 0.2 release on nuget.org "soon".
-
 Elastic stack (aka ELK) is a popular log-aggregation system that gives you a powerful log search and dashboard engine with views across all of your services.
 
 Tye can push logs to Elastic stack easily without the need for any SDKs or code changes in your services.
