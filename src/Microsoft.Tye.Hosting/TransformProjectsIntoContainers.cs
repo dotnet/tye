@@ -75,7 +75,8 @@ namespace Microsoft.Tye.Hosting
             var outputFileName = project.AssemblyName + ".dll";
             var dockerRunInfo = new DockerRunInfo(containerImage, $"dotnet {outputFileName} {project.Args}")
             {
-                WorkingDirectory = "/app"
+                WorkingDirectory = "/app",
+                IsAspNet = project.IsAspNet
             };
 
             dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: project.PublishOutputPath, name: null, target: "/app"));
