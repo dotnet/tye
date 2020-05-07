@@ -5,7 +5,7 @@ services:
 - name: backend
   dockerFile: backend/Dockerfile
   bindings:
-    - port: 8002
+    - containerPort: 80
       protocol: http
 - name: frontend
   project: frontend/frontend.csproj
