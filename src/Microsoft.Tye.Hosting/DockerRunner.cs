@@ -229,15 +229,6 @@ namespace Microsoft.Tye.Hosting
                 hostname = addresses[0].ToString();
             }
 
-            // This is .NET specific
-            var userSecretStore = GetUserSecretsPathFromSecrets();
-
-            if (!string.IsNullOrEmpty(userSecretStore))
-            {
-                // Map the user secrets on this drive to user secrets
-                docker.VolumeMappings.Add(new DockerVolume(source: userSecretStore, name: null, target: "/root/.microsoft/usersecrets:ro"));
-            }
-
             var dockerInfo = new DockerInformation(new Task[service.Description.Replicas]);
 
             async Task RunDockerContainer(IEnumerable<(int ExternalPort, int Port, int? ContainerPort, string? Protocol)> ports)
@@ -250,15 +241,7 @@ namespace Microsoft.Tye.Hosting
 
                 service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
 
-                var environment = new Dictionary<string, string>
-                {
-                    // Default to development environment
-                    ["DOTNET_ENVIRONMENT"] = "Development",
-                    ["ASPNETCORE_ENVIRONMENT"] = "Development",
-                    // Remove the color codes from the console output
-                    ["DOTNET_LOGGING__CONSOLE__DISABLECOLORS"] = "true",
-                    ["ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS"] = "true"
-                };
+                var environment = new Dictionary<string, string>();
 
                 var portString = "";
 
@@ -271,16 +254,19 @@ namespace Microsoft.Tye.Hosting
                     // 1. Tell the docker container what port to bind to
                     portString = docker.Private ? "" : string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.ContainerPort ?? p.Port}"));
 
-                    // 2. Configure ASP.NET Core to bind to those same ports
-                    environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://*:{p.ContainerPort ?? p.Port}"));
-
-                    // Set the HTTPS port for the redirect middleware
-                    foreach (var p in ports)
+                    if (docker.IsAspNet)
                     {
-                        if (string.Equals(p.Protocol, "https", StringComparison.OrdinalIgnoreCase))
+                        // 2. Configure ASP.NET Core to bind to those same ports
+                        environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://*:{p.ContainerPort ?? p.Port}"));
+
+                        // Set the HTTPS port for the redirect middleware
+                        foreach (var p in ports)
                         {
-                            // We need to set the redirect URL to the exposed port so the redirect works cleanly
-                            environment["HTTPS_PORT"] = p.ExternalPort.ToString();
+                            if (string.Equals(p.Protocol, "https", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // We need to set the redirect URL to the exposed port so the redirect works cleanly
+                                environment["HTTPS_PORT"] = p.ExternalPort.ToString();
+                            }
                         }
                     }
 
@@ -385,6 +371,8 @@ namespace Microsoft.Tye.Hosting
 
                 _logger.LogInformation("Collecting docker logs for {ContainerName}.", replica);
 
+                var backOff = TimeSpan.FromSeconds(5);
+
                 while (!dockerInfo.StoppingTokenSource.Token.IsCancellationRequested)
                 {
                     var logsRes = await ProcessUtil.RunAsync("docker", $"logs -f {containerId}",
@@ -403,13 +391,15 @@ namespace Microsoft.Tye.Hosting
                         try
                         {
                             // Avoid spamming logs if restarts are happening
-                            await Task.Delay(5000, dockerInfo.StoppingTokenSource.Token);
+                            await Task.Delay(backOff, dockerInfo.StoppingTokenSource.Token);
                         }
                         catch (OperationCanceledException)
                         {
                             break;
                         }
                     }
+
+                    backOff *= 2;
                 }
 
                 _logger.LogInformation("docker logs collection for {ContainerName} complete with exit code {ExitCode}", replica, result.ExitCode);
@@ -526,30 +516,6 @@ namespace Microsoft.Tye.Hosting
             }
 
             return Task.CompletedTask;
-        }
-
-        private static string? GetUserSecretsPathFromSecrets()
-        {
-            // This is the logic used to determine the user secrets path
-            // See https://github.com/dotnet/extensions/blob/64140f90157fec1bfd8aeafdffe8f30308ccdf41/src/Configuration/Config.UserSecrets/src/PathHelper.cs#L27
-            const string userSecretsFallbackDir = "DOTNET_USER_SECRETS_FALLBACK_DIR";
-
-            // For backwards compat, this checks env vars first before using Env.GetFolderPath
-            var appData = Environment.GetEnvironmentVariable("APPDATA");
-            var root = appData                                                                   // On Windows it goes to %APPDATA%\Microsoft\UserSecrets\
-                       ?? Environment.GetEnvironmentVariable("HOME")                             // On Mac/Linux it goes to ~/.microsoft/usersecrets/
-                       ?? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
-                       ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
-                       ?? Environment.GetEnvironmentVariable(userSecretsFallbackDir);            // this fallback is an escape hatch if everything else fails
-
-            if (string.IsNullOrEmpty(root))
-            {
-                return null;
-            }
-
-            return !string.IsNullOrEmpty(appData)
-                ? Path.Combine(root, "Microsoft", "UserSecrets")
-                : Path.Combine(root, ".microsoft", "usersecrets");
         }
 
         private class DockerInformation
