@@ -25,7 +25,7 @@ namespace Microsoft.Tye.Hosting.Model
 
         public string? Args { get; }
 
-        public string Image { get; }
+        public string? Image { get; }
 
         public FileInfo? DockerFile { get; set; }
 
