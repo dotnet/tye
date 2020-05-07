@@ -13,6 +13,10 @@
             "description": "Dockerhub username or hostname of remote registry. Used for tagging images.",
             "type": "string"
         },
+        "namespace": {
+            "description": "The Kubernetes namespace to use.",
+            "type": "string"
+        },
         "services": {
             "description": "The application's services.",
             "type": "array",
