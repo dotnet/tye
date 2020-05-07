@@ -111,7 +111,8 @@ namespace Microsoft.Tye
                         {
                             Args = configService.Args,
                             Replicas = configService.Replicas ?? 1,
-                            DockerFile = configService.DockerFile != null ? Path.Combine(source.DirectoryName, configService.DockerFile) : null
+                            DockerFile = configService.DockerFile != null ? Path.Combine(source.DirectoryName, configService.DockerFile) : null,
+                            DockerFileContext = configService.DockerFileContext != null ? Path.Combine(source.DirectoryName, configService.DockerFileContext) : null
                         };
                         service = container;
                     }

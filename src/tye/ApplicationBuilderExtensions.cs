@@ -47,9 +47,13 @@ namespace Microsoft.Tye
                 {
                     var dockerRunInfo = new DockerRunInfo(container.Image, container.Args);
 
-                    if (container.DockerFile != null)
+                    if (!string.IsNullOrEmpty(container.DockerFile))
                     {
                         dockerRunInfo.DockerFile = new FileInfo(container.DockerFile);
+                        if (!string.IsNullOrEmpty(container.DockerFileContext))
+                        {
+                            dockerRunInfo.DockerFileContext = new FileInfo(container.DockerFileContext);
+                        }
                     }
 
                     foreach (var mapping in container.Volumes)

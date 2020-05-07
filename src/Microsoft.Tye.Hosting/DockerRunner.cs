@@ -206,13 +206,15 @@ namespace Microsoft.Tye.Hosting
 
             if (docker.DockerFile != null)
             {
-                var exitCode = await ProcessUtil.RunAsync(
+                var dockerBuildResult = await ProcessUtil.RunAsync(
                     $"docker",
-                    $"build \"{docker.DockerFile.DirectoryName}\" -t {dockerImage} -f \"{docker.DockerFile}\"",
-                    docker.WorkingDirectory);
+                    $"build \"{docker.DockerFileContext.DirectoryName ?? docker.DockerFile.DirectoryName}\" -t {dockerImage} -f \"{docker.DockerFile}\"",
+                    docker.WorkingDirectory,
+                    throwOnError: false);
 
-                if (exitCode.ExitCode != 0)
+                if (dockerBuildResult.ExitCode != 0)
                 {
+                    _logger.LogInformation("Running docker command with exception info {ExceptionStdOut} {ExceptionStdErr}", dockerBuildResult.StandardOutput, dockerBuildResult.StandardError);
                     throw new CommandException("'docker build' failed.");
                 }
             }

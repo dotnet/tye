@@ -45,6 +45,9 @@ namespace Tye.Serialization
                     case "dockerFile":
                         service.DockerFile = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "dockerFileContext":
+                        service.DockerFileContext = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     case "project":
                         service.Project = YamlParser.GetScalarValue(key, child.Value);
                         break;

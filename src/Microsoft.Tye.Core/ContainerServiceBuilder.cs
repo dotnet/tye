@@ -20,6 +20,8 @@ namespace Microsoft.Tye
 
         public string? DockerFile { get; set; }
 
+        public string? DockerFileContext { get; set; }
+
         public int Replicas { get; set; } = 1;
 
         public List<EnvironmentVariableBuilder> EnvironmentVariables { get; } = new List<EnvironmentVariableBuilder>();

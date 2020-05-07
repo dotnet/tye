@@ -653,6 +653,52 @@ services:
             });
         }
 
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task DockerFileChangeContextTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("dockerfile");
+
+             File.Move(Path.Combine(projectDirectory.DirectoryPath, "backend", "Dockerfile"), Path.Combine(projectDirectory.DirectoryPath, "Dockerfile"));
+
+            var content = @"
+name: frontend-backend
+services:
+- name: backend
+  dockerFile: Dockerfile
+  dockerFileContext: backend/
+  bindings:
+    - containerPort: 80
+      protocol: http
+- name: frontend
+  project: frontend/frontend.csproj";
+
+            var projectFile = Path.Combine(projectDirectory.DirectoryPath, "tye.yaml");
+            await File.WriteAllTextAsync(projectFile, content);
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(projectFile));
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var frontendUri = await GetServiceUrl(client, uri, "frontend");
+                var backendUri = await GetServiceUrl(client, uri, "backend");
+
+                var backendResponse = await client.GetAsync(backendUri);
+                var frontendResponse = await client.GetAsync(frontendUri);
+
+                Assert.True(backendResponse.IsSuccessStatusCode);
+                Assert.True(frontendResponse.IsSuccessStatusCode);
+            });
+        }
+
         private async Task<string> GetServiceUrl(HttpClient client, Uri uri, string serviceName)
         {
             var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceName}");
