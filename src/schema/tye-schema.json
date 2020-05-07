@@ -17,6 +17,10 @@
             "description": "The Kubernetes namespace to use.",
             "type": "string"
         },
+        "network": {
+            "description": "The Docker network to use.",
+            "type": "string"
+        },
         "services": {
             "description": "The application's services.",
             "type": "array",
