@@ -46,6 +46,7 @@ services:
 ```yaml
 name: myapplication
 registry: exampleuser
+namespace: examplenamespace
 services:
 ```
 
@@ -67,6 +68,14 @@ Allows storing the name of the container registry in configuration. This is used
 The registry could be a DockerHub username (`exampleuser`) or the hostname of a container registry (`example.azureci.io`).
 
 If this is not specified in configuration, interactive deployments will prompt for it.
+
+#### `namespace` (string)
+
+Allows configuring the Kubernetes namespace used by commands that operate on Kubernetes. If unconfigured, Tye will use the namespace of the current Kubernetes context.
+
+The namespace specified in `tye.yaml` can be overridden at the command line.
+
+> :bulb: Use `kubectl config view --minify --output 'jsonpath={..namespace}'` to view the current namespace.
 
 #### `services` (`Service[]`) *required*
 

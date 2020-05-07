@@ -7,7 +7,7 @@
 ## Synopsis 
 
 ```text
-tye undeploy [-?|-h|--help] [-i|--interactive] [-v|--verbosity <Debug|Info|Quiet>] [--what-if] [<PATH>]
+tye undeploy [-?|-h|--help] [-i|--interactive] [-n|--namespace <n>] [-v|--verbosity <Debug|Info|Quiet>] [--what-if] [<PATH>]
 ```
 
 ## Description
@@ -19,7 +19,13 @@ The `tye undeploy` command will delete a deployed application from Kubernetes. `
 - Offer a choice to delete each resource (interactive)
 - Delete each resource (if applicable)
 
-`tye undeploy` operates in the current Kubernetes namespace. Use `kubectl config view --minify --output 'jsonpath={..namespace}'` to view the current namespace.
+`tye undeploy` chooses the Kubernetes namespace to operate in according to the following priority:
+
+- The value of `--namespace` passed at the command line
+- The value of `namespace` configured in `tye.yaml` (if present)
+- The Kubernetes namespace for the current context
+
+> :bulb: Use `kubectl config view --minify --output 'jsonpath={..namespace}'` to view the current namespace.
 
 Undeploy decides which resources to delete based on the `app.kubernetes.io/part-of=...` label. This label will be set to the application name for all resources created by Tye. `tye undeploy` does not rely on the list of services in `tye.yaml` or a solution file. 
 
@@ -40,6 +46,10 @@ If a directory path is specified, `tye undeploy` will default to using these fil
 - `-i|--interactive`
 
     Does an interactive undeploy that will prompt for deletion of each resource.
+
+- `-n|--namespace`
+  
+    Specifies the Kubernetes namespace for deployment. Overrides a namespace value set in `tye.yaml`.
 
 - `-v|--verbosity <Debug|Info|Quiet>`
 
