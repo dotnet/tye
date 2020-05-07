@@ -29,6 +29,13 @@
                 "$ref": "#/definitions/ingress"
             }
         },
+        "extensions": {
+            "description": "Extensions to be added to tye.",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/extension"
+            }
+        },
         "services": {
             "description": "The application's services.",
             "type": "array",
@@ -47,6 +54,12 @@
                     },
                     {
                         "$ref": "#/definitions/project"
+                    },
+                    {
+                        "$ref": "#/definitions/repository"
+                    },
+                    {
+                        "$ref": "#/definitions/include"
                     }
                 ]
             }
@@ -109,6 +122,45 @@
             ],
             "additionalProperties": false
         },
+        "build-property": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "Build property name.",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "Build property name.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "value"
+            ],
+            "additionalProperties": false
+        },
+        "volume": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "A named volume.",
+                    "type": "string"
+                },
+                "source": {
+                    "description": "The local path.",
+                    "type": "string"
+                },
+                "target": {
+                    "description": "The destination path within the container.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "target"
+            ],
+            "additionalProperties": false
+        },
         "executable": {
             "type": "object",
             "properties": {
@@ -136,7 +188,7 @@
                     "type": "string"
                 },
                 "replicas": {
-                    "description": "Number of service replices to create.",
+                    "description": "Number of service replicas to create.",
                     "type": "integer"
                 },
                 "bindings": {
@@ -166,6 +218,40 @@
             },
             "additionalProperties": false
         },
+        "repository": {
+            "properties": {
+                "name": {
+                    "description": "The service name. Must be unique per-application.",
+                    "type": "string"
+                },
+                "repository":
+                {
+                    "description": "The repository url which will be cloned.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "repository"
+            ]
+        },
+        "include": {
+            "properties": {
+                "name": {
+                    "description": "The service name. Must be unique per-application.",
+                    "type": "string"
+                },
+                "include":
+                {
+                    "description": "Path to tye.yaml file which will be used in the application.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "include"
+            ]
+        },
         "image": {
             "type": "object",
             "properties": {
@@ -173,8 +259,23 @@
                     "description": "The service name. Must be unique per-application.",
                     "type": "string"
                 },
+                "volumes": {
+                    "description": "Volumes to mount to the container.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/volume"
+                    }
+                },
                 "image": {
                     "description": "The name of a Docker image.",
+                    "type": "string"
+                },
+                "dockerFile": {
+                    "description": "The Dockerfile to use.",
+                    "type": "string"
+                },
+                "dockerFileContext": {
+                    "description": "The Dockerfile context to run docker build on.",
                     "type": "string"
                 },
                 "env": {
@@ -189,7 +290,7 @@
                     "type": "string"
                 },
                 "replicas": {
-                    "description": "Number of service replices to create.",
+                    "description": "Number of service replicas to create.",
                     "type": "integer"
                 },
                 "bindings": {
@@ -201,8 +302,7 @@
                 }
             },
             "required": [
-                "name",
-                "image"
+                "name"
             ]
         },
         "ingress": {
@@ -283,6 +383,13 @@
                         "$ref": "#/definitions/env-var"
                     }
                 },
+                "buildProperties": {
+                    "description": "Build properties to use when launching or building a project.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/build-property"
+                    }
+                },
                 "args": {
                     "description": "Command-line arguments to use when launching.",
                     "type": "string"
@@ -292,7 +399,7 @@
                     "type": "boolean"
                 },
                 "replicas": {
-                    "description": "Number of service replices to create.",
+                    "description": "Number of service replicas to create.",
                     "type": "integer"
                 },
                 "bindings": {
@@ -306,6 +413,19 @@
             "required": [
                 "name",
                 "project"
+            ]
+        },
+        "extension":
+        {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "Extension name.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name"
             ]
         }
     }
