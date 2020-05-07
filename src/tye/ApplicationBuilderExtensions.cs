@@ -45,7 +45,10 @@ namespace Microsoft.Tye
                 }
                 else if (service is ContainerServiceBuilder container)
                 {
-                    var dockerRunInfo = new DockerRunInfo(container.Image, container.Args);
+                    var dockerRunInfo = new DockerRunInfo(container.Image, container.Args)
+                    {
+                        IsAspNet = container.IsAspNet
+                    };
 
                     if (!string.IsNullOrEmpty(container.DockerFile))
                     {
