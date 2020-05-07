@@ -1,7 +1,5 @@
 # Distributed Tracing with Zipkin
 
-> :warning: This recipe refers to features that are only available in our CI builds at the moment. These features will be part of the 0.2 release on nuget.org "soon".
-
 Distributed tracing is a key diagnostics tool in your microservices toolbelt. Distributed traces show you at a glance what operations took place across your entire application to complete some task.
 
 Zipkin is a popular open-source distributed trace storage and query system. It can show you:
