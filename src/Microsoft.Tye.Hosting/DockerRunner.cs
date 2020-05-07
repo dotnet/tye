@@ -96,7 +96,7 @@ namespace Microsoft.Tye.Hosting
 
             if (!string.IsNullOrEmpty(application.Network))
             {
-                var dockerNetworkResult = await ProcessUtil.RunAsync("docker", $"network ls --filter \"name={application.Network}\" --format \"{{{{.ID}}}}\"");
+                var dockerNetworkResult = await ProcessUtil.RunAsync("docker", $"network ls --filter \"name={application.Network}\" --format \"{{{{.ID}}}}\"", throwOnError: false);
                 if (dockerNetworkResult.ExitCode != 0)
                 {
                     _logger.LogError("{Network}: Run docker network ls command failed", application.Network);
@@ -131,7 +131,14 @@ namespace Microsoft.Tye.Hosting
 
                 _logger.LogInformation("Running docker command {Command}", command);
 
-                await ProcessUtil.RunAsync("docker", command);
+                var dockerNetworkResult = await ProcessUtil.RunAsync("docker", command, throwOnError: false);
+
+                if (dockerNetworkResult.ExitCode != 0)
+                {
+                    _logger.LogInformation("Running docker command with exception info {ExceptionStdOut} {ExceptionStdErr}", dockerNetworkResult.StandardOutput, dockerNetworkResult.StandardError);
+
+                    throw new CommandException("Run docker network create command failed");
+                }
             }
 
             // Stash information outside of the application services
