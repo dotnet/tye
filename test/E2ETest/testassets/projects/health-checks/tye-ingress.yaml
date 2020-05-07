@@ -1,0 +1,30 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: health-checks
+ingress:
+  - name: ingress
+    bindings:
+      - port: 8006
+    rules:
+      - path: /api
+        service: ingress-svc
+services:
+  - name: ingress-svc
+    project: api/api.csproj
+    replicas: 2
+    liveness:
+      http:
+        path: /healthy
+      initialDelay: 5
+      period: 1
+      timeout: 1
+      successThreshold: 1
+      failureThreshold: 1
+    readiness:
+      http:
+        path: /ready
+      initialDelay: 5
+      period: 1
+      timeout: 1
+      successThreshold: 1
+      failureThreshold: 1

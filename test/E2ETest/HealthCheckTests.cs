@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -228,6 +229,121 @@ namespace E2ETest
         }
 
         [Fact]
+        public async Task ProxyShouldNotProxyToNonReadyReplicasTests()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("health-checks");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-proxy.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
+            {
+                Sink = _sink,
+            };
+
+            SetReplicasInitialState(host, true, true);
+
+            await StartHostAndWaitForReplicasToStart(host, new[] { "proxy" }, ReplicaState.Ready);
+
+            var replicasToBecomeReady = host.Application.Services["proxy"].Replicas.Select(r => r.Value).ToList();
+
+            // we assume that proxy will continue sending http request to the same replica
+            var randomReplicaPortRes1 = await _client.GetAsync($"http://localhost:{host.Application.Services["proxy"].Description.Bindings.First().Port}/ports");
+            var randomReplicaPort1 = JsonSerializer.Deserialize<int[]>(await randomReplicaPortRes1.Content.ReadAsStringAsync())[0];
+            var randomReplica1 = replicasToBecomeReady.First(r => r.Bindings.Any(b => b.Port == randomReplicaPort1));
+
+            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] { randomReplica1.Name }.ToHashSet(), null, TimeSpan.Zero, async _ =>
+              {
+                  await SetHealthyReadyInReplica(randomReplica1, ready: false);
+              });
+
+            var randomReplicaPortRes2 = await _client.GetAsync($"http://localhost:{host.Application.Services["proxy"].Description.Bindings.First().Port}/ports");
+            var randomReplicaPort2 = JsonSerializer.Deserialize<int[]>(await randomReplicaPortRes2.Content.ReadAsStringAsync())[0];
+            var randomReplica2 = replicasToBecomeReady.First(r => r.Bindings.Any(b => b.Port == randomReplicaPort2));
+
+            Assert.NotEqual(randomReplicaPort1, randomReplicaPort2);
+
+            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] { randomReplica2.Name }.ToHashSet(), null, TimeSpan.Zero, async _ =>
+              {
+                  await SetHealthyReadyInReplica(randomReplica2, ready: false);
+              });
+
+            try
+            {
+                var resShouldFail = await _client.GetAsync($"http://localhost:{host.Application.Services["proxy"].Description.Bindings.First().Port}/ports");
+                Assert.False(resShouldFail.IsSuccessStatusCode);
+            }
+            catch (HttpRequestException)
+            {
+            }
+
+            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Ready, 1, new[] { randomReplica2.Name }.ToHashSet(), null, TimeSpan.Zero, async _ =>
+              {
+                  await SetHealthyReadyInReplica(randomReplica2, ready: true);
+              });
+
+            var randomReplicaPortRes3 = await _client.GetAsync($"http://localhost:{host.Application.Services["proxy"].Description.Bindings.First().Port}/ports");
+            var randomReplicaPort3 = JsonSerializer.Deserialize<int[]>(await randomReplicaPortRes3.Content.ReadAsStringAsync())[0];
+
+            Assert.Equal(randomReplicaPort3, randomReplicaPort2);
+        }
+        
+        [Fact]
+        public async Task IngressShouldNotProxyToNonReadyReplicasTests()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("health-checks");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-ingress.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
+            {
+                Sink = _sink,
+            };
+
+            SetReplicasInitialState(host, true, true);
+
+            await StartHostAndWaitForReplicasToStart(host, new[] { "ingress-svc" }, ReplicaState.Ready);
+            
+            var replicasToBecomeReady = host.Application.Services["ingress-svc"].Replicas.Select(r => r.Value).ToList();
+            var ingressBinding = host.Application.Services.First(s => s.Value.Description.RunInfo is IngressRunInfo).Value.Description.Bindings.First();
+            var uniqueIdUrl = $"{ingressBinding.Protocol}://localhost:{ingressBinding.Port}/api/id";
+
+            var uniqueIds = await ProbeNumberOfUniqueReplicas(uniqueIdUrl);
+            Assert.Equal(2, uniqueIds);
+
+            var firstReplica = replicasToBecomeReady.First();
+            var secondReplica = replicasToBecomeReady.Skip(1).First();
+
+            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] {firstReplica.Name}.ToHashSet(), null, TimeSpan.Zero, async _ =>
+            {
+                await SetHealthyReadyInReplica(firstReplica, ready: false);
+            });
+
+            uniqueIds = await ProbeNumberOfUniqueReplicas(uniqueIdUrl);
+            Assert.Equal(1, uniqueIds);
+            
+            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] {secondReplica.Name}.ToHashSet(), null, TimeSpan.Zero, async _ =>
+            {
+                await SetHealthyReadyInReplica(secondReplica, ready: false);
+            });
+            
+            var res = await _client.GetAsync(uniqueIdUrl);
+            Assert.Equal(HttpStatusCode.BadGateway, res.StatusCode);
+            
+            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Ready, 2, new[] {firstReplica.Name, secondReplica.Name}.ToHashSet(), null, TimeSpan.Zero, async _ =>
+            {
+                await SetHealthyReadyInReplica(firstReplica, ready: true);
+                await SetHealthyReadyInReplica(secondReplica, ready: true);
+            });
+            
+            uniqueIds = await ProbeNumberOfUniqueReplicas(uniqueIdUrl);
+            Assert.Equal(2, uniqueIds);
+        }
+
+        [Fact]
         public async Task HeadersTests()
         {
             using var projectDirectory = CopyTestProjectDirectory("health-checks");
@@ -285,6 +401,21 @@ namespace E2ETest
             }
 
             await _client.GetAsync($"http://localhost:{replica.Ports.First()}/set?" + string.Join("&", query));
+        }
+
+        private async Task<int> ProbeNumberOfUniqueReplicas(string url)
+        {
+            // this assumes roundrobin
+            var unique = new HashSet<string>();
+
+            string? id = null;
+            while (id == null || unique.Add(id))
+            {
+                var res = await _client.GetAsync(url);
+                id = await res.Content.ReadAsStringAsync();
+            }
+
+            return unique.Count;
         }
 
         private void SetReplicasInitialState(TyeHost host, bool? healthy, bool? ready, string[]? services = null)

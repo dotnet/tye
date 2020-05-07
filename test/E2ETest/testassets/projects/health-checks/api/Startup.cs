@@ -20,14 +20,16 @@ namespace api
     {
         private static string _randomId = Guid.NewGuid().ToString();
 
-        private static bool _healthy = false;
-        private static bool _ready = false;
+        private static bool _healthy = true;
+        private static bool _ready = true;
 
         private static int _healthyDelay = 0;
         private static int _readyDelay = 0;
 
         private static Dictionary<string, string> _livenessHeaders;
         private static Dictionary<string, string> _readinessHeaders;
+
+        private static int[] _ports;
         
         private static object _locker = new object();
         
@@ -37,7 +39,13 @@ namespace api
 
             var healthyEnv = Environment.GetEnvironmentVariable("healthy");
             var readyEnv = Environment.GetEnvironmentVariable("ready");
-            
+
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PORT")))
+            {
+                var portParts = Environment.GetEnvironmentVariable("PORT").Split(';');
+                _ports = portParts.Select(p => int.Parse(p)).ToArray();
+            }
+
             if (healthyEnv != null)
             {
                 _healthy = bool.Parse(healthyEnv);
@@ -74,6 +82,11 @@ namespace api
                 endpoints.MapGet("/", async ctx =>
                 {
                     await ctx.Response.WriteAsync("Hello");
+                });
+
+                endpoints.MapGet("/ports", async ctx =>
+                {
+                    await ctx.Response.WriteAsync(JsonSerializer.Serialize(_ports));
                 });
 
                 endpoints.MapGet("/id", async ctx =>
