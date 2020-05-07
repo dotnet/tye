@@ -199,8 +199,6 @@ namespace Microsoft.Tye.Hosting
 
             if (docker.DockerFile != null)
             {
-                // Build docker image first.
-                // TODO replace version
                 var exitCode = await ProcessUtil.RunAsync(
                     $"docker",
                     $"build \"{docker.DockerFile.DirectoryName}\" -t {dockerImage} -f \"{docker.DockerFile}\"",

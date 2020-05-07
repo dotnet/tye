@@ -622,7 +622,6 @@ services:
             });
         }
 
-
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task DockerFileTest()
