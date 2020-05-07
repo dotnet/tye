@@ -112,6 +112,9 @@ services:
   bindings:
     - port: 5672
       protocol: rabbitmq
+  # a reference to another tye.yaml
+- name: poll
+  include: ../poll/tye.yaml
 ```
 
 ### Service Properties
@@ -179,6 +182,14 @@ The working directory to use when launching. Only applies when the service is an
 #### `bindings` (`Binding[]`)
 
 A list of bindings *exposed* by the service. Bindings represent protocols *provided* by a service.
+
+#### `include` (string)
+
+A path to another tye.yaml to be used by the application.
+
+#### `repository` (string)
+
+A reference to a repository that will be cloned and used by the application. By default, it is a string that would be passed after `git clone`.
 
 ## Environment Variables
 
