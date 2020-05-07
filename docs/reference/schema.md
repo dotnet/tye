@@ -47,6 +47,7 @@ services:
 name: myapplication
 registry: exampleuser
 namespace: examplenamespace
+network: examplenetwork
 services:
 ```
 
@@ -76,6 +77,12 @@ Allows configuring the Kubernetes namespace used by commands that operate on Kub
 The namespace specified in `tye.yaml` can be overridden at the command line.
 
 > :bulb: Use `kubectl config view --minify --output 'jsonpath={..namespace}'` to view the current namespace.
+
+#### `network` (string)
+
+Allows configuring the Docker network used for `tye run`. 
+
+If a network is configured, then all services running in containers will connect to the specified network. Otherwise a Docker network will be created with a generated name, and used to connect all containers.
 
 #### `services` (`Service[]`) *required*
 
