@@ -1,0 +1,11 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: frontend-backend
+services:
+- name: backend
+  dockerFile: backend/Dockerfile
+  bindings:
+    - containerPort: 80
+      protocol: http
+- name: frontend
+  project: frontend/frontend.csproj

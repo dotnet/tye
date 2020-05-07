@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Runtime.InteropServices;
 using Microsoft.Tye;
 
 namespace Test.Infrastructure
@@ -13,7 +14,7 @@ namespace Test.Infrastructure
         public SkipIfDockerNotRunningAttribute()
         {
             // TODO Check performance of this.
-            IsMet = DockerDetector.Instance.IsDockerConnectedToDaemon.Value.GetAwaiter().GetResult();
+            IsMet = DockerDetector.Instance.IsDockerConnectedToDaemon.Value.GetAwaiter().GetResult() && !(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AGENT_OS")));
             SkipReason = "Docker is not installed or running.";
         }
 

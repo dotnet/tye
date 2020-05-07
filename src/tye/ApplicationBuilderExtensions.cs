@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Tye.Extensions;
 using Microsoft.Tye.Hosting.Model;
@@ -45,6 +46,15 @@ namespace Microsoft.Tye
                 else if (service is ContainerServiceBuilder container)
                 {
                     var dockerRunInfo = new DockerRunInfo(container.Image, container.Args);
+
+                    if (!string.IsNullOrEmpty(container.DockerFile))
+                    {
+                        dockerRunInfo.DockerFile = new FileInfo(container.DockerFile);
+                        if (!string.IsNullOrEmpty(container.DockerFileContext))
+                        {
+                            dockerRunInfo.DockerFileContext = new FileInfo(container.DockerFileContext);
+                        }
+                    }
 
                     foreach (var mapping in container.Volumes)
                     {
