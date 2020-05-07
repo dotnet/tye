@@ -134,12 +134,20 @@ Including a `project` entry marks the service as a *project*:
 
 #### `image` (string)
 
-The name and optional tag of an image that can be run using Docker. 
+The name and optional tag of an image that can be run using Docker.
 
 Including `image` marks the service as a *container*:
 
 - It will pulled and run locally using Docker during development.
 - It will not be deployed during deployment.
+
+#### `dockerFile` (string)
+
+The Dockerfile to build from. Uses the name of the service as the name of the image. Only supported for `tye run` currently.
+
+#### `dockerFileContext` (string)
+
+Path to the Dockerfile Context to run docker build against. This is only used when `dockerFile` is specified as well.
 
 #### `executable` (string)
 
@@ -218,6 +226,37 @@ The name of the environment variable.
 #### `value` (string) *required*
 
 The value of the environment variable.
+
+## Build Properties
+
+Configuration that can be specified when building a project. These will be passed in as MSBuild properties when building a project. It appears in the list `buildProperties` of a `Service`.
+
+### Build Properties Example
+
+```yaml
+name: frontend-backend
+services:
+- name: backend
+  project: backend/backend.csproj
+  buildProperties:
+  - name: Configuration
+    value: Debug
+- name: frontend
+  project: frontend/frontend.csproj
+  buildProperties:
+  - name: Configuration
+    value: Release
+```
+
+### Build Properties Definition
+
+#### `name` (string) *required*
+
+The name of the build property.
+
+#### `value` (string) *required*
+
+The value of the build property.
 
 ## Bindings
 
