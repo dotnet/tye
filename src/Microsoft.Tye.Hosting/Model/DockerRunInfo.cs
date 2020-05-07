@@ -13,7 +13,6 @@ namespace Microsoft.Tye.Hosting.Model
         {
             Image = image;
             Args = args;
-            IsAspNet = Image.StartsWith("mcr.microsoft.com/dotnet/core/aspnet", StringComparison.OrdinalIgnoreCase);
         }
 
         public bool Private { get; set; }

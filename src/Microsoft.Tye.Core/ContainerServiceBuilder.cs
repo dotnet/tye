@@ -16,6 +16,8 @@ namespace Microsoft.Tye
 
         public string Image { get; set; }
 
+        public bool IsAspNet { get; set; }
+
         public string? Args { get; set; }
 
         public int Replicas { get; set; } = 1;

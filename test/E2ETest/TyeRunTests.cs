@@ -165,7 +165,10 @@ namespace E2ETest
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
-            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}");
+            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}")
+            {
+                IsAspNet = true
+            };
             container.Volumes.Add(new VolumeBuilder(project.PublishDir, name: null, target: "/app"));
             container.Args = $"dotnet /app/{outputFileName} {project.Args}";
             container.Bindings.AddRange(project.Bindings.Where(b => b.Protocol != "https"));
@@ -209,7 +212,10 @@ namespace E2ETest
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
-            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}");
+            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}")
+            {
+                IsAspNet = true
+            };
             container.Dependencies.UnionWith(project.Dependencies);
             container.Volumes.Add(new VolumeBuilder(project.PublishDir, name: null, target: "/app"));
             container.Args = $"dotnet /app/{outputFileName} {project.Args}";
