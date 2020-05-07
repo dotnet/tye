@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.IO;
 
 namespace Microsoft.Tye.Hosting.Model
 {
@@ -25,5 +26,9 @@ namespace Microsoft.Tye.Hosting.Model
         public string? Args { get; }
 
         public string Image { get; }
+
+        public FileInfo? DockerFile { get; set; }
+
+        public FileInfo? DockerFileContext { get; set; }
     }
 }
