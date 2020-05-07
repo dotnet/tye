@@ -659,7 +659,7 @@ services:
         {
             using var projectDirectory = CopyTestProjectDirectory("dockerfile");
 
-             File.Move(Path.Combine(projectDirectory.DirectoryPath, "backend", "Dockerfile"), Path.Combine(projectDirectory.DirectoryPath, "Dockerfile"));
+            File.Move(Path.Combine(projectDirectory.DirectoryPath, "backend", "Dockerfile"), Path.Combine(projectDirectory.DirectoryPath, "Dockerfile"));
 
             var content = @"
 name: frontend-backend
