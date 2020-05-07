@@ -27,7 +27,9 @@ The `tye undeploy` command will delete a deployed application from Kubernetes. `
 
 > :bulb: Use `kubectl config view --minify --output 'jsonpath={..namespace}'` to view the current namespace.
 
-Undeploy decides which resources to delete based on the `app.kubernetes.io/part-of=...` label. This label will be set to the application name for all resources created by Tye. `tye undeploy` does not rely on the list of services in `tye.yaml` or a solution file. 
+Undeploy decides which resources to delete based on the `app.kubernetes.io/part-of=...` label. This label will be set to the application name for all resources created by Tye. `tye undeploy` does not rely on the list of services in `tye.yaml` or a solution file.
+
+> :bulb: The `tye undeploy` command uses your local Kubernetes context to access the Kubernetes cluster. Make sure `kubectl` is configured to manage your cluster before running `tye undeploy`.
 
 ## Arguments
 
