@@ -18,11 +18,7 @@ Using Tye's service discovery features is *optional*. If you already have a sche
 
 ---
 
-Tye uses a combination of environment variables and files on disk for specifying connection strings and URIs of services.
-
-- Enviroment variables are used where possible because they are simple
-- Files on disk are used for secrets in deployed applications because they are more secure
-- Both of these are primitives that can be accessed from any programming langauge
+Tye uses environment variables for specifying connection strings and URIs of services.
 
 Our philosophy is that automating something you could do yourself is better than doing *magic* or requiring external services.
 
