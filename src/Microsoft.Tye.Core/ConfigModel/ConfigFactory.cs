@@ -89,7 +89,7 @@ namespace Microsoft.Tye.ConfigModel
             // Note, this will not work if OutputType is on separate lines.
             // TODO consider a more thorough check with xml reading, but at that point, it may be better just to read the project itself.
             var content = File.ReadAllText(projectFile.FullName);
-            return content.Contains("<OutputType>exe</OutputType>");
+            return content.Contains("<OutputType>exe</OutputType>", StringComparison.OrdinalIgnoreCase);
         }
 
         private static ConfigApplication FromYaml(FileInfo file)
