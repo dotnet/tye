@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Tye.Serialization;
@@ -68,7 +69,7 @@ namespace Microsoft.Tye.ConfigModel
                 // We want a *fast* heuristic that excludes unit test projects and class libraries without
                 // having to load all of the projects. 
                 var launchSettings = Path.Combine(projectFile.DirectoryName, "Properties", "launchSettings.json");
-                if (File.Exists(launchSettings))
+                if (File.Exists(launchSettings) || ContainsOutputTypeExe(projectFile))
                 {
                     var service = new ConfigService()
                     {
@@ -81,6 +82,14 @@ namespace Microsoft.Tye.ConfigModel
             }
 
             return application;
+        }
+
+        private static bool ContainsOutputTypeExe(FileInfo projectFile)
+        {
+            // Note, this will not work if OutputType is on separate lines.
+            // TODO consider a more thorough check with xml reading, but at that point, it may be better just to read the project itself.
+            var content = File.ReadAllText(projectFile.FullName);
+            return content.Contains("<OutputType>exe</OutputType>", StringComparison.OrdinalIgnoreCase);
         }
 
         private static ConfigApplication FromYaml(FileInfo file)
