@@ -25,5 +25,7 @@
 |------|-------------|
 |**[Tye Commandline Reference](reference/commandline/README.md)** | Documentation for `tye` commands.
 |**[Service Discovery](reference/service_discovery.md)** | Learn more about service discovery in Tye.
-|**[Local Development](referenece/../reference/local_development.md)** | Learn more about how Tye works for local development.
+|**[Local Development](referenece/local_development.md)** | Learn more about how Tye works for local development.
+|**[Deployment](referenece/deployment.md)** | Learn more about how Tye works for deploying to Kubernetes.
 |**[`tye.yaml` Schema](reference/schema.md)** | `tye.yaml` configuration.
+|**[Multiple Repository Scenarios](reference/multirepo.md)** | Learn how to configure a multiple repository application.
