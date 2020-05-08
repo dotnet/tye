@@ -16,6 +16,7 @@
 |-------|------------|
 |**[Using Ingress](recipes/ingress.md)** | Using `tye` with an ingress for serving public traffic.
 |**[Using Distributed Tracing](recipes/distributed_tracing.md)** | Using zipkin for distributed tracing.
+|**[Logging with Elastic Stack](recipes/logging.md)** | Using Elastic Stack for logging.
 |**[Using Dapr with Tye](recipes/dapr.md)** | Using `tye` for local development and deployment with a [Dapr](https://dapr.io) application.
 
 
