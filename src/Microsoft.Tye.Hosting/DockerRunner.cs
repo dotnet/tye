@@ -395,7 +395,7 @@ namespace Microsoft.Tye.Hosting
                             try
                             {
                                 // Avoid spamming logs if restarts are happening
-                                await Task.Delay(backOff, dockerInfo.StoppingTokenSource.Token);
+                                await Task.Delay(backOff, status.StoppingTokenSource.Token);
                             }
                             catch (OperationCanceledException)
                             {
