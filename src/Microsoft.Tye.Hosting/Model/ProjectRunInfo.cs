@@ -26,6 +26,7 @@ namespace Microsoft.Tye.Hosting.Model
             PublishOutputPath = project.PublishDir;
             ContainerBaseImage = project.ContainerInfo.BaseImageName;
             ContainerBaseTag = project.ContainerInfo.BaseImageTag;
+            IsAspNet = project.IsAspNet;
         }
 
         public Dictionary<string, string> BuildProperties { get; } = new Dictionary<string, string>();
@@ -36,7 +37,7 @@ namespace Microsoft.Tye.Hosting.Model
         public string TargetFrameworkName { get; set; } = default!;
         public string TargetFrameworkVersion { get; set; } = default!;
         public string TargetFramework { get; }
-
+        public bool IsAspNet { get; }
         public string Version { get; }
 
         public string AssemblyName { get; }
