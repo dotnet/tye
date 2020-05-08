@@ -49,8 +49,8 @@ namespace Microsoft.Tye.Hosting.Model
         public string RunCommand { get; }
         public string RunArguments { get; }
 
-        public string? ContainerBaseTag { get; set; } = default!;
-        public string? ContainerBaseImage { get; set; } = default!;
+        public string? ContainerBaseTag { get; }
+        public string? ContainerBaseImage { get; }
 
         // This exists for running projects as containers
         public List<DockerVolume> VolumeMappings { get; } = new List<DockerVolume>();
