@@ -128,7 +128,9 @@ namespace Microsoft.Tye.Hosting
             var baseImage = project.IsAspNet ? "mcr.microsoft.com/dotnet/core/aspnet" : "mcr.microsoft.com/dotnet/core/runtime";
 
             if (!string.IsNullOrEmpty(project.ContainerBaseImage))
+            {
                 baseImage = project.ContainerBaseImage;
+            }
 
             var imageTag = string.IsNullOrEmpty(project.ContainerBaseTag) ? project.TargetFrameworkVersion : project.ContainerBaseTag;
 

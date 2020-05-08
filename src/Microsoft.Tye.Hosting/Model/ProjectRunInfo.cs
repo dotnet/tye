@@ -24,8 +24,8 @@ namespace Microsoft.Tye.Hosting.Model
             RunCommand = project.RunCommand;
             RunArguments = project.RunArguments;
             PublishOutputPath = project.PublishDir;
-            ContainerBaseImage = project.ContainerInfo!.BaseImageName;
-            ContainerBaseTag = project.ContainerInfo!.BaseImageTag;
+            ContainerBaseImage = project.ContainerInfo?.BaseImageName;
+            ContainerBaseTag = project.ContainerInfo?.BaseImageTag;
             IsAspNet = project.IsAspNet;
         }
 

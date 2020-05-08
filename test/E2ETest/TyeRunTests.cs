@@ -11,12 +11,10 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Microsoft.Diagnostics.Tracing.Parsers.JScript;
 using Microsoft.Tye;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
 using Microsoft.Tye.Hosting.Model.V1;
-using Org.BouncyCastle.Crypto;
 using Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
@@ -270,7 +268,6 @@ namespace E2ETest
 
             Assert.True(string.Equals(projectRunInfo!.ContainerBaseImage, project.ContainerInfo.BaseImageName));
             Assert.True(string.Equals(projectRunInfo!.ContainerBaseTag, project.ContainerInfo.BaseImageTag));
-
         }
 
         [ConditionalFact]
