@@ -230,6 +230,8 @@ namespace Microsoft.Tye.Hosting
                     environment["PORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
                 }
 
+                var backOff = TimeSpan.FromSeconds(5);
+
                 while (!processInfo.StoppedTokenSource.IsCancellationRequested)
                 {
                     var replica = serviceName + "_" + Guid.NewGuid().ToString().Substring(0, 10).ToLower();
@@ -282,6 +284,9 @@ namespace Microsoft.Tye.Hosting
                                     _logger.LogInformation("{ServiceName} running on process id {PID}", replica, pid);
                                 }
 
+                                // Reset the backoff
+                                backOff = TimeSpan.FromSeconds(5);
+
                                 status.Pid = pid;
 
                                 WriteReplicaToStore(pid.ToString());
@@ -303,13 +308,15 @@ namespace Microsoft.Tye.Hosting
 
                         try
                         {
-                            await Task.Delay(5000, processInfo.StoppedTokenSource.Token);
+                            await Task.Delay(backOff, processInfo.StoppedTokenSource.Token);
                         }
                         catch (OperationCanceledException)
                         {
                             // Swallow cancellation exceptions and continue
                         }
                     }
+
+                    backOff *= 2;
 
                     service.Restarts++;
 

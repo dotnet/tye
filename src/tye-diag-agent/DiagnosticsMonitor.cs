@@ -93,7 +93,7 @@ namespace Microsoft.Tye
                                 continue;
                             }
 
-                            logger.LogInformation(wellKnown.LogFormat, provider.Key);
+                            logger.LogInformation(wellKnown.LogFormat, provider.Value);
                             collector.LoggingSink = new LoggingSink(logger, provider);
                             break;
                         }

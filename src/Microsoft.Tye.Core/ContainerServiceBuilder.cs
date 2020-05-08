@@ -16,7 +16,13 @@ namespace Microsoft.Tye
 
         public string Image { get; set; }
 
+        public bool IsAspNet { get; set; }
+
         public string? Args { get; set; }
+
+        public string? DockerFile { get; set; }
+
+        public string? DockerFileContext { get; set; }
 
         public int Replicas { get; set; } = 1;
 
