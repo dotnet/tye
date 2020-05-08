@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.Diagnostics.Tracing.Parsers.JScript;
 using Microsoft.Tye;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
@@ -261,14 +262,14 @@ namespace E2ETest
             var project = (ProjectServiceBuilder)application.Services.First(s => s.Name == "backend-baseimage");
 
             // check ContainerInfo values
-            Assert.True(string.Equals(project.ContainerInfo.BaseImageName, "mcr.microsoft.com/dotnet/core/sdk"));
-            Assert.True(string.Equals(project.ContainerInfo.BaseImageTag, "3.1-buster"));
+            Assert.True(string.Equals(project.ContainerInfo!.BaseImageName, "mcr.microsoft.com/dotnet/core/sdk"));
+            Assert.True(string.Equals(project.ContainerInfo!.BaseImageTag, "3.1-buster"));
 
             // check projectInfo values
             var projectRunInfo = new ProjectRunInfo(project);
 
-            Assert.True(string.Equals(projectRunInfo.ContainerBaseImage, project.ContainerInfo.BaseImageName));
-            Assert.True(string.Equals(projectRunInfo.ContainerBaseTag, project.ContainerInfo.BaseImageTag));
+            Assert.True(string.Equals(projectRunInfo!.ContainerBaseImage, project.ContainerInfo.BaseImageName));
+            Assert.True(string.Equals(projectRunInfo!.ContainerBaseTag, project.ContainerInfo.BaseImageTag));
 
         }
 

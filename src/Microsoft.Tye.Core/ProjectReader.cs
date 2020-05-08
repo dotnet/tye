@@ -269,8 +269,8 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"Found shared frameworks: {string.Join(", ", sharedFrameworks)}");
 
             // determine container base image
-            project.ContainerInfo.BaseImageName = projectInstance.GetPropertyValue("ContainerBaseImage");
-            project.ContainerInfo.BaseImageTag = projectInstance.GetPropertyValue("ContainerBaseTag");
+            project.ContainerInfo!.BaseImageName = projectInstance.GetPropertyValue("ContainerBaseImage");
+            project.ContainerInfo!.BaseImageTag = projectInstance.GetPropertyValue("ContainerBaseTag");
 
             bool PropertyIsTrue(string property)
             {
