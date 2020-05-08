@@ -273,10 +273,9 @@ namespace Microsoft.Tye
             {
                 project.ContainerInfo = new ContainerInfo() { UseMultiphaseDockerfile = false, };
             }
-            
+
             project.ContainerInfo!.BaseImageName = projectInstance.GetPropertyValue("ContainerBaseImage");
             project.ContainerInfo!.BaseImageTag = projectInstance.GetPropertyValue("ContainerBaseTag");
-            
 
             bool PropertyIsTrue(string property)
             {
