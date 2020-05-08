@@ -5,6 +5,11 @@
     <RootNamespace>Backend</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/core/sdk</ContainerBaseImage>
+    <ContainerBaseTag>3.1-buster</ContainerBaseTag>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="$(TyeLibrariesPath)\Microsoft.Tye.Extensions.Configuration\Microsoft.Tye.Extensions.Configuration.csproj" />
   </ItemGroup>
