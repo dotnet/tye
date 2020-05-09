@@ -183,7 +183,7 @@ namespace E2ETest
         public async Task Generate_DaprApplication()
         {
             var applicationName = "dapr_test_application";
-            var projectName = "dapr_test_project";
+            var projectName = "dapr-test-project";
             var environment = "production";
 
             await DockerAssert.DeleteDockerImagesAsync(output, projectName);
