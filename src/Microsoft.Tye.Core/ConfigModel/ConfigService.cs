@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Tye;
 using YamlDotNet.Serialization;
 
 namespace Microsoft.Tye.ConfigModel
@@ -11,9 +12,11 @@ namespace Microsoft.Tye.ConfigModel
     public class ConfigService
     {
         const string errorMessage = "a DNS-1035 label must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name',  or 'abc-123', regex used for validation is '[a-z]([-a-z0-9]*[a-z0-9])?')";
+        const string maxLengthErrorMessage = "must be no more than 63 characters";
+
         [Required]
         [RegularExpression("[a-z]([-a-z0-9]*[a-z0-9])?", ErrorMessage = errorMessage)]
-        [MaxLength(63)]
+        [MaxLength(63, ErrorMessage = maxLengthErrorMessage)]
         public string Name { get; set; } = default!;
         public bool External { get; set; }
         public string? Image { get; set; }

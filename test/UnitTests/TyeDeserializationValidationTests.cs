@@ -203,8 +203,43 @@ services:
 
             using var parser = new YamlParser(input);
             var app = parser.ParseConfigApplication();
+            Assert.Throws<TyeYamlException>(() => app.Validate());
+        }
+
+        [Fact]
+        public void ValidateServiceNameThrowsException()
+        {
+            var input = @"
+services:
+  - name: appA
+    bindings:
+      - protocol: http
+        name: a
+      - protocol: https
+        name: b";
+            string errorMessage = "a DNS-1035 label must consist of lower case alphanumeric";
+            using var parser = new YamlParser(input);
+            var app = parser.ParseConfigApplication();
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
-            Assert.Contains(CoreStrings.FormatProjectImageExecutableExclusive(a, b), exception.Message);
+            Assert.Contains(errorMessage, exception.Message);
+        }
+
+        [Fact]
+        public void ValidateServiceNameThrowsExceptionForMaxLength()
+        {
+            var input = @"
+services:
+  - name: appavalidateservicenamethrowsexceptionformaxlengthvalidateservicen
+    bindings:
+      - protocol: http
+        name: a
+      - protocol: https
+        name: b";
+            var errorMessage = "must be no more than 63 characters";
+            using var parser = new YamlParser(input);
+            var app = parser.ParseConfigApplication();
+            var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
+            Assert.Contains(errorMessage, exception.Message);
         }
     }
 }
