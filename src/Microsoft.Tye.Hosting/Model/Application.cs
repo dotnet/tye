@@ -139,7 +139,8 @@ namespace Microsoft.Tye.Hosting.Model
                 foreach (var b in s.Description.Bindings)
                 {
                     var protocol = b.Protocol;
-                    var host = b.Host ?? (service.Description.RunInfo is DockerRunInfo ? s.Description.Name : defaultHost);
+                    // Just ignored the binding host.
+                    var host = service.Description.RunInfo is DockerRunInfo ? s.Description.Name : defaultHost;
 
                     var port = b.Port;
                     if (b.Port is object && service.Description.RunInfo is DockerRunInfo)
