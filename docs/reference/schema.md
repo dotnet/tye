@@ -46,7 +46,10 @@ services:
 ```yaml
 name: myapplication
 registry: exampleuser
-services:
+namespace: examplenamespace
+network: examplenetwork
+ingress: ...
+services: ...
 ```
 
 ### Root Properties
@@ -67,6 +70,24 @@ Allows storing the name of the container registry in configuration. This is used
 The registry could be a DockerHub username (`exampleuser`) or the hostname of a container registry (`example.azureci.io`).
 
 If this is not specified in configuration, interactive deployments will prompt for it.
+
+#### `namespace` (string)
+
+Allows configuring the Kubernetes namespace used by commands that operate on Kubernetes. If unconfigured, Tye will use the namespace of the current Kubernetes context.
+
+The namespace specified in `tye.yaml` can be overridden at the command line.
+
+> :bulb: Use `kubectl config view --minify --output 'jsonpath={..namespace}'` to view the current namespace.
+
+#### `network` (string)
+
+Allows configuring the Docker network used for `tye run`. 
+
+If a network is configured, then all services running in containers will connect to the specified network. Otherwise a Docker network will be created with a generated name, and used to connect all containers.
+
+#### `ingress` (`Ingress[]`)
+
+Specifies the list of ingresses.
 
 #### `services` (`Service[]`) *required*
 
@@ -103,6 +124,9 @@ services:
   bindings:
     - port: 5672
       protocol: rabbitmq
+  # a reference to another tye.yaml
+- name: poll
+  include: ../poll/tye.yaml
 ```
 
 ### Service Properties
@@ -122,12 +146,20 @@ Including a `project` entry marks the service as a *project*:
 
 #### `image` (string)
 
-The name and optional tag of an image that can be run using Docker. 
+The name and optional tag of an image that can be run using Docker.
 
 Including `image` marks the service as a *container*:
 
 - It will pulled and run locally using Docker during development.
 - It will not be deployed during deployment.
+
+#### `dockerFile` (string)
+
+The Dockerfile to build from. Uses the name of the service as the name of the image. Only supported for `tye run` currently.
+
+#### `dockerFileContext` (string)
+
+Path to the Dockerfile Context to run docker build against. This is only used when `dockerFile` is specified as well.
 
 #### `executable` (string)
 
@@ -171,6 +203,14 @@ The working directory to use when launching. Only applies when the service is an
 
 A list of bindings *exposed* by the service. Bindings represent protocols *provided* by a service.
 
+#### `include` (string)
+
+A path to another tye.yaml to be used by the application.
+
+#### `repository` (string)
+
+A reference to a repository that will be cloned and used by the application. By default, it is a string that would be passed after `git clone`.
+
 ## Environment Variables
 
 `EnvironmentVariable` elements appear in a list inside the `env` property of a `Service`.
@@ -199,7 +239,38 @@ The name of the environment variable.
 
 The value of the environment variable.
 
-## Bindings
+## Build Properties
+
+Configuration that can be specified when building a project. These will be passed in as MSBuild properties when building a project. It appears in the list `buildProperties` of a `Service`.
+
+### Build Properties Example
+
+```yaml
+name: frontend-backend
+services:
+- name: backend
+  project: backend/backend.csproj
+  buildProperties:
+  - name: Configuration
+    value: Debug
+- name: frontend
+  project: frontend/frontend.csproj
+  buildProperties:
+  - name: Configuration
+    value: Release
+```
+
+### Build Properties Definition
+
+#### `name` (string) *required*
+
+The name of the build property.
+
+#### `value` (string) *required*
+
+The value of the build property.
+
+## Binding
 
 `Binding` elements appear in a list inside the `bindings` property of a `Service`.
 
@@ -295,3 +366,134 @@ A named docker volume.
 #### `target` (string) *required*
 
 The destination path within the container.
+
+## Ingress
+
+`Ingress` elements appear in a list within the `ingress` root property.
+
+Each ingress element represents an HTTP (L7) network proxy, capable of accepting public traffic from the internet:
+
+- In development: a local proxy is used for testing purposes
+- In deployed applications: a real load-balancer/proxy accepting traffic from outside the cluster is used
+
+### Ingress Example
+
+```yaml
+ingress:
+- name: example
+  bindings:
+  - port: 8080
+  rules:
+  - host: a.example.com
+    service: app-a
+  - host: b.example.com
+    service: app-b 
+```
+
+This example configures a single ingress named `example` that routes traffic to `app-a` or `app-b` based on the `Host` header. The port `8080` will be used during local development.
+
+### Ingress Properties
+
+#### `name` (`string`) *required*
+
+The name of the ingress.
+
+#### `bindings` (`IngressBinding`)
+
+The bindings of the ingress service when running locally. Ignored for deployed applications.
+
+#### `rules` (`IngressRule`)
+
+The rules used to route traffic for the ingress.
+
+## IngressBinding
+
+`IngressBinding` elements appear in an array within the `bindings` property of an `Ingress` element. The bindings of an ingress specify the ports of the ingress service when running locally. Bindings are ignored when deploying applications.
+
+### IngressBinding Example
+
+```yaml
+ingress:
+- name: example
+  bindings:
+
+  # An IngressBinding
+  - port: 8080
+    protocol: http
+
+  rules:
+  - host: a.example.com
+    service: app-a
+  - host: b.example.com
+    service: app-b 
+```
+
+In this example the binding specifies that the ingress service should listen for `HTTP` on port 8080 when running locally for development.
+
+### IngressBinding Properties
+
+#### `name` (`string`)
+
+The name of the binding.
+
+#### `port` (`integer`)
+
+The port of the binding.
+
+#### `protocol` (`string`)
+
+The protocol (`http` or `https`).
+
+## IngressRule
+
+`IngressRule` elements appear in an array within the `rules` property of the `Ingress` element. Rules configure the routing behavior of the ingress proxy.
+
+Rules can configure routing based on path-prefix, or based on host (HTTP `Host` header) or both. 
+
+- A rule without a `path` is considered to match all paths, which is the same as specifying `path: '/'`
+- A rule without a `host` is considered to match all hosts.
+
+### IngressRule Example
+
+```yaml
+ingress:
+- name: example
+  bindings:
+  - port: 8080
+    protocol: http
+  rules:
+
+  # Example IngressRules
+  - host: a.example.com
+    service: app-a
+  - host: b.example.com
+    path: /mypath
+    service: app-b
+```
+
+### IngressRule Properties
+
+#### `service` (`string`) *required*
+
+The service to route traffic to. Must be the name of a service that is part of this application.
+
+#### `path` (`string`)
+
+The path-prefix to match. Matching is case-insensitive.
+
+The `path` must begin with `/`:
+
+- `/mypath` is value
+- `mypath` is invalid
+
+The `path` may end with a trailing slash - the behavior is the same whether or not a trailing slash appears.
+
+The path `/mypath` or `/mypath/` will match:
+
+- `/mypath`
+- `/mypath/`
+- `/MYPATH/something/else`
+
+#### `host` (`string`)
+
+The host to match. 

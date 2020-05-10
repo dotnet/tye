@@ -75,6 +75,8 @@ stages:
         steps:
         - checkout: self
           clean: true
+        - script: docker version
+        - script: docker images 
         - script: eng\common\cibuild.cmd -configuration $(_BuildConfig) -prepareMachine $(_OfficialBuildArgs)
           displayName: Build and Publish
         - task: PublishBuildArtifacts@1

@@ -182,3 +182,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
     ``` 
 
     Visit `http://localhost:5000` to see the `frontend` working in kubernetes.
+
+4. Clean-up
+
+    At this point, you may want to undeploy the application by running `tye undeploy`.

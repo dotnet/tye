@@ -8,20 +8,13 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
 2. Install tye via the following command:
 
     ```text
-    dotnet tool install -g Microsoft.Tye --version "0.1.0-alpha.20209.5"
+    dotnet tool install -g Microsoft.Tye --version "0.2.0-alpha.20258.3"
     ```
 
     OR if you already have Tye installed and want to update:
 
     ```text
-    dotnet tool update -g Microsoft.Tye --version "0.1.0-alpha.20209.5"
-    ```
-
-3. Verify the installation was complete by running:
-
-    ```
-    tye --version
-    > 0.1.0-alpha.20209.5+e3fc0045bd1e5913da935241874761929f1e8465
+    dotnet tool update -g Microsoft.Tye --version "0.2.0-alpha.20258.3"
     ```
 
 ## Next steps
@@ -35,13 +28,13 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
 This will install the newest available build from our CI.
 
 ```txt
-dotnet tool install -g Microsoft.Tye --version "0.2.0-*" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json
+dotnet tool install -g Microsoft.Tye --version "0.3.0-*" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json
 ```
 
 If you already have a build installed and you want to update, replace `install` with `update`:
 
 ```txt
-dotnet tool update -g Microsoft.Tye --version "0.2.0-*" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json
+dotnet tool update -g Microsoft.Tye --version "0.3.0-*" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json
 ```
 
 > :bulb: Note that the version numbers for our CI builds and released packages will usually be different. 

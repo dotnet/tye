@@ -56,13 +56,8 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"Validating ingress class '{ingressClass}'.");
             var config = KubernetesClientConfiguration.BuildDefaultConfig();
 
-            // Workaround for https://github.com/kubernetes-client/csharp/issues/372
-            var store = await KubernetesClientConfiguration.LoadKubeConfigAsync();
-            var context = store.Contexts.Where(c => c.Name == config.CurrentContext).FirstOrDefault();
-
-            // Use namespace of application, or current context, or 'default'
-            config.Namespace = application.Namespace;
-            config.Namespace ??= context?.ContextDetails?.Namespace ?? "default";
+            // If namespace is null, set it to default
+            config.Namespace ??= "default";
 
             var kubernetes = new Kubernetes(config);
 
@@ -110,7 +105,7 @@ namespace Microsoft.Tye
 
             output.WriteAlwaysLine(
                 "Tye can deploy the ingress-nginx controller for you. This will be a basic deployment suitable for " +
-                "experimentation and development. Your production needs, or requirments may differ depending on your Kubernetes distribution. " +
+                "experimentation and development. Your production needs, or requirements may differ depending on your Kubernetes distribution. " +
                 "See: https://aka.ms/tye/ingress for documentation.");
             if (!output.Confirm($"Deploy ingress-nginx"))
             {

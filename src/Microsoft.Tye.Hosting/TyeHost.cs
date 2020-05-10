@@ -260,17 +260,26 @@ namespace Microsoft.Tye.Hosting
 
         private static AggregateApplicationProcessor CreateApplicationProcessor(ReplicaRegistry replicaRegistry, HostOptions options, Microsoft.Extensions.Logging.ILogger logger)
         {
-            var diagnostics = new DiagnosticOptions()
+            var diagnosticsCollector = new DiagnosticsCollector(logger)
             {
-                DistributedTraceProvider = options.DistributedTraceProvider,
-                LoggingProvider = options.LoggingProvider,
-                MetricsProvider = options.MetricsProvider,
+                // Local run always uses metrics for the dashboard
+                MetricSink = new MetricSink(logger),
             };
 
-            var diagnosticsCollector = new DiagnosticsCollector(logger, diagnostics);
+            if (options.LoggingProvider is string &&
+                DiagnosticsProvider.TryParse(options.LoggingProvider, out var logging))
+            {
+                diagnosticsCollector.LoggingSink = new LoggingSink(logger, logging);
+            }
+
+            if (options.DistributedTraceProvider is string &&
+                DiagnosticsProvider.TryParse(options.DistributedTraceProvider, out var tracing))
+            {
+                diagnosticsCollector.TracingSink = new TracingSink(logger, tracing);
+            }
 
             // Print out what providers were selected and their values
-            diagnostics.DumpDiagnostics(logger);
+            DumpDiagnostics(options, logger);
 
             var processors = new List<IApplicationProcessor>
             {
@@ -348,6 +357,34 @@ namespace Microsoft.Tye.Hosting
 
             _replicaRegistry?.Dispose();
             DashboardWebApplication?.Dispose();
+        }
+
+        private static void DumpDiagnostics(HostOptions options, Microsoft.Extensions.Logging.ILogger logger)
+        {
+            var providerText = new List<string>();
+            providerText.AddRange(
+                new[] { options.DistributedTraceProvider, options.LoggingProvider, options.MetricsProvider }
+                .Where(p => p is object)
+                .Cast<string>());
+
+            foreach (var text in providerText)
+            {
+                if (DiagnosticsProvider.TryParse(text, out var provider))
+                {
+                    if (DiagnosticsProvider.WellKnownProviders.TryGetValue(provider.Key, out var wellKnown))
+                    {
+                        logger.LogInformation(wellKnown.LogFormat, provider.Value);
+                    }
+                    else
+                    {
+                        logger.LogWarning("Unknown diagnostics provider {Key}:{Value}", provider.Key, provider.Value);
+                    }
+                }
+                else
+                {
+                    logger.LogError("Could not parse provider argument: {Arg}", text);
+                }
+            }
         }
     }
 }

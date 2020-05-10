@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Threading.Tasks;
@@ -36,18 +37,29 @@ namespace Microsoft.Tye
 
             output.WriteDebugLine("Running 'dotnet publish'.");
             output.WriteCommandLine("dotnet", $"publish \"{project.ProjectFile.FullName}\" -c Release -o \"{outputDirectory.DirectoryPath}\"");
-            var capture = output.Capture();
-            var exitCode = await Process.ExecuteAsync(
+
+            var publishResult = await ProcessUtil.RunAsync(
                 $"dotnet",
                 $"publish \"{project.ProjectFile.FullName}\" -c Release -o \"{outputDirectory.DirectoryPath}\"",
                 project.ProjectFile.DirectoryName,
-                stdOut: capture.StdOut,
-                stdErr: capture.StdErr);
+                throwOnError: false);
 
-            output.WriteDebugLine($"Done running 'dotnet publish' exit code: {exitCode}");
-            if (exitCode != 0)
+            output.WriteDebugLine($"Done running 'dotnet publish' exit code: {publishResult.ExitCode}");
+            if (publishResult.ExitCode != 0)
             {
                 outputDirectory.Dispose();
+                output.WriteInfoLine($"'dotnet publish' failed. Error:");
+
+                foreach (var line in publishResult.StandardOutput.Split(Environment.NewLine))
+                {
+                    output.WriteInfoLine(line);
+                }
+
+                foreach (var line in publishResult.StandardError.Split(Environment.NewLine))
+                {
+                    output.WriteInfoLine(line);
+                }
+
                 throw new CommandException("'dotnet publish' failed.");
             }
 

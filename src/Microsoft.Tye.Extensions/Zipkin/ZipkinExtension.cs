@@ -14,48 +14,59 @@ namespace Microsoft.Tye.Extensions.Zipkin
     {
         public override Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
         {
-            if (context.Operation == ExtensionContext.OperationKind.LocalRun)
+            if (context.Application.Services.Any(s => s.Name == "zipkin"))
             {
-                if (context.Application.Services.Any(s => s.Name == "zipkin"))
+                context.Output.WriteDebugLine("zipkin service already configured. Skipping...");
+            }
+            else
+            {
+                context.Output.WriteDebugLine("Injecting zipkin service...");
+                var service = new ContainerServiceBuilder("zipkin", "openzipkin/zipkin")
                 {
-                    context.Output.WriteDebugLine("zipkin service already configured. Skipping...");
-                }
-                else
-                {
-                    context.Output.WriteDebugLine("Injecting zipkin service...");
-
-                    var service = new ContainerServiceBuilder("zipkin", "openzipkin/zipkin")
+                    Bindings =
                     {
-                        Bindings =
+                        new BindingBuilder()
                         {
-                            new BindingBuilder()
-                            {
-                                Port = 9411,
-                                ContainerPort = 9411,
-                                Protocol = "http",
-                            },
+                            Port = 9411,
+                            ContainerPort = 9411,
+                            Protocol = "http",
                         },
-                    };
-                    context.Application.Services.Add(service);
+                    },
+                };
+                context.Application.Services.Add(service);
 
-                    foreach (var s in context.Application.Services)
+                foreach (var s in context.Application.Services)
+                {
+                    if (object.ReferenceEquals(s, service))
                     {
-                        if (object.ReferenceEquals(s, service))
-                        {
-                            continue;
-                        }
+                        continue;
+                    }
 
-                        // make zipkin available as a dependency of everything.
-                        if (!s.Dependencies.Contains(service.Name))
-                        {
-                            s.Dependencies.Add(service.Name);
-                        }
+                    // make zipkin available as a dependency of everything.
+                    if (!s.Dependencies.Contains(service.Name))
+                    {
+                        s.Dependencies.Add(service.Name);
                     }
                 }
+            }
 
-                if (context.Options!.DistributedTraceProvider.Key is null)
+            if (context.Operation == ExtensionContext.OperationKind.LocalRun)
+            {
+                if (context.Options!.DistributedTraceProvider is null)
                 {
-                    context.Options.DistributedTraceProvider = ("zipkin", "http://localhost:9411");
+                    // For local development we hardcode the port and hostname
+                    context.Options.DistributedTraceProvider = "zipkin=http://localhost:9411";
+                }
+            }
+            else if (context.Operation == ExtensionContext.OperationKind.Deploy)
+            {
+                foreach (var project in context.Application.Services.OfType<ProjectServiceBuilder>())
+                {
+                    var sidecar = DiagnosticAgent.GetOrAddSidecar(project);
+
+                    // Use service discovery to find zipkin
+                    sidecar.Args.Add("--provider:zipkin=service:zipkin");
+                    sidecar.Dependencies.Add("zipkin");
                 }
             }
 
