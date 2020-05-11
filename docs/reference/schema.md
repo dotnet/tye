@@ -133,7 +133,12 @@ services:
 
 #### `name` (string) *required*
 
-The service name. Each service must have a name, and it must be a legal DNS name: (`a-z` + `_`).
+- The service name. Each service must have a name, and it must be a legal DNS name: (`a-z` + `-`).
+- contain at most 63 characters
+- contain only lowercase alphanumeric characters or ‘-’
+- start with an alphanumeric character
+- end with an alphanumeric character
+
 
 #### `project` (string)
 
