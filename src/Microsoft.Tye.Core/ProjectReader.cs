@@ -274,7 +274,7 @@ namespace Microsoft.Tye
                 project.ContainerInfo.BaseImageName = projectInstance.GetPropertyValue("ContainerBaseImage");
                 project.ContainerInfo.BaseImageTag = projectInstance.GetPropertyValue("ContainerBaseTag");
             }
-        
+
             bool PropertyIsTrue(string property)
             {
                 return projectInstance.GetPropertyValue(property) is string s && !string.IsNullOrEmpty(s) && bool.Parse(s);
