@@ -125,16 +125,19 @@ namespace Microsoft.Tye.Hosting
 
         private static string DetermineContainerImage(ProjectRunInfo project)
         {
-            var baseImage = project.IsAspNet ? "mcr.microsoft.com/dotnet/core/aspnet" : "mcr.microsoft.com/dotnet/core/runtime";
-
+            string baseImage;
             if (!string.IsNullOrEmpty(project.ContainerBaseImage))
             {
                 baseImage = project.ContainerBaseImage;
             }
+            else
+            {
+                baseImage = project.IsAspNet ? "mcr.microsoft.com/dotnet/core/aspnet" : "mcr.microsoft.com/dotnet/core/runtime";
+            }
 
-            var imageTag = string.IsNullOrEmpty(project.ContainerBaseTag) ? project.TargetFrameworkVersion : project.ContainerBaseTag;
+            var baseImageTag = !string.IsNullOrEmpty(project.ContainerBaseTag) ? project.ContainerBaseTag : project.TargetFrameworkVersion;
 
-            return $"{baseImage}:{imageTag}";
+            return $"{baseImage}:{baseImageTag}";
         }
 
         public Task StopAsync(Application application)
