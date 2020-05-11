@@ -113,7 +113,7 @@ namespace Microsoft.Tye
                     throw new CommandException("'docker build' failed.");
                 }
 
-                output.WriteInfoLine($"Created Docker Image: '{container.ImageName}:{container.ImageTag}'");
+                output.WriteInfoLine($"Created Docker Image: '{container.ImageName!}:{container.ImageTag!}'");
                 project.Outputs.Add(new DockerImageOutput(container.ImageName!, container.ImageTag!));
             }
             finally
