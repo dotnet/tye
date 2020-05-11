@@ -246,7 +246,7 @@ namespace E2ETest
             });
         }
 
-        [ConditionalFact]
+        [Fact]
         public async Task DockerBaseImageAndTagTest()
         {
             using var projectDirectory = CopyTestProjectDirectory(Path.Combine("frontend-backend", "backend"));
