@@ -246,6 +246,30 @@ namespace E2ETest
             });
         }
 
+        [Fact]
+        public async Task DockerBaseImageAndTagTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory(Path.Combine("frontend-backend", "backend"));
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "backend-baseimage.csproj"));
+
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            // Transform the backend into a docker image for testing
+            var project = (ProjectServiceBuilder)application.Services.First(s => s.Name == "backend-baseimage");
+
+            // check ContainerInfo values
+            Assert.True(string.Equals(project.ContainerInfo!.BaseImageName, "mcr.microsoft.com/dotnet/core/sdk"));
+            Assert.True(string.Equals(project.ContainerInfo!.BaseImageTag, "3.1-buster"));
+
+            // check projectInfo values
+            var projectRunInfo = new ProjectRunInfo(project);
+
+            Assert.True(string.Equals(projectRunInfo!.ContainerBaseImage, project.ContainerInfo.BaseImageName));
+            Assert.True(string.Equals(projectRunInfo!.ContainerBaseTag, project.ContainerInfo.BaseImageTag));
+        }
+
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task DockerNamedVolumeTest()

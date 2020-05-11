@@ -92,21 +92,21 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(container));
             }
 
-            if (container.BaseImageName == null && project.IsAspNet)
+            if (string.IsNullOrEmpty(container.BaseImageName) && project.IsAspNet)
             {
                 container.BaseImageName = "mcr.microsoft.com/dotnet/core/aspnet";
             }
-            else if (container.BaseImageName == null)
+            else if (string.IsNullOrEmpty(container.BaseImageName))
             {
                 container.BaseImageName = "mcr.microsoft.com/dotnet/core/runtime";
             }
 
-            if (container.BaseImageTag == null && project.TargetFrameworkName == "netcoreapp")
+            if (string.IsNullOrEmpty(container.BaseImageTag) && project.TargetFrameworkName == "netcoreapp")
             {
                 container.BaseImageTag = project.TargetFrameworkVersion;
             }
 
-            if (container.BaseImageTag == null)
+            if (string.IsNullOrEmpty(container.BaseImageTag))
             {
                 throw new CommandException($"Unsupported TFM {project.TargetFramework}.");
             }
