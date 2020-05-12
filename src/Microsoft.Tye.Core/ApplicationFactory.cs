@@ -98,12 +98,12 @@ namespace Microsoft.Tye
 
                         project.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
                         project.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
-
-                        await ProjectReader.ReadProjectDetailsAsync(output, project);
-
+                        
                         // We don't apply more container defaults here because we might need
                         // to prompt for the registry name.
                         project.ContainerInfo = new ContainerInfo() { UseMultiphaseDockerfile = false, };
+
+                        await ProjectReader.ReadProjectDetailsAsync(output, project);
 
                         // Do k8s by default.
                         project.ManifestInfo = new KubernetesManifestInfo();
