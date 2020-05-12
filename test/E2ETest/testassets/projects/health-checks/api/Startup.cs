@@ -24,8 +24,8 @@ namespace api
     {
         private static string _randomId = Guid.NewGuid().ToString();
 
-        private static bool _healthy = true;
-        private static bool _ready = true;
+        private static bool _healthy = false;
+        private static bool _ready = false;
 
         private static int _healthyDelay = 0;
         private static int _readyDelay = 0;
