@@ -57,9 +57,7 @@ namespace Microsoft.Tye.Hosting
                                         continue;
                                     }
 
-                                    // TODO: proxy doesn't work for some external containers (e.g. redis), so for now we don't use proxy if #replicas = 1
-                                    //if (service.Description.RunInfo is IngressRunInfo && service.Description.Replicas == 1)
-                                    if (service.Description.Replicas == 1)
+                                    if ((service.Description.Readiness is null || service.Description.RunInfo is IngressRunInfo) && service.Description.Replicas == 1)
                                     {
                                         // No need to proxy for a single replica, we may want to do this later but right now we skip it
                                         continue;
