@@ -18,7 +18,6 @@ namespace Microsoft.Tye.Hosting.Model.V1
         public int? ExitCode { get; set; }
         public int? Pid { get; set; }
         public IDictionary<string, string>? Environment { get; set; }
-
         public ReplicaState? State { get; set; }
     }
 }

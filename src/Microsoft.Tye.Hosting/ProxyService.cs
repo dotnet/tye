@@ -57,7 +57,7 @@ namespace Microsoft.Tye.Hosting
                                         continue;
                                     }
 
-                                    if ((service.Description.Readiness is null || service.Description.RunInfo is IngressRunInfo) && service.Description.Replicas == 1)
+                                    if (service.Description.Readiness == null && service.Description.Replicas == 1)
                                     {
                                         // No need to proxy for a single replica, we may want to do this later but right now we skip it
                                         continue;

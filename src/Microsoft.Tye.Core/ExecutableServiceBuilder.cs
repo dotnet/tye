@@ -25,6 +25,7 @@ namespace Microsoft.Tye
         public List<EnvironmentVariableBuilder> EnvironmentVariables { get; } = new List<EnvironmentVariableBuilder>();
 
         public ProbeBuilder? Liveness { get; set; }
+        
         public ProbeBuilder? Readiness { get; set; }
     }
 }

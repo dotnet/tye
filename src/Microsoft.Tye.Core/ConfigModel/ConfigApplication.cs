@@ -145,7 +145,7 @@ namespace Microsoft.Tye.ConfigModel
                     }
 
                     // right now only http is supported, so it must be set
-                    if (probe.Probe!.Http is null)
+                    if (probe.Probe!.Http == null)
                     {
                         throw new TyeYamlException(CoreStrings.FormatProberRequired(probe.Name));
                     }

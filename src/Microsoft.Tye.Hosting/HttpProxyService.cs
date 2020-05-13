@@ -132,7 +132,19 @@ namespace Microsoft.Tye.Hosting
                         RequestDelegate del = async context =>
                         {
                             var next = (int)(Interlocked.Increment(ref count) % uris.Count);
-                            for (int i = 0; !_readyPorts.ContainsKey(uris[next].Port) && i < uris.Count; i++, next = (int)(Interlocked.Increment(ref count) % uris.Count)) ;
+                            
+                            // we find the first `Ready` port
+                            for (int i = 0; i < uris.Count; i++)
+                            {
+                                if (_readyPorts.ContainsKey(uris[next].Port))
+                                {
+                                    break;
+                                }
+
+                                next = (int)(Interlocked.Increment(ref count) % uris.Count);
+                            }
+
+                            // if we've looped through all the port and didn't find a single one that is `Ready`, we return HTTP BadGateway
                             if (!_readyPorts.ContainsKey(uris[next].Port))
                             {
                                 context.Response.StatusCode = (int)HttpStatusCode.BadGateway;

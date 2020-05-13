@@ -469,7 +469,7 @@ namespace Microsoft.Tye
 
             if (builder.Http != null)
             {
-                var builderHttp = builder.Http!;
+                var builderHttp = builder.Http;
                 var httpGet = new YamlMappingNode();
 
                 probe.Add("httpGet", httpGet);
@@ -477,23 +477,23 @@ namespace Microsoft.Tye
 
                 if (builderHttp.Protocol != null)
                 {
-                    httpGet.Add("scheme", builderHttp.Protocol!.ToUpper());
+                    httpGet.Add("scheme", builderHttp.Protocol.ToUpper());
                 }
 
                 if (builderHttp.Port != null)
                 {
-                    httpGet.Add("port", builderHttp.Port!.ToString()!);
+                    httpGet.Add("port", builderHttp.Port.ToString()!);
                 }
                 else
                 {
                     // If port is not given, we pull default port
-                    var binding = service.Bindings.First(b => builderHttp.Protocol is null || b.Protocol == builderHttp.Protocol);
+                    var binding = service.Bindings.First(b => builderHttp.Protocol == null || b.Protocol == builderHttp.Protocol);
                     if (binding.Port != null)
                     {
                         httpGet.Add("port", binding.Port.Value.ToString());
                     }
 
-                    if (builderHttp.Protocol is null && binding.Protocol != null)
+                    if (builderHttp.Protocol == null && binding.Protocol != null)
                     {
                         httpGet.Add("scheme", binding.Protocol.ToUpper());
                     }

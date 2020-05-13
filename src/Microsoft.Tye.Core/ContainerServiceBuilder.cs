@@ -31,6 +31,7 @@ namespace Microsoft.Tye
         public List<VolumeBuilder> Volumes { get; } = new List<VolumeBuilder>();
 
         public ProbeBuilder? Liveness { get; set; }
+        
         public ProbeBuilder? Readiness { get; set; }
     }
 }

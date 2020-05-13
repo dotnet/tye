@@ -103,16 +103,16 @@ namespace Microsoft.Tye.Hosting
             private void Init()
             {
                 var serviceDesc = _replica.Service.Description;
-                if (serviceDesc.Liveness is null && serviceDesc.Readiness is null)
+                if (serviceDesc.Liveness == null && serviceDesc.Readiness == null)
                 {
                     MoveToReady();
                 }
-                else if (serviceDesc.Liveness is null)
+                else if (serviceDesc.Liveness == null)
                 {
                     MoveToHealthy(from: ReplicaState.Started);
                     StartReadinessProbe(serviceDesc.Readiness!);
                 }
-                else if (serviceDesc.Readiness is null)
+                else if (serviceDesc.Readiness == null)
                 {
                     StartLivenessProbe(serviceDesc.Liveness, moveToOnSuccess: ReplicaState.Ready);
                 }
@@ -126,9 +126,9 @@ namespace Microsoft.Tye.Hosting
             private void StartLivenessProbe(Probe probe, ReplicaState moveToOnSuccess = ReplicaState.Healthy)
             {
                 // currently only HTTP is available
-                if (probe.Http is null)
+                if (probe.Http == null)
                 {
-                    _logger.LogWarning("cannot start probing replica {name} because probe configuration is not set", _replica.Name);
+                    _logger.LogWarning("Cannot start probing replica {name} because probe configuration is not set", _replica.Name);
                     return;
                 }
 
@@ -178,9 +178,9 @@ namespace Microsoft.Tye.Hosting
             private void StartReadinessProbe(Probe probe)
             {
                 // currently only HTTP is available
-                if (probe.Http is null)
+                if (probe.Http == null)
                 {
-                    _logger.LogWarning("cannot start probing replica {name} because probe configuration is not set", _replica.Name);
+                    _logger.LogWarning("Cannot start probing replica {name} because probe configuration is not set", _replica.Name);
                     return;
                 }
 
@@ -230,19 +230,19 @@ namespace Microsoft.Tye.Hosting
 
             private void MoveToHealthy(ReplicaState from)
             {
-                _logger.LogInformation("replica {name} is moving to an healthy state", _replica.Name);
+                _logger.LogDebug("Replica {name} is moving to an healthy state", _replica.Name);
                 ChangeState(ReplicaState.Healthy);
             }
 
             private void MoveToReady()
             {
-                _logger.LogInformation("replica {name} is moving to a ready state", _replica.Name);
+                _logger.LogDebug("Replica {name} is moving to a ready state", _replica.Name);
                 ChangeState(ReplicaState.Ready);
             }
 
             private void Kill()
             {
-                _logger.LogInformation("killing replica {name} because it has failed the liveness probe", _replica.Name);
+                _logger.LogDebug("Killing replica {name} because it has failed the liveness probe", _replica.Name);
                 _replica.StoppingTokenSource.Cancel();
             }
 
@@ -358,7 +358,7 @@ namespace Microsoft.Tye.Hosting
                     var res = await _httpClient.SendAsync(req, timeoutCts.Token);
                     if (!res.IsSuccessStatusCode)
                     {
-                        ShowWarning($"replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to a failed status ({res.StatusCode})");
+                        ShowWarning($"Replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to a failed status ({res.StatusCode})");
                         Send(false);
                         return;
                     }
@@ -367,12 +367,12 @@ namespace Microsoft.Tye.Hosting
                 }
                 catch (HttpRequestException ex)
                 {
-                    ShowWarning($"replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to an http exception", ex);
+                    ShowWarning($"Replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to an http exception", ex);
                     Send(false);
                 }
                 catch (TaskCanceledException)
                 {
-                    ShowWarning($"replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to timeout");
+                    ShowWarning($"Replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to timeout");
                     Send(false);
                 }
                 finally
@@ -412,6 +412,11 @@ namespace Microsoft.Tye.Hosting
 
             public override void Start()
             {
+                // the logic that selects the binding for the probing depends on the protocol and port fields that were provided in the probe
+                // if neither port nor protocol were provided, we select the first binding
+                // if just port was provided, we select the first binding with that port
+                // if just protocol was provided, we select the first binding with that protocol (http/https)
+                // if both port and protocol were provided, we select the first binding with that port and protocol
                 Func<ReplicaBinding, bool> bindingClosure = (_httpProberSettings.Port.HasValue, _httpProberSettings.Protocol != null) switch
                 {
                     (false, false) => _ => true,
@@ -423,7 +428,7 @@ namespace Microsoft.Tye.Hosting
                 var selectedBindings = _replica.Bindings.Where(bindingClosure);
                 if (selectedBindings.Count() == 0)
                 {
-                    _logger.LogWarning($"no suitable binding was found for replica {_replica.Name} for probe '{_probeName}'");
+                    _logger.LogWarning($"No suitable binding was found for replica {_replica.Name} for probe '{_probeName}'");
                     return;
                 }
 
