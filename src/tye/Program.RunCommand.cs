@@ -91,7 +91,7 @@ namespace Microsoft.Tye
                 var output = new OutputContext(args.Console, Verbosity.Info);
 
                 output.WriteInfoLine("Loading Application Details...");
-                var application = await ApplicationFactory.CreateAsync(output, args.Path);
+                var application = await ApplicationFactory.CreateAsync(output, args.Path, args.Host);
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
@@ -119,7 +119,7 @@ namespace Microsoft.Tye
                 output.WriteInfoLine("Launching Tye Host...");
                 output.WriteInfoLine(string.Empty);
 
-                await using var tyeHost = new TyeHost(application.ToHostingApplication(args.Host), options);
+                await using var tyeHost = new TyeHost(application.ToHostingApplication(), options);
                 await tyeHost.RunAsync();
             });
 

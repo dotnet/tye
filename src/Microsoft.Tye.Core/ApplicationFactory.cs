@@ -14,7 +14,7 @@ namespace Microsoft.Tye
 {
     public static class ApplicationFactory
     {
-        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source)
+        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, string host = "127.0.0.1")
         {
             if (source is null)
             {
@@ -28,6 +28,7 @@ namespace Microsoft.Tye
             rootConfig.Validate();
 
             var root = new ApplicationBuilder(source, rootConfig.Name ?? source.Directory.Name.ToLowerInvariant());
+            root.Host = host;
             root.Namespace = rootConfig.Namespace;
 
             queue.Enqueue((rootConfig, new HashSet<string>()));

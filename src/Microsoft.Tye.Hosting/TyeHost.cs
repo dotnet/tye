@@ -186,12 +186,7 @@ namespace Microsoft.Tye.Hosting
         private string ComputeHost(WebApplication app)
         {
             var host = app.Configuration["host"];
-            if (string.IsNullOrEmpty(host))
-            {
-                host = "127.0.0.1";
-            }
-
-            return host;
+            return !string.IsNullOrEmpty(host) ? host : "127.0.0.1";
         }
 
         private int ComputePort(WebApplication app)

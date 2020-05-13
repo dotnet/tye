@@ -29,7 +29,7 @@ namespace Microsoft.Tye
             }
         }
 
-        public static Application ToHostingApplication(this ApplicationBuilder application, string host = "127.0.0.1")
+        public static Application ToHostingApplication(this ApplicationBuilder application)
         {
             var services = new Dictionary<string, Service>();
 
@@ -127,7 +127,7 @@ namespace Microsoft.Tye
                     description.Bindings.Add(new ServiceBinding()
                     {
                         ConnectionString = binding.ConnectionString,
-                        Host = binding.Host ?? host,
+                        Host = binding.Host ?? application.Host,
                         ContainerPort = binding.ContainerPort,
                         Name = binding.Name,
                         Port = binding.Port,

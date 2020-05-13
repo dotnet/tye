@@ -30,5 +30,7 @@ namespace Microsoft.Tye
         public List<IngressBuilder> Ingress { get; } = new List<IngressBuilder>();
 
         public string? Network { get; set; }
+
+        public string? Host { get; set; }
     }
 }
