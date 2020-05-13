@@ -7,9 +7,9 @@ ingress:
       - port: 8006
     rules:
       - path: /api
-        service: ingress-svc
+        service: health-ingress-svc
 services:
-  - name: ingress-svc
+  - name: health-ingress-svc
     project: api/api.csproj
     replicas: 2
     liveness:

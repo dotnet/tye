@@ -2,7 +2,7 @@
 # read all about it at https://github.com/dotnet/tye
 name: health-checks
 services:
-  - name: proxy
+  - name: health-proxy
     project: api/api.csproj
     replicas: 2
     bindings:

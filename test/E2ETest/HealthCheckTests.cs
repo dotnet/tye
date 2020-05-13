@@ -72,7 +72,7 @@ namespace E2ETest
                 Sink = _sink,
             };
 
-            await StartHostAndWaitForReplicasToStart(host, new[] { "none" }, ReplicaState.Ready);
+            await StartHostAndWaitForReplicasToStart(host, new[] { "health-none" }, ReplicaState.Ready);
         }
 
         [Fact]
@@ -89,7 +89,7 @@ namespace E2ETest
                 Sink = _sink,
             };
 
-            await StartHostAndWaitForReplicasToStart(host, new[] { "readiness" }, ReplicaState.Healthy);
+            await StartHostAndWaitForReplicasToStart(host, new[] { "health-readiness" }, ReplicaState.Healthy);
         }
 
         [Fact]
@@ -106,9 +106,9 @@ namespace E2ETest
                 Sink = _sink,
             };
 
-            await StartHostAndWaitForReplicasToStart(host, new[] { "readiness" }, ReplicaState.Healthy);
+            await StartHostAndWaitForReplicasToStart(host, new[] { "health-readiness" }, ReplicaState.Healthy);
 
-            var replicas = host.Application.Services["readiness"].Replicas.Select(r => r.Value).ToList();
+            var replicas = host.Application.Services["health-readiness"].Replicas.Select(r => r.Value).ToList();
             Assert.True(await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Ready, replicas.Count, replicas.Select(r => r.Name).ToHashSet(), null, TimeSpan.Zero, async _ =>
             {
                 await Task.WhenAll(replicas.Select(r => SetHealthyReadyInReplica(r, ready: true)));
@@ -129,9 +129,9 @@ namespace E2ETest
                 Sink = _sink,
             };
 
-            await StartHostAndWaitForReplicasToStart(host, new[] { "liveness" }, ReplicaState.Started);
+            await StartHostAndWaitForReplicasToStart(host, new[] { "health-liveness" }, ReplicaState.Started);
 
-            var replicasToBecomeReady = host.Application.Services["liveness"].Replicas.Select(r => r.Value);
+            var replicasToBecomeReady = host.Application.Services["health-liveness"].Replicas.Select(r => r.Value);
             var replicasNamesToBecomeReady = replicasToBecomeReady.Select(r => r.Name).ToHashSet();
             Assert.True(await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Ready, replicasNamesToBecomeReady.Count, replicasNamesToBecomeReady, null, TimeSpan.Zero, async _ =>
             {
@@ -155,9 +155,9 @@ namespace E2ETest
 
             SetReplicasInitialState(host, true, true);
 
-            await StartHostAndWaitForReplicasToStart(host, new[] { "all" }, ReplicaState.Ready);
+            await StartHostAndWaitForReplicasToStart(host, new[] { "health-all" }, ReplicaState.Ready);
 
-            var replicasToBecomeReady = host.Application.Services["all"].Replicas.Select(r => r.Value).ToList();
+            var replicasToBecomeReady = host.Application.Services["health-all"].Replicas.Select(r => r.Value).ToList();
             var replicasNamesToBecomeReady = replicasToBecomeReady.Select(r => r.Name).ToHashSet();
 
             var randomReplica = replicasToBecomeReady[new Random().Next(0, replicasToBecomeReady.Count)];
@@ -184,9 +184,9 @@ namespace E2ETest
 
             SetReplicasInitialState(host, true, true);
 
-            await StartHostAndWaitForReplicasToStart(host, new[] { "all" }, ReplicaState.Ready);
+            await StartHostAndWaitForReplicasToStart(host, new[] { "health-all" }, ReplicaState.Ready);
 
-            var replicasToBecomeReady = host.Application.Services["all"].Replicas.Select(r => r.Value).ToList();
+            var replicasToBecomeReady = host.Application.Services["health-all"].Replicas.Select(r => r.Value).ToList();
             var replicasNamesToBecomeReady = replicasToBecomeReady.Select(r => r.Name).ToHashSet();
 
             var randomReplica = replicasToBecomeReady[new Random().Next(0, replicasToBecomeReady.Count)];
@@ -213,9 +213,9 @@ namespace E2ETest
 
             SetReplicasInitialState(host, true, true);
 
-            await StartHostAndWaitForReplicasToStart(host, new[] { "all" }, ReplicaState.Ready);
+            await StartHostAndWaitForReplicasToStart(host, new[] { "health-all" }, ReplicaState.Ready);
 
-            var replicasToBecomeReady = host.Application.Services["all"].Replicas.Select(r => r.Value).ToList();
+            var replicasToBecomeReady = host.Application.Services["health-all"].Replicas.Select(r => r.Value).ToList();
             var replicasNamesToBecomeReady = replicasToBecomeReady.Select(r => r.Name).ToHashSet();
 
             var randomNumber = new Random().Next(0, replicasToBecomeReady.Count);
@@ -248,12 +248,12 @@ namespace E2ETest
 
             SetReplicasInitialState(host, true, true);
 
-            await StartHostAndWaitForReplicasToStart(host, new[] { "proxy" }, ReplicaState.Ready);
+            await StartHostAndWaitForReplicasToStart(host, new[] { "health-proxy" }, ReplicaState.Ready);
 
-            var replicasToBecomeReady = host.Application.Services["proxy"].Replicas.Select(r => r.Value).ToList();
+            var replicasToBecomeReady = host.Application.Services["health-proxy"].Replicas.Select(r => r.Value).ToList();
 
             // we assume that proxy will continue sending http request to the same replica
-            var randomReplicaPortRes1 = await _client.GetAsync($"http://localhost:{host.Application.Services["proxy"].Description.Bindings.First().Port}/ports");
+            var randomReplicaPortRes1 = await _client.GetAsync($"http://localhost:{host.Application.Services["health-proxy"].Description.Bindings.First().Port}/ports");
             var randomReplicaPort1 = JsonSerializer.Deserialize<int[]>(await randomReplicaPortRes1.Content.ReadAsStringAsync())[0];
             var randomReplica1 = replicasToBecomeReady.First(r => r.Bindings.Any(b => b.Port == randomReplicaPort1));
 
@@ -262,7 +262,7 @@ namespace E2ETest
                   await SetHealthyReadyInReplica(randomReplica1, ready: false);
               });
 
-            var randomReplicaPortRes2 = await _client.GetAsync($"http://localhost:{host.Application.Services["proxy"].Description.Bindings.First().Port}/ports");
+            var randomReplicaPortRes2 = await _client.GetAsync($"http://localhost:{host.Application.Services["health-proxy"].Description.Bindings.First().Port}/ports");
             var randomReplicaPort2 = JsonSerializer.Deserialize<int[]>(await randomReplicaPortRes2.Content.ReadAsStringAsync())[0];
             var randomReplica2 = replicasToBecomeReady.First(r => r.Bindings.Any(b => b.Port == randomReplicaPort2));
 
@@ -275,7 +275,7 @@ namespace E2ETest
 
             try
             {
-                var resShouldFail = await _client.GetAsync($"http://localhost:{host.Application.Services["proxy"].Description.Bindings.First().Port}/ports");
+                var resShouldFail = await _client.GetAsync($"http://localhost:{host.Application.Services["health-proxy"].Description.Bindings.First().Port}/ports");
                 Assert.False(resShouldFail.IsSuccessStatusCode);
             }
             catch (HttpRequestException)
@@ -287,7 +287,7 @@ namespace E2ETest
                   await SetHealthyReadyInReplica(randomReplica2, ready: true);
               });
 
-            var randomReplicaPortRes3 = await _client.GetAsync($"http://localhost:{host.Application.Services["proxy"].Description.Bindings.First().Port}/ports");
+            var randomReplicaPortRes3 = await _client.GetAsync($"http://localhost:{host.Application.Services["health-proxy"].Description.Bindings.First().Port}/ports");
             var randomReplicaPort3 = JsonSerializer.Deserialize<int[]>(await randomReplicaPortRes3.Content.ReadAsStringAsync())[0];
 
             Assert.Equal(randomReplicaPort3, randomReplicaPort2);
@@ -309,9 +309,9 @@ namespace E2ETest
 
             SetReplicasInitialState(host, true, true);
 
-            await StartHostAndWaitForReplicasToStart(host, new[] { "ingress-svc" }, ReplicaState.Ready);
+            await StartHostAndWaitForReplicasToStart(host, new[] { "health-ingress-svc" }, ReplicaState.Ready);
 
-            var replicasToBecomeReady = host.Application.Services["ingress-svc"].Replicas.Select(r => r.Value).ToList();
+            var replicasToBecomeReady = host.Application.Services["health-ingress-svc"].Replicas.Select(r => r.Value).ToList();
             var ingressBinding = host.Application.Services.First(s => s.Value.Description.RunInfo is IngressRunInfo).Value.Description.Bindings.First();
             var uniqueIdUrl = $"{ingressBinding.Protocol}://localhost:{ingressBinding.Port}/api/id";
 
@@ -363,16 +363,16 @@ namespace E2ETest
 
             SetReplicasInitialState(host, true, true);
 
-            await StartHostAndWaitForReplicasToStart(host, new[] { "all" }, ReplicaState.Ready);
+            await StartHostAndWaitForReplicasToStart(host, new[] { "health-all" }, ReplicaState.Ready);
 
-            var res = await _client.GetAsync($"http://localhost:{host.Application.Services["all"].Description.Bindings.First().Port}/livenessHeaders");
+            var res = await _client.GetAsync($"http://localhost:{host.Application.Services["health-all"].Description.Bindings.First().Port}/livenessHeaders");
             Assert.True(res.IsSuccessStatusCode);
 
             var headers = JsonSerializer.Deserialize<Dictionary<string, string>>(await res.Content.ReadAsStringAsync());
             Assert.Equal("value1", headers["name1"]);
             Assert.Equal("value2", headers["name2"]);
 
-            res = await _client.GetAsync($"http://localhost:{host.Application.Services["all"].Description.Bindings.First().Port}/readinessHeaders");
+            res = await _client.GetAsync($"http://localhost:{host.Application.Services["health-all"].Description.Bindings.First().Port}/readinessHeaders");
             Assert.True(res.IsSuccessStatusCode);
 
             headers = JsonSerializer.Deserialize<Dictionary<string, string>>(await res.Content.ReadAsStringAsync());

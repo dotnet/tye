@@ -2,7 +2,7 @@
 # read all about it at https://github.com/dotnet/tye
 name: health-checks
 services:
-  - name: readiness
+  - name: health-readiness
     project: api/api.csproj
     replicas: 3
     bindings:
