@@ -18,7 +18,6 @@ ingress:
         service: app-a
       - host: b.example.com
         service: app-b
-        
 services:
 - name: app-a
   project: ApplicationA/ApplicationA.csproj
