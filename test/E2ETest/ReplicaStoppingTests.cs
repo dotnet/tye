@@ -55,7 +55,7 @@ namespace E2ETest
 
             await RunHostingApplication(application, new HostOptions(), async (host, uri) =>
             {
-                var replicaToStop = host.Application.Services["none"].Replicas.First();
+                var replicaToStop = host.Application.Services["health-none"].Replicas.First();
                 Assert.Contains(replicaToStop.Value.State, startedOrHigher);
 
                 var replicasToRestart = new[] { replicaToStop.Key };
