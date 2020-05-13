@@ -392,5 +392,40 @@ namespace E2ETest
                 await DockerAssert.DeleteDockerImagesAsync(output, "app-b");
             }
         }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task Generate_HealthChecks()
+        {
+            var applicationName = "health-checks";
+            var environment = "production";
+            var projectName = "health-all";
+
+            await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory(applicationName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-all.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            try
+            {
+                await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
+
+                // name of application is the folder
+                var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
+
+                YamlAssert.Equals(expectedContent, content, output);
+
+                await DockerAssert.AssertImageExistsAsync(output, projectName);
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+            }
+        }
     }
 }

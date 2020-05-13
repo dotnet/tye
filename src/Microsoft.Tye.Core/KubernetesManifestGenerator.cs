@@ -378,6 +378,16 @@ namespace Microsoft.Tye
                         }
                     }
                 }
+
+                if (project.Liveness != null)
+                {
+                    AddProbe(project, container, project.Liveness!, "livenessProbe");
+                }
+
+                if (project.Readiness != null)
+                {
+                    AddProbe(project, container, project.Readiness!, "readinessProbe");
+                }
             }
 
             foreach (var sidecar in project.Sidecars)
@@ -450,6 +460,64 @@ namespace Microsoft.Tye
             }
 
             return new KubernetesDeploymentOutput(project.Name, new YamlDocument(root));
+        }
+
+        private static void AddProbe(ServiceBuilder service, YamlMappingNode container, ProbeBuilder builder, string name)
+        {
+            var probe = new YamlMappingNode();
+            container.Add(name, probe);
+
+            if (builder.Http != null)
+            {
+                var builderHttp = builder.Http!;
+                var httpGet = new YamlMappingNode();
+
+                probe.Add("httpGet", httpGet);
+                httpGet.Add("path", builderHttp.Path);
+
+                if (builderHttp.Protocol != null)
+                {
+                    httpGet.Add("scheme", builderHttp.Protocol!.ToUpper());
+                }
+
+                if (builderHttp.Port != null)
+                {
+                    httpGet.Add("port", builderHttp.Port!.ToString()!);
+                }
+                else
+                {
+                    // If port is not given, we pull default port
+                    var binding = service.Bindings.First(b => builderHttp.Protocol is null || b.Protocol == builderHttp.Protocol);
+                    if (binding.Port != null)
+                    {
+                        httpGet.Add("port", binding.Port.Value.ToString());
+                    }
+
+                    if (builderHttp.Protocol is null && binding.Protocol != null)
+                    {
+                        httpGet.Add("scheme", binding.Protocol.ToUpper());
+                    }
+                }
+
+                if (builderHttp.Headers.Count > 0)
+                {
+                    var headers = new YamlSequenceNode();
+                    httpGet.Add("httpHeaders", headers);
+
+                    foreach (var builderHeader in builderHttp.Headers)
+                    {
+                        var header = new YamlMappingNode();
+                        header.Add("name", builderHeader.Key);
+                        header.Add("value", builderHeader.Value.ToString()!);
+                        headers.Add(header);
+                    }
+                }
+            }
+
+            probe.Add("initialDelaySeconds", builder.InitialDelay.ToString()!);
+            probe.Add("periodSeconds", builder.Period.ToString()!);
+            probe.Add("successThreshold", builder.SuccessThreshold.ToString()!);
+            probe.Add("failureThreshold", builder.FailureThreshold.ToString()!);
         }
 
         private static void AddEnvironmentVariablesForComputedBindings(YamlSequenceNode env, ComputedBindings bindings)
