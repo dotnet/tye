@@ -74,5 +74,20 @@ namespace E2ETest
 
             YamlAssert.Equals(expectedContent, content);
         }
+
+
+        [Fact]
+        public void console_normalization_svc_name()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("Console.Normalization.svc.Name");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "Console.Normalization.svc.Name.csproj"));
+
+            var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: false);
+
+            var expectedContent = File.ReadAllText("testassets/init/console-normalization-svc-name.yaml");
+
+            YamlAssert.Equals(expectedContent, content);
+        }
     }
 }
