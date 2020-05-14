@@ -109,6 +109,30 @@ Tye will build all .NET projects (unless `build: false` has been specified) befo
 
 Tye will use the Docker cli to pull any needed container images before launching any services. This is done as a separate step to avoid failures when the network is very slow or an image is very large. 
 
+### Determining Docker base images and tags
+
+Tye will use the TFM of the project to set the base image and tags of the container images to use when creating the associated Dockerfile.
+
+Should you choose to use a custom base image and/or tag or variant you can do so by soecifying the base image and tag in a `<PropertyGroup>` in any of the projects.
+
+Example - custom image
+```xml
+<PropertyGroup>
+   <ContainerBaseImage>myrepository/dotnetbaseimage</ContainerBaseImage>
+   <ContainerBaseTag>v1.1.0</ContainerBaseTag>
+</PropertyGroup>
+```
+
+Example - Debian buster tag
+```xml
+<PropertyGroup>
+   <ContainerBaseImage>mcr.microsoft.com/dotnet/core/sdk</ContainerBaseImage>
+   <ContainerBaseTag>3.1-buster</ContainerBaseTag>
+</PropertyGroup>
+```
+
+_* Note only public repositories are supported._
+
 ## Computing bindings
 
 In order to help services communicate, Tye manages details like listening ports and hostnames. This listening information is specified to services using environment variables in development. This section will summarize some of the key information for local development, but the best guide for the topic is the [service discovery documentation](/docs/reference/service_discovery.md).
