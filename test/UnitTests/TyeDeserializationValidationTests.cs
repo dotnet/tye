@@ -220,7 +220,7 @@ services:
         name: a
       - protocol: https
         name: b";
-            string errorMessage = "a DNS-1035 label must consist of lower case alphanumeric";
+            string errorMessage = "A service name must consist of lower case alphanumeric";
             using var parser = new YamlParser(input);
             var app = parser.ParseConfigApplication();
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
