@@ -114,7 +114,7 @@ namespace Microsoft.Tye
                             DockerFile = configService.DockerFile != null ? Path.Combine(source.DirectoryName, configService.DockerFile) : null,
                             // Supplying an absolute path with trailing slashes fails for DockerFileContext when calling docker build, so trim trailing slash.
                             DockerFileContext = configService.DockerFileContext != null
-                                                    ? Path.Combine(source.DirectoryName, configService.DockerFileContext).Trim('\\').Trim('/') 
+                                                    ? Path.Combine(source.DirectoryName, configService.DockerFileContext).Trim('\\').Trim('/')
                                                     : null
                         };
                         service = container;
