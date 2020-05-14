@@ -208,7 +208,8 @@ namespace Microsoft.Tye.Hosting
             {
                 var dockerBuildResult = await ProcessUtil.RunAsync(
                     $"docker",
-                    $"build \"{docker.DockerFileContext?.DirectoryName ?? docker.DockerFile.DirectoryName}\" -t {dockerImage} -f \"{docker.DockerFile}\"",
+                    // Supplying an absolute path with trailing slashes fails here, so trim trailing slash.
+                    $"build \"{docker.DockerFileContext?.FullName.Trim(Path.DirectorySeparatorChar) ?? docker.DockerFile.DirectoryName}\" -t {dockerImage} -f \"{docker.DockerFile}\"",
                     docker.WorkingDirectory,
                     throwOnError: false);
 
