@@ -57,6 +57,10 @@ namespace Microsoft.Tye
                         {
                             dockerRunInfo.DockerFileContext = new FileInfo(container.DockerFileContext);
                         }
+                        else
+                        {
+                            dockerRunInfo.DockerFileContext = new FileInfo(dockerRunInfo.DockerFile.DirectoryName);
+                        }
                     }
 
                     foreach (var mapping in container.Volumes)
