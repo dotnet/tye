@@ -31,7 +31,7 @@ namespace Microsoft.Tye.Hosting.Model
 
         public ReplicaState? State { get; set; }
 
-        public CancellationTokenSource StoppingTokenSource { get; } = new CancellationTokenSource();
+        public CancellationTokenSource? StoppingTokenSource { get; set; }
 
         public List<ReplicaBinding> Bindings { get; set; } = new List<ReplicaBinding>();
     }

@@ -237,6 +237,9 @@ namespace Microsoft.Tye.Hosting
                     var replica = serviceName + "_" + Guid.NewGuid().ToString().Substring(0, 10).ToLower();
                     var status = new ProcessStatus(service, replica);
                     service.Replicas[replica] = status;
+                    
+                    using var stoppingCts = new CancellationTokenSource();
+                    status.StoppingTokenSource = stoppingCts;
                     await using var _ = processInfo.StoppedTokenSource.Token.Register(() => status.StoppingTokenSource.Cancel());
 
                     service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));

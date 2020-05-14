@@ -233,145 +233,170 @@ namespace Microsoft.Tye.Hosting
 
             async Task RunDockerContainer(IEnumerable<(int ExternalPort, int Port, int? ContainerPort, string? Protocol)> ports)
             {
-                while (!dockerInfo.StoppingTokenSource.IsCancellationRequested)
+                var hasPorts = ports.Any();
+
+                var replica = service.Description.Name.ToLower() + "_" + Guid.NewGuid().ToString().Substring(0, 10).ToLower();
+                var status = new DockerStatus(service, replica);
+                service.Replicas[replica] = status;
+
+                service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
+
+                var environment = new Dictionary<string, string>();
+
+                var portString = "";
+
+                if (hasPorts)
                 {
-                    var hasPorts = ports.Any();
+                    status.Ports = ports.Select(p => p.Port);
+                    status.Bindings = ports.Select(p => new ReplicaBinding() {Port = p.Port, ExternalPort = p.ExternalPort, Protocol = p.Protocol}).ToList();
 
-                    var replica = service.Description.Name.ToLower() + "_" + Guid.NewGuid().ToString().Substring(0, 10).ToLower();
-                    var status = new DockerStatus(service, replica);
-                    service.Replicas[replica] = status;
-                    await using var _ = dockerInfo.StoppingTokenSource.Token.Register(() => status.StoppingTokenSource.Cancel());
+                    // These are the ports that the application should use for binding
 
-                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
+                    // 1. Tell the docker container what port to bind to
+                    portString = docker.Private ? "" : string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.ContainerPort ?? p.Port}"));
 
-                    var environment = new Dictionary<string, string>();
-
-                    var portString = "";
-
-                    if (hasPorts)
+                    if (docker.IsAspNet)
                     {
-                        status.Ports = ports.Select(p => p.Port);
-                        status.Bindings = ports.Select(p => new ReplicaBinding() { Port = p.Port, ExternalPort = p.ExternalPort, Protocol = p.Protocol }).ToList();
+                        // 2. Configure ASP.NET Core to bind to those same ports
+                        environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://*:{p.ContainerPort ?? p.Port}"));
 
-                        // These are the ports that the application should use for binding
-
-                        // 1. Tell the docker container what port to bind to
-                        portString = docker.Private ? "" : string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.ContainerPort ?? p.Port}"));
-
-                        if (docker.IsAspNet)
+                        // Set the HTTPS port for the redirect middleware
+                        foreach (var p in ports)
                         {
-                            // 2. Configure ASP.NET Core to bind to those same ports
-                            environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://*:{p.ContainerPort ?? p.Port}"));
-
-                            // Set the HTTPS port for the redirect middleware
-                            foreach (var p in ports)
+                            if (string.Equals(p.Protocol, "https", StringComparison.OrdinalIgnoreCase))
                             {
-                                if (string.Equals(p.Protocol, "https", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    // We need to set the redirect URL to the exposed port so the redirect works cleanly
-                                    environment["HTTPS_PORT"] = p.ExternalPort.ToString();
-                                }
+                                // We need to set the redirect URL to the exposed port so the redirect works cleanly
+                                environment["HTTPS_PORT"] = p.ExternalPort.ToString();
                             }
                         }
-
-                        // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
-                        environment["PORT"] = string.Join(";", ports.Select(p => $"{p.ContainerPort ?? p.Port}"));
-
-                        // This the port for the container proxy (containerport:externalport)
-                        environment["PROXY_PORT"] = string.Join(";", ports.Select(p => $"{p.ContainerPort ?? p.Port}:{p.ExternalPort}"));
                     }
 
-                    // See: https://github.com/docker/for-linux/issues/264
-                    //
-                    // The way we do proxying here doesn't really work for multi-container scenarios on linux
-                    // without some more setup.
-                    application.PopulateEnvironment(service, (key, value) => environment[key] = value, hostname);
+                    // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
+                    environment["PORT"] = string.Join(";", ports.Select(p => $"{p.ContainerPort ?? p.Port}"));
 
-                    environment["APP_INSTANCE"] = replica;
-                    environment["CONTAINER_HOST"] = hostname;
+                    // This the port for the container proxy (containerport:externalport)
+                    environment["PROXY_PORT"] = string.Join(";", ports.Select(p => $"{p.ContainerPort ?? p.Port}:{p.ExternalPort}"));
+                }
 
-                    status.Environment = environment;
+                // See: https://github.com/docker/for-linux/issues/264
+                //
+                // The way we do proxying here doesn't really work for multi-container scenarios on linux
+                // without some more setup.
+                application.PopulateEnvironment(service, (key, value) => environment[key] = value, hostname);
 
-                    foreach (var pair in environment)
+                environment["APP_INSTANCE"] = replica;
+                environment["CONTAINER_HOST"] = hostname;
+
+                status.Environment = environment;
+
+                foreach (var pair in environment)
+                {
+                    environmentArguments += $"-e \"{pair.Key}={pair.Value}\" ";
+                }
+
+                foreach (var volumeMapping in docker.VolumeMappings)
+                {
+                    if (volumeMapping.Source != null)
                     {
-                        environmentArguments += $"-e \"{pair.Key}={pair.Value}\" ";
+                        var sourcePath = Path.GetFullPath(Path.Combine(application.ContextDirectory, volumeMapping.Source));
+                        volumes += $"-v {sourcePath}:{volumeMapping.Target} ";
                     }
-
-                    foreach (var volumeMapping in docker.VolumeMappings)
+                    else if (volumeMapping.Name != null)
                     {
-                        if (volumeMapping.Source != null)
+                        volumes += $"-v {volumeMapping.Name}:{volumeMapping.Target} ";
+                    }
+                }
+
+                var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {dockerImage} {docker.Args ?? ""}";
+
+                _logger.LogInformation("Running image {Image} for {Replica}", docker.Image, replica);
+
+                service.Logs.OnNext($"[{replica}]: docker {command}");
+
+                status.DockerCommand = command;
+                status.DockerNetwork = dockerNetwork;
+
+                WriteReplicaToStore(replica);
+                var result = await ProcessUtil.RunAsync(
+                    "docker",
+                    command,
+                    throwOnError: false,
+                    cancellationToken: dockerInfo.StoppingTokenSource.Token,
+                    outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
+                    errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"));
+
+                if (result.ExitCode != 0)
+                {
+                    _logger.LogError("docker run failed for {ServiceName} with exit code {ExitCode}:" + result.StandardError, service.Description.Name, result.ExitCode);
+                    service.Replicas.TryRemove(replica, out var _);
+                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
+
+                    PrintStdOutAndErr(service, replica, result);
+                    return;
+                }
+
+                var containerId = (string?)result.StandardOutput.Trim();
+
+                // There's a race condition that sometimes makes us miss the output
+                // so keep trying to get the container id
+                while (string.IsNullOrEmpty(containerId))
+                {
+                    // Try to get the ID of the container
+                    result = await ProcessUtil.RunAsync("docker", $"ps --no-trunc -f name={replica} --format " + "{{.ID}}");
+
+                    containerId = result.ExitCode == 0 ? result.StandardOutput.Trim() : null;
+                }
+
+                var shortContainerId = containerId.Substring(0, Math.Min(12, containerId.Length));
+
+                status.ContainerId = shortContainerId;
+
+                _logger.LogInformation("Running container {ContainerName} with ID {ContainerId}", replica, shortContainerId);
+
+                if (!string.IsNullOrEmpty(dockerNetwork))
+                {
+                    status.DockerNetworkAlias = docker.NetworkAlias ?? serviceDescription.Name;
+
+                    var networkCommand = $"network connect {dockerNetwork} {replica} --alias {status.DockerNetworkAlias}";
+
+                    service.Logs.OnNext($"[{replica}]: docker {networkCommand}");
+
+                    _logger.LogInformation("Running docker command {Command}", networkCommand);
+
+                    result = await ProcessUtil.RunAsync("docker", networkCommand);
+
+                    PrintStdOutAndErr(service, replica, result);
+                }
+
+                var sentStartedEvent = false;
+
+                while (!dockerInfo.StoppingTokenSource.Token.IsCancellationRequested)
+                {
+                    if (sentStartedEvent)
+                    {
+                        using var restartCts = new CancellationTokenSource(DockerStopTimeout);
+                        result = await ProcessUtil.RunAsync("docker", $"restart {containerId}", throwOnError: false, cancellationToken: restartCts.Token);
+
+                        if (restartCts.IsCancellationRequested)
                         {
-                            var sourcePath = Path.GetFullPath(Path.Combine(application.ContextDirectory, volumeMapping.Source));
-                            volumes += $"-v {sourcePath}:{volumeMapping.Target} ";
+                            _logger.LogWarning($"Failed to restart container after {DockerStopTimeout.Seconds} seconds.", replica, shortContainerId);
+                            break; // implement retry mechanism?
                         }
-                        else if (volumeMapping.Name != null)
+                        else if (result.ExitCode != 0)
                         {
-                            volumes += $"-v {volumeMapping.Name}:{volumeMapping.Target} ";
+                            _logger.LogWarning($"Failed to restart container due to exit code {result.ExitCode}.", replica, shortContainerId);
+                            break;
                         }
+
+                        service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
                     }
 
-                    var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {dockerImage} {docker.Args ?? ""}";
-
-                    _logger.LogInformation("Running image {Image} for {Replica}", docker.Image, replica);
-
-                    service.Logs.OnNext($"[{replica}]: docker {command}");
-
-                    status.DockerCommand = command;
-                    status.DockerNetwork = dockerNetwork;
-
-                    WriteReplicaToStore(replica);
-                    var result = await ProcessUtil.RunAsync(
-                        "docker",
-                        command,
-                        throwOnError: false,
-                        cancellationToken: status.StoppingTokenSource.Token,
-                        outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
-                        errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"));
-
-                    if (result.ExitCode != 0)
-                    {
-                        _logger.LogError("docker run failed for {ServiceName} with exit code {ExitCode}:" + result.StandardError, service.Description.Name, result.ExitCode);
-                        service.Replicas.TryRemove(replica, out var _);
-                        service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
-
-                        PrintStdOutAndErr(service, replica, result);
-                        return;
-                    }
-
-                    var containerId = (string?)result.StandardOutput.Trim();
-
-                    // There's a race condition that sometimes makes us miss the output
-                    // so keep trying to get the container id
-                    while (string.IsNullOrEmpty(containerId))
-                    {
-                        // Try to get the ID of the container
-                        result = await ProcessUtil.RunAsync("docker", $"ps --no-trunc -f name={replica} --format " + "{{.ID}}");
-
-                        containerId = result.ExitCode == 0 ? result.StandardOutput.Trim() : null;
-                    }
-
-                    var shortContainerId = containerId.Substring(0, Math.Min(12, containerId.Length));
-
-                    status.ContainerId = shortContainerId;
-
-                    _logger.LogInformation("Running container {ContainerName} with ID {ContainerId}", replica, shortContainerId);
-
-                    if (!string.IsNullOrEmpty(dockerNetwork))
-                    {
-                        status.DockerNetworkAlias = docker.NetworkAlias ?? serviceDescription.Name;
-
-                        var networkCommand = $"network connect {dockerNetwork} {replica} --alias {status.DockerNetworkAlias}";
-
-                        service.Logs.OnNext($"[{replica}]: docker {networkCommand}");
-
-                        _logger.LogInformation("Running docker command {Command}", networkCommand);
-
-                        result = await ProcessUtil.RunAsync("docker", networkCommand);
-
-                        PrintStdOutAndErr(service, replica, result);
-                    }
-
+                    using var stoppingCts = new CancellationTokenSource();
+                    status.StoppingTokenSource = stoppingCts;
                     service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
+                    sentStartedEvent = true;
+
+                    await using var _ = dockerInfo.StoppingTokenSource.Token.Register(() => status.StoppingTokenSource.Cancel());
 
                     _logger.LogInformation("Collecting docker logs for {ContainerName}.", replica);
 
@@ -408,39 +433,44 @@ namespace Microsoft.Tye.Hosting
 
                     _logger.LogInformation("docker logs collection for {ContainerName} complete with exit code {ExitCode}", replica, result.ExitCode);
 
-                    // Docker has a tendency to get stuck so we're going to timeout this shutdown process
-                    var timeoutCts = new CancellationTokenSource(DockerStopTimeout);
-
-                    _logger.LogInformation("Stopping container {ContainerName} with ID {ContainerId}", replica, shortContainerId);
-
-                    result = await ProcessUtil.RunAsync("docker", $"stop {containerId}", throwOnError: false, cancellationToken: timeoutCts.Token);
-
-                    if (timeoutCts.IsCancellationRequested)
-                    {
-                        _logger.LogWarning($"Failed to stop container after {DockerStopTimeout.Seconds} seconds, container will most likely be running.", replica, shortContainerId);
-                    }
-
-                    PrintStdOutAndErr(service, replica, result);
-
-                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
-
-                    _logger.LogInformation("Stopped container {ContainerName} with ID {ContainerId} exited with {ExitCode}", replica, shortContainerId, result.ExitCode);
-
-                    result = await ProcessUtil.RunAsync("docker", $"rm {containerId}", throwOnError: false, cancellationToken: timeoutCts.Token);
-
-                    if (timeoutCts.IsCancellationRequested)
-                    {
-                        _logger.LogWarning($"Failed to remove container after {DockerStopTimeout.Seconds} seconds, container will most likely still exist.", replica, shortContainerId);
-                    }
-
-                    PrintStdOutAndErr(service, replica, result);
-
-                    _logger.LogInformation("Removed container {ContainerName} with ID {ContainerId} exited with {ExitCode}", replica, shortContainerId, result.ExitCode);
-
-                    service.Replicas.TryRemove(replica, out var _);
-
-                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
+                    status.StoppingTokenSource = null;
                 }
+
+                // Docker has a tendency to get stuck so we're going to timeout this shutdown process
+                var timeoutCts = new CancellationTokenSource(DockerStopTimeout);
+
+                _logger.LogInformation("Stopping container {ContainerName} with ID {ContainerId}", replica, shortContainerId);
+
+                result = await ProcessUtil.RunAsync("docker", $"stop {containerId}", throwOnError: false, cancellationToken: timeoutCts.Token);
+
+                if (timeoutCts.IsCancellationRequested)
+                {
+                    _logger.LogWarning($"Failed to stop container after {DockerStopTimeout.Seconds} seconds, container will most likely be running.", replica, shortContainerId);
+                }
+
+                PrintStdOutAndErr(service, replica, result);
+
+                if (sentStartedEvent)
+                {
+                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
+                }
+
+                _logger.LogInformation("Stopped container {ContainerName} with ID {ContainerId} exited with {ExitCode}", replica, shortContainerId, result.ExitCode);
+
+                result = await ProcessUtil.RunAsync("docker", $"rm {containerId}", throwOnError: false, cancellationToken: timeoutCts.Token);
+
+                if (timeoutCts.IsCancellationRequested)
+                {
+                    _logger.LogWarning($"Failed to remove container after {DockerStopTimeout.Seconds} seconds, container will most likely still exist.", replica, shortContainerId);
+                }
+
+                PrintStdOutAndErr(service, replica, result);
+
+                _logger.LogInformation("Removed container {ContainerName} with ID {ContainerId} exited with {ExitCode}", replica, shortContainerId, result.ExitCode);
+
+                service.Replicas.TryRemove(replica, out var _);
+
+                service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
             };
 
             if (serviceDescription.Bindings.Count > 0)

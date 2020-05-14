@@ -63,7 +63,7 @@ namespace E2ETest
 
                 Assert.True(await DoOperationAndWaitForReplicasToRestart(host, replicasToRestart.ToHashSet(), restOfReplicas.ToHashSet(), TimeSpan.FromSeconds(1), _ =>
                 {
-                    replicaToStop.Value.StoppingTokenSource.Cancel();
+                    replicaToStop.Value.StoppingTokenSource!.Cancel();
                     return Task.CompletedTask;
                 }));
 
@@ -92,11 +92,11 @@ namespace E2ETest
 
                   Assert.True(await DoOperationAndWaitForReplicasToRestart(host, replicasToRestart.ToHashSet(), restOfReplicas.ToHashSet(), TimeSpan.FromSeconds(1), _ =>
                   {
-                      replicaToStop.Value.StoppingTokenSource.Cancel();
+                      replicaToStop.Value.StoppingTokenSource!.Cancel();
                       return Task.CompletedTask;
                   }));
 
-                  Assert.Contains(replicaToStop.Value.State, stoppedOrLower);
+                  Assert.Contains(replicaToStop.Value.State, startedOrHigher); // when a container restarts, it assumes the same replica
                   Assert.True(host.Application.Services.SelectMany(s => s.Value.Replicas).All(r => startedOrHigher.Contains(r.Value.State)));
               });
         }
