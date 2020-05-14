@@ -243,7 +243,7 @@ namespace Microsoft.Tye.Hosting
             private void Kill()
             {
                 _logger.LogDebug("Killing replica {name} because it has failed the liveness probe", _replica.Name);
-                
+
                 // it is assumed that a `Started` replica should have an initialized stopping token source
                 _replica.StoppingTokenSource!.Cancel();
             }

@@ -56,7 +56,7 @@ namespace Microsoft.Tye
         public List<SidecarBuilder> Sidecars { get; } = new List<SidecarBuilder>();
 
         public ProbeBuilder? Liveness { get; set; }
-        
+
         public ProbeBuilder? Readiness { get; set; }
     }
 }

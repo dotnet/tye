@@ -132,7 +132,7 @@ namespace Microsoft.Tye.Hosting
                         RequestDelegate del = async context =>
                         {
                             var next = (int)(Interlocked.Increment(ref count) % uris.Count);
-                            
+
                             // we find the first `Ready` port
                             for (int i = 0; i < uris.Count; i++)
                             {
