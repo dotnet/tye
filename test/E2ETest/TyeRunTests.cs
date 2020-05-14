@@ -660,9 +660,8 @@ services:
             });
         }
 
-        //[ConditionalFact]
-        //[SkipIfDockerNotRunning]
-        [Fact]
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
         public async Task DockerFileChangeContextTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("dockerfile");
