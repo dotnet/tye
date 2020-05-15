@@ -11,8 +11,10 @@ namespace Microsoft.Tye.ConfigModel
 {
     public class ConfigService
     {
-        const string ErrorMessage = "A service name must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name',  or 'abc-123', regex used for validation is '[a-z]([-a-z0-9]*[a-z0-9])?')";
-        const string MaxLengthErrorMessage = "must be no more than 63 characters";
+        const string ErrorMessage = "A service name must consist of lower case alphanumeric characters or '-'," +
+            " start with an alphabetic character, and end with an alphanumeric character" +
+            " (e.g. 'my-name',  or 'abc-123', regex used for validation is '[a-z]([-a-z0-9]*[a-z0-9])?').";
+        const string MaxLengthErrorMessage = "Name cannot be more that 63 characters long.";
 
         [Required]
         [RegularExpression("[a-z]([-a-z0-9]*[a-z0-9])?", ErrorMessage = ErrorMessage)]

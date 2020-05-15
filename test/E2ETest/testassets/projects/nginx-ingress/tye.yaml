@@ -6,9 +6,9 @@ services:
   volumes:
     - source: nginx.conf
       target: /etc/nginx/conf.d/default.conf
-- name: app-a
+- name: appA
   project: ApplicationA/ApplicationA.csproj
   replicas: 2
-- name: app-b
+- name: appB
   project: ApplicationB/ApplicationB.csproj
   replicas: 2

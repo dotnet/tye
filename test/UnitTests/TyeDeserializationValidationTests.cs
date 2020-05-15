@@ -211,13 +211,13 @@ services:
         {
             var input = @"
 services:
-  - name: appA
+  - name: app_
     bindings:
       - protocol: http
         name: a
       - protocol: https
         name: b";
-            string errorMessage = "A service name must consist of lower case alphanumeric";
+            var errorMessage = "A service name must consist of lower case alphanumeric";
             using var parser = new YamlParser(input);
             var app = parser.ParseConfigApplication();
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
@@ -235,7 +235,7 @@ services:
         name: a
       - protocol: https
         name: b";
-            var errorMessage = "must be no more than 63 characters";
+            var errorMessage = "Name cannot be more that 63 characters long.";
             using var parser = new YamlParser(input);
             var app = parser.ParseConfigApplication();
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());

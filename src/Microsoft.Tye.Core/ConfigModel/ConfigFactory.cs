@@ -43,7 +43,7 @@ namespace Microsoft.Tye.ConfigModel
 
             var service = new ConfigService()
             {
-                Name = Normalization(Path.GetFileNameWithoutExtension(file.Name)),
+                Name = NormalizeServiceName(Path.GetFileNameWithoutExtension(file.Name)),
                 Project = file.FullName.Replace('\\', '/'),
             };
 
@@ -74,7 +74,7 @@ namespace Microsoft.Tye.ConfigModel
                 {
                     var service = new ConfigService()
                     {
-                        Name = Normalization(Path.GetFileNameWithoutExtension(projectFile.Name)),
+                        Name = NormalizeServiceName(Path.GetFileNameWithoutExtension(projectFile.Name)),
                         Project = projectFile.FullName.Replace('\\', '/'),
                     };
 
@@ -99,7 +99,7 @@ namespace Microsoft.Tye.ConfigModel
             return parser.ParseConfigApplication();
         }
 
-        private static string Normalization(string name)
+        private static string NormalizeServiceName(string name)
             => Regex.Replace(name.ToLowerInvariant(), "[^0-9A-Za-z-]+", "-");
     }
 }

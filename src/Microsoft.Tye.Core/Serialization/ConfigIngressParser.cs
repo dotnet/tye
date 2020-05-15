@@ -30,7 +30,7 @@ namespace Tye.Serialization
                 switch (key)
                 {
                     case "name":
-                        configIngress.Name = YamlParser.GetScalarValue(key, child.Value);
+                        configIngress.Name = YamlParser.GetScalarValue(key, child.Value).ToLowerInvariant();
                         break;
                     case "replicas":
                         if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var replicas))
@@ -91,7 +91,7 @@ namespace Tye.Serialization
                         rule.Path = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     case "service":
-                        rule.Service = YamlParser.GetScalarValue(key, child.Value);
+                        rule.Service = YamlParser.GetScalarValue(key, child.Value).ToLowerInvariant();
                         break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
