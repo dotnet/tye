@@ -11,7 +11,7 @@ namespace MoviesAPI.Controllers
             => _moviesService = moviesService;
 
         [HttpGet]
-        public IActionResult GetBooks()
+        public IActionResult GetMovies()
             => Ok(_moviesService.GetMovies());
     }
 }
