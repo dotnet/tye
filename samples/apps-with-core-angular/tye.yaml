@@ -13,7 +13,7 @@ services:
     port: 5001
   
 - name: moviesapp
-  image: moviesapp:dev
+  dockerFile: MoviesApp/Dockerfile
   bindings:
   - protocol: http
     port: 4400
