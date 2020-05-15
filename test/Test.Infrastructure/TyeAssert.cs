@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Linq;
 using Microsoft.Tye.ConfigModel;
 using Xunit;
@@ -29,7 +30,7 @@ namespace Test.Infrastructure
                 {
                     var otherRule = otherIngress
                         .Rules
-                        .Where(o => o.Path == rule.Path && o.Host == rule.Host && o.Service == rule.Service)
+                        .Where(o => o.Path == rule.Path && o.Host == rule.Host && o.Service?.Equals(rule.Service, StringComparison.OrdinalIgnoreCase) == true)
                         .Single();
                     Assert.NotNull(otherRule);
                 }
@@ -49,7 +50,7 @@ namespace Test.Infrastructure
             {
                 var otherService = expected
                     .Services
-                    .Where(o => o.Name == service.Name)
+                    .Where(o => o.Name.Equals(service.Name, StringComparison.OrdinalIgnoreCase))
                     .Single();
                 Assert.NotNull(otherService);
                 Assert.Equal(otherService.Args, service.Args);
