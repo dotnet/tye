@@ -363,8 +363,8 @@ namespace E2ETest
             var applicationName = "apps-with-ingress";
             var environment = "production";
 
-            await DockerAssert.DeleteDockerImagesAsync(output, "app-a");
-            await DockerAssert.DeleteDockerImagesAsync(output, "app-b");
+            await DockerAssert.DeleteDockerImagesAsync(output, "appa");
+            await DockerAssert.DeleteDockerImagesAsync(output, "appa");
 
             using var projectDirectory = TestHelpers.CopyTestProjectDirectory(applicationName);
 
@@ -383,13 +383,13 @@ namespace E2ETest
 
                 YamlAssert.Equals(expectedContent, content, output);
 
-                await DockerAssert.AssertImageExistsAsync(output, "app-a");
-                await DockerAssert.AssertImageExistsAsync(output, "app-b");
+                await DockerAssert.AssertImageExistsAsync(output, "appa");
+                await DockerAssert.AssertImageExistsAsync(output, "appb");
             }
             finally
             {
-                await DockerAssert.DeleteDockerImagesAsync(output, "app-a");
-                await DockerAssert.DeleteDockerImagesAsync(output, "app-b");
+                await DockerAssert.DeleteDockerImagesAsync(output, "appa");
+                await DockerAssert.DeleteDockerImagesAsync(output, "appb");
             }
         }
     }
