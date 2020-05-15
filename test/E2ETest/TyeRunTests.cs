@@ -701,6 +701,12 @@ services:
   bindings:
     - containerPort: 80
       protocol: http
+- name: backend2
+  dockerFile: ./Dockerfile
+  dockerFileContext: ./backend
+  bindings:
+    - containerPort: 80
+      protocol: http
 - name: frontend
   project: frontend/frontend.csproj";
 
@@ -721,11 +727,14 @@ services:
             {
                 var frontendUri = await GetServiceUrl(client, uri, "frontend");
                 var backendUri = await GetServiceUrl(client, uri, "backend");
+                var backend2Uri = await GetServiceUrl(client, uri, "backend2");
 
                 var backendResponse = await client.GetAsync(backendUri);
+                var backend2Response = await client.GetAsync(backend2Uri);
                 var frontendResponse = await client.GetAsync(frontendUri);
 
                 Assert.True(backendResponse.IsSuccessStatusCode);
+                Assert.True(backend2Response.IsSuccessStatusCode);
                 Assert.True(frontendResponse.IsSuccessStatusCode);
             });
         }

@@ -208,7 +208,7 @@ namespace Microsoft.Tye.Hosting
             {
                 var dockerBuildResult = await ProcessUtil.RunAsync(
                     $"docker",
-                    $"build \"{docker.DockerFileContext?.DirectoryName ?? docker.DockerFile.DirectoryName}\" -t {dockerImage} -f \"{docker.DockerFile}\"",
+                    $"build \"{docker.DockerFileContext?.FullName}\" -t {dockerImage} -f \"{docker.DockerFile}\"",
                     docker.WorkingDirectory,
                     throwOnError: false);
 

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Tye.ConfigModel;
 
@@ -112,7 +113,8 @@ namespace Microsoft.Tye
                             Args = configService.Args,
                             Replicas = configService.Replicas ?? 1,
                             DockerFile = configService.DockerFile != null ? Path.Combine(source.DirectoryName, configService.DockerFile) : null,
-                            DockerFileContext = configService.DockerFileContext != null ? Path.Combine(source.DirectoryName, configService.DockerFileContext) : null
+                            // Supplying an absolute path with trailing slashes fails for DockerFileContext when calling docker build, so trim trailing slash.
+                            DockerFileContext = GetDockerFileContext(source, configService)
                         };
                         service = container;
                     }
@@ -321,6 +323,32 @@ namespace Microsoft.Tye
             }
 
             return root;
+        }
+
+        private static string? GetDockerFileContext(FileInfo source, ConfigService configService)
+        {
+            if (configService.DockerFileContext == null)
+            {
+                return null;
+            }
+
+            // On windows, calling docker build with an aboslute path that ends in a trailing slash fails,
+            // but it's the exact opposite on linux, where it needs to have the trailing slash.
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return Path.TrimEndingDirectorySeparator(Path.Combine(source.DirectoryName, configService.DockerFileContext));
+            }
+            else
+            {
+                var path = Path.Combine(source.DirectoryName, configService.DockerFileContext);
+
+                if (!Path.EndsInDirectorySeparator(path))
+                {
+                    return path += Path.DirectorySeparatorChar;
+                }
+
+                return path;
+            }
         }
 
         private static ConfigApplication GetNestedConfig(ConfigApplication rootConfig, string? file)
