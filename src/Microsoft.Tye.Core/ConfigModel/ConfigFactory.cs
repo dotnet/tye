@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using Microsoft.Tye.Serialization;
 using Tye.Serialization;
 
@@ -42,7 +43,7 @@ namespace Microsoft.Tye.ConfigModel
 
             var service = new ConfigService()
             {
-                Name = Path.GetFileNameWithoutExtension(file.Name).ToLowerInvariant(),
+                Name = NormalizeServiceName(Path.GetFileNameWithoutExtension(file.Name)),
                 Project = file.FullName.Replace('\\', '/'),
             };
 
@@ -73,7 +74,7 @@ namespace Microsoft.Tye.ConfigModel
                 {
                     var service = new ConfigService()
                     {
-                        Name = Path.GetFileNameWithoutExtension(projectFile.Name).ToLowerInvariant(),
+                        Name = NormalizeServiceName(Path.GetFileNameWithoutExtension(projectFile.Name)),
                         Project = projectFile.FullName.Replace('\\', '/'),
                     };
 
@@ -97,5 +98,8 @@ namespace Microsoft.Tye.ConfigModel
             using var parser = new YamlParser(file);
             return parser.ParseConfigApplication();
         }
+
+        private static string NormalizeServiceName(string name)
+            => Regex.Replace(name.ToLowerInvariant(), "[^0-9A-Za-z-]+", "-");
     }
 }

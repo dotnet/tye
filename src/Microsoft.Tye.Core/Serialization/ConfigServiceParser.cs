@@ -30,7 +30,7 @@ namespace Tye.Serialization
                 switch (key)
                 {
                     case "name":
-                        service.Name = YamlParser.GetScalarValue(key, child.Value);
+                        service.Name = YamlParser.GetScalarValue(key, child.Value).ToLowerInvariant();
                         break;
                     case "external":
                         if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var external))

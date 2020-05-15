@@ -203,8 +203,43 @@ services:
 
             using var parser = new YamlParser(input);
             var app = parser.ParseConfigApplication();
+            Assert.Throws<TyeYamlException>(() => app.Validate());
+        }
+
+        [Fact]
+        public void ValidateServiceNameThrowsException()
+        {
+            var input = @"
+services:
+  - name: app_
+    bindings:
+      - protocol: http
+        name: a
+      - protocol: https
+        name: b";
+            var errorMessage = "A service name must consist of lower case alphanumeric";
+            using var parser = new YamlParser(input);
+            var app = parser.ParseConfigApplication();
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
-            Assert.Contains(CoreStrings.FormatProjectImageExecutableExclusive(a, b), exception.Message);
+            Assert.Contains(errorMessage, exception.Message);
+        }
+
+        [Fact]
+        public void ValidateServiceNameThrowsExceptionForMaxLength()
+        {
+            var input = @"
+services:
+  - name: appavalidateservicenamethrowsexceptionformaxlengthvalidateservicen
+    bindings:
+      - protocol: http
+        name: a
+      - protocol: https
+        name: b";
+            var errorMessage = "Name cannot be more that 63 characters long.";
+            using var parser = new YamlParser(input);
+            var app = parser.ParseConfigApplication();
+            var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
+            Assert.Contains(errorMessage, exception.Message);
         }
     }
 }
