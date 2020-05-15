@@ -77,7 +77,7 @@ namespace E2ETest
 
 
         [Fact]
-        public void console_normalization_svc_name()
+        public void Console_Normalization_Service_Name()
         {
             using var projectDirectory = CopyTestProjectDirectory("Console.Normalization.svc.Name");
 
