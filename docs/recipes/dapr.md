@@ -104,7 +104,7 @@ Secondly initialize Dapr for your cluster following the instructions [here](http
 You can verify that these steps have been performed correctly by running the following command:
 
 ```sh
-dapr components--kubernetes
+dapr components --kubernetes
 ```
 
 ```txt
