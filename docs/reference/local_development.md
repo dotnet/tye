@@ -113,12 +113,12 @@ Tye will use the Docker cli to pull any needed container images before launching
 
 Tye will use the TFM of the project to set the base image and tags of the container images to use when creating the associated Dockerfile.
 
-Should you choose to use a custom base image and/or tag or variant you can do so by soecifying the base image and tag in a `<PropertyGroup>` in any of the projects.
+Should you choose to use a custom base image and/or tag or variant you can do so by specifying the base image and tag in a `<PropertyGroup>` in any of the projects.
 
 Example - custom image
 ```xml
 <PropertyGroup>
-   <ContainerBaseImage>myrepository/dotnetbaseimage</ContainerBaseImage>
+   <ContainerBaseImage>myregistry/dotnetbaseimage</ContainerBaseImage>
    <ContainerBaseTag>v1.1.0</ContainerBaseTag>
 </PropertyGroup>
 ```
@@ -130,8 +130,6 @@ Example - Debian buster tag
    <ContainerBaseTag>3.1-buster</ContainerBaseTag>
 </PropertyGroup>
 ```
-
-_* Note only public repositories are supported._
 
 ## Computing bindings
 
