@@ -514,7 +514,7 @@ namespace Microsoft.Tye
                 }
             }
 
-            probe.Add("initialDelaySeconds", builder.InitialDelay.ToString()!);
+            probe.Add("initialDelaySeconds", builder.InitialDelay.ToString());
             probe.Add("periodSeconds", builder.Period.ToString()!);
             probe.Add("successThreshold", builder.SuccessThreshold.ToString()!);
             probe.Add("failureThreshold", builder.FailureThreshold.ToString()!);
