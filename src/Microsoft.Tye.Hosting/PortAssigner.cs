@@ -50,7 +50,7 @@ namespace Microsoft.Tye.Hosting
                         binding.Port = GetNextPort();
                     }
 
-                    if (service.Description.Replicas == 1)
+                    if (service.Description.Readiness == null && service.Description.Replicas == 1)
                     {
                         // No need to proxy, the port maps to itself
                         binding.ReplicaPorts.Add(binding.Port.Value);

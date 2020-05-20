@@ -4,13 +4,10 @@
 
 namespace Microsoft.Tye.Hosting.Model
 {
-    public enum ReplicaState
+    public class ReplicaBinding
     {
-        Removed,
-        Added,
-        Started,
-        Stopped,
-        Healthy,
-        Ready
+        public int Port { get; set; }
+        public int ExternalPort { get; set; }
+        public string? Protocol { get; set; }
     }
 }

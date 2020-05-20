@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -26,9 +27,12 @@ namespace Microsoft.Tye.Hosting
         private List<WebApplication> _webApplications = new List<WebApplication>();
         private readonly ILogger _logger;
 
+        private ConcurrentDictionary<int, bool> _readyPorts;
+
         public HttpProxyService(ILogger logger)
         {
             _logger = logger;
+            _readyPorts = new ConcurrentDictionary<int, bool>();
         }
 
         public async Task StartAsync(Application application)
@@ -98,8 +102,9 @@ namespace Microsoft.Tye.Hosting
                         _logger.LogInformation("Processing ingress rule: Path:{Path}, Host:{Host}, Service:{Service}", rule.Path, rule.Host, rule.Service);
 
                         var targetServiceDescription = target.Description;
+                        RegisterListener(target);
 
-                        var uris = new List<Uri>();
+                        var uris = new List<(int Port, Uri Uri)>();
 
                         // HTTP before HTTPS (this might change once we figure out certs...)
                         var targetBinding = targetServiceDescription.Bindings.FirstOrDefault(b => b.Protocol == "http") ??
@@ -117,23 +122,42 @@ namespace Microsoft.Tye.Hosting
                         {
                             var port = targetBinding.ReplicaPorts[i];
                             var url = $"{targetBinding.Protocol}://localhost:{port}";
-                            uris.Add(new Uri(url));
+                            uris.Add((port, new Uri(url)));
                         }
 
                         _logger.LogInformation("Service {ServiceName} is using {Urls}", targetServiceDescription.Name, string.Join(",", uris.Select(u => u.ToString())));
 
                         // The only load balancing strategy here is round robin
                         long count = 0;
-                        RequestDelegate del = context =>
+                        RequestDelegate del = async context =>
                         {
                             var next = (int)(Interlocked.Increment(ref count) % uris.Count);
 
-                            var uri = new UriBuilder(uris[next])
+                            // we find the first `Ready` port
+                            for (int i = 0; i < uris.Count; i++)
+                            {
+                                if (_readyPorts.ContainsKey(uris[next].Port))
+                                {
+                                    break;
+                                }
+
+                                next = (int)(Interlocked.Increment(ref count) % uris.Count);
+                            }
+
+                            // if we've looped through all the port and didn't find a single one that is `Ready`, we return HTTP BadGateway
+                            if (!_readyPorts.ContainsKey(uris[next].Port))
+                            {
+                                context.Response.StatusCode = (int)HttpStatusCode.BadGateway;
+                                await context.Response.WriteAsync("Bad gateway");
+                                return;
+                            }
+
+                            var uri = new UriBuilder(uris[next].Uri)
                             {
                                 Path = (string)context.Request.RouteValues["path"]
                             };
 
-                            return context.ProxyRequest(invoker, uri.Uri);
+                            await context.ProxyRequest(invoker, uri.Uri);
                         };
 
                         IEndpointConventionBuilder conventions = null!;
@@ -167,6 +191,14 @@ namespace Microsoft.Tye.Hosting
 
         public async Task StopAsync(Application application)
         {
+            foreach (var service in application.Services.Values)
+            {
+                if (service.Items.TryGetValue(typeof(Subscription), out var item) && item is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+            }
+
             foreach (var webApp in _webApplications)
             {
                 try
@@ -182,6 +214,33 @@ namespace Microsoft.Tye.Hosting
                     webApp.Dispose();
                 }
             }
+        }
+
+        private void RegisterListener(Service service)
+        {
+            if (!service.Items.ContainsKey(typeof(Subscription)))
+            {
+                service.Items[typeof(Subscription)] = service.ReplicaEvents.Subscribe(OnReplicaEvent);
+            }
+        }
+
+        private void OnReplicaEvent(ReplicaEvent replicaEvent)
+        {
+            foreach (var binding in replicaEvent.Replica.Bindings)
+            {
+                if (replicaEvent.State == ReplicaState.Ready)
+                {
+                    _readyPorts.TryAdd(binding.Port, true);
+                }
+                else
+                {
+                    _readyPorts.TryRemove(binding.Port, out _);
+                }
+            }
+        }
+
+        private class Subscription
+        {
         }
     }
 }

@@ -97,6 +97,9 @@ namespace Microsoft.Tye
                         }
                         project.Replicas = configService.Replicas ?? 1;
 
+                        project.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
+                        project.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
+
                         // We don't apply more container defaults here because we might need
                         // to prompt for the registry name.
                         project.ContainerInfo = new ContainerInfo() { UseMultiphaseDockerfile = false, };
@@ -117,6 +120,9 @@ namespace Microsoft.Tye
                             DockerFileContext = GetDockerFileContext(source, configService)
                         };
                         service = container;
+
+                        container.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
+                        container.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
                     }
                     else if (!string.IsNullOrEmpty(configService.Executable))
                     {
@@ -139,6 +145,9 @@ namespace Microsoft.Tye
                             Replicas = configService.Replicas ?? 1
                         };
                         service = executable;
+
+                        executable.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
+                        executable.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
                     }
                     else if (!string.IsNullOrEmpty(configService.Include))
                     {
@@ -379,5 +388,23 @@ namespace Microsoft.Tye
                 }
             }
         }
+
+        private static ProbeBuilder GetProbeBuilder(ConfigProbe config) => new ProbeBuilder()
+        {
+            Http = config.Http != null ? GetHttpProberBuilder(config.Http) : null,
+            InitialDelay = config.InitialDelay,
+            Period = config.Period,
+            Timeout = config.Timeout,
+            SuccessThreshold = config.SuccessThreshold,
+            FailureThreshold = config.FailureThreshold
+        };
+
+        private static HttpProberBuilder GetHttpProberBuilder(ConfigHttpProber config) => new HttpProberBuilder()
+        {
+            Path = config.Path,
+            Headers = config.Headers,
+            Port = config.Port,
+            Protocol = config.Protocol
+        };
     }
 }

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.IO.Pipelines;
 using System.Net;
@@ -13,7 +14,6 @@ using System.Threading.Tasks;
 using Bedrock.Framework;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Tye.Hosting.Model;
@@ -25,9 +25,12 @@ namespace Microsoft.Tye.Hosting
         private IHost? _host;
         private readonly ILogger _logger;
 
+        private ConcurrentDictionary<int, CancellationTokenSource> _cancellationsByReplicaPort;
+
         public ProxyService(ILogger logger)
         {
             _logger = logger;
+            _cancellationsByReplicaPort = new ConcurrentDictionary<int, CancellationTokenSource>();
         }
 
         public Task StartAsync(Application application)
@@ -44,6 +47,8 @@ namespace Microsoft.Tye.Hosting
                                     continue;
                                 }
 
+                                service.Items[typeof(Subscription)] = service.ReplicaEvents.Subscribe(OnReplicaEvent);
+
                                 foreach (var binding in service.Description.Bindings)
                                 {
                                     if (binding.Port == null)
@@ -52,7 +57,7 @@ namespace Microsoft.Tye.Hosting
                                         continue;
                                     }
 
-                                    if (service.Description.Replicas == 1)
+                                    if (service.Description.Readiness == null && service.Description.Replicas == 1)
                                     {
                                         // No need to proxy for a single replica, we may want to do this later but right now we skip it
                                         continue;
@@ -76,6 +81,15 @@ namespace Microsoft.Tye.Hosting
                                             var notificationFeature = connection.Features.Get<IConnectionLifetimeNotificationFeature>();
 
                                             var next = (int)(Interlocked.Increment(ref count) % ports.Count);
+
+                                            if (!_cancellationsByReplicaPort.TryGetValue(ports[next], out var cts))
+                                            {
+                                                // replica in ready state <=> it's ports have cancellation tokens in the dictionary
+                                                // if replica is not in ready state, we don't forward traffic, but return instead
+                                                return;
+                                            }
+
+                                            using var _ = cts.Token.Register(() => notificationFeature.RequestClose());
 
                                             NetworkStream? targetStream = null;
 
@@ -134,6 +148,8 @@ namespace Microsoft.Tye.Hosting
                                                 {
                                                     _logger.LogDebug(0, ex, "Proxy error for service {ServiceName}", service.Description.Name);
                                                 }
+
+                                                _logger.LogDebug("Existing proxy {ServiceName} {ExternalPort}:{InternalPort}", service.Description.Name, binding.Port, ports[next]);
                                             }
                                             catch (Exception ex)
                                             {
@@ -159,6 +175,14 @@ namespace Microsoft.Tye.Hosting
 
         public async Task StopAsync(Application application)
         {
+            foreach (var service in application.Services.Values)
+            {
+                if (service.Items.TryGetValue(typeof(Subscription), out var item) && item is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+            }
+
             if (_host != null)
             {
                 await _host.StopAsync();
@@ -168,6 +192,31 @@ namespace Microsoft.Tye.Hosting
                     await disposable.DisposeAsync();
                 }
             }
+        }
+
+        private void OnReplicaEvent(ReplicaEvent replicaEvent)
+        {
+            // when a replica becomes ready for the first time, it shouldn't have a cancellation token in the dictionary
+            // for any event other than ready, we want to cancel the token and remove it from the dictionary
+            foreach (var binding in replicaEvent.Replica.Bindings)
+            {
+                if (_cancellationsByReplicaPort.TryRemove(binding.Port, out var cts))
+                {
+                    cts.Cancel();
+                }
+            }
+
+            if (replicaEvent.State == ReplicaState.Ready)
+            {
+                foreach (var binding in replicaEvent.Replica.Bindings)
+                {
+                    _cancellationsByReplicaPort.TryAdd(binding.Port, new CancellationTokenSource());
+                }
+            }
+        }
+
+        private class Subscription
+        {
         }
     }
 }

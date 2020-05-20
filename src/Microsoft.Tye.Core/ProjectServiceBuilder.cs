@@ -54,5 +54,9 @@ namespace Microsoft.Tye
         public Dictionary<string, string> BuildProperties { get; } = new Dictionary<string, string>();
 
         public List<SidecarBuilder> Sidecars { get; } = new List<SidecarBuilder>();
+
+        public ProbeBuilder? Liveness { get; set; }
+
+        public ProbeBuilder? Readiness { get; set; }
     }
 }

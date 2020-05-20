@@ -36,11 +36,15 @@ namespace Microsoft.Tye
             foreach (var service in application.Services)
             {
                 RunInfo? runInfo;
+                Probe? liveness;
+                Probe? readiness;
                 int replicas;
                 var env = new List<EnvironmentVariable>();
                 if (service is ExternalServiceBuilder)
                 {
                     runInfo = null;
+                    liveness = null;
+                    readiness = null;
                     replicas = 1;
                 }
                 else if (service is ContainerServiceBuilder container)
@@ -70,6 +74,8 @@ namespace Microsoft.Tye
 
                     runInfo = dockerRunInfo;
                     replicas = container.Replicas;
+                    liveness = container.Liveness != null ? GetProbeFromBuilder(container.Liveness) : null;
+                    readiness = container.Readiness != null ? GetProbeFromBuilder(container.Readiness) : null;
 
                     foreach (var entry in container.EnvironmentVariables)
                     {
@@ -80,6 +86,8 @@ namespace Microsoft.Tye
                 {
                     runInfo = new ExecutableRunInfo(executable.Executable, executable.WorkingDirectory, executable.Args);
                     replicas = executable.Replicas;
+                    liveness = executable.Liveness != null ? GetProbeFromBuilder(executable.Liveness) : null;
+                    readiness = executable.Readiness != null ? GetProbeFromBuilder(executable.Readiness) : null;
 
                     foreach (var entry in executable.EnvironmentVariables)
                     {
@@ -107,6 +115,8 @@ namespace Microsoft.Tye
 
                     runInfo = projectInfo;
                     replicas = project.Replicas;
+                    liveness = project.Liveness != null ? GetProbeFromBuilder(project.Liveness) : null;
+                    readiness = project.Readiness != null ? GetProbeFromBuilder(project.Readiness) : null;
 
                     foreach (var entry in project.EnvironmentVariables)
                     {
@@ -121,6 +131,8 @@ namespace Microsoft.Tye
                 var description = new ServiceDescription(service.Name, runInfo)
                 {
                     Replicas = replicas,
+                    Liveness = liveness,
+                    Readiness = readiness
                 };
 
                 description.Configuration.AddRange(env);
@@ -187,5 +199,21 @@ namespace Microsoft.Tye
 
             return env;
         }
+
+        private static Probe GetProbeFromBuilder(ProbeBuilder builder) => new Probe()
+        {
+            Http = builder.Http != null ? new HttpProber()
+            {
+                Path = builder.Http.Path,
+                Headers = builder.Http.Headers,
+                Port = builder.Http.Port,
+                Protocol = builder.Http.Protocol
+            } : null,
+            InitialDelay = TimeSpan.FromSeconds(builder.InitialDelay),
+            Period = TimeSpan.FromSeconds(builder.Period),
+            Timeout = TimeSpan.FromSeconds(builder.Timeout),
+            SuccessThreshold = builder.SuccessThreshold,
+            FailureThreshold = builder.FailureThreshold
+        };
     }
 }

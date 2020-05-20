@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Build.Evaluation;
 using Microsoft.Tye.ConfigModel;
 using YamlDotNet.RepresentationModel;
 
@@ -37,6 +39,7 @@ namespace Tye.Serialization
                         {
                             throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeABoolean(key));
                         }
+
                         service.External = external;
                         break;
                     case "image":
@@ -56,6 +59,7 @@ namespace Tye.Serialization
                         {
                             throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
                         }
+
                         HandleBuildProperties((child.Value as YamlSequenceNode)!, service.BuildProperties);
                         break;
                     case "include":
@@ -69,6 +73,7 @@ namespace Tye.Serialization
                         {
                             throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeABoolean(key));
                         }
+
                         service.Build = build;
                         break;
                     case "executable":
@@ -115,7 +120,16 @@ namespace Tye.Serialization
                         {
                             throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
                         }
+
                         HandleServiceConfiguration((child.Value as YamlSequenceNode)!, service.Configuration);
+                        break;
+                    case "liveness":
+                        service.Liveness = new ConfigProbe();
+                        HandleServiceProbe((YamlMappingNode)child.Value, service.Liveness!);
+                        break;
+                    case "readiness":
+                        service.Readiness = new ConfigProbe();
+                        HandleServiceProbe((YamlMappingNode)child.Value, service.Readiness!);
                         break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
@@ -185,6 +199,165 @@ namespace Tye.Serialization
                 HandleServiceVolumeNameMapping((YamlMappingNode)child, volume);
                 volumes.Add(volume);
             }
+        }
+
+        private static void HandleServiceProbe(YamlMappingNode yamlMappingNode, ConfigProbe probe)
+        {
+            foreach (var child in yamlMappingNode.Children)
+            {
+                var key = YamlParser.GetScalarValue(child.Key);
+
+                switch (key)
+                {
+                    case "http":
+                        probe.Http = new ConfigHttpProber();
+                        HandleServiceHttpProber((YamlMappingNode)child.Value, probe.Http!);
+                        break;
+                    case "initialDelay":
+                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var initialDelay))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
+                        }
+
+                        if (initialDelay < 0)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBePositive(key));
+                        }
+
+                        probe.InitialDelay = initialDelay;
+                        break;
+                    case "period":
+                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var period))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
+                        }
+
+                        if (period < 1)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeGreaterThanZero(key));
+                        }
+
+                        probe.Period = period;
+                        break;
+                    case "timeout":
+                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var timeout))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
+                        }
+
+                        if (timeout < 1)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeGreaterThanZero(key));
+                        }
+
+                        probe.Timeout = timeout;
+                        break;
+                    case "successThreshold":
+                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var successThreshold))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
+                        }
+
+                        if (successThreshold < 1)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeGreaterThanZero(key));
+                        }
+
+                        probe.SuccessThreshold = successThreshold;
+                        break;
+                    case "failureThreshold":
+                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var failureThreshold))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
+                        }
+
+                        if (failureThreshold < 1)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeGreaterThanZero(key));
+                        }
+
+                        probe.FailureThreshold = failureThreshold;
+                        break;
+                    default:
+                        throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
+                }
+            }
+        }
+
+        private static void HandleServiceHttpProber(YamlMappingNode yamlMappingNode, ConfigHttpProber prober)
+        {
+            foreach (var child in yamlMappingNode.Children)
+            {
+                var key = YamlParser.GetScalarValue(child.Key);
+
+                switch (key)
+                {
+                    case "path":
+                        prober.Path = YamlParser.GetScalarValue("path", child.Value);
+                        break;
+                    case "port":
+                        if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var port))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnInteger(key));
+                        }
+
+                        prober.Port = port;
+                        break;
+                    case "protocol":
+                        prober.Path = YamlParser.GetScalarValue("protocol", child.Value);
+                        break;
+                    case "headers":
+                        prober.Headers = new List<KeyValuePair<string, object>>();
+                        var headersNode = child.Value as YamlSequenceNode;
+                        if (headersNode is null)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence("headers"));
+                        }
+
+                        foreach (var header in headersNode.Children)
+                        {
+                            HandleServiceProbeHttpHeader((YamlMappingNode)header, prober.Headers);
+                        }
+
+                        break;
+                    default:
+                        throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
+                }
+            }
+        }
+
+        private static void HandleServiceProbeHttpHeader(YamlMappingNode yamlMappingNode, List<KeyValuePair<string, object>> headers)
+        {
+            string? name = null;
+            object? value = null;
+
+            foreach (var child in yamlMappingNode.Children)
+            {
+                var key = YamlParser.GetScalarValue(child.Key);
+
+                switch (key)
+                {
+                    case "name":
+                        name = YamlParser.GetScalarValue("name", child.Value);
+                        break;
+                    case "value":
+                        value = YamlParser.GetScalarValue("value", child.Value);
+                        break;
+                    default:
+                        throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
+                }
+            }
+
+            if (name is null)
+            {
+                throw new TyeYamlException(yamlMappingNode.Start, CoreStrings.FormatExpectedYamlScalar("name"));
+            }
+            else if (value is null)
+            {
+                throw new TyeYamlException(yamlMappingNode.Start, CoreStrings.FormatExpectedYamlScalar("value"));
+            }
+
+            headers.Add(new KeyValuePair<string, object>(name, value));
         }
 
         private static void HandleServiceVolumeNameMapping(YamlMappingNode yamlMappingNode, ConfigVolume volume)
