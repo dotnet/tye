@@ -61,7 +61,7 @@ namespace Microsoft.Tye
             }
         }
 
-        public static Task ReadProjectDetailsAsync(OutputContext output, ProjectServiceBuilder project)
+        public static Task ReadProjectDetailsAsync(OutputContext output, DotnetProjectServiceBuilder project)
         {
             if (output is null)
             {
@@ -142,7 +142,7 @@ namespace Microsoft.Tye
 
         // Do not load MSBuild types before using EnsureMSBuildRegistered.
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void EvaluateProject(OutputContext output, ProjectServiceBuilder project)
+        private static void EvaluateProject(OutputContext output, DotnetProjectServiceBuilder project)
         {
             var sw = Stopwatch.StartNew();
 

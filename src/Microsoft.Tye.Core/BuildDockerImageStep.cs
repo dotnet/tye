@@ -15,7 +15,7 @@ namespace Microsoft.Tye
 
         public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
-            if (SkipWithoutProject(output, service, out var project))
+            if (SkipWithoutDotnetProject(output, service, out var project))
             {
                 await HandleWithDockerFile(output, application, service);
                 return;
@@ -46,11 +46,6 @@ namespace Microsoft.Tye
                 return;
             }
 
-            if (SkipWithoutContainerInfo(output, service, out var container))
-            {
-                return;
-            }
-
             if (!await DockerDetector.Instance.IsDockerInstalled.Value)
             {
                 throw new CommandException($"Cannot generate a docker image for '{service.Name}' because docker is not installed.");
@@ -61,7 +56,7 @@ namespace Microsoft.Tye
                 throw new CommandException($"Cannot generate a docker image for '{service.Name}' because docker is not running.");
             }
 
-            await DockerContainerBuilder.BuildContainerImageFromDockerFile(output, application, project, container);
+            await DockerContainerBuilder.BuildContainerImageFromDockerFile(output, application, project);
         }
     }
 }

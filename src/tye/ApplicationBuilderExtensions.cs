@@ -47,25 +47,48 @@ namespace Microsoft.Tye
                     readiness = null;
                     replicas = 1;
                 }
-                else if (service is ContainerServiceBuilder container)
+                else if (service is DockerFileProjectServiceBuilder dockerFile)
                 {
-                    var dockerRunInfo = new DockerRunInfo(container.Image, container.Args)
+                    var dockerRunInfo = new DockerRunInfo(dockerFile.Image, dockerFile.Args)
                     {
-                        IsAspNet = container.IsAspNet
+                        IsAspNet = dockerFile.IsAspNet
                     };
 
-                    if (!string.IsNullOrEmpty(container.DockerFile))
+                    if (!string.IsNullOrEmpty(dockerFile.DockerFile))
                     {
-                        dockerRunInfo.DockerFile = new FileInfo(container.DockerFile);
-                        if (!string.IsNullOrEmpty(container.DockerFileContext))
+                        dockerRunInfo.DockerFile = new FileInfo(dockerFile.DockerFile);
+                        if (!string.IsNullOrEmpty(dockerFile.DockerFileContext))
                         {
-                            dockerRunInfo.DockerFileContext = new FileInfo(container.DockerFileContext);
+                            dockerRunInfo.DockerFileContext = new FileInfo(dockerFile.DockerFileContext);
                         }
                         else
                         {
                             dockerRunInfo.DockerFileContext = new FileInfo(dockerRunInfo.DockerFile.DirectoryName);
                         }
                     }
+
+                    foreach (var mapping in dockerFile.Volumes)
+                    {
+                        dockerRunInfo.VolumeMappings.Add(new DockerVolume(mapping.Source, mapping.Name, mapping.Target));
+                    }
+
+                    runInfo = dockerRunInfo;
+                    replicas = dockerFile.Replicas;
+                    liveness = dockerFile.Liveness != null ? GetProbeFromBuilder(dockerFile.Liveness) : null;
+                    readiness = dockerFile.Readiness != null ? GetProbeFromBuilder(dockerFile.Readiness) : null;
+
+                    foreach (var entry in dockerFile.EnvironmentVariables)
+                    {
+                        env.Add(entry.ToHostingEnvironmentVariable());
+                    }
+                }
+
+                else if (service is ContainerServiceBuilder container)
+                {
+                    var dockerRunInfo = new DockerRunInfo(container.Image, container.Args)
+                    {
+                        IsAspNet = container.IsAspNet
+                    };
 
                     foreach (var mapping in container.Volumes)
                     {
@@ -94,7 +117,7 @@ namespace Microsoft.Tye
                         env.Add(entry.ToHostingEnvironmentVariable());
                     }
                 }
-                else if (service is ProjectServiceBuilder project)
+                else if (service is DotnetProjectServiceBuilder project)
                 {
                     if (project.TargetFrameworks.Length > 1)
                     {

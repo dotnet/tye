@@ -1,0 +1,109 @@
+﻿kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: backend
+  labels:
+    app.kubernetes.io/name: 'backend'
+    app.kubernetes.io/part-of: 'frontend-backend'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: 'backend'
+        app.kubernetes.io/part-of: 'frontend-backend'
+    spec:
+      containers:
+      - name: backend
+        image: backend:latest
+        imagePullPolicy: Always
+        env:
+        - name: ASPNETCORE_URLS
+          value: 'http://*'
+        - name: PORT
+          value: '80'
+        - name: SERVICE__FRONTEND__PROTOCOL
+          value: 'http'
+        - name: SERVICE__FRONTEND__PORT
+          value: '80'
+        - name: SERVICE__FRONTEND__HOST
+          value: 'frontend'
+        ports:
+        - containerPort: 80
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: backend
+  labels:
+    app.kubernetes.io/name: 'backend'
+    app.kubernetes.io/part-of: 'frontend-backend'
+spec:
+  selector:
+    app.kubernetes.io/name: backend
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+...
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: frontend
+  labels:
+    app.kubernetes.io/name: 'frontend'
+    app.kubernetes.io/part-of: 'frontend-backend'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: 'frontend'
+        app.kubernetes.io/part-of: 'frontend-backend'
+    spec:
+      containers:
+      - name: frontend
+        image: frontend:1.0.0
+        imagePullPolicy: Always
+        env:
+        - name: ASPNETCORE_URLS
+          value: 'http://*'
+        - name: PORT
+          value: '80'
+        - name: SERVICE__BACKEND__PROTOCOL
+          value: 'http'
+        - name: SERVICE__BACKEND__PORT
+          value: '80'
+        - name: SERVICE__BACKEND__HOST
+          value: 'backend'
+        ports:
+        - containerPort: 80
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: frontend
+  labels:
+    app.kubernetes.io/name: 'frontend'
+    app.kubernetes.io/part-of: 'frontend-backend'
+spec:
+  selector:
+    app.kubernetes.io/name: frontend
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+...

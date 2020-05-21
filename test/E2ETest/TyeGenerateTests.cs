@@ -428,15 +428,17 @@ namespace E2ETest
             }
         }
 
-        [ConditionalFact]
-        [SkipIfDockerNotRunning]
+        //[ConditionalFact]
+        //[SkipIfDockerNotRunning]
+        [Fact]
         public async Task Generate_DockerFile()
         {
             var applicationName = "dockerfile";
             var environment = "production";
             var projectName = "frontend-backend";
 
-            await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+            await DockerAssert.DeleteDockerImagesAsync(output, "frontend");
+            await DockerAssert.DeleteDockerImagesAsync(output, "backend");
 
             using var projectDirectory = TestHelpers.CopyTestProjectDirectory(applicationName);
 
@@ -450,16 +452,19 @@ namespace E2ETest
                 await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
 
                 // name of application is the folder
-                var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
+                var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
 
-                await DockerAssert.AssertImageExistsAsync(output, projectName);
+                await DockerAssert.AssertImageExistsAsync(output, "frontend");
+                await DockerAssert.AssertImageExistsAsync(output, "backend");
             }
             finally
             {
-                await DockerAssert.DeleteDockerImagesAsync(output, projectName);
+
+                await DockerAssert.DeleteDockerImagesAsync(output, "frontend");
+                await DockerAssert.DeleteDockerImagesAsync(output, "backend");
             }
         }
     }

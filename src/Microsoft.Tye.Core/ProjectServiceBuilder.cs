@@ -7,22 +7,30 @@ using System.IO;
 
 namespace Microsoft.Tye
 {
-    public sealed class ProjectServiceBuilder : ServiceBuilder
+    public class DockerFileProjectServiceBuilder : ProjectServiceBuilder
     {
-        public ProjectServiceBuilder(string name, FileInfo projectFile)
+        public DockerFileProjectServiceBuilder(string name, string image)
+            : base(name)
+        {
+            Image = image;
+        }
+
+        public string Image { get; set; }
+
+        public string? DockerFile { get; set; }
+
+        public string? DockerFileContext { get; set; }
+    }
+
+    public class DotnetProjectServiceBuilder : ProjectServiceBuilder
+    {
+        public DotnetProjectServiceBuilder(string name, FileInfo projectFile)
             : base(name)
         {
             ProjectFile = projectFile;
         }
 
         public FileInfo ProjectFile { get; }
-
-        public int Replicas { get; set; } = 1;
-
-        public bool Build { get; set; }
-
-        public string? Args { get; set; }
-
         public FrameworkCollection Frameworks { get; } = new FrameworkCollection();
 
         // These is always set on the ApplicationFactory codepath.
@@ -37,8 +45,22 @@ namespace Microsoft.Tye
         public string AssemblyName { get; set; } = default!;
         public string PublishDir { get; set; } = default!;
         public string IntermediateOutputPath { get; set; } = default!;
+        public Dictionary<string, string> BuildProperties { get; } = new Dictionary<string, string>();
+    }
+
+    public class ProjectServiceBuilder : ServiceBuilder
+    {
+        public ProjectServiceBuilder(string name)
+            : base(name)
+        {
+        }
         public bool IsAspNet { get; set; }
-        public bool RelocateDiagnosticsDomainSockets { get; set; }
+
+        public int Replicas { get; set; } = 1;
+
+        public bool Build { get; set; }
+
+        public string? Args { get; set; }
 
         // Data used for building containers
         public ContainerInfo? ContainerInfo { get; set; }
@@ -51,12 +73,12 @@ namespace Microsoft.Tye
         // Used when running in a container locally.
         public List<VolumeBuilder> Volumes { get; } = new List<VolumeBuilder>();
 
-        public Dictionary<string, string> BuildProperties { get; } = new Dictionary<string, string>();
-
         public List<SidecarBuilder> Sidecars { get; } = new List<SidecarBuilder>();
 
         public ProbeBuilder? Liveness { get; set; }
 
         public ProbeBuilder? Readiness { get; set; }
+
+        public bool RelocateDiagnosticsDomainSockets { get; set; }
     }
 }

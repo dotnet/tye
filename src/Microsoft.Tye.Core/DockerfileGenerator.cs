@@ -12,7 +12,7 @@ namespace Microsoft.Tye
 {
     public static class DockerfileGenerator
     {
-        public static async Task WriteDockerfileAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container, string filePath)
+        public static async Task WriteDockerfileAsync(OutputContext output, ApplicationBuilder application, DotnetProjectServiceBuilder project, ContainerInfo container, string filePath)
         {
             if (output is null)
             {
@@ -75,7 +75,7 @@ namespace Microsoft.Tye
             await writer.WriteLineAsync($"ENTRYPOINT [\"dotnet\", \"{applicationEntryPoint}.dll\"]");
         }
 
-        public static void ApplyContainerDefaults(ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container)
+        public static void ApplyContainerDefaults(ApplicationBuilder application, DotnetProjectServiceBuilder project, ContainerInfo container)
         {
             if (application is null)
             {

@@ -86,7 +86,7 @@ namespace Microsoft.Tye
                     {
                         var expandedProject = Environment.ExpandEnvironmentVariables(configService.Project);
                         var projectFile = new FileInfo(Path.Combine(config.Source.DirectoryName, expandedProject));
-                        var project = new ProjectServiceBuilder(configService.Name!, projectFile);
+                        var project = new DotnetProjectServiceBuilder(configService.Name!, projectFile);
                         service = project;
 
                         project.Build = configService.Build ?? true;
@@ -109,20 +109,40 @@ namespace Microsoft.Tye
                         // Do k8s by default.
                         project.ManifestInfo = new KubernetesManifestInfo();
                     }
-                    else if (!string.IsNullOrEmpty(configService.Image) || !string.IsNullOrEmpty(configService.DockerFile))
+                    else if (!string.IsNullOrEmpty(configService.Image))
                     {
                         var container = new ContainerServiceBuilder(configService.Name!, configService.Image!)
                         {
                             Args = configService.Args,
-                            Replicas = configService.Replicas ?? 1,
-                            DockerFile = configService.DockerFile != null ? Path.Combine(source.DirectoryName, configService.DockerFile) : null,
-                            // Supplying an absolute path with trailing slashes fails for DockerFileContext when calling docker build, so trim trailing slash.
-                            DockerFileContext = GetDockerFileContext(source, configService)
+                            Replicas = configService.Replicas ?? 1
                         };
                         service = container;
 
                         container.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
                         container.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
+                    }
+                    else if (!string.IsNullOrEmpty(configService.DockerFile))
+                    {
+                        var dockerFile = new DockerFileProjectServiceBuilder(configService.Name!, configService.Image!)
+                        {
+                            Args = configService.Args,
+                            Build = configService.Build ?? true,
+                            Replicas = configService.Replicas ?? 1,
+                            DockerFile = Path.Combine(source.DirectoryName, configService.DockerFile),
+                            // Supplying an absolute path with trailing slashes fails for DockerFileContext when calling docker build, so trim trailing slash.
+                            DockerFileContext = GetDockerFileContext(source, configService)
+                        };
+                        service = dockerFile;
+
+                        dockerFile.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
+                        dockerFile.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
+
+                        // We don't apply more container defaults here because we might need
+                        // to prompt for the registry name.
+                        dockerFile.ContainerInfo = new ContainerInfo() { UseMultiphaseDockerfile = false, };
+
+                        // Do k8s by default.
+                        dockerFile.ManifestInfo = new KubernetesManifestInfo();
                     }
                     else if (!string.IsNullOrEmpty(configService.Executable))
                     {

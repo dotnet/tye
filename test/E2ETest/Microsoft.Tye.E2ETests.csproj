@@ -31,4 +31,8 @@
     <Compile Remove="testassets\**\*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="testassets\generate\dockerfile.yaml" />
+  </ItemGroup>
+
 </Project>
