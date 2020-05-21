@@ -40,7 +40,6 @@ namespace Microsoft.Tye
 
             output.WriteDebugLine($"Using existing Dockerfile '{dockerFilePath}'.");
 
-            // TODO allow specifying name and tag
             output.WriteDebugLine("Running 'docker build'.");
             output.WriteCommandLine("docker", $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"");
             var capture = output.Capture();
