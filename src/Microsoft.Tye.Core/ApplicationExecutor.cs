@@ -104,6 +104,29 @@ namespace Microsoft.Tye
                 return true;
             }
 
+            protected bool SkipWithoutDockerFile(OutputContext output, ServiceBuilder service, [MaybeNullWhen(returnValue: true)] out ContainerServiceBuilder project)
+            {
+                if (output is null)
+                {
+                    throw new ArgumentNullException(nameof(output));
+                }
+
+                if (service is null)
+                {
+                    throw new ArgumentNullException(nameof(service));
+                }
+
+                if (service is ContainerServiceBuilder p)
+                {
+                    project = p;
+                    return false;
+                }
+
+                output.WriteInfoLine($"Service '{service.Name}' does not have a project associated. Skipping.");
+                project = default!;
+                return true;
+            }
+
             protected bool SkipWithoutContainerInfo(OutputContext output, ServiceBuilder service, [MaybeNullWhen(returnValue: true)] out ContainerInfo container)
             {
                 if (output is null)

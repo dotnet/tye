@@ -12,6 +12,71 @@ namespace Microsoft.Tye
 {
     internal static class DockerContainerBuilder
     {
+
+        public static async Task BuildContainerImageFromDockerFile(OutputContext output, ApplicationBuilder application, ContainerServiceBuilder containerService, ContainerInfo container)
+        {
+            if (output is null)
+            {
+                throw new ArgumentNullException(nameof(output));
+            }
+
+            if (application is null)
+            {
+                throw new ArgumentNullException(nameof(application));
+            }
+
+            if (containerService is null)
+            {
+                throw new ArgumentNullException(nameof(containerService));
+            }
+
+            if (container is null)
+            {
+                throw new ArgumentNullException(nameof(container));
+            }
+
+            if (containerService.DockerFile is null)
+            {
+                throw new ArgumentNullException(nameof(containerService.DockerFile ));
+            }
+
+            var contextDirectory = containerService.DockerFileContext ?? ".";
+            var dockerFilePath = Path.Combine(containerService.DockerFile, "Dockerfile");
+
+            TempFile? tempFile = null;
+            TempDirectory? tempDirectory = null;
+
+            output.WriteDebugLine($"Using existing Dockerfile '{dockerFilePath}'.");
+            File.Copy(dockerFilePath, Path.Combine(contextDirectory, "Dockerfile"));
+            dockerFilePath = Path.Combine(contextDirectory, "Dockerfile");
+            try
+            {
+                output.WriteDebugLine("Running 'docker build'.");
+                output.WriteCommandLine("docker", $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"");
+                var capture = output.Capture();
+                var exitCode = await Process.ExecuteAsync(
+                    $"docker",
+                    $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"",
+                    new FileInfo(containerService.DockerFile).DirectoryName,
+                    stdOut: capture.StdOut,
+                    stdErr: capture.StdErr);
+
+                output.WriteDebugLine($"Done running 'docker build' exit code: {exitCode}");
+                if (exitCode != 0)
+                {
+                    throw new CommandException("'docker build' failed.");
+                }
+
+                output.WriteInfoLine($"Created Docker Image: '{container.ImageName}:{container.ImageTag}'");
+                containerService.Outputs.Add(new DockerImageOutput(container.ImageName!, container.ImageTag!));
+            }
+            finally
+            {
+                tempDirectory?.Dispose();
+                tempFile?.Dispose();
+            }
+        }
+
         public static async Task BuildContainerImageAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container)
         {
             if (output is null)
