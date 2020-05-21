@@ -47,7 +47,7 @@ namespace Microsoft.Tye
                     readiness = null;
                     replicas = 1;
                 }
-                else if (service is DockerFileProjectServiceBuilder dockerFile)
+                else if (service is DockerFileServiceBuilder dockerFile)
                 {
                     var dockerRunInfo = new DockerRunInfo(dockerFile.Image, dockerFile.Args)
                     {

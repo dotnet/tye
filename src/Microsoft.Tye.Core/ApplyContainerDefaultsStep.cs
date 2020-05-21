@@ -26,7 +26,7 @@ namespace Microsoft.Tye
             {
                 DockerfileGenerator.ApplyContainerDefaults(application, dotnetProject, container);
             }
-            else if (project is DockerFileProjectServiceBuilder dockerFile)
+            else if (project is DockerFileServiceBuilder dockerFile)
             {
                 DockerfileGenerator.ApplyContainerDefaults(application, dockerFile, container);
             }

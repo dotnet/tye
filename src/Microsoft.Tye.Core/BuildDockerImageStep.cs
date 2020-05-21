@@ -39,7 +39,7 @@ namespace Microsoft.Tye
             {
                 await DockerContainerBuilder.BuildContainerImageAsync(output, application, dotnetProject, container);
             }
-            else if (project is DockerFileProjectServiceBuilder dockerFile)
+            else if (project is DockerFileServiceBuilder dockerFile)
             {
                 await DockerContainerBuilder.BuildContainerImageFromDockerFileAsync(output, application, dockerFile, container);
             }

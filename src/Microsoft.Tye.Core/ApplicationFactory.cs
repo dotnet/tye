@@ -123,7 +123,7 @@ namespace Microsoft.Tye
                     }
                     else if (!string.IsNullOrEmpty(configService.DockerFile))
                     {
-                        var dockerFile = new DockerFileProjectServiceBuilder(configService.Name!, configService.Image!)
+                        var dockerFile = new DockerFileServiceBuilder(configService.Name!, configService.Image!)
                         {
                             Args = configService.Args,
                             Build = configService.Build ?? true,

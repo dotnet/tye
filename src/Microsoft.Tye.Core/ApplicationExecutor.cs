@@ -127,7 +127,7 @@ namespace Microsoft.Tye
                 return true;
             }
 
-            protected bool SkipWithoutDockerFile(OutputContext output, ServiceBuilder service, [MaybeNullWhen(returnValue: true)] out DockerFileProjectServiceBuilder project)
+            protected bool SkipWithoutDockerFile(OutputContext output, ServiceBuilder service, [MaybeNullWhen(returnValue: true)] out DockerFileServiceBuilder project)
             {
                 if (output is null)
                 {
@@ -139,7 +139,7 @@ namespace Microsoft.Tye
                     throw new ArgumentNullException(nameof(service));
                 }
 
-                if (service is DockerFileProjectServiceBuilder p)
+                if (service is DockerFileServiceBuilder p)
                 {
                     project = p;
                     return false;

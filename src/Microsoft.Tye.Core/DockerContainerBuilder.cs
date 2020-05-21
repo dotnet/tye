@@ -12,7 +12,7 @@ namespace Microsoft.Tye
 {
     internal static class DockerContainerBuilder
     {
-        public static async Task BuildContainerImageFromDockerFileAsync(OutputContext output, ApplicationBuilder application, DockerFileProjectServiceBuilder containerService, ContainerInfo container)
+        public static async Task BuildContainerImageFromDockerFileAsync(OutputContext output, ApplicationBuilder application, DockerFileServiceBuilder containerService, ContainerInfo container)
         {
             if (output is null)
             {

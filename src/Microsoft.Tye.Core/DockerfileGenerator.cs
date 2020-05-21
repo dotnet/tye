@@ -126,7 +126,7 @@ namespace Microsoft.Tye
             container.ImageTag ??= project.Version?.Replace("+", "-") ?? "latest";
         }
 
-        public static void ApplyContainerDefaults(ApplicationBuilder application, DockerFileProjectServiceBuilder project, ContainerInfo container)
+        public static void ApplyContainerDefaults(ApplicationBuilder application, DockerFileServiceBuilder project, ContainerInfo container)
         {
             if (container.ImageName == null && application.Registry?.Hostname == null)
             {
