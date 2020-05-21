@@ -12,7 +12,7 @@ namespace Microsoft.Tye
 
         public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
-            if (SkipWithoutDotnetProject(output, service, out var project))
+            if (SkipWithoutProject(output, service, out var project))
             {
                 return Task.CompletedTask;
             }
@@ -22,7 +22,14 @@ namespace Microsoft.Tye
                 return Task.CompletedTask;
             }
 
-            DockerfileGenerator.ApplyContainerDefaults(application, project, container);
+            if (project is DotnetProjectServiceBuilder dotnetProject)
+            {
+                DockerfileGenerator.ApplyContainerDefaults(application, dotnetProject, container);
+            }
+            else if (project is DockerFileProjectServiceBuilder dockerFile)
+            {
+                DockerfileGenerator.ApplyContainerDefaults(application, dockerFile, container);
+            }
             return Task.CompletedTask;
         }
     }

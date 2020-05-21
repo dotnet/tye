@@ -12,8 +12,7 @@ namespace Microsoft.Tye
 {
     internal static class DockerContainerBuilder
     {
-
-        public static async Task BuildContainerImageFromDockerFile(OutputContext output, ApplicationBuilder application, DockerFileProjectServiceBuilder containerService)
+        public static async Task BuildContainerImageFromDockerFileAsync(OutputContext output, ApplicationBuilder application, DockerFileProjectServiceBuilder containerService, ContainerInfo container)
         {
             if (output is null)
             {
@@ -42,13 +41,12 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"Using existing Dockerfile '{dockerFilePath}'.");
 
             // TODO allow specifying name and tag
-            var dockerImage = containerService.Name;
             output.WriteDebugLine("Running 'docker build'.");
-            output.WriteCommandLine("docker", $"build \"{contextDirectory}\" -t {dockerImage}:latest -f \"{dockerFilePath}\"");
+            output.WriteCommandLine("docker", $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"");
             var capture = output.Capture();
             var exitCode = await Process.ExecuteAsync(
                 $"docker",
-                $"build \"{contextDirectory}\" -t {dockerImage}:latest -f \"{dockerFilePath}\"",
+                $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"",
                 new FileInfo(containerService.DockerFile).DirectoryName,
                 stdOut: capture.StdOut,
                 stdErr: capture.StdErr);
@@ -59,8 +57,8 @@ namespace Microsoft.Tye
                 throw new CommandException("'docker build' failed.");
             }
 
-            output.WriteInfoLine($"Created Docker Image: '{dockerImage}'");
-            containerService.Outputs.Add(new DockerImageOutput(dockerImage, "latest"));
+            output.WriteInfoLine($"Created Docker Image: '{container.ImageName}:{container.ImageTag}'");
+            containerService.Outputs.Add(new DockerImageOutput(container.ImageName!, container.ImageTag!));
         }
 
         public static async Task BuildContainerImageAsync(OutputContext output, ApplicationBuilder application, DotnetProjectServiceBuilder project, ContainerInfo container)

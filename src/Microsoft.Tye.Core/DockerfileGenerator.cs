@@ -125,5 +125,19 @@ namespace Microsoft.Tye
 
             container.ImageTag ??= project.Version?.Replace("+", "-") ?? "latest";
         }
+
+        public static void ApplyContainerDefaults(ApplicationBuilder application, DockerFileProjectServiceBuilder project, ContainerInfo container)
+        {
+            if (container.ImageName == null && application.Registry?.Hostname == null)
+            {
+                container.ImageName ??= project.Name.ToLowerInvariant();
+            }
+            else if (container.ImageName == null && application.Registry?.Hostname != null)
+            {
+                container.ImageName ??= $"{application.Registry?.Hostname}/{project.Name.ToLowerInvariant()}";
+            }
+
+            container.ImageTag ??= "latest";
+        }
     }
 }

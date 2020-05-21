@@ -15,7 +15,7 @@ namespace Microsoft.Tye
 
         public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
-            if (SkipWithoutDotnetProject(output, service, out var _))
+            if (SkipWithoutProject(output, service, out var _))
             {
                 return;
             }

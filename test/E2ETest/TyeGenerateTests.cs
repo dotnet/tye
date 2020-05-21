@@ -428,9 +428,8 @@ namespace E2ETest
             }
         }
 
-        //[ConditionalFact]
-        //[SkipIfDockerNotRunning]
-        [Fact]
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
         public async Task Generate_DockerFile()
         {
             var applicationName = "dockerfile";

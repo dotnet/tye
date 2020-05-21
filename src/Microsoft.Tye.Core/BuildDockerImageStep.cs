@@ -15,9 +15,8 @@ namespace Microsoft.Tye
 
         public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
-            if (SkipWithoutDotnetProject(output, service, out var project))
+            if (SkipWithoutProject(output, service, out var project))
             {
-                await HandleWithDockerFile(output, application, service);
                 return;
             }
 
@@ -36,27 +35,14 @@ namespace Microsoft.Tye
                 throw new CommandException($"Cannot generate a docker image for '{service.Name}' because docker is not running.");
             }
 
-            await DockerContainerBuilder.BuildContainerImageAsync(output, application, project, container);
-        }
-
-        private async Task HandleWithDockerFile(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
-        {
-            if (SkipWithoutDockerFile(output, service, out var project))
+            if (project is DotnetProjectServiceBuilder dotnetProject)
             {
-                return;
+                await DockerContainerBuilder.BuildContainerImageAsync(output, application, dotnetProject, container);
             }
-
-            if (!await DockerDetector.Instance.IsDockerInstalled.Value)
+            else if (project is DockerFileProjectServiceBuilder dockerFile)
             {
-                throw new CommandException($"Cannot generate a docker image for '{service.Name}' because docker is not installed.");
+                await DockerContainerBuilder.BuildContainerImageFromDockerFileAsync(output, application, dockerFile, container);
             }
-
-            if (!await DockerDetector.Instance.IsDockerConnectedToDaemon.Value)
-            {
-                throw new CommandException($"Cannot generate a docker image for '{service.Name}' because docker is not running.");
-            }
-
-            await DockerContainerBuilder.BuildContainerImageFromDockerFile(output, application, project);
         }
     }
 }
