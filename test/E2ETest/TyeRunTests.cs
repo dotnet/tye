@@ -161,7 +161,7 @@ namespace E2ETest
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Transform the backend into a docker image for testing
-            var project = (ProjectServiceBuilder)application.Services.First(s => s.Name == "backend");
+            var project = (DotnetProjectServiceBuilder)application.Services.First(s => s.Name == "backend");
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
@@ -208,7 +208,7 @@ namespace E2ETest
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Transform the backend into a docker image for testing
-            var project = (ProjectServiceBuilder)application.Services.First(s => s.Name == "frontend");
+            var project = (DotnetProjectServiceBuilder)application.Services.First(s => s.Name == "frontend");
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
@@ -257,7 +257,7 @@ namespace E2ETest
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Transform the backend into a docker image for testing
-            var project = (ProjectServiceBuilder)application.Services.First(s => s.Name == "backend-baseimage");
+            var project = (DotnetProjectServiceBuilder)application.Services.First(s => s.Name == "backend-baseimage");
 
             // check ContainerInfo values
             Assert.True(string.Equals(project.ContainerInfo!.BaseImageName, "mcr.microsoft.com/dotnet/core/sdk"));

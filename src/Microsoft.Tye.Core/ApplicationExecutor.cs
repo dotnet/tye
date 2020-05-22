@@ -81,6 +81,29 @@ namespace Microsoft.Tye
 
             public abstract Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service);
 
+            protected bool SkipWithoutDotnetProject(OutputContext output, ServiceBuilder service, [MaybeNullWhen(returnValue: true)] out DotnetProjectServiceBuilder project)
+            {
+                if (output is null)
+                {
+                    throw new ArgumentNullException(nameof(output));
+                }
+
+                if (service is null)
+                {
+                    throw new ArgumentNullException(nameof(service));
+                }
+
+                if (service is DotnetProjectServiceBuilder p)
+                {
+                    project = p;
+                    return false;
+                }
+
+                output.WriteInfoLine($"Service '{service.Name}' does not have a project associated. Skipping.");
+                project = default!;
+                return true;
+            }
+
             protected bool SkipWithoutProject(OutputContext output, ServiceBuilder service, [MaybeNullWhen(returnValue: true)] out ProjectServiceBuilder project)
             {
                 if (output is null)
@@ -94,6 +117,29 @@ namespace Microsoft.Tye
                 }
 
                 if (service is ProjectServiceBuilder p)
+                {
+                    project = p;
+                    return false;
+                }
+
+                output.WriteInfoLine($"Service '{service.Name}' does not have a project associated. Skipping.");
+                project = default!;
+                return true;
+            }
+
+            protected bool SkipWithoutDockerFile(OutputContext output, ServiceBuilder service, [MaybeNullWhen(returnValue: true)] out DockerFileServiceBuilder project)
+            {
+                if (output is null)
+                {
+                    throw new ArgumentNullException(nameof(output));
+                }
+
+                if (service is null)
+                {
+                    throw new ArgumentNullException(nameof(service));
+                }
+
+                if (service is DockerFileServiceBuilder p)
                 {
                     project = p;
                     return false;

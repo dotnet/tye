@@ -139,7 +139,7 @@ namespace Microsoft.Tye.ConfigModel
                 var probes = new[] { (Name: "liveness", Probe: service.Liveness), (Name: "readiness", Probe: service.Readiness) }.Where(p => p.Probe != null).ToArray();
                 foreach (var probe in probes)
                 {
-                    if (probe.Name == "liveness" && probe.Probe.SuccessThreshold != 1)
+                    if (probe.Name == "liveness" && probe.Probe!.SuccessThreshold != 1)
                     {
                         throw new TyeYamlException(CoreStrings.FormatSuccessThresholdMustBeOne(probe.Name));
                     }

@@ -8,7 +8,7 @@ namespace Microsoft.Tye
 {
     public static class DiagnosticAgent
     {
-        public static SidecarBuilder GetOrAddSidecar(ProjectServiceBuilder project)
+        public static SidecarBuilder GetOrAddSidecar(DotnetProjectServiceBuilder project)
         {
             // Bring your rain boots.
             project.RelocateDiagnosticsDomainSockets = true;
