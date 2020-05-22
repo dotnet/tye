@@ -118,10 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ExpectedYamlScalar" xml:space="preserve">
-    <value>Excpeted scalar value for key: "{key}".</value>
+    <value>Expected scalar value for key: "{key}".</value>
   </data>
   <data name="ExpectedYamlSequence" xml:space="preserve">
-    <value>Excpeted yaml sequence for key: "{key}".</value>
+    <value>Expected yaml sequence for key: "{key}".</value>
   </data>
   <data name="ExtensionMustProvideAName" xml:space="preserve">
     <value>Configuration validation failed. Extensions must provide a name.</value>
