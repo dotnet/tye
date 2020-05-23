@@ -28,7 +28,7 @@ When the readiness probe fails for a certain replica, Tye stops routing traffic 
 
 ## Sample Code
 
-The sample code for this document can found [here](../../samples/liveness-readiness)
+The sample code for this document can found [here](/../../samples/liveness-readiness)
 
 This application has one service, with 2 replicas and an ingress that routes into it. 
 
