@@ -67,7 +67,7 @@ Allows storing the name of the container registry in configuration. This is used
 - Determining how to tag the images
 - Determining where to push the images
 
-The registry could be a DockerHub username (`exampleuser`) or the hostname of a container registry (`example.azureci.io`).
+The registry could be a DockerHub username (`exampleuser`) or the hostname of a container registry (`example.azurecr.io`).
 
 If this is not specified in configuration, interactive deployments will prompt for it.
 
