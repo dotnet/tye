@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -15,10 +16,22 @@ namespace webapi
     {
         public bool? Healthy { get; set; }
         public bool? Ready { get; set; }
+        public int? Timeout{ get; set; }
     }
 
     public class Startup
     {
+        private string _id;
+        private bool _healthy;
+        private bool _ready;
+
+        public Startup()
+        {
+            _id = Guid.NewGuid().ToString();
+            _healthy = true;
+            _ready = true;
+        }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
@@ -28,10 +41,6 @@ namespace webapi
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            var id = Guid.NewGuid().ToString();
-            var healthy = true;
-            var ready = true;
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -43,18 +52,18 @@ namespace webapi
             {
                 endpoints.MapGet("/", async context =>
                 {
-                    await context.Response.WriteAsync($"Hello World! Process Id: {id}");
+                    await context.Response.WriteAsync($"Hello World! Process Id: {_id}");
                 });
 
                 endpoints.MapGet("/healthy", async context =>
                 {
-                    context.Response.StatusCode = healthy ? 200 : 500;
+                    context.Response.StatusCode = _healthy ? 200 : 500;
                     await context.Response.WriteAsync($"Status Code: {context.Response.StatusCode}");
                 });
 
                 endpoints.MapGet("/ready", async context =>
                 {
-                    context.Response.StatusCode = ready ? 200 : 500;
+                    context.Response.StatusCode = _ready ? 200 : 500;
                     await context.Response.WriteAsync($"Status Code: {context.Response.StatusCode}");
                 });
 
@@ -62,14 +71,27 @@ namespace webapi
                 {
                     var data = await JsonSerializer.DeserializeAsync<SetDTO>(context.Request.Body);
                     
+                    var originalHealthy = _healthy;
+                    var originalReady = _ready;
+
                     if (data.Healthy.HasValue)
                     {
-                        healthy = data.Healthy.Value;
+                        _healthy = data.Healthy.Value;
                     }
 
                     if (data.Ready.HasValue)
                     {
-                        ready = data.Ready.Value;
+                        _ready = data.Ready.Value;
+                    }
+
+                    if (data.Timeout.HasValue)
+                    {
+                        var _ = Task.Delay(TimeSpan.FromSeconds(data.Timeout.Value))
+                            .ContinueWith(_ =>
+                            {
+                                _healthy = originalHealthy;
+                                _ready = originalReady;
+                            });
                     }
 
                     await context.Response.WriteAsync("Done");
