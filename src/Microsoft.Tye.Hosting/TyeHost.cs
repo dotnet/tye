@@ -12,7 +12,6 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
@@ -112,8 +111,16 @@ namespace Microsoft.Tye.Hosting
             // Logging for this application
             builder.Host.UseSerilog((context, configuration) =>
             {
+                var logLevel = options.LogVerbosity switch
+                {
+                    Verbosity.Quiet => LogEventLevel.Warning,
+                    Verbosity.Info => LogEventLevel.Information,
+                    Verbosity.Debug => LogEventLevel.Verbose,
+                    _ => default
+                };
+                
                 configuration
-                    .MinimumLevel.Verbose()
+                    .MinimumLevel.Is(logLevel)
                     .Filter.ByExcluding(Matching.FromSource("Microsoft.AspNetCore"))
                     .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions"))
                     .Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting"))
@@ -124,7 +131,7 @@ namespace Microsoft.Tye.Hosting
 
                 if (sink is object)
                 {
-                    configuration.WriteTo.Sink(sink, LogEventLevel.Verbose);
+                    configuration.WriteTo.Sink(sink, logLevel);
                 }
             });
 
