@@ -241,5 +241,37 @@ services:
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
             Assert.Contains(errorMessage, exception.Message);
         }
+        
+        [Fact]
+        public void ProberRequired()
+        {
+            var input = @"
+services:
+    - name: sample
+      liveness:
+        period: 1";
+            var errorMessage = CoreStrings.FormatProberRequired("liveness");
+            using var parser = new YamlParser(input);
+            var app = parser.ParseConfigApplication();
+            var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
+            Assert.Contains(errorMessage, exception.Message);
+        }
+        
+        [Fact]
+        public void LivenessProbeSuccessThresholdMustBeOne()
+        {
+            var input = @"
+services:
+    - name: sample
+      liveness:
+        successThreshold: 2
+        http:
+            path: /";
+            var errorMessage = CoreStrings.FormatSuccessThresholdMustBeOne("liveness");
+            using var parser = new YamlParser(input);
+            var app = parser.ParseConfigApplication();
+            var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
+            Assert.Contains(errorMessage, exception.Message);
+        }
     }
 }

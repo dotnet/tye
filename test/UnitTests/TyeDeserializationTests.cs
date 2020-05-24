@@ -508,5 +508,127 @@ services:
             var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
             Assert.Contains(CoreStrings.FormatExpectedYamlSequence("env"), exception.Message);
         }
+
+        [Theory]
+        [InlineData("liveness")]
+        [InlineData("readiness")]
+        public void Probe_UnrecognizedKey(string probe)
+        {
+            using var parser = new YamlParser($@"
+services:
+    - name: sample
+      {probe}:
+        something: something");
+
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Contains(CoreStrings.FormatUnrecognizedKey("something"), exception.Message);
+        }
+
+        [Theory]
+        [InlineData("initialDelay")]
+        [InlineData("period")]
+        [InlineData("timeout")]
+        [InlineData("successThreshold")]
+        [InlineData("failureThreshold")]
+        public void Probe_ScalarFields_MustBeInteger(string field)
+        {
+            using var parser = new YamlParser($@"
+services:
+    - name: sample
+      liveness:
+        {field}: 3.5");
+            
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Contains(CoreStrings.FormatMustBeAnInteger(field), exception.Message);
+        }
+
+        [Theory]
+        [InlineData("initialDelay")]
+        public void Probe_ScalarFields_MustBePositive(string field)
+        {
+            using var parser = new YamlParser($@"
+services:
+    - name: sample
+      liveness:
+        {field}: -1");
+            
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Contains(CoreStrings.FormatMustBePositive(field), exception.Message);
+        }
+
+        [Theory]
+        [InlineData("period")]
+        [InlineData("timeout")]
+        [InlineData("successThreshold")]
+        [InlineData("failureThreshold")]
+        public void Probe_ScalarFields_MustBeGreaterThanZero(string field)
+        {
+            using var parser = new YamlParser($@"
+services:
+    - name: sample
+      liveness:
+        {field}: 0");
+            
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Contains(CoreStrings.FormatMustBeGreaterThanZero(field), exception.Message);
+        }
+
+        [Fact]
+        public void Probe_HttpProber_UnrecognizedKey()
+        {
+            using var parser = new YamlParser(@"
+services:
+    - name: sample
+      liveness:
+        http:
+            something: something");
+            
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Contains(CoreStrings.FormatUnrecognizedKey("something"), exception.Message);
+        }
+        
+        [Fact]
+        public void Probe_HttpProber_PortMustBeScalar()
+        {
+            using var parser = new YamlParser($@"
+services:
+    - name: sample
+      liveness:
+        http:
+            port: 3.5");
+            
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Contains(CoreStrings.FormatMustBeAnInteger("port"), exception.Message);
+        }
+
+        [Fact]
+        public void Probe_HttpProber_HeadersMustBeSequence()
+        {
+            using var parser = new YamlParser(@"
+services:
+    - name: sample
+      liveness:
+        http:
+            headers: abc");
+            
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Contains(CoreStrings.FormatExpectedYamlSequence("headers"), exception.Message);
+        }
+
+        [Fact]
+        public void Probe_HttpProber_Headers_UnrecognizedKey()
+        {
+            using var parser = new YamlParser(@"
+services:
+    - name: sample
+      liveness:
+        http:
+            headers:
+                - name: header1
+                  something: something");
+            
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Contains(CoreStrings.FormatUnrecognizedKey("something"), exception.Message);
+        }
     }
 }
