@@ -59,6 +59,8 @@ namespace Microsoft.Tye
 
         private static async Task ExecuteDeployAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive, bool force)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
             if (!await KubectlDetector.Instance.IsKubectlInstalled.Value)
             {
                 throw new CommandException($"Cannot apply manifests because kubectl is not installed.");
@@ -98,6 +100,12 @@ namespace Microsoft.Tye
             };
 
             await executor.ExecuteAsync(application);
+
+            watch.Stop();
+
+            TimeSpan elapsedTime = watch.Elapsed;
+
+            output.WriteAlwaysLine($"Time Elapsed: {elapsedTime.Hours:00}:{elapsedTime.Minutes:00}:{elapsedTime.Seconds:00}:{elapsedTime.Milliseconds / 10:00}");
         }
 
         internal static void ApplyRegistry(OutputContext output, ApplicationBuilder application, bool interactive, bool requireRegistry)
