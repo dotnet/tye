@@ -241,7 +241,7 @@ services:
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
             Assert.Contains(errorMessage, exception.Message);
         }
-        
+
         [Fact]
         public void ProberRequired()
         {
@@ -256,7 +256,7 @@ services:
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
             Assert.Contains(errorMessage, exception.Message);
         }
-        
+
         [Fact]
         public void LivenessProbeSuccessThresholdMustBeOne()
         {
