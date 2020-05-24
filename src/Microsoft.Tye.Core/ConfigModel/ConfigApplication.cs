@@ -139,15 +139,31 @@ namespace Microsoft.Tye.ConfigModel
                 var probes = new[] { (Name: "liveness", Probe: service.Liveness), (Name: "readiness", Probe: service.Readiness) }.Where(p => p.Probe != null).ToArray();
                 foreach (var probe in probes)
                 {
-                    if (probe.Name == "liveness" && probe.Probe!.SuccessThreshold != 1)
+                    context = new ValidationContext(probe.Probe);
+                    if (!Validator.TryValidateObject(probe.Probe, context, results, validateAllProperties: true))
                     {
-                        throw new TyeYamlException(CoreStrings.FormatSuccessThresholdMustBeOne(probe.Name));
+                        throw new TyeYamlException(
+                            $"Probe '{probe.Name}' in service '{service.Name}' validation failed." + Environment.NewLine +
+                            string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
                     }
-
+                    
                     // right now only http is supported, so it must be set
                     if (probe.Probe!.Http == null)
                     {
                         throw new TyeYamlException(CoreStrings.FormatProberRequired(probe.Name));
+                    }
+                    
+                    context = new ValidationContext(probe.Probe!.Http);
+                    if (!Validator.TryValidateObject(probe.Probe!.Http, context, results, validateAllProperties: true))
+                    {
+                        throw new TyeYamlException(
+                            $"Http in probe '{probe.Name}' in service '{service.Name}' validation failed." + Environment.NewLine +
+                            string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
+                    }
+                    
+                    if (probe.Name == "liveness" && probe.Probe!.SuccessThreshold != 1)
+                    {
+                        throw new TyeYamlException(CoreStrings.FormatSuccessThresholdMustBeOne(probe.Name));
                     }
                 }
             }
