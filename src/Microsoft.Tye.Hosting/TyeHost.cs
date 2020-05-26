@@ -118,7 +118,7 @@ namespace Microsoft.Tye.Hosting
                     Verbosity.Debug => LogEventLevel.Verbose,
                     _ => default
                 };
-                
+
                 configuration
                     .MinimumLevel.Is(logLevel)
                     .Filter.ByExcluding(Matching.FromSource("Microsoft.AspNetCore"))
