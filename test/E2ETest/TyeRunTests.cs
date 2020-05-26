@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine.IO;
 using System.IO;
 using System.Linq;
@@ -514,6 +515,39 @@ namespace E2ETest
 
                 Assert.StartsWith("Hello from Application A", await responseA.Content.ReadAsStringAsync());
                 Assert.StartsWith("Hello from Application B", await responseB.Content.ReadAsStringAsync());
+            });
+        }
+
+        [Fact]
+        public async Task IngressQueryAndContentProxyingTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var ingressUri = await GetServiceUrl(client, uri, "ingress");
+
+                var request = new HttpRequestMessage(HttpMethod.Post, ingressUri + "/A/data?key1=value1&key2=value2");
+                request.Content = new StringContent("some content");
+
+                var response = await client.SendAsync(request);
+                var responseContent =
+                    JsonSerializer.Deserialize<Dictionary<string, string>>(await response.Content.ReadAsStringAsync());
+
+                Assert.Equal("some content", responseContent["content"]);
+                Assert.Equal("?key1=value1&key2=value2", responseContent["query"]);
             });
         }
 
