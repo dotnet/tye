@@ -11,13 +11,19 @@ Probes serve two main functions
 
 Before we get to the definition of a probe and how it works, it's important to understand the life cycle of a replica.  
 
-Each replica in Tye can be in one of these three states  
+When using the local orchestrator (`tye run`), each replica in Tye can be in one of these three states  
 
 * `Started` - A replica is in this state when it has just been started, and hasn't been probed yet.  
 * `Healthy` - A replica is in this state when it passes the `liveness` probe, but not the `readiness` probe. 
 * `Ready` - A replica is in this state when it passes both the `liveness` and `readiness` probes.  
 
 (*Internally, there are more states that a replica can be in, but those are not relevant to this discussion*)
+
+The orchestrator is responsible for switching between the different states based on the feedback from the probes, as described in later sections.  
+
+When deploying the application to Kubernetes (via `tye deploy`), the life cycle is represented differently and is managed by Kubernetes. Click [here](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/) to read more about the life cycle of a Pod in Kubernetes.  
+
+Throughout the rest of the document, we'll be referring to the life cycle of the replica as it is represented in the local orchestrator (i.e. `Started`, `Healthy`, `Ready`).
 
 ## Types of Probes  
 
@@ -44,9 +50,9 @@ Tye only routes traffic (either via a service binding, or an ingress) to `Ready`
 
 By now, the life cycle of a replica when both `liveness` and `readiness` probes are configured should be clear, but how does the life cycle of a replica look like when both probes or one of the probes is absent?  
 
-* When both `liveness` and `readiness` probes are absent, a replica gets promoted from `Started` to `Ready` automatically, upon creation.
-* When only the `readiness` probe is absent, a replica gets promoted from `Started` to `Healthy` only after it passes the `liveness` probe, but upon being promoted to `Healthy`, it's automatically promoted again, to `Ready`.  
-* When only the `liveness` probe is absent, a replica gets promoted from `Started` to `Healthy` automatically, upon creation, but gets promoted from `Healthy` to `Ready` only upon passing the `readiness` probe.  
+* When neither `liveness` nor `readiness` probes are present, a replica gets promoted from `Started` to `Ready` automatically, upon creation.
+* When only the `liveness` probe is present, a replica gets promoted from `Started` to `Healthy` only after it passes the `liveness` probe, but upon being promoted to `Healthy`, it's automatically promoted again, to `Ready`.  
+* When only the `readiness` probe is present, a replica gets promoted from `Started` to `Healthy` automatically, upon creation, but gets promoted from `Healthy` to `Ready` only upon passing the `readiness` probe.  
 
 ## Running Locally with Liveness and Readiness Probes
 
@@ -73,7 +79,7 @@ services:
         path: /ready
 ```
 
-The service is configured to respond successfully to both the `liveness` and `readiness` probes, so after you run Tye, you should see these log lines  
+The service is configured to respond successfully to both the `liveness` and `readiness` probes, so after executing `tye run`, you should see these log lines  
 
 ```
 [18:14:05 INF] Replica simple-webapi_a2d67bd9-4 is moving to an healthy state
@@ -86,15 +92,7 @@ As you can see, both replicas pass the `liveness` probe and get prompted to an `
 
 The sample application exposes an endpoint that allows you modify the responses that the `/healthy` and `/ready` endpoints, in order to see the probes in action.  
 
-For example, if you send an *HTTP POST* request to this endpoint `http://localhost:8080/set` with this body  
-
-```
-{
-	"Ready": false,
-	"Timeout": 10
-}
-```  
-
+For example, if you send an *HTTP GET* to `http://localhost:8080/set?ready=false&timeout=10` or enter that address in the browser,  
 It will make `/ready` return *HTTP 500* for 10 seconds.   
 
 Shortly after issuing that requests, you should see this log line in the terminal 
@@ -117,12 +115,7 @@ meaning that the replica got demoted from `Healthy` to `Ready` again, due to pas
 
 You can use the same method to make the `liveness` probe fail, and watch as Tye restarts the replica.  
 
-Send an *HTTP POST* request to this endpoint `http://localhost:8080/set` with this body
-```
-{
-    "Healthy": false
-}
-```
+Send an *HTTP GET* request to this endpoint `http://localhost:8080/set?healthy=false`
 
 
 And watch for this log line  

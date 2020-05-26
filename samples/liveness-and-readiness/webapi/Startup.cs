@@ -71,26 +71,32 @@ namespace webapi
                     await context.Response.WriteAsync($"Status Code: {context.Response.StatusCode}");
                 });
 
-                endpoints.MapPost("/set", async context =>
+                // Should be technically POST/PUT, but it's just for tests...
+                endpoints.MapGet("/set", async context =>
                 {
-                    var data = await JsonSerializer.DeserializeAsync<SetDTO>(context.Request.Body);
-                    
+                    var query = context.Request.Query.ToDictionary(kv => kv.Key).ToDictionary(kv => kv.Key, kv => kv.Value.Value.First());
+                    Console.WriteLine(context.Request.QueryString);
+
                     var originalHealthy = _healthy;
                     var originalReady = _ready;
 
-                    if (data.Healthy.HasValue)
+                    Console.WriteLine("Setting3...");
+
+                    if (query.ContainsKey("healthy") && bool.TryParse(query["healthy"], out var healthy))
                     {
-                        _healthy = data.Healthy.Value;
+                        Console.WriteLine("Setting Healthy: " + healthy);
+                        _healthy = healthy;
                     }
 
-                    if (data.Ready.HasValue)
+                    if (query.ContainsKey("ready") && bool.TryParse(query["ready"], out var ready))
                     {
-                        _ready = data.Ready.Value;
+                        Console.WriteLine("Setting Ready: " + ready);
+                        _ready = ready;
                     }
 
-                    if (data.Timeout.HasValue)
+                    if (query.ContainsKey("timeout") && int.TryParse(query["timeout"], out var timeout))
                     {
-                        var _ = Task.Delay(TimeSpan.FromSeconds(data.Timeout.Value))
+                        var _ = Task.Delay(TimeSpan.FromSeconds(timeout))
                             .ContinueWith(_ =>
                             {
                                 _healthy = originalHealthy;
