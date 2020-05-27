@@ -229,11 +229,11 @@ namespace Microsoft.Tye
                         throw new CommandException("Unable to determine service type.");
                     }
 
-                    // Add dependencies to ourself before adding ourself to avoid self reference
-                    service.Dependencies.UnionWith(dependencies);
 
                     AddToRootServices(root, dependencies, service.Name);
 
+                    service.Dependencies.UnionWith(dependencies);
+                    
                     root.Services.Add(service);
 
                     // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
