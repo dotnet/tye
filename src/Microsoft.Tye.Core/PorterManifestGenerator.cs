@@ -32,6 +32,28 @@ namespace Microsoft.Tye
                     mapping.Add("tag", image.ImageTag);
                 }
             }
+            var mixins = new YamlSequenceNode();
+            root.Add("mixins", mixins);
+            mixins.Add("exec");
+
+            var installSeq = new YamlSequenceNode();
+            root.Add("install", installSeq);
+            var installExec = new YamlMappingNode();
+            installSeq.Add(installExec);
+            var args = new YamlMappingNode();
+            installExec.Add("exec", args);
+            args.Add("command", "ls");
+            args.Add("description", "ls");
+
+            //root.Add("upgrade", "");
+            var uninstallSeq = new YamlSequenceNode();
+            root.Add("uninstall", uninstallSeq);
+            var uninstallExec = new YamlMappingNode();
+            uninstallSeq.Add(uninstallExec);
+            var unargs = new YamlMappingNode();
+            uninstallExec.Add("exec", unargs);
+            unargs.Add("command", "ls");
+            unargs.Add("description", "ls");
 
             return new YamlDocument(root);
         }
