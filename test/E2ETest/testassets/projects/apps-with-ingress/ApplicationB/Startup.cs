@@ -1,7 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.IO;
+using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -33,6 +32,20 @@ namespace ApplicationB
                 endpoints.MapGet("/", async context =>
                 {
                     await context.Response.WriteAsync("Hello from Application B " + Environment.GetEnvironmentVariable("APP_INSTANCE") ?? Environment.GetEnvironmentVariable("HOSTNAME"));
+                });
+                
+                // This method returns the body content and query string back to the caller, to test that the ingress passes those properly
+                endpoints.MapPost("/data", async context =>
+                {
+                    using var reader = new StreamReader(context.Request.Body);
+                    var content = await reader.ReadToEndAsync();
+                    var query = context.Request.QueryString.Value;
+
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                    {
+                        content,
+                        query
+                    }));
                 });
             });
         }
