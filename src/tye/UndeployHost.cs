@@ -19,6 +19,8 @@ namespace Microsoft.Tye
     {
         public static async Task UndeployAsync(IConsole console, FileInfo path, Verbosity verbosity, string @namespace, bool interactive, bool whatIf)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
             var output = new OutputContext(console, verbosity);
 
             output.WriteInfoLine("Loading Application Details...");
@@ -31,6 +33,12 @@ namespace Microsoft.Tye
             }
 
             await ExecuteUndeployAsync(output, application, @namespace, interactive, whatIf);
+
+            watch.Stop();
+
+            TimeSpan elapsedTime = watch.Elapsed;
+
+            output.WriteAlwaysLine($"Time Elapsed: {elapsedTime.Hours:00}:{elapsedTime.Minutes:00}:{elapsedTime.Seconds:00}:{elapsedTime.Milliseconds / 10:00}");
         }
 
         public static async Task ExecuteUndeployAsync(OutputContext output, ConfigApplication application, string @namespace, bool interactive, bool whatIf)
@@ -52,10 +60,10 @@ namespace Microsoft.Tye
             // - kubectl api-resources --all (and similar) are implemented client-side (n+1 problem)
             // - the C# k8s SDK doesn't have an untyped api for operations on arbitrary resources, the
             //   closest thing is the custom resource APIs
-            // - Legacy resources without an api group don't follow the same URL scheme as more modern 
+            // - Legacy resources without an api group don't follow the same URL scheme as more modern
             //   ones, and thus cannot be addressed using the custom resource APIs.
             //
-            // So solving 'undeploy' generically would involve doing a bunch of work to query things 
+            // So solving 'undeploy' generically would involve doing a bunch of work to query things
             // generically, including going outside of what's provided by the SDK.
             //
             // - querying api-resources
