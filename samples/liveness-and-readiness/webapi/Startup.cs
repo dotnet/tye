@@ -75,22 +75,17 @@ namespace webapi
                 endpoints.MapGet("/set", async context =>
                 {
                     var query = context.Request.Query.ToDictionary(kv => kv.Key).ToDictionary(kv => kv.Key, kv => kv.Value.Value.First());
-                    Console.WriteLine(context.Request.QueryString);
 
                     var originalHealthy = _healthy;
                     var originalReady = _ready;
 
-                    Console.WriteLine("Setting3...");
-
                     if (query.ContainsKey("healthy") && bool.TryParse(query["healthy"], out var healthy))
                     {
-                        Console.WriteLine("Setting Healthy: " + healthy);
                         _healthy = healthy;
                     }
 
                     if (query.ContainsKey("ready") && bool.TryParse(query["ready"], out var ready))
                     {
-                        Console.WriteLine("Setting Ready: " + ready);
                         _ready = ready;
                     }
 
