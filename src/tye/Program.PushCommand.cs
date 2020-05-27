@@ -64,6 +64,10 @@ namespace Microsoft.Tye
                     new BuildDockerImageStep() { Environment = environment, },
                     new PushDockerImageStep() { Environment = environment, },
                 },
+                ApplicationSteps =
+                {
+                    new PublishPorterStep()
+                }
             };
 
             await executor.ExecuteAsync(application);

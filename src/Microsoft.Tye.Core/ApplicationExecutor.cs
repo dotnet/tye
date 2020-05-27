@@ -27,6 +27,8 @@ namespace Microsoft.Tye
 
         public async Task ExecuteAsync(ApplicationBuilder application)
         {
+            var serviceOutputs = new List<ServiceOutput>();
+
             foreach (var service in application.Services)
             {
                 using var tracker = output.BeginStep($"Processing Service '{service.Name}'...");
@@ -36,8 +38,11 @@ namespace Microsoft.Tye
                     await step.ExecuteAsync(output, application, service);
                     stepTracker.MarkComplete();
                 }
+                serviceOutputs.AddRange(service.Outputs);
                 tracker.MarkComplete();
             }
+
+            var ingressOutputs = new List<IngressOutput>();
 
             foreach (var ingress in application.Ingress)
             {
@@ -48,6 +53,7 @@ namespace Microsoft.Tye
                     await step.ExecuteAsync(output, application, ingress);
                     stepTracker.MarkComplete();
                 }
+                ingressOutputs.AddRange(ingress.Outputs);
                 tracker.MarkComplete();
             }
 
