@@ -233,7 +233,7 @@ namespace Microsoft.Tye
                     AddToRootServices(root, dependencies, service.Name);
 
                     service.Dependencies.UnionWith(dependencies);
-                    
+
                     root.Services.Add(service);
 
                     // If there are no bindings and we're in ASP.NET Core project then add an HTTP and HTTPS binding
