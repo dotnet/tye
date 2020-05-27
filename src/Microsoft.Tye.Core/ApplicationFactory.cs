@@ -398,7 +398,7 @@ namespace Microsoft.Tye
             // Add ourselves in the set of all current dependencies.
             dependencies.Add(serviceName);
 
-            // Iterate through all services and add the current services as a dependency (except ourselves)
+            // Iterate through all services and add the current services as a dependency
             foreach (var s in root.Services)
             {
                 s.Dependencies.Add(serviceName);
