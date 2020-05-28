@@ -25,6 +25,12 @@ spec:
           value: 'http://*'
         - name: PORT
           value: '80'
+        - name: SERVICE__APPA__PROTOCOL
+          value: 'http'
+        - name: SERVICE__APPA__PORT
+          value: '80'
+        - name: SERVICE__APPA__HOST
+          value: 'appa'
         - name: SERVICE__APPB__PROTOCOL
           value: 'http'
         - name: SERVICE__APPB__PORT
@@ -80,6 +86,12 @@ spec:
           value: 'http://*'
         - name: PORT
           value: '80'
+        - name: SERVICE__APPB__PROTOCOL
+          value: 'http'
+        - name: SERVICE__APPB__PORT
+          value: '80'
+        - name: SERVICE__APPB__HOST
+          value: 'appb'
         - name: SERVICE__APPA__PROTOCOL
           value: 'http'
         - name: SERVICE__APPA__PORT

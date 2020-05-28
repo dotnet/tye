@@ -1,4 +1,4 @@
-﻿kind: Deployment
+kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: results
@@ -25,6 +25,12 @@ spec:
           value: 'http://*'
         - name: PORT
           value: '80'
+        - name: SERVICE__RESULTS__PROTOCOL
+          value: 'http'
+        - name: SERVICE__RESULTS__PORT
+          value: '80'
+        - name: SERVICE__RESULTS__HOST
+          value: 'results'
         - name: SERVICE__WORKER__PROTOCOL
           value: 'http'
         - name: SERVICE__WORKER__PORT
@@ -80,6 +86,12 @@ spec:
           value: 'http://*'
         - name: PORT
           value: '80'
+        - name: SERVICE__WORKER__PROTOCOL
+          value: 'http'
+        - name: SERVICE__WORKER__PORT
+          value: '80'
+        - name: SERVICE__WORKER__HOST
+          value: 'worker'
         - name: CONNECTIONSTRINGS__REDIS
           valueFrom:
             secretKeyRef:

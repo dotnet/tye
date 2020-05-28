@@ -46,15 +46,18 @@ namespace Microsoft.Tye
                 }
             }
 
+            var services = new List<string>() { service.Name };
+            services.AddRange(service.Dependencies);
+
             // Process bindings and turn them into environment variables and secrets. There's
             // some duplication with the code in m8s (Application.cs) for populating environments.
             //
             // service.Service.Bindings is the bindings OUT - this step computes bindings IN.
-            service.Outputs.Add(ComputeBindings(application, service.Dependencies));
+            service.Outputs.Add(ComputeBindings(application, services));
 
             foreach (var sidecar in project.Sidecars)
             {
-                sidecar.Outputs.Add(ComputeBindings(application, sidecar.Dependencies));
+                sidecar.Outputs.Add(ComputeBindings(application, services));
             }
 
             return Task.CompletedTask;
