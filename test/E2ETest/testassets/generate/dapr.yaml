@@ -1,4 +1,4 @@
-﻿kind: Deployment
+kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: dapr-test-project
@@ -37,6 +37,12 @@ spec:
           value: 'http://*'
         - name: PORT
           value: '80'
+        - name: SERVICE__DAPR-TEST-PROJECT__PROTOCOL
+          value: 'http'
+        - name: SERVICE__DAPR-TEST-PROJECT__PORT
+          value: '80'
+        - name: SERVICE__DAPR-TEST-PROJECT__HOST
+          value: 'dapr-test-project'
         ports:
         - containerPort: 80
 ...

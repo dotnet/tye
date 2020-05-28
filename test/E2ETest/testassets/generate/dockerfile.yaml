@@ -1,4 +1,4 @@
-﻿kind: Deployment
+kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: backend
@@ -25,6 +25,12 @@ spec:
           value: 'http://*'
         - name: PORT
           value: '80'
+        - name: SERVICE__BACKEND__PROTOCOL
+          value: 'http'
+        - name: SERVICE__BACKEND__PORT
+          value: '80'
+        - name: SERVICE__BACKEND__HOST
+          value: 'backend'
         - name: SERVICE__FRONTEND__PROTOCOL
           value: 'http'
         - name: SERVICE__FRONTEND__PORT
@@ -80,6 +86,12 @@ spec:
           value: 'http://*'
         - name: PORT
           value: '80'
+        - name: SERVICE__FRONTEND__PROTOCOL
+          value: 'http'
+        - name: SERVICE__FRONTEND__PORT
+          value: '80'
+        - name: SERVICE__FRONTEND__HOST
+          value: 'frontend'
         - name: SERVICE__BACKEND__PROTOCOL
           value: 'http'
         - name: SERVICE__BACKEND__PORT

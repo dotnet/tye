@@ -73,12 +73,13 @@ namespace Microsoft.Tye.Extensions.Dapr
 
                     // Add dapr proxy as a service available to everyone.
                     proxy.Dependencies.UnionWith(context.Application.Services.Select(s => s.Name));
-                    context.Application.Services.Add(proxy);
 
                     foreach (var s in context.Application.Services)
                     {
                         s.Dependencies.Add(proxy.Name);
                     }
+
+                    context.Application.Services.Add(proxy);
 
                     // Listen for grpc on an auto-assigned port
                     var grpc = new BindingBuilder()

@@ -229,10 +229,10 @@ namespace Microsoft.Tye
                         throw new CommandException("Unable to determine service type.");
                     }
 
+                    // Add dependencies to ourself before adding ourself to avoid self reference
+                    service.Dependencies.UnionWith(dependencies);
 
                     AddToRootServices(root, dependencies, service.Name);
-
-                    service.Dependencies.UnionWith(dependencies);
 
                     root.Services.Add(service);
 
@@ -398,10 +398,14 @@ namespace Microsoft.Tye
             // Add ourselves in the set of all current dependencies.
             dependencies.Add(serviceName);
 
-            // Iterate through all services and add the current services as a dependency
+            // Iterate through all services and add the current services as a dependency (except ourselves)
             foreach (var s in root.Services)
             {
-                s.Dependencies.Add(serviceName);
+                if (dependencies.Contains(s.Name, StringComparer.OrdinalIgnoreCase)
+                    && !s.Name.Equals(serviceName, StringComparison.OrdinalIgnoreCase))
+                {
+                    s.Dependencies.Add(serviceName);
+                }
             }
         }
 
