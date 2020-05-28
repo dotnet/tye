@@ -49,8 +49,6 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-                await File.WriteAllTextAsync($@"C:\Users\jukotali\code\tye\test\E2ETest\testassets/generate/{projectName}.yaml", content);
-
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
@@ -89,8 +87,6 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-                await File.WriteAllTextAsync($@"C:\Users\jukotali\code\tye\test\E2ETest\testassets/generate/{projectName}.yaml", content);
-
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
@@ -132,8 +128,6 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-                await File.WriteAllTextAsync($@"C:\Users\jukotali\code\tye\test\E2ETest\testassets/generate/{projectName}.yaml", content);
-
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
@@ -172,8 +166,6 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-                await File.WriteAllTextAsync($@"C:\Users\jukotali\code\tye\test\E2ETest\testassets/generate/{projectName}-noregistry.yaml", content);
-
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}-noregistry.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
@@ -209,8 +201,6 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
-                await File.WriteAllTextAsync($@"C:\Users\jukotali\code\tye\test\E2ETest\testassets/generate/dapr.yaml", content);
-
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/dapr.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
@@ -246,8 +236,6 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
-                await File.WriteAllTextAsync($@"C:\Users\jukotali\code\tye\test\E2ETest\testassets/generate/{applicationName}.yaml", content);
-
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
@@ -283,8 +271,6 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
-                await File.WriteAllTextAsync($@"C:\Users\jukotali\code\tye\test\E2ETest\testassets/generate/{applicationName}.yaml", content);
-
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
@@ -320,8 +306,6 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
-                await File.WriteAllTextAsync($@"C:\Users\jukotali\code\tye\test\E2ETest\testassets/generate/{applicationName}.yaml", content);
-
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
@@ -359,8 +343,6 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, "results", $"VotingSample-generate-{environment}.yaml"));
-                await File.WriteAllTextAsync($@"C:\Users\jukotali\code\tye\test\E2ETest\testassets/generate/{applicationName}.yaml", content);
-
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
@@ -397,8 +379,6 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
-                await File.WriteAllTextAsync($@"C:\Users\jukotali\code\tye\test\E2ETest\testassets/generate/{applicationName}.yaml", content);
-
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
@@ -436,7 +416,6 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
-                await File.WriteAllTextAsync($@"C:\Users\jukotali\code\tye\test\E2ETest\testassets/generate/{applicationName}.yaml", content);
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
@@ -473,8 +452,6 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-                await File.WriteAllTextAsync($@"C:\Users\jukotali\code\tye\test\E2ETest\testassets/generate/{applicationName}.yaml", content);
-
                 var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
