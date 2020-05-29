@@ -21,8 +21,8 @@ namespace Microsoft.Tye.Extensions.Seq
 
                 var seq = new ContainerServiceBuilder("seq", "datalust/seq")
                 {
-                    EnvironmentVariables = 
-                    { 
+                    EnvironmentVariables =
+                    {
                         new EnvironmentVariableBuilder("ACCEPT_EULA")
                         {
                             Value = "Y"
