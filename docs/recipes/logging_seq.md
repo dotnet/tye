@@ -36,60 +36,17 @@ tye run
 
 If you navigate to the Tye dashboard you should see an extra service (`seq`) in the list of services.
 
---------------------------------------------------------------
-## TODO(raz) - UPDATE SCREENSHOT
 
---------------------------------------------------------------
-<img width="1268" alt="image" src="https://user-images.githubusercontent.com/1430011/80926951-523ec680-8d4f-11ea-913a-032f66d642ab.png">
+<img width="1103" alt="image" src="https://user-images.githubusercontent.com/1769935/83251452-f26ffa00-a1ec-11ea-9642-29e4ec579178.png">
 
 Visit the first URI (`http://localhost:5340`) in your browser to access the Seq dashboard.
 
-Now you're ready to view the data! Click the `Search` icon. That's the icon on the toolbar on the left at the top. It looks like a compass.
+Now you're ready to view the data! After it loads, it should look like the screenshot below:
 
-After that loads, it should look like the screenshot below:
-
---------------------------------------------------------------
-## TODO(raz) - UPDATE SCREENSHOT
-
---------------------------------------------------------------
-<img width="1515" alt="image" src="https://user-images.githubusercontent.com/1430011/80927199-e4939a00-8d50-11ea-8039-08723c391799.png">
+<img width="1515" alt="image" src="https://user-images.githubusercontent.com/1769935/83251005-4cbc8b00-a1ec-11ea-9c76-b7e6db2ef73b.png">
 
 Now you can see the logs from your application with each field broken out into structured format. If you take advantage of [structured logging](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-3.1#log-message-template) then you'll see your own data included in structured form here alongside framework logs.
 
-## Understanding log aggregation and tracing
-
-Now that we've got a logging dashboard, let's do a query to understand the connection between tracing and log aggregation.
-
-The basic idea is that because log aggregation pulls all of the logs together across all of your services, and distributed tracing flows context across services, you can easily query all of the logs for a logical operation.
-
-We'll use the discover tab to build a basic query. 
-
-First, perform some operation that will trigger a cross-service call so we have some data to use. If you're using the [sample here](https://github.com/dotnet/tye/tree/master/samples/frontend-backend) then visiting the frontend application in the browser will do.
-
-Next, let's add some fields to the query. The left pane in Kibana has all of the known fields. Select the following by clicking on the `Add` button near each of them:
-
-- `message`
-- `fields.TraceId`
-- `fields.Application`
-
 It should like the screenshot below:
 
---------------------------------------------------------------
-## TODO(raz) - UPDATE SCREENSHOT
-
---------------------------------------------------------------
-<img width="1461" alt="image" src="https://user-images.githubusercontent.com/1430011/80927315-02adca00-8d52-11ea-9778-af4abf61e1b6.png">
-
-You can expand an individual message by clicking the `>` icon on the left if you want to see the values of non-selected fields.
-
-Now it's showing just the fields that were selected, but its showing all log messages, not the ones from a specific request.
-
-Hover over on of the values of `fields.TraceId` for a request to `backend` and click the icon for `Filter for value` (magnifying glass with the `+`). 
-
---------------------------------------------------------------
-## TODO(raz) - UPDATE SCREENSHOT
-
---------------------------------------------------------------
-<img width="1457" alt="image" src="https://user-images.githubusercontent.com/1430011/80927502-2a516200-8d53-11ea-8c2f-caa056bb5423.png">
-
-Now you can see all of the log messages for just that operation, across both the `frontend` and `backend` services. This kind of query can be useful when you want to investigate a problem that occured in the past, and see exactly what was logged by each service that participated in the operation.
+<img width="1101" alt="image" src="https://user-images.githubusercontent.com/1769935/83252026-e46ea900-a1ed-11ea-9b96-38695c42dab4.png">
