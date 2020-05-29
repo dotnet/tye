@@ -230,19 +230,19 @@ namespace Microsoft.Tye.Hosting
 
             private void MoveToHealthy(ReplicaState from)
             {
-                _logger.LogDebug("Replica {name} is moving to an healthy state", _replica.Name);
+                _logger.LogInformation("Replica {name} is moving to an healthy state", _replica.Name);
                 ChangeState(ReplicaState.Healthy);
             }
 
             private void MoveToReady()
             {
-                _logger.LogDebug("Replica {name} is moving to a ready state", _replica.Name);
+                _logger.LogInformation("Replica {name} is moving to a ready state", _replica.Name);
                 ChangeState(ReplicaState.Ready);
             }
 
             private void Kill()
             {
-                _logger.LogDebug("Killing replica {name} because it has failed the liveness probe", _replica.Name);
+                _logger.LogInformation("Killing replica {name} because it has failed the liveness probe", _replica.Name);
 
                 // it is assumed that a `Started` replica should have an initialized stopping token source
                 _replica.StoppingTokenSource!.Cancel();
@@ -360,7 +360,7 @@ namespace Microsoft.Tye.Hosting
                     var res = await _httpClient.SendAsync(req, timeoutCts.Token);
                     if (!res.IsSuccessStatusCode)
                     {
-                        ShowWarning($"Replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to a failed status ({res.StatusCode})");
+                        DebugWarning($"Replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to a failed status ({res.StatusCode})");
                         Send(false);
                         return;
                     }
@@ -369,12 +369,12 @@ namespace Microsoft.Tye.Hosting
                 }
                 catch (HttpRequestException ex)
                 {
-                    ShowWarning($"Replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to an http exception", ex);
+                    DebugWarning($"Replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to an http exception", ex);
                     Send(false);
                 }
                 catch (TaskCanceledException)
                 {
-                    ShowWarning($"Replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to timeout");
+                    DebugWarning($"Replica {_replica.Name} failed http probe at address '{_httpProberSettings.Path}' due to timeout");
                     Send(false);
                 }
                 finally
@@ -395,7 +395,7 @@ namespace Microsoft.Tye.Hosting
                 _lastStatus = status;
             }
 
-            private void ShowWarning(string message, Exception? ex = null)
+            private void DebugWarning(string message, Exception? ex = null)
             {
                 if (!_lastStatus)
                 {
@@ -404,11 +404,11 @@ namespace Microsoft.Tye.Hosting
 
                 if (ex != null)
                 {
-                    _logger.LogWarning(ex, message);
+                    _logger.LogDebug(ex, message);
                 }
                 else
                 {
-                    _logger.LogWarning(message);
+                    _logger.LogDebug(message);
                 }
             }
 
