@@ -25,7 +25,7 @@ namespace Microsoft.Tye.Extensions.Seq
                     { 
                         new EnvironmentVariableBuilder("ACCEPT_EULA")
                         {
-                        Value = "Y"
+                            Value = "Y"
                         },
                     },
                     Bindings =
@@ -40,7 +40,7 @@ namespace Microsoft.Tye.Extensions.Seq
                     },
                 };
                 context.Application.Services.Add(seq);
-                
+
                 if (config.Data.TryGetValue("logPath", out var obj) &&
                     obj is string logPath &&
                     !string.IsNullOrEmpty(logPath))
