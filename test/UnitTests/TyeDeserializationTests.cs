@@ -66,8 +66,8 @@ services:
       value: ""test2""
     volumes:
     - name: volume
-      source: /data 
-      target: /data 
+      source: /data
+      target: /data
     bindings:
     - name: test
       port: 4444
@@ -132,8 +132,8 @@ ingress:
       value: ""test2""
     volumes:
     - name: volume
-      source: /data 
-      target: /data 
+      source: /data
+      target: /data
     bindings:
     - name: test
       port: 4444
@@ -503,10 +503,10 @@ services:
             using var parser = new YamlParser(
 @"services:
   - name: ingress
-    env: abc");
+    xyz: abc");
 
             var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
-            Assert.Contains(CoreStrings.FormatExpectedYamlSequence("env"), exception.Message);
+            Assert.Contains(CoreStrings.FormatUnrecognizedKey("xyz"), exception.Message);
         }
 
         [Theory]
