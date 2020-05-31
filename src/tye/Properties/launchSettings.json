@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "tye": {
+      "commandName": "Project",
+      "commandLineArgs": "run "
+    }
+  }
+}

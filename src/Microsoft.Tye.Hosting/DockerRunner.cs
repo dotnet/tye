@@ -468,9 +468,15 @@ namespace Microsoft.Tye.Hosting
                         service.Logs.OnNext(data);
                     }
 
+                    var arguments = $"build \"{docker.DockerFileContext?.FullName}\" -t {dockerImage} -f \"{docker.DockerFile}\"";
+                    foreach (var buildArg in docker.BuildArgs)
+                    {
+                        arguments += $" --build-arg {buildArg.Key}={buildArg.Value}";
+                    }
+
                     var dockerBuildResult = await ProcessUtil.RunAsync(
                         $"docker",
-                        $"build \"{docker.DockerFileContext?.FullName}\" -t {dockerImage} -f \"{docker.DockerFile}\"",
+                        arguments,
                         outputDataReceived: Log,
                         errorDataReceived: Log,
                         workingDirectory: docker.WorkingDirectory,

@@ -51,7 +51,8 @@ namespace Microsoft.Tye
                 {
                     var dockerRunInfo = new DockerRunInfo(dockerFile.Image, dockerFile.Args)
                     {
-                        IsAspNet = dockerFile.IsAspNet
+                        IsAspNet = dockerFile.IsAspNet,
+                        BuildArgs = dockerFile.BuildArgs
                     };
 
                     if (!string.IsNullOrEmpty(dockerFile.DockerFile))
