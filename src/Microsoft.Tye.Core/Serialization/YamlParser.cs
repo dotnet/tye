@@ -61,6 +61,7 @@ namespace Tye.Serialization
                 service.Bindings ??= new List<ConfigServiceBinding>();
                 service.Configuration ??= new List<ConfigConfigurationSource>();
                 service.Volumes ??= new List<ConfigVolume>();
+                service.Tags ??= new List<string>();
             }
 
             foreach (var ingress in app.Ingress)

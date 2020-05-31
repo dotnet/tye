@@ -53,6 +53,9 @@ services:
     - name: Configuration
     - value: Debug
     replicas: 2
+    tags:
+      - tagA
+      - tagC
     external: false
     image: abc
     build: false
@@ -77,7 +80,10 @@ services:
       protocol: http
   - name: appB
     project: ApplicationB/ApplicationB.csproj
-    replicas: 2";
+    replicas: 2
+    tags:
+      - tagB
+      - tagD";
 
             using var parser = new YamlParser(input);
             var app = parser.ParseConfigApplication();
@@ -119,6 +125,9 @@ ingress:
   - name: appA
     project: ApplicationA/ApplicationA.csproj
     replicas: 2
+    tags:
+      - A
+      - B
     external: false
     image: abc
     build: false
@@ -143,7 +152,10 @@ ingress:
       protocol: http
   - name: appB
     project: ApplicationB/ApplicationB.csproj
-    replicas: 2";
+    replicas: 2
+    tags:
+      - tC
+      - tD";
             using var parser = new YamlParser(input);
             var actual = parser.ParseConfigApplication();
 
@@ -495,6 +507,37 @@ services:
 
             var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
             Assert.Contains(CoreStrings.FormatExpectedYamlSequence("env"), exception.Message);
+        }
+
+        [Fact]
+        public void Services_Tags_MustBeSequence()
+        {
+            using var parser = new YamlParser(
+@"services:
+  - name: ingress
+    tags: abc");
+
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Contains(CoreStrings.FormatExpectedYamlSequence("tags"), exception.Message);
+        }
+
+        [Fact]
+        public void Services_Tags_SetCorrectly()
+        {
+            var input = @"
+services:
+  - name: ingress
+    tags:
+      - tagA
+      - with space
+      - ""C.X""
+";
+            using var parser = new YamlParser(input);
+            var actual = parser.ParseConfigApplication();
+
+            var expected = _deserializer.Deserialize<ConfigApplication>(new StringReader(input));
+
+            TyeAssert.Equal(expected, actual);
         }
 
         [Fact]

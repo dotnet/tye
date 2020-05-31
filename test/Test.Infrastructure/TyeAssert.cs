@@ -61,6 +61,7 @@ namespace Test.Infrastructure
                 Assert.Equal(otherService.Project, service.Project);
                 Assert.Equal(otherService.Replicas, service.Replicas);
                 Assert.Equal(otherService.WorkingDirectory, service.WorkingDirectory);
+                Assert.Equal(otherService.Tags, service.Tags);
 
                 foreach (var binding in service.Bindings)
                 {
