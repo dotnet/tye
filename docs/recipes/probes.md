@@ -66,20 +66,35 @@ tye run
 
 The sample has a single service with a `liveness` and a `readiness` probe, as shown in this snippet
 
-```
+```yaml
 services:
   - name: simple-webapi
     project: webapi/webapi.csproj
     replicas: 2
     liveness:
       http:
-        path: /healthy
+        path: /lively
     readiness:
       http:
         path: /ready
 ```
 
-The service is configured to respond successfully to both the `liveness` and `readiness` probes, so after executing `tye run`, you should see these log lines  
+The sample service uses the [Microsoft.Extensions.Diagnostics.HealthChecks](https://www.nuget.org/packages/Microsoft.Extensions.Diagnostics.HealthChecks) library to register two health checks, one for liveness (named `someLivenessCheck`) and another for readiness (named `someReadinessCheck`). both health checks are configured to respond positively by default.  
+
+```C#
+ services
+    .AddHealthChecks()
+    // this registers a "liveness" check. A service that fails a liveness check is considered to be unrecoverable and has to be restarted by the orchestrator (Tye/Kubernetes).
+    // for example: you may consider failing this check if your service has encountered a fatal exception, or if you've detected a memory leak or a substantially long average response time
+    .AddCheck("someLivenessCheck", new MyGenericCheck(_statusDictionary, "someLivenessCheck"), failureStatus: HealthStatus.Unhealthy, tags: new[] { "liveness" })
+    // this registers a "readiness" check. A service that fails a readiness check is considered to be unable to serve traffic temporarily. The orchestrator doesn't restart a service that fails this check, but stops sending traffic to it until it responds to this check positively again.
+    // for example: you may consider failing this check if your service is currently unable to connect to some external service such as your database, cache service, etc...
+    .AddCheck("someReadinessCheck", new MyGenericCheck(_statusDictionary, "someReadinessCheck"), failureStatus: HealthStatus.Unhealthy, tags: new[] { "readiness" });
+```
+
+(Starting .NET 5, the HealthChecks library ships together with ASP.NET Core)
+
+Since the service is configured to respond positively to all checks by default, after executing `tye run`, you should see these log lines  
 
 ```
 [18:14:05 INF] Replica simple-webapi_a2d67bd9-4 is moving to an healthy state
@@ -90,9 +105,9 @@ The service is configured to respond successfully to both the `liveness` and `re
 
 As you can see, both replicas pass the `liveness` probe and get prompted to an `Healthy` state, and shortly after, both replica pass the `readiness` probe and get promoted to a `Ready` state.  
 
-The sample application exposes an endpoint that allows you modify the responses that the `/healthy` and `/ready` endpoints, in order to see the probes in action.  
+The sample service exposes an endpoint that allows you to modify the status of the health checks and thus affect the status that is returned from the `/lively` and `/ready` that in return affect the liveness and readiness probes of the service.  
 
-For example, if you send an *HTTP GET* to `http://localhost:8080/set?ready=false&timeout=10` or enter that address in the browser,  
+For example, if you send an *HTTP GET* to `http://localhost:8080/set?someReadinessCheck=false&timeout=10` or enter that address in the browser,  
 It will make `/ready` return *HTTP 500* for 10 seconds.   
 
 Shortly after issuing that requests, you should see this log line in the terminal 
@@ -115,7 +130,7 @@ meaning that the replica got demoted from `Healthy` to `Ready` again, due to pas
 
 You can use the same method to make the `liveness` probe fail, and watch as Tye restarts the replica.  
 
-Send an *HTTP GET* request to this endpoint `http://localhost:8080/set?healthy=false`
+Send an *HTTP GET* request to this endpoint `http://localhost:8080/set?someLivenessCheck=false`
 
 
 And watch for this log line  
@@ -160,6 +175,6 @@ kubectl describe deploy simple-webapi
 And you will notice that the deployment has `Liveness` and `Readiness` in its description  
 
 ```
-Liveness:   http-get http://:80/healthy delay=0s timeout=1s period=1s #success=1 #failure=3
+Liveness:   http-get http://:80/lively delay=0s timeout=1s period=1s #success=1 #failure=3
 Readiness:  http-get http://:80/ready delay=0s timeout=1s period=1s #success=1 #failure=3
 ```
