@@ -76,20 +76,6 @@ namespace Test.Infrastructure
                     Assert.NotNull(otherBinding);
                 }
 
-                foreach (var binding in service.Bindings)
-                {
-                    var otherBinding = otherService.Bindings
-                                    .Where(o => o.Name == binding.Name
-                                        && o.Port == binding.Port
-                                        && o.Protocol == binding.Protocol
-                                        && o.ConnectionString == binding.ConnectionString
-                                        && o.ContainerPort == binding.ContainerPort
-                                        && o.Host == binding.Host)
-                                    .Single();
-
-                    Assert.NotNull(otherBinding);
-                }
-
                 foreach (var config in service.Configuration)
                 {
                     var otherConfig = otherService.Configuration
