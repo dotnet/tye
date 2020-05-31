@@ -413,7 +413,7 @@ namespace Tye.Serialization
             foreach (var child in yamlSequenceNode.Children)
             {
                 YamlParser.ThrowIfNotYamlMapping(child);
-                var keyValue =  HandleServiceDockerArgsNameMapping((YamlMappingNode)child);
+                var keyValue = HandleServiceDockerArgsNameMapping((YamlMappingNode)child);
                 dockerArguments.Add(keyValue.Key, keyValue.Value);
             }
         }
