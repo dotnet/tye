@@ -5,6 +5,7 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Tye;
 using Test.Infrastructure;
 using Xunit;
@@ -78,6 +79,45 @@ namespace E2ETest
 
                 var publishOutput = Assert.Single(application.Services.Single().Outputs.OfType<ProjectPublishOutput>());
                 Assert.False(Directory.Exists(publishOutput.Directory.FullName), $"Directory {publishOutput.Directory.FullName} should be deleted.");
+
+                await DockerAssert.AssertImageExistsAsync(output, imageName);
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, imageName);
+            }
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task TyeBuild_SinglePhase_ExistingDockerfileWithBuildArgs()
+        {
+            var projectName = "single-phase-dockerfile-args";
+            var environment = "production";
+            var imageName = "test/web";
+
+            await DockerAssert.DeleteDockerImagesAsync(output, imageName);
+
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
+            Assert.True(File.Exists(Path.Combine(projectDirectory.DirectoryPath, "Dockerfile")), "Dockerfile should exist.");
+
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            application.Registry = new ContainerRegistry("test");
+
+            try
+            {
+                await BuildHost.ExecuteBuildAsync(outputContext, application, environment, interactive: false);
+
+                Assert.Single(application.Services.Single().Outputs.OfType<DockerImageOutput>());
+                var builder = (DockerFileServiceBuilder)application.Services.First();
+                var valuePair = builder.BuildArgs.First();
+                Assert.Equal("pat", valuePair.Key);
+                Assert.Equal("thisisapat", valuePair.Value);
 
                 await DockerAssert.AssertImageExistsAsync(output, imageName);
             }

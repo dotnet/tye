@@ -33,6 +33,11 @@
 
   <ItemGroup>
     <None Remove="testassets\generate\dockerfile.yaml" />
+    <None Remove="testassets\projects\single-phase-dockerfile-args\appsettings.Development.json" />
+    <None Remove="testassets\projects\single-phase-dockerfile-args\appsettings.json" />
+    <None Remove="testassets\projects\single-phase-dockerfile-args\Dockerfile" />
+    <None Remove="testassets\projects\single-phase-dockerfile-args\Properties\launchSettings.json" />
+    <None Remove="testassets\projects\single-phase-dockerfile-args\tye.yaml" />
   </ItemGroup>
 
 </Project>
