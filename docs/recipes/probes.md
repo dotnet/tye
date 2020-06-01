@@ -92,7 +92,7 @@ The sample service uses the [Microsoft.Extensions.Diagnostics.HealthChecks](http
     .AddCheck("someReadinessCheck", new MyGenericCheck(_statusDictionary, "someReadinessCheck"), failureStatus: HealthStatus.Unhealthy, tags: new[] { "readiness" });
 ```
 
-(Starting .NET 5, the HealthChecks library ships together with ASP.NET Core)
+(The HealthChecks library ships together with ASP.NET Core 2.2 or higher)
 
 Since the service is configured to respond positively to all checks by default, after executing `tye run`, you should see these log lines  
 
