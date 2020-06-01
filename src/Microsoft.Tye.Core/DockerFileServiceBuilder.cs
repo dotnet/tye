@@ -15,8 +15,8 @@ namespace Microsoft.Tye
         }
         public string Image { get; set; }
 
-        public Dictionary<string, string> BuildArgs { get; set; } = new Dictionary<string, string>();
         public string? DockerFile { get; set; }
+        public Dictionary<string, string> BuildArgs { get; set; } = new Dictionary<string, string>();
 
         public string? DockerFileContext { get; set; }
     }
