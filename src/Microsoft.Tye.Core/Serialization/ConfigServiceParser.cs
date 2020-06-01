@@ -487,7 +487,6 @@ namespace Tye.Serialization
             if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value) || yamlMappingNode!.Children.Count > 1)
             {
                 throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
-
             }
 
             return new KeyValuePair<string, string>(key, value);
