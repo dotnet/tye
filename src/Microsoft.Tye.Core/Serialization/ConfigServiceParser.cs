@@ -413,8 +413,7 @@ namespace Tye.Serialization
             foreach (var child in yamlSequenceNode.Children)
             {
                 YamlParser.ThrowIfNotYamlMapping(child);
-                var keyValue = HandleServiceDockerArgsNameMapping((YamlMappingNode)child);
-                dockerArguments.Add(keyValue.Key, keyValue.Value);
+                HandleServiceDockerArgsNameMapping((YamlMappingNode)child, dockerArguments);
             }
         }
 
@@ -477,7 +476,7 @@ namespace Tye.Serialization
                 tags.Add(tag);
             }
         }
-        private static KeyValuePair<string, string> HandleServiceDockerArgsNameMapping(YamlMappingNode yamlMappingNode)
+        private static void HandleServiceDockerArgsNameMapping(YamlMappingNode yamlMappingNode, IDictionary<string, string> dockerArguments)
         {
             // only expecting on child at this level
             var child = yamlMappingNode!.Children.FirstOrDefault();
@@ -489,7 +488,7 @@ namespace Tye.Serialization
                 throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
             }
 
-            return new KeyValuePair<string, string>(key, value);
+            dockerArguments.Add(key, value);
         }
     }
 }
