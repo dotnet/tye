@@ -101,7 +101,6 @@ namespace E2ETest
             using var projectDirectory = CopyTestProjectDirectory(projectName);
             Assert.True(File.Exists(Path.Combine(projectDirectory.DirectoryPath, "Dockerfile")), "Dockerfile should exist.");
 
-
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
