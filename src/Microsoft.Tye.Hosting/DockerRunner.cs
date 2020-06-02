@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -468,15 +469,15 @@ namespace Microsoft.Tye.Hosting
                         service.Logs.OnNext(data);
                     }
 
-                    var arguments = $"build \"{docker.DockerFileContext?.FullName}\" -t {dockerImage} -f \"{docker.DockerFile}\"";
+                    var arguments = new StringBuilder($"build \"{docker.DockerFileContext?.FullName}\" -t {dockerImage} -f \"{docker.DockerFile}\"");
                     foreach (var buildArg in docker.BuildArgs)
                     {
-                        arguments += $" --build-arg {buildArg.Key}={buildArg.Value}";
+                        arguments.Append($" --build-arg {buildArg.Key}={buildArg.Value}");
                     }
 
                     var dockerBuildResult = await ProcessUtil.RunAsync(
                         $"docker",
-                        arguments,
+                        arguments.ToString(),
                         outputDataReceived: Log,
                         errorDataReceived: Log,
                         workingDirectory: docker.WorkingDirectory,
