@@ -79,22 +79,7 @@ services:
         path: /ready
 ```
 
-The sample service uses the [Microsoft.Extensions.Diagnostics.HealthChecks](https://www.nuget.org/packages/Microsoft.Extensions.Diagnostics.HealthChecks) library to register two health checks, one for liveness (named `someLivenessCheck`) and another for readiness (named `someReadinessCheck`). both health checks are configured to respond positively by default.  
-
-```C#
- services
-    .AddHealthChecks()
-    // this registers a "liveness" check. A service that fails a liveness check is considered to be unrecoverable and has to be restarted by the orchestrator (Tye/Kubernetes).
-    // for example: you may consider failing this check if your service has encountered a fatal exception, or if you've detected a memory leak or a substantially long average response time
-    .AddCheck("someLivenessCheck", new MyGenericCheck(_statusDictionary, "someLivenessCheck"), failureStatus: HealthStatus.Unhealthy, tags: new[] { "liveness" })
-    // this registers a "readiness" check. A service that fails a readiness check is considered to be unable to serve traffic temporarily. The orchestrator doesn't restart a service that fails this check, but stops sending traffic to it until it responds to this check positively again.
-    // for example: you may consider failing this check if your service is currently unable to connect to some external service such as your database, cache service, etc...
-    .AddCheck("someReadinessCheck", new MyGenericCheck(_statusDictionary, "someReadinessCheck"), failureStatus: HealthStatus.Unhealthy, tags: new[] { "readiness" });
-```
-
-(The HealthChecks library ships together with ASP.NET Core 2.2 or higher)
-
-Since the service is configured to respond positively to all checks by default, after executing `tye run`, you should see these log lines  
+After executing `tye run`, you should see these log lines  
 
 ```
 [18:14:05 INF] Replica simple-webapi_a2d67bd9-4 is moving to an healthy state
@@ -105,49 +90,27 @@ Since the service is configured to respond positively to all checks by default, 
 
 As you can see, both replicas pass the `liveness` probe and get prompted to an `Healthy` state, and shortly after, both replica pass the `readiness` probe and get promoted to a `Ready` state.  
 
-The sample service exposes an endpoint that allows you to modify the status of the health checks and thus affect the status that is returned from the `/lively` and `/ready` that in return affect the liveness and readiness probes of the service.  
-
-For example, if you send an *HTTP GET* to `http://localhost:8080/set?someReadinessCheck=false&timeout=10` or enter that address in the browser,  
-It will make `/ready` return *HTTP 500* for 10 seconds.   
-
-Shortly after issuing that requests, you should see this log line in the terminal 
+If the `readiness` probe fails, a replica will move from a `Ready` state to an `Healthy` state.
 
 ```
 [18:14:18 INF] Replica simple-webapi_a2d67bd9-4 is moving to an healthy state
 ```
 
-meaning that the replica got demoted from `Ready` to `Healthy`, due to failing the `readiness` probe.  
-
-After *about* 10 seconds, you should see this log line in the terminal  
+If after some time, the `readiness` probe becomes successful again, a replica will move from an `Healthy` state to a `Ready` state.
 
 ```
 [18:14:26 INF] Replica simple-webapi_a2d67bd9-4 is moving to a ready state
 ```
 
-meaning that the replica got demoted from `Healthy` to `Ready` again, due to passing the `readiness` probe.
-
-(*The reason it's a bit less than 10 seconds, is because Tye doesn't fail the probe immediately. It waits for a certain number of consecutive failures, as described in the schema document.*)  
-
-You can use the same method to make the `liveness` probe fail, and watch as Tye restarts the replica.  
-
-Send an *HTTP GET* request to this endpoint `http://localhost:8080/set?someLivenessCheck=false`
-
-
-And watch for this log line  
+If the `liveness` probe fails, a replica will be killed, and the orchestrator will spawn a new replica in its stead
 
 ```
 [18:25:08 INF] Killing replica simple-webapi_a9c2e2f4-d because it has failed the liveness probe
-```
-
-Shortly after, you should see this log lines  
-
-```
+...
 [18:25:08 INF] Launching service simple-webapi_0e7fe12d-7
 [18:25:09 INF] Replica simple-webapi_0e7fe12d-7 is moving to an healthy state
 [18:25:11 INF] Replica simple-webapi_0e7fe12d-7 is moving to a ready state
 ```
-
-Showing that Tye launches a new replica instead of the replica that it has killed.
 
 ## Deploying with Liveness and Readiness Probes
 
