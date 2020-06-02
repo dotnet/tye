@@ -60,7 +60,14 @@ namespace webapi
             {
                 endpoints.MapGet("/", async context =>
                 {
-                    await context.Response.WriteAsync($"Hello World! Process Id: {_id}");
+                    context.Response.ContentType = "text/html";
+                    await context.Response.WriteAsync($@"
+                    Hello World! Process Id: {_id}<br />
+                    This sample service exposes an HTTP GET endpoint <b>/set</b> that allows you to change the results of the liveness/readiness probes. <br /><br />
+                    Examples: <br /><br />
+                    <b>GET /set?someReadinessCheck=false&timeout=10</b> will cause the readiness probe to fail for 10 seconds.<br />
+                    <b>GET /set?someLivenessCheck=false</b> will cause the liveness probe to fail, resulting in a restart of that replica.
+                    ");
                 });
 
                 // this endpoint returns HTTP 200 if all "liveness" checks have passed, otherwise, it returns HTTP 500
