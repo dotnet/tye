@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine.IO;
 using System.IO;
 using System.Linq;
@@ -161,7 +162,7 @@ namespace E2ETest
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Transform the backend into a docker image for testing
-            var project = (ProjectServiceBuilder)application.Services.First(s => s.Name == "backend");
+            var project = (DotnetProjectServiceBuilder)application.Services.First(s => s.Name == "backend");
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
@@ -208,7 +209,7 @@ namespace E2ETest
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Transform the backend into a docker image for testing
-            var project = (ProjectServiceBuilder)application.Services.First(s => s.Name == "frontend");
+            var project = (DotnetProjectServiceBuilder)application.Services.First(s => s.Name == "frontend");
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
@@ -244,6 +245,30 @@ namespace E2ETest
                 Assert.True(backendResponse.IsSuccessStatusCode);
                 Assert.True(frontendResponse.IsSuccessStatusCode);
             });
+        }
+
+        [Fact]
+        public async Task DockerBaseImageAndTagTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory(Path.Combine("frontend-backend", "backend"));
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "backend-baseimage.csproj"));
+
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            // Transform the backend into a docker image for testing
+            var project = (DotnetProjectServiceBuilder)application.Services.First(s => s.Name == "backend-baseimage");
+
+            // check ContainerInfo values
+            Assert.True(string.Equals(project.ContainerInfo!.BaseImageName, "mcr.microsoft.com/dotnet/core/sdk"));
+            Assert.True(string.Equals(project.ContainerInfo!.BaseImageTag, "3.1-buster"));
+
+            // check projectInfo values
+            var projectRunInfo = new ProjectRunInfo(project);
+
+            Assert.True(string.Equals(projectRunInfo!.ContainerBaseImage, project.ContainerInfo.BaseImageName));
+            Assert.True(string.Equals(projectRunInfo!.ContainerBaseTag, project.ContainerInfo.BaseImageTag));
         }
 
         [ConditionalFact]
@@ -465,8 +490,8 @@ namespace E2ETest
             await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
             {
                 var ingressUri = await GetServiceUrl(client, uri, "ingress");
-                var appAUri = await GetServiceUrl(client, uri, "app-a");
-                var appBUri = await GetServiceUrl(client, uri, "app-b");
+                var appAUri = await GetServiceUrl(client, uri, "appa");
+                var appBUri = await GetServiceUrl(client, uri, "appb");
 
                 var appAResponse = await client.GetAsync(appAUri);
                 var appBResponse = await client.GetAsync(appBUri);
@@ -493,6 +518,39 @@ namespace E2ETest
             });
         }
 
+        [Fact]
+        public async Task IngressQueryAndContentProxyingTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var ingressUri = await GetServiceUrl(client, uri, "ingress");
+
+                var request = new HttpRequestMessage(HttpMethod.Post, ingressUri + "/A/data?key1=value1&key2=value2");
+                request.Content = new StringContent("some content");
+
+                var response = await client.SendAsync(request);
+                var responseContent =
+                    JsonSerializer.Deserialize<Dictionary<string, string>>(await response.Content.ReadAsStringAsync());
+
+                Assert.Equal("some content", responseContent["content"]);
+                Assert.Equal("?key1=value1&key2=value2", responseContent["query"]);
+            });
+        }
+
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task NginxIngressTest()
@@ -514,8 +572,8 @@ namespace E2ETest
             await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
             {
                 var nginxUri = await GetServiceUrl(client, uri, "nginx");
-                var appAUri = await GetServiceUrl(client, uri, "appA");
-                var appBUri = await GetServiceUrl(client, uri, "appB");
+                var appAUri = await GetServiceUrl(client, uri, "appa");
+                var appBUri = await GetServiceUrl(client, uri, "appb");
 
                 var nginxResponse = await client.GetAsync(nginxUri);
                 var appAResponse = await client.GetAsync(appAUri);
@@ -677,6 +735,12 @@ services:
   bindings:
     - containerPort: 80
       protocol: http
+- name: backend2
+  dockerFile: ./Dockerfile
+  dockerFileContext: ./backend
+  bindings:
+    - containerPort: 80
+      protocol: http
 - name: frontend
   project: frontend/frontend.csproj";
 
@@ -697,11 +761,14 @@ services:
             {
                 var frontendUri = await GetServiceUrl(client, uri, "frontend");
                 var backendUri = await GetServiceUrl(client, uri, "backend");
+                var backend2Uri = await GetServiceUrl(client, uri, "backend2");
 
                 var backendResponse = await client.GetAsync(backendUri);
+                var backend2Response = await client.GetAsync(backend2Uri);
                 var frontendResponse = await client.GetAsync(frontendUri);
 
                 Assert.True(backendResponse.IsSuccessStatusCode);
+                Assert.True(backend2Response.IsSuccessStatusCode);
                 Assert.True(frontendResponse.IsSuccessStatusCode);
             });
         }

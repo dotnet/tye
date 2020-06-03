@@ -83,7 +83,7 @@ namespace Microsoft.Tye.Extensions.Elastic
                 var kibana = elastic.Bindings.Single(b => b.Name == "kibana");
                 elastic.Bindings.Remove(kibana);
 
-                foreach (var project in context.Application.Services.OfType<ProjectServiceBuilder>())
+                foreach (var project in context.Application.Services.OfType<DotnetProjectServiceBuilder>())
                 {
                     var sidecar = DiagnosticAgent.GetOrAddSidecar(project);
 

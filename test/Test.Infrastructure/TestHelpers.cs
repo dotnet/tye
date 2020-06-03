@@ -19,7 +19,7 @@ namespace Test.Infrastructure
 {
     public static class TestHelpers
     {
-        private static readonly TimeSpan WaitForServicesTimeout = Debugger.IsAttached ? TimeSpan.FromMinutes(5) : TimeSpan.FromSeconds(20);
+        private static readonly TimeSpan WaitForServicesTimeout = Debugger.IsAttached ? TimeSpan.FromMinutes(5) : TimeSpan.FromMinutes(1);
 
         // https://github.com/dotnet/aspnetcore/blob/5a0526dfd991419d5bce0d8ea525b50df2e37b04/src/Testing/src/TestPathUtilities.cs
         // This can get into a bad pattern for having crazy paths in places. Eventually, especially if we use helix,
@@ -101,11 +101,71 @@ namespace Test.Infrastructure
             return temp;
         }
 
-        public static async Task StartHostAndWaitForReplicasToStart(TyeHost host)
+        public static async Task<bool> DoOperationAndWaitForReplicasToChangeState(TyeHost host, ReplicaState desiredState, int n, HashSet<string>? toChange, HashSet<string>? rest, Func<ReplicaEvent, string> entitySelector, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
         {
-            var startedTask = new TaskCompletionSource<bool>();
+            if (toChange != null && rest != null && rest.Overlaps(toChange))
+            {
+                throw new ArgumentException($"{nameof(toChange)} and {nameof(rest)} can't overlap");
+            }
+
+            var changedTask = new TaskCompletionSource<bool>();
+            var remaining = n;
+
+            void OnReplicaChange(ReplicaEvent ev)
+            {
+                if (rest != null && rest.Contains(entitySelector(ev)))
+                {
+                    changedTask!.TrySetResult(false);
+                }
+                else if ((toChange == null || toChange.Contains(entitySelector(ev))) && ev.State == desiredState)
+                {
+                    Interlocked.Decrement(ref remaining);
+                }
+
+                if (remaining == 0)
+                {
+                    Task.Delay(waitUntilSuccess)
+                        .ContinueWith(_ =>
+                        {
+                            if (!changedTask!.Task.IsCompleted)
+                            {
+                                changedTask!.TrySetResult(remaining == 0);
+                            }
+                        });
+                }
+            }
+
+            var servicesStateObserver = host.Application.Services.Select(srv => srv.Value.ReplicaEvents.Subscribe(OnReplicaChange)).ToList();
+
+            await operation(host);
+
+            using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);
+            try
+            {
+                await using (cancellation.Token.Register(() => changedTask.TrySetCanceled()))
+                {
+                    return await changedTask.Task;
+                }
+            }
+            finally
+            {
+                foreach (var observer in servicesStateObserver)
+                {
+                    observer.Dispose();
+                }
+            }
+        }
+
+        public static async Task<bool> DoOperationAndWaitForReplicasToRestart(TyeHost host, HashSet<string> toRestart, HashSet<string>? rest, Func<ReplicaEvent, string> entitySelector, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
+        {
+            if (rest != null && rest.Overlaps(toRestart))
+            {
+                throw new ArgumentException($"{nameof(toRestart)} and {nameof(rest)} can't overlap");
+            }
+
+            var restartedTask = new TaskCompletionSource<bool>();
+            var remaining = toRestart.Count;
             var alreadyStarted = 0;
-            var totalReplicas = host.Application.Services.Sum(s => s.Value.Description.Replicas);
 
             void OnReplicaChange(ReplicaEvent ev)
             {
@@ -115,24 +175,39 @@ namespace Test.Infrastructure
                 }
                 else if (ev.State == ReplicaState.Stopped)
                 {
-                    Interlocked.Decrement(ref alreadyStarted);
+                    if (toRestart.Contains(entitySelector(ev)))
+                    {
+                        Interlocked.Decrement(ref remaining);
+                    }
+                    else if (rest != null && rest.Contains(entitySelector(ev)))
+                    {
+                        restartedTask!.SetResult(false);
+                    }
                 }
 
-                if (alreadyStarted == totalReplicas)
+                if (remaining == 0 && alreadyStarted == toRestart.Count)
                 {
-                    startedTask!.TrySetResult(true);
+                    Task.Delay(waitUntilSuccess)
+                        .ContinueWith(_ =>
+                        {
+                            if (!restartedTask!.Task.IsCompleted)
+                            {
+                                restartedTask!.SetResult(remaining == 0 && alreadyStarted == toRestart.Count);
+                            }
+                        });
                 }
             }
 
             var servicesStateObserver = host.Application.Services.Select(srv => srv.Value.ReplicaEvents.Subscribe(OnReplicaChange)).ToList();
-            await host.StartAsync();
+
+            await operation(host);
 
             using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);
             try
             {
-                await using (cancellation.Token.Register(() => startedTask.TrySetCanceled()))
+                await using (cancellation.Token.Register(() => restartedTask.TrySetCanceled()))
                 {
-                    await startedTask.Task;
+                    return await restartedTask.Task;
                 }
             }
             finally
@@ -141,6 +216,29 @@ namespace Test.Infrastructure
                 {
                     observer.Dispose();
                 }
+            }
+        }
+
+        public static Task<bool> DoOperationAndWaitForReplicasToChangeState(TyeHost host, ReplicaState desiredState, int n, HashSet<string>? toChange, HashSet<string>? rest, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
+            => DoOperationAndWaitForReplicasToChangeState(host, desiredState, n, toChange, rest, ev => ev.Replica.Name, waitUntilSuccess, operation);
+
+        public static Task<bool> DoOperationAndWaitForReplicasToRestart(TyeHost host, HashSet<string> toRestart, HashSet<string>? rest, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
+            => DoOperationAndWaitForReplicasToRestart(host, toRestart, rest, ev => ev.Replica.Name, waitUntilSuccess, operation);
+
+        public static async Task StartHostAndWaitForReplicasToStart(TyeHost host, string[]? services = null, ReplicaState desiredState = ReplicaState.Started)
+        {
+            if (services == null)
+            {
+                await DoOperationAndWaitForReplicasToChangeState(host, desiredState, host.Application.Services.Sum(s => s.Value.Description.Replicas), null, null, TimeSpan.Zero, h => h.StartAsync());
+            }
+            else
+            {
+                if (services.Any(s => !host.Application.Services.ContainsKey(s)))
+                {
+                    throw new ArgumentException($"not all services given in {nameof(services)} exist");
+                }
+
+                await DoOperationAndWaitForReplicasToChangeState(host, desiredState, host.Application.Services.Where(s => services.Contains(s.Value.Description.Name)).Sum(s => s.Value.Description.Replicas), services.ToHashSet(), null, ev => ev.Replica.Service.Description.Name, TimeSpan.Zero, h => h.StartAsync());
             }
         }
 
@@ -157,42 +255,7 @@ namespace Test.Infrastructure
                 await dockerRunner.StartAsync(new Application(new FileInfo(host.Application.Source), new Dictionary<string, Service>()));
             }
 
-            var stoppedTask = new TaskCompletionSource<bool>();
-            var remaining = replicas.Length;
-
-            void OnReplicaChange(ReplicaEvent ev)
-            {
-                if (replicas.Contains(ev.Replica.Name) && ev.State == ReplicaState.Stopped)
-                {
-                    Interlocked.Decrement(ref remaining);
-                }
-
-                if (remaining == 0)
-                {
-                    stoppedTask!.TrySetResult(true);
-                }
-            }
-
-            var servicesStateObserver = host.Application.Services.Select(srv => srv.Value.ReplicaEvents.Subscribe(OnReplicaChange)).ToList();
-
-            // We purge existing replicas by restarting the host which will initiate the purging process
-            await Purge(host);
-
-            using var cancellation = new CancellationTokenSource(WaitForServicesTimeout);
-            try
-            {
-                await using (cancellation.Token.Register(() => stoppedTask.TrySetCanceled()))
-                {
-                    await stoppedTask.Task;
-                }
-            }
-            finally
-            {
-                foreach (var observer in servicesStateObserver)
-                {
-                    observer.Dispose();
-                }
-            }
+            await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Stopped, replicas.Length, replicas.ToHashSet(), new HashSet<string>(), TimeSpan.Zero, Purge);
         }
     }
 }

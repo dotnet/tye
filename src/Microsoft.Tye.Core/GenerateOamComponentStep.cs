@@ -20,7 +20,7 @@ namespace Microsoft.Tye
                 return Task.CompletedTask;
             }
 
-            if (SkipWithoutProject(output, service, out var project))
+            if (SkipWithoutDotnetProject(output, service, out var project))
             {
                 return Task.CompletedTask;
             }

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.IO;
@@ -29,8 +30,16 @@ namespace Microsoft.Tye
 
             command.Handler = CommandHandler.Create<IConsole, FileInfo?, bool>((console, path, force) =>
             {
+                var watch = System.Diagnostics.Stopwatch.StartNew();
+
                 var outputFilePath = InitHost.CreateTyeFile(path, force);
                 console.Out.WriteLine($"Created '{outputFilePath}'.");
+
+                watch.Stop();
+
+                TimeSpan elapsedTime = watch.Elapsed;
+
+                console.Out.WriteLine($"Time Elapsed: {elapsedTime.Hours:00}:{elapsedTime.Minutes:00}:{elapsedTime.Seconds:00}:{elapsedTime.Milliseconds / 10:00}");
             });
 
             return command;

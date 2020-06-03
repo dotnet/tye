@@ -1,36 +1,42 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: app-a
+  name: appa
   labels:
-    app.kubernetes.io/name: 'app-a'
+    app.kubernetes.io/name: 'appa'
     app.kubernetes.io/part-of: 'apps-with-ingress'
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app.kubernetes.io/name: app-a
+      app.kubernetes.io/name: appa
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: 'app-a'
+        app.kubernetes.io/name: 'appa'
         app.kubernetes.io/part-of: 'apps-with-ingress'
     spec:
       containers:
-      - name: app-a
-        image: app-a:1.0.0
+      - name: appa
+        image: appa:1.0.0
         imagePullPolicy: Always
         env:
         - name: ASPNETCORE_URLS
           value: 'http://*'
         - name: PORT
           value: '80'
-        - name: SERVICE__APP-B__PROTOCOL
+        - name: SERVICE__APPA__PROTOCOL
           value: 'http'
-        - name: SERVICE__APP-B__PORT
+        - name: SERVICE__APPA__PORT
           value: '80'
-        - name: SERVICE__APP-B__HOST
-          value: 'app-b'
+        - name: SERVICE__APPA__HOST
+          value: 'appa'
+        - name: SERVICE__APPB__PROTOCOL
+          value: 'http'
+        - name: SERVICE__APPB__PORT
+          value: '80'
+        - name: SERVICE__APPB__HOST
+          value: 'appb'
         ports:
         - containerPort: 80
 ...
@@ -38,13 +44,13 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: app-a
+  name: appa
   labels:
-    app.kubernetes.io/name: 'app-a'
+    app.kubernetes.io/name: 'appa'
     app.kubernetes.io/part-of: 'apps-with-ingress'
 spec:
   selector:
-    app.kubernetes.io/name: app-a
+    app.kubernetes.io/name: appa
   type: ClusterIP
   ports:
   - name: http
@@ -56,36 +62,42 @@ spec:
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: app-b
+  name: appb
   labels:
-    app.kubernetes.io/name: 'app-b'
+    app.kubernetes.io/name: 'appb'
     app.kubernetes.io/part-of: 'apps-with-ingress'
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app.kubernetes.io/name: app-b
+      app.kubernetes.io/name: appb
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: 'app-b'
+        app.kubernetes.io/name: 'appb'
         app.kubernetes.io/part-of: 'apps-with-ingress'
     spec:
       containers:
-      - name: app-b
-        image: app-b:1.0.0
+      - name: appb
+        image: appb:1.0.0
         imagePullPolicy: Always
         env:
         - name: ASPNETCORE_URLS
           value: 'http://*'
         - name: PORT
           value: '80'
-        - name: SERVICE__APP-A__PROTOCOL
+        - name: SERVICE__APPB__PROTOCOL
           value: 'http'
-        - name: SERVICE__APP-A__PORT
+        - name: SERVICE__APPB__PORT
           value: '80'
-        - name: SERVICE__APP-A__HOST
-          value: 'app-a'
+        - name: SERVICE__APPB__HOST
+          value: 'appb'
+        - name: SERVICE__APPA__PROTOCOL
+          value: 'http'
+        - name: SERVICE__APPA__PORT
+          value: '80'
+        - name: SERVICE__APPA__HOST
+          value: 'appa'
         ports:
         - containerPort: 80
 ...
@@ -93,13 +105,13 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: app-b
+  name: appb
   labels:
-    app.kubernetes.io/name: 'app-b'
+    app.kubernetes.io/name: 'appb'
     app.kubernetes.io/part-of: 'apps-with-ingress'
 spec:
   selector:
-    app.kubernetes.io/name: app-b
+    app.kubernetes.io/name: appb
   type: ClusterIP
   ports:
   - name: http
@@ -122,25 +134,25 @@ spec:
   - http:
       paths:
       - backend:
-          serviceName: app-a
+          serviceName: appa
           servicePort: 80
         path: /A(/|$)(.*)
       - backend:
-          serviceName: app-b
+          serviceName: appb
           servicePort: 80
         path: /B(/|$)(.*)
   - host: a.example.com
     http:
       paths:
       - backend:
-          serviceName: app-a
+          serviceName: appa
           servicePort: 80
         path: /()(.*)
   - host: b.example.com
     http:
       paths:
       - backend:
-          serviceName: app-b
+          serviceName: appb
           servicePort: 80
         path: /()(.*)
 ...

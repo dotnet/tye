@@ -1,0 +1,26 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: health-checks
+services:
+  - name: health-proxy
+    project: api/api.csproj
+    replicas: 2
+    bindings:
+      - port: 8005
+    liveness:
+      http:
+        path: /healthy
+      initialDelay: 5
+      period: 1
+      timeout: 1
+      successThreshold: 1
+      failureThreshold: 1
+    readiness:
+      http:
+        path: /ready
+      initialDelay: 5
+      period: 1
+      timeout: 1
+      successThreshold: 1
+      failureThreshold: 1
+  

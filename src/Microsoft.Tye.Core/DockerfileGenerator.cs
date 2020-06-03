@@ -12,7 +12,7 @@ namespace Microsoft.Tye
 {
     public static class DockerfileGenerator
     {
-        public static async Task WriteDockerfileAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container, string filePath)
+        public static async Task WriteDockerfileAsync(OutputContext output, ApplicationBuilder application, DotnetProjectServiceBuilder project, ContainerInfo container, string filePath)
         {
             if (output is null)
             {
@@ -75,7 +75,7 @@ namespace Microsoft.Tye
             await writer.WriteLineAsync($"ENTRYPOINT [\"dotnet\", \"{applicationEntryPoint}.dll\"]");
         }
 
-        public static void ApplyContainerDefaults(ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container)
+        public static void ApplyContainerDefaults(ApplicationBuilder application, DotnetProjectServiceBuilder project, ContainerInfo container)
         {
             if (application is null)
             {
@@ -92,21 +92,21 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(container));
             }
 
-            if (container.BaseImageName == null && project.IsAspNet)
+            if (string.IsNullOrEmpty(container.BaseImageName) && project.IsAspNet)
             {
                 container.BaseImageName = "mcr.microsoft.com/dotnet/core/aspnet";
             }
-            else if (container.BaseImageName == null)
+            else if (string.IsNullOrEmpty(container.BaseImageName))
             {
                 container.BaseImageName = "mcr.microsoft.com/dotnet/core/runtime";
             }
 
-            if (container.BaseImageTag == null && project.TargetFrameworkName == "netcoreapp")
+            if (string.IsNullOrEmpty(container.BaseImageTag) && project.TargetFrameworkName == "netcoreapp")
             {
                 container.BaseImageTag = project.TargetFrameworkVersion;
             }
 
-            if (container.BaseImageTag == null)
+            if (string.IsNullOrEmpty(container.BaseImageTag))
             {
                 throw new CommandException($"Unsupported TFM {project.TargetFramework}.");
             }
@@ -124,6 +124,20 @@ namespace Microsoft.Tye
             }
 
             container.ImageTag ??= project.Version?.Replace("+", "-") ?? "latest";
+        }
+
+        public static void ApplyContainerDefaults(ApplicationBuilder application, DockerFileServiceBuilder project, ContainerInfo container)
+        {
+            if (container.ImageName == null && application.Registry?.Hostname == null)
+            {
+                container.ImageName ??= project.Name.ToLowerInvariant();
+            }
+            else if (container.ImageName == null && application.Registry?.Hostname != null)
+            {
+                container.ImageName ??= $"{application.Registry?.Hostname}/{project.Name.ToLowerInvariant()}";
+            }
+
+            container.ImageTag ??= "latest";
         }
     }
 }

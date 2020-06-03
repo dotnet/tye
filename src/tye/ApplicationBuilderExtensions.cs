@@ -36,28 +36,59 @@ namespace Microsoft.Tye
             foreach (var service in application.Services)
             {
                 RunInfo? runInfo;
+                Probe? liveness;
+                Probe? readiness;
                 int replicas;
                 var env = new List<EnvironmentVariable>();
                 if (service is ExternalServiceBuilder)
                 {
                     runInfo = null;
+                    liveness = null;
+                    readiness = null;
                     replicas = 1;
                 }
+                else if (service is DockerFileServiceBuilder dockerFile)
+                {
+                    var dockerRunInfo = new DockerRunInfo(dockerFile.Image, dockerFile.Args)
+                    {
+                        IsAspNet = dockerFile.IsAspNet
+                    };
+
+                    if (!string.IsNullOrEmpty(dockerFile.DockerFile))
+                    {
+                        dockerRunInfo.DockerFile = new FileInfo(dockerFile.DockerFile);
+                        if (!string.IsNullOrEmpty(dockerFile.DockerFileContext))
+                        {
+                            dockerRunInfo.DockerFileContext = new FileInfo(dockerFile.DockerFileContext);
+                        }
+                        else
+                        {
+                            dockerRunInfo.DockerFileContext = new FileInfo(dockerRunInfo.DockerFile.DirectoryName);
+                        }
+                    }
+
+                    foreach (var mapping in dockerFile.Volumes)
+                    {
+                        dockerRunInfo.VolumeMappings.Add(new DockerVolume(mapping.Source, mapping.Name, mapping.Target));
+                    }
+
+                    runInfo = dockerRunInfo;
+                    replicas = dockerFile.Replicas;
+                    liveness = dockerFile.Liveness != null ? GetProbeFromBuilder(dockerFile.Liveness) : null;
+                    readiness = dockerFile.Readiness != null ? GetProbeFromBuilder(dockerFile.Readiness) : null;
+
+                    foreach (var entry in dockerFile.EnvironmentVariables)
+                    {
+                        env.Add(entry.ToHostingEnvironmentVariable());
+                    }
+                }
+
                 else if (service is ContainerServiceBuilder container)
                 {
                     var dockerRunInfo = new DockerRunInfo(container.Image, container.Args)
                     {
                         IsAspNet = container.IsAspNet
                     };
-
-                    if (!string.IsNullOrEmpty(container.DockerFile))
-                    {
-                        dockerRunInfo.DockerFile = new FileInfo(container.DockerFile);
-                        if (!string.IsNullOrEmpty(container.DockerFileContext))
-                        {
-                            dockerRunInfo.DockerFileContext = new FileInfo(container.DockerFileContext);
-                        }
-                    }
 
                     foreach (var mapping in container.Volumes)
                     {
@@ -66,6 +97,8 @@ namespace Microsoft.Tye
 
                     runInfo = dockerRunInfo;
                     replicas = container.Replicas;
+                    liveness = container.Liveness != null ? GetProbeFromBuilder(container.Liveness) : null;
+                    readiness = container.Readiness != null ? GetProbeFromBuilder(container.Readiness) : null;
 
                     foreach (var entry in container.EnvironmentVariables)
                     {
@@ -76,13 +109,15 @@ namespace Microsoft.Tye
                 {
                     runInfo = new ExecutableRunInfo(executable.Executable, executable.WorkingDirectory, executable.Args);
                     replicas = executable.Replicas;
+                    liveness = executable.Liveness != null ? GetProbeFromBuilder(executable.Liveness) : null;
+                    readiness = executable.Readiness != null ? GetProbeFromBuilder(executable.Readiness) : null;
 
                     foreach (var entry in executable.EnvironmentVariables)
                     {
                         env.Add(entry.ToHostingEnvironmentVariable());
                     }
                 }
-                else if (service is ProjectServiceBuilder project)
+                else if (service is DotnetProjectServiceBuilder project)
                 {
                     if (project.TargetFrameworks.Length > 1)
                     {
@@ -103,6 +138,8 @@ namespace Microsoft.Tye
 
                     runInfo = projectInfo;
                     replicas = project.Replicas;
+                    liveness = project.Liveness != null ? GetProbeFromBuilder(project.Liveness) : null;
+                    readiness = project.Readiness != null ? GetProbeFromBuilder(project.Readiness) : null;
 
                     foreach (var entry in project.EnvironmentVariables)
                     {
@@ -117,6 +154,8 @@ namespace Microsoft.Tye
                 var description = new ServiceDescription(service.Name, runInfo)
                 {
                     Replicas = replicas,
+                    Liveness = liveness,
+                    Readiness = readiness
                 };
 
                 description.Configuration.AddRange(env);
@@ -183,5 +222,21 @@ namespace Microsoft.Tye
 
             return env;
         }
+
+        private static Probe GetProbeFromBuilder(ProbeBuilder builder) => new Probe()
+        {
+            Http = builder.Http != null ? new HttpProber()
+            {
+                Path = builder.Http.Path,
+                Headers = builder.Http.Headers,
+                Port = builder.Http.Port,
+                Protocol = builder.Http.Protocol
+            } : null,
+            InitialDelay = TimeSpan.FromSeconds(builder.InitialDelay),
+            Period = TimeSpan.FromSeconds(builder.Period),
+            Timeout = TimeSpan.FromSeconds(builder.Timeout),
+            SuccessThreshold = builder.SuccessThreshold,
+            FailureThreshold = builder.FailureThreshold
+        };
     }
 }

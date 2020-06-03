@@ -25,5 +25,7 @@ namespace Microsoft.Tye
         public int? Port { get; set; }
 
         public string? Host { get; set; }
+
+        public Verbosity LogVerbosity { get; set; } = Verbosity.Debug;
     }
 }

@@ -60,7 +60,7 @@ namespace Microsoft.Tye.Extensions.Zipkin
             }
             else if (context.Operation == ExtensionContext.OperationKind.Deploy)
             {
-                foreach (var project in context.Application.Services.OfType<ProjectServiceBuilder>())
+                foreach (var project in context.Application.Services.OfType<DotnetProjectServiceBuilder>())
                 {
                     var sidecar = DiagnosticAgent.GetOrAddSidecar(project);
 

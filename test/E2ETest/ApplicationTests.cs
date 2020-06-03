@@ -31,10 +31,11 @@ namespace E2ETest
             var dictionary = new Dictionary<string, string>();
             app.PopulateEnvironment(app.Services["results"], (s1, s2) => dictionary[s1] = s2);
 
-            // Just the WORKER is defined.
-            Assert.Equal(8, dictionary.Count);
+            // Just the worker and results are defined.
+            Assert.Equal(16, dictionary.Count);
 
             Assert.Equal("http", dictionary["SERVICE__WORKER__PROTOCOL"]);
+            Assert.Equal("http", dictionary["SERVICE__RESULTS__PROTOCOL"]);
             // No POSTGRES or REDIS
             Assert.False(dictionary.ContainsKey("SERVICE__POSTGRES__PROTOCOL"));
             Assert.False(dictionary.ContainsKey("SERVICE__REDIS__PROTOCOL"));

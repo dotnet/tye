@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
@@ -34,7 +35,14 @@ namespace Microsoft.Tye
                 throw new CommandException($"Cannot generate a docker image for '{service.Name}' because docker is not running.");
             }
 
-            await DockerContainerBuilder.BuildContainerImageAsync(output, application, project, container);
+            if (project is DotnetProjectServiceBuilder dotnetProject)
+            {
+                await DockerContainerBuilder.BuildContainerImageAsync(output, application, dotnetProject, container);
+            }
+            else if (project is DockerFileServiceBuilder dockerFile)
+            {
+                await DockerContainerBuilder.BuildContainerImageFromDockerFileAsync(output, application, dockerFile, container);
+            }
         }
     }
 }

@@ -88,7 +88,7 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                var output = new OutputContext(args.Console, Verbosity.Info);
+                var output = new OutputContext(args.Console, args.Verbosity);
 
                 output.WriteInfoLine("Loading Application Details...");
                 var application = await ApplicationFactory.CreateAsync(output, args.Path, args.Host);
@@ -109,6 +109,7 @@ namespace Microsoft.Tye
                     DistributedTraceProvider = args.Dtrace,
                     LoggingProvider = args.Logs,
                     MetricsProvider = args.Metrics,
+                    LogVerbosity = args.Verbosity
                 };
                 options.Debug.AddRange(args.Debug);
 
@@ -164,6 +165,8 @@ namespace Microsoft.Tye
             public FileInfo Path { get; set; } = default!;
 
             public int? Port { get; set; }
+
+            public Verbosity Verbosity { get; set; }
 
             public string Host { get; set; } = default!;
         }

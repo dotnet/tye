@@ -20,14 +20,14 @@ namespace Microsoft.Tye
 
         public string? Args { get; set; }
 
-        public string? DockerFile { get; set; }
-
-        public string? DockerFileContext { get; set; }
-
         public int Replicas { get; set; } = 1;
 
         public List<EnvironmentVariableBuilder> EnvironmentVariables { get; } = new List<EnvironmentVariableBuilder>();
 
         public List<VolumeBuilder> Volumes { get; } = new List<VolumeBuilder>();
+
+        public ProbeBuilder? Liveness { get; set; }
+
+        public ProbeBuilder? Readiness { get; set; }
     }
 }

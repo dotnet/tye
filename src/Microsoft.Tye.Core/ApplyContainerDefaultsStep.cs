@@ -22,7 +22,14 @@ namespace Microsoft.Tye
                 return Task.CompletedTask;
             }
 
-            DockerfileGenerator.ApplyContainerDefaults(application, project, container);
+            if (project is DotnetProjectServiceBuilder dotnetProject)
+            {
+                DockerfileGenerator.ApplyContainerDefaults(application, dotnetProject, container);
+            }
+            else if (project is DockerFileServiceBuilder dockerFile)
+            {
+                DockerfileGenerator.ApplyContainerDefaults(application, dockerFile, container);
+            }
             return Task.CompletedTask;
         }
     }

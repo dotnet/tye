@@ -61,7 +61,7 @@ namespace Microsoft.Tye
             }
         }
 
-        public static Task ReadProjectDetailsAsync(OutputContext output, ProjectServiceBuilder project)
+        public static Task ReadProjectDetailsAsync(OutputContext output, DotnetProjectServiceBuilder project)
         {
             if (output is null)
             {
@@ -142,7 +142,7 @@ namespace Microsoft.Tye
 
         // Do not load MSBuild types before using EnsureMSBuildRegistered.
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void EvaluateProject(OutputContext output, ProjectServiceBuilder project)
+        private static void EvaluateProject(OutputContext output, DotnetProjectServiceBuilder project)
         {
             var sw = Stopwatch.StartNew();
 
@@ -267,6 +267,13 @@ namespace Microsoft.Tye
             var sharedFrameworks = projectInstance.GetItems("FrameworkReference").Select(i => i.EvaluatedInclude).ToList();
             project.Frameworks.AddRange(sharedFrameworks.Select(s => new Framework(s)));
             output.WriteDebugLine($"Found shared frameworks: {string.Join(", ", sharedFrameworks)}");
+
+            // determine container base image
+            if (project.ContainerInfo != null)
+            {
+                project.ContainerInfo.BaseImageName = projectInstance.GetPropertyValue("ContainerBaseImage");
+                project.ContainerInfo.BaseImageTag = projectInstance.GetPropertyValue("ContainerBaseTag");
+            }
 
             bool PropertyIsTrue(string property)
             {

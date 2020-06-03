@@ -118,10 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ExpectedYamlScalar" xml:space="preserve">
-    <value>Excpeted scalar value for key: "{key}".</value>
+    <value>Expected scalar value for key: "{key}".</value>
   </data>
   <data name="ExpectedYamlSequence" xml:space="preserve">
-    <value>Excpeted yaml sequence for key: "{key}".</value>
+    <value>Expected yaml sequence for key: "{key}".</value>
   </data>
   <data name="ExtensionMustProvideAName" xml:space="preserve">
     <value>Configuration validation failed. Extensions must provide a name.</value>
@@ -141,6 +141,12 @@
   <data name="MultipleBindingWithSamePort" xml:space="preserve">
     <value>Cannot have multiple {0} bindings with the same port.</value>
   </data>
+    <data name="ProberRequired" xml:space="preserve">
+        <value>A prober must be configured for the {0} probe.</value>
+    </data>
+    <data name="SuccessThresholdMustBeOne" xml:space="preserve">
+        <value>"successThreshold" for {0} probe must be set to "1".</value>
+    </data>
   <data name="MustBeABoolean" xml:space="preserve">
     <value>"{value}" must be a boolean value (true/false).</value>
   </data>
@@ -150,6 +156,9 @@
   <data name="MustBePositive" xml:space="preserve">
     <value>"{value}" value cannot be negative.</value>
   </data>
+    <data name="MustBeGreaterThanZero" xml:space="preserve">
+        <value>"{value}" value must be greater than zero.</value>
+    </data>
   <data name="ProjectImageExecutableExclusive" xml:space="preserve">
     <value>Cannot have both "{0}" and "{1}" set for a service. Only one of project, image, and executable can be set for a given service.</value>
   </data>

@@ -12,7 +12,55 @@ namespace Microsoft.Tye
 {
     internal static class DockerContainerBuilder
     {
-        public static async Task BuildContainerImageAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container)
+        public static async Task BuildContainerImageFromDockerFileAsync(OutputContext output, ApplicationBuilder application, DockerFileServiceBuilder containerService, ContainerInfo container)
+        {
+            if (output is null)
+            {
+                throw new ArgumentNullException(nameof(output));
+            }
+
+            if (application is null)
+            {
+                throw new ArgumentNullException(nameof(application));
+            }
+
+            if (containerService is null)
+            {
+                throw new ArgumentNullException(nameof(containerService));
+            }
+
+            if (containerService.DockerFile is null)
+            {
+                throw new ArgumentNullException(nameof(containerService.DockerFile));
+            }
+
+            var dockerFileInfo = new FileInfo(containerService.DockerFile);
+            var contextDirectory = containerService.DockerFileContext ?? dockerFileInfo.DirectoryName;
+            var dockerFilePath = Path.Combine(dockerFileInfo.DirectoryName, "Dockerfile");
+
+            output.WriteDebugLine($"Using existing Dockerfile '{dockerFilePath}'.");
+
+            output.WriteDebugLine("Running 'docker build'.");
+            output.WriteCommandLine("docker", $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"");
+            var capture = output.Capture();
+            var exitCode = await Process.ExecuteAsync(
+                $"docker",
+                $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"",
+                new FileInfo(containerService.DockerFile).DirectoryName,
+                stdOut: capture.StdOut,
+                stdErr: capture.StdErr);
+
+            output.WriteDebugLine($"Done running 'docker build' exit code: {exitCode}");
+            if (exitCode != 0)
+            {
+                throw new CommandException("'docker build' failed.");
+            }
+
+            output.WriteInfoLine($"Created Docker Image: '{container.ImageName}:{container.ImageTag}'");
+            containerService.Outputs.Add(new DockerImageOutput(container.ImageName!, container.ImageTag!));
+        }
+
+        public static async Task BuildContainerImageAsync(OutputContext output, ApplicationBuilder application, DotnetProjectServiceBuilder project, ContainerInfo container)
         {
             if (output is null)
             {
