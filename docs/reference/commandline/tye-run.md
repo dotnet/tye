@@ -62,6 +62,10 @@ If a directory path is specified, `tye run` will default to using these files, i
 
     The default value is `info`
 
+- `--watch`
+
+    Watches for file changes in all projects that are built by tye. Uses [`dotnet watch`](https://docs.microsoft.com/en-us/aspnet/core/tutorials/dotnet-watch?view=aspnetcore-3.1) to monitor for file changes. 
+
 ## Examples
 
 - Run an application in the current directory:
