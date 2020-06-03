@@ -168,6 +168,14 @@ namespace Microsoft.Tye.Hosting
             // Set by BuildAndRunService
             var args = service.Status.Args!;
             var path = service.Status.ExecutablePath!;
+
+            if (_options.Watch && service.ServiceType == ServiceType.Project)
+            {
+                path = "dotnet";
+                // Don't use launch settings as we already configured ports earlier.
+                args = $"watch run {service.Status.ProjectFilePath} --no-launch-profile " + args;
+            }
+
             var workingDirectory = service.Status.WorkingDirectory!;
 
             async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol)> ports)
@@ -274,7 +282,18 @@ namespace Microsoft.Tye.Hosting
                             args,
                             environmentVariables: environment,
                             workingDirectory: workingDirectory,
-                            outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
+                            outputDataReceived: data =>
+                            {
+                                if (data.Contains("watch : Exited"))
+                                {
+                                    _logger.LogInformation("File change detected for {ServiceName}, restarting process.", replica);
+                                }
+                                else if (data.Contains("watch : Started"))
+                                {
+                                    _logger.LogInformation("Started {ServiceName}, watching for file changes.", replica);
+                                }
+                                service.Logs.OnNext($"[{replica}]: {data}");
+                            },
                             errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
                             onStart: pid =>
                             {

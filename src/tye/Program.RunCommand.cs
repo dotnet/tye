@@ -71,6 +71,12 @@ namespace Microsoft.Tye
                     Description = "Launch dashboard on run.",
                     Required = false
                 },
+                new Option("--watch")
+                {
+                    Description = "Watches for code changes for all dotnet projects.",
+                    Required = false
+                },
+
 
                 StandardOptions.Verbosity,
             };
@@ -103,7 +109,8 @@ namespace Microsoft.Tye
                     DistributedTraceProvider = args.Dtrace,
                     LoggingProvider = args.Logs,
                     MetricsProvider = args.Metrics,
-                    LogVerbosity = args.Verbosity
+                    LogVerbosity = args.Verbosity,
+                    Watch = args.Watch
                 };
                 options.Debug.AddRange(args.Debug);
 
@@ -161,6 +168,8 @@ namespace Microsoft.Tye
             public int? Port { get; set; }
 
             public Verbosity Verbosity { get; set; }
+
+            public bool Watch { get; set; }
         }
     }
 }
