@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -15,7 +14,7 @@ namespace Microsoft.Tye
 {
     public static class ApplicationFactory
     {
-        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source)
+        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, ApplicationFactoryFilter? filter = null)
         {
             if (source is null)
             {
@@ -71,7 +70,11 @@ namespace Microsoft.Tye
                     root.Extensions.Add(extension);
                 }
 
-                foreach (var configService in config.Services)
+                var services = filter?.ServicesFilter != null ?
+                    config.Services.Where(filter.ServicesFilter).ToList() :
+                    config.Services;
+
+                foreach (var configService in services)
                 {
                     ServiceBuilder service;
                     if (root.Services.Any(s => s.Name == configService.Name))

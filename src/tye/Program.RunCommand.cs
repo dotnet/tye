@@ -3,15 +3,13 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.CommandLine.IO;
 using System.IO;
+using System.Linq;
 using System.Threading;
-using Microsoft.Tye.ConfigModel;
-using Microsoft.Tye.Extensions;
 using Microsoft.Tye.Hosting;
-using Microsoft.Tye.Hosting.Diagnostics;
 
 namespace Microsoft.Tye
 {
@@ -71,6 +69,15 @@ namespace Microsoft.Tye
                     Description = "Launch dashboard on run.",
                     Required = false
                 },
+                new Option("--tags")
+                {
+                    Argument = new Argument<List<string>>("tags")
+                    {
+                        Arity = ArgumentArity.OneOrMore
+                    },
+                    Description = "Filter services by tags.",
+                    Required = false
+                },
 
                 StandardOptions.Verbosity,
             };
@@ -86,7 +93,18 @@ namespace Microsoft.Tye
                 var output = new OutputContext(args.Console, args.Verbosity);
 
                 output.WriteInfoLine("Loading Application Details...");
-                var application = await ApplicationFactory.CreateAsync(output, args.Path);
+
+                ApplicationFactoryFilter? filter = null;
+
+                if (args.Tags.Any())
+                {
+                    filter = new ApplicationFactoryFilter
+                    {
+                        ServicesFilter = service => args.Tags.Any(b => service.Tags.Contains(b))
+                    };
+                }
+
+                var application = await ApplicationFactory.CreateAsync(output, args.Path, filter);
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
@@ -161,6 +179,9 @@ namespace Microsoft.Tye
             public int? Port { get; set; }
 
             public Verbosity Verbosity { get; set; }
+
+            public string[] Tags { get; set; } = Array.Empty<string>();
+
         }
     }
 }
