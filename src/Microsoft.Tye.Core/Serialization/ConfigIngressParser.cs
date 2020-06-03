@@ -59,6 +59,14 @@ namespace Tye.Serialization
                         }
                         HandleIngressBindings((child.Value as YamlSequenceNode)!, configIngress.Bindings);
                         break;
+                    case "tags":
+                        if (child.Value.NodeType != YamlNodeType.Sequence)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
+                        }
+
+                        HandleIngressTags((child.Value as YamlSequenceNode)!, configIngress.Tags);
+                        break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
@@ -135,6 +143,15 @@ namespace Tye.Serialization
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
+            }
+        }
+
+        private static void HandleIngressTags(YamlSequenceNode yamlSequenceNode, List<string> tags)
+        {
+            foreach (var child in yamlSequenceNode!.Children)
+            {
+                var tag = YamlParser.GetScalarValue(child);
+                tags.Add(tag);
             }
         }
     }

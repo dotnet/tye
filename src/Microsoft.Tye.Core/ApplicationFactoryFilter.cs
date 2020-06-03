@@ -10,5 +10,6 @@ namespace Microsoft.Tye
     public class ApplicationFactoryFilter
     {
         public Func<ConfigService, bool>? ServicesFilter { get; set; }
+        public Func<ConfigIngress, bool>? IngressFilter { get; set; }
     }
 }

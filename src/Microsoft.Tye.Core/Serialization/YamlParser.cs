@@ -68,6 +68,7 @@ namespace Tye.Serialization
             {
                 ingress.Bindings ??= new List<ConfigIngressBinding>();
                 ingress.Rules ??= new List<ConfigIngressRule>();
+                ingress.Tags ??= new List<string>();
             }
 
             return app;

@@ -46,6 +46,9 @@ ingress:
       - host: b.example.com
         service: appB
     replicas: 2
+    tags:
+      - tagA
+      - tagC
 services:
   - name: appA
     project: ApplicationA/ApplicationA.csproj
@@ -121,7 +124,8 @@ ingress:
         [Fact]
         public void ServicesSetCorrectly()
         {
-            var input = @"services:
+            var input = @"
+services:
   - name: appA
     project: ApplicationA/ApplicationA.csproj
     replicas: 2
@@ -446,6 +450,38 @@ services:
       - abc: abc");
             var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
             Assert.Contains(CoreStrings.FormatUnrecognizedKey("abc"), exception.Message);
+        }
+
+
+        [Fact]
+        public void Ingress_Tags_MustBeSequence()
+        {
+            using var parser = new YamlParser(
+@"ingress:
+  - name: ingress
+    tags: abc");
+
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Contains(CoreStrings.FormatExpectedYamlSequence("tags"), exception.Message);
+        }
+
+        [Fact]
+        public void Ingress_Tags_SetCorrectly()
+        {
+            var input = @"
+ingress:
+  - name: ingress
+    tags:
+      - tagA
+      - with space
+      - ""C.X""
+";
+            using var parser = new YamlParser(input);
+            var actual = parser.ParseConfigApplication();
+
+            var expected = _deserializer.Deserialize<ConfigApplication>(new StringReader(input));
+
+            TyeAssert.Equal(expected, actual);
         }
 
         [Fact]

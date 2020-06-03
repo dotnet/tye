@@ -44,6 +44,7 @@ namespace Test.Infrastructure
 
                     Assert.NotNull(otherBinding);
                 }
+                Assert.Equal(otherIngress.Tags, ingress.Tags);
             }
 
             foreach (var service in actual.Services)

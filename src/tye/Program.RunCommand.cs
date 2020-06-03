@@ -75,7 +75,7 @@ namespace Microsoft.Tye
                     {
                         Arity = ArgumentArity.OneOrMore
                     },
-                    Description = "Filter services by tags.",
+                    Description = "Filter by tags.",
                     Required = false
                 },
 

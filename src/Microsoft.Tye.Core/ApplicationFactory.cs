@@ -323,7 +323,11 @@ namespace Microsoft.Tye
                     }
                 }
 
-                foreach (var configIngress in config.Ingress)
+                var ingresses = filter?.IngressFilter != null ?
+                    config.Ingress.Where(filter.IngressFilter).ToList() :
+                    config.Ingress;
+
+                foreach (var configIngress in ingresses)
                 {
                     var ingress = new IngressBuilder(configIngress.Name!);
                     ingress.Replicas = configIngress.Replicas ?? 1;
