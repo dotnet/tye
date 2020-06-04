@@ -470,6 +470,7 @@ namespace Microsoft.Tye.Hosting
                     }
 
                     var arguments = new StringBuilder($"build \"{docker.DockerFileContext?.FullName}\" -t {dockerImage} -f \"{docker.DockerFile}\"");
+
                     foreach (var buildArg in docker.BuildArgs)
                     {
                         arguments.Append($" --build-arg {buildArg.Key}={buildArg.Value}");
