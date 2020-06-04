@@ -123,8 +123,8 @@ namespace E2ETest
             {
                 await DockerAssert.DeleteDockerImagesAsync(output, imageName);
             }
-        }      
-        
+        }
+
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task TyeBuild_SinglePhase_ExistingDockerfileWithBuildArgsDuplicateArgs()
@@ -154,6 +154,54 @@ namespace E2ETest
                 var valuePair = builder.BuildArgs.First();
                 Assert.Equal("pat", valuePair.Key);
                 Assert.Equal("thisisapat", valuePair.Value);
+
+                await DockerAssert.AssertImageExistsAsync(output, imageName);
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, imageName);
+            }
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task TyeBuild_SinglePhase_ExistingDockerfileWithBuildArgsMultiArgs()
+        {
+            var projectName = "single-phase-dockerfile-multi-args";
+            var environment = "production";
+            var imageName = "test/web";
+
+            await DockerAssert.DeleteDockerImagesAsync(output, imageName);
+
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
+            Assert.True(File.Exists(Path.Combine(projectDirectory.DirectoryPath, "Dockerfile")), "Dockerfile should exist.");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            application.Registry = new ContainerRegistry("test");
+
+            try
+            {
+                await BuildHost.ExecuteBuildAsync(outputContext, application, environment, interactive: false);
+
+                Assert.Single(application.Services.Single().Outputs.OfType<DockerImageOutput>());
+                var builder = (DockerFileServiceBuilder)application.Services.First();
+                var valuePair = builder.BuildArgs.ElementAt(0);
+
+                Assert.Equal(3, builder.BuildArgs.Count);
+                Assert.Equal("pat", valuePair.Key);
+                Assert.Equal("thisisapat", valuePair.Value);
+
+                valuePair = builder.BuildArgs.ElementAt(1);
+                Assert.Equal("number_of_replicas", valuePair.Key);
+                Assert.Equal("2", valuePair.Value);
+
+                valuePair = builder.BuildArgs.ElementAt(2);
+                Assert.Equal("number_of_shards", valuePair.Key);
+                Assert.Equal("5", valuePair.Value);
 
                 await DockerAssert.AssertImageExistsAsync(output, imageName);
             }

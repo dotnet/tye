@@ -478,17 +478,18 @@ namespace Tye.Serialization
         }
         private static void HandleServiceDockerArgsNameMapping(YamlMappingNode yamlMappingNode, IDictionary<string, string> dockerArguments)
         {
-            // only expecting on child at this level
-            var child = yamlMappingNode!.Children.FirstOrDefault();
-            var key = YamlParser.GetScalarValue(child.Key);
-            var value = YamlParser.GetScalarValue(key, child.Value);
-
-            if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value) || yamlMappingNode!.Children.Count > 1)
+            foreach (var child in yamlMappingNode!.Children)
             {
-                throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
-            }
+                var key = YamlParser.GetScalarValue(child.Key);
+                var value = YamlParser.GetScalarValue(key, child.Value);
 
-            dockerArguments.Add(key, value);
+                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
+                {
+                    throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
+                }
+
+                dockerArguments.Add(key, value);
+            }
         }
     }
 }

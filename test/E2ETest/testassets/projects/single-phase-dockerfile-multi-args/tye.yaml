@@ -1,0 +1,14 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
+#
+name: single-phase-dockerfile-args
+services:
+- name: web
+  dockerFile: Dockerfile
+  dockerFileArgs: 
+  - pat: thisisapat
+    number_of_replicas: 2
+    number_of_shards: 5
