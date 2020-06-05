@@ -24,7 +24,6 @@ namespace Microsoft.Tye.Hosting
 
         private readonly ILogger _logger;
         private readonly ProcessRunnerOptions _options;
-        private readonly IReporter _reporter;
         private readonly ReplicaRegistry _replicaRegistry;
 
         public ProcessRunner(ILogger logger, ReplicaRegistry replicaRegistry, ProcessRunnerOptions options)
@@ -32,7 +31,6 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
             _replicaRegistry = replicaRegistry;
             _options = options;
-            _reporter = CreateReporter(logger.IsEnabled(LogLevel.Debug), quiet: false, PhysicalConsole.Singleton);
         }
 
         public async Task StartAsync(Application application)
@@ -46,9 +44,6 @@ namespace Microsoft.Tye.Hosting
         {
             return KillRunningProcesses(application.Services);
         }
-
-        private static IReporter CreateReporter(bool verbose, bool quiet, IConsole console)
-            => new PrefixConsoleReporter("watch : ", console, verbose || CliContext.IsGlobalVerbose(), quiet);
 
         private async Task BuildAndRunProjects(Application application)
         {
@@ -279,7 +274,7 @@ namespace Microsoft.Tye.Hosting
                         {
                             var projectFile = runInfo.ProjectFile.FullName;
 
-                            var fileSetFactory = new MsBuildFileSetFactory(_reporter,
+                            var fileSetFactory = new MsBuildFileSetFactory(_logger,
                                 projectFile,
                                 waitOnError: true,
                                 trace: false);
@@ -292,7 +287,7 @@ namespace Microsoft.Tye.Hosting
                                 EnvironmentVariables = environment
                             };
 
-                            await new DotNetWatcher(_reporter)
+                            await new DotNetWatcher(_logger)
                                 .WatchAsync(processInfo, fileSetFactory, status.StoppingTokenSource.Token);
                         }
                         else

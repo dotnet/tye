@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Watcher.Internal
 {
@@ -16,14 +17,14 @@ namespace Microsoft.DotNet.Watcher.Internal
     {
         private const string TargetName = "GenerateWatchList";
         private const string WatchTargetsFileName = "DotNetWatch.targets";
-        private readonly IReporter _reporter;
+        private readonly ILogger _logger;
         private readonly string _projectFile;
         private readonly OutputSink _outputSink;
         private readonly ProcessRunner _processRunner;
         private readonly bool _waitOnError;
         private readonly IReadOnlyList<string> _buildFlags;
 
-        public MsBuildFileSetFactory(IReporter reporter,
+        public MsBuildFileSetFactory(ILogger reporter,
             string projectFile,
             bool waitOnError,
             bool trace)
@@ -33,19 +34,19 @@ namespace Microsoft.DotNet.Watcher.Internal
         }
 
         // output sink is for testing
-        internal MsBuildFileSetFactory(IReporter reporter,
+        internal MsBuildFileSetFactory(ILogger logger,
             string projectFile,
             OutputSink outputSink,
             bool trace)
         {
-            Ensure.NotNull(reporter, nameof(reporter));
+            Ensure.NotNull(logger, nameof(logger));
             Ensure.NotNullOrEmpty(projectFile, nameof(projectFile));
             Ensure.NotNull(outputSink, nameof(outputSink));
 
-            _reporter = reporter;
+            _logger = logger;
             _projectFile = projectFile;
             _outputSink = outputSink;
-            _processRunner = new ProcessRunner(reporter);
+            _processRunner = new ProcessRunner(logger);
             _buildFlags = InitializeArgs(FindTargetsFile(), trace);
         }
 
@@ -76,7 +77,7 @@ namespace Microsoft.DotNet.Watcher.Internal
                         OutputCapture = capture
                     };
 
-                    _reporter.Verbose($"Running MSBuild target '{TargetName}' on '{_projectFile}'");
+                    _logger.LogDebug($"Running MSBuild target '{TargetName}' on '{_projectFile}'");
 
                     var exitCode = await _processRunner.RunAsync(processSpec, cancellationToken);
 
@@ -87,12 +88,12 @@ namespace Microsoft.DotNet.Watcher.Internal
                                 .Select(l => l?.Trim())
                                 .Where(l => !string.IsNullOrEmpty(l)));
 
-                        _reporter.Verbose($"Watching {fileset.Count} file(s) for changes");
+                        _logger.LogDebug($"Watching {fileset.Count} file(s) for changes");
 #if DEBUG
 
                         foreach (var file in fileset)
                         {
-                            _reporter.Verbose($"  -> {file}");
+                            _logger.LogDebug($"  -> {file}");
                         }
 
                         Debug.Assert(fileset.All(Path.IsPathRooted), "All files should be rooted paths");
@@ -101,17 +102,17 @@ namespace Microsoft.DotNet.Watcher.Internal
                         return fileset;
                     }
 
-                    _reporter.Error($"Error(s) finding watch items project file '{Path.GetFileName(_projectFile)}'");
+                    _logger.LogError($"Error(s) finding watch items project file '{Path.GetFileName(_projectFile)}'");
 
-                    _reporter.Output($"MSBuild output from target '{TargetName}':");
-                    _reporter.Output(string.Empty);
+                    _logger.LogInformation($"MSBuild output from target '{TargetName}':");
+                    _logger.LogInformation(string.Empty);
 
                     foreach (var line in capture.Lines)
                     {
-                        _reporter.Output($"   {line}");
+                        _logger.LogInformation($"   {line}");
                     }
 
-                    _reporter.Output(string.Empty);
+                    _logger.LogInformation(string.Empty);
 
                     if (!_waitOnError)
                     {
@@ -119,15 +120,15 @@ namespace Microsoft.DotNet.Watcher.Internal
                     }
                     else
                     {
-                        _reporter.Warn("Fix the error to continue or press Ctrl+C to exit.");
+                        _logger.LogWarning("Fix the error to continue or press Ctrl+C to exit.");
 
                         var fileSet = new FileSet(new[] { _projectFile });
 
-                        using (var watcher = new FileSetWatcher(fileSet, _reporter))
+                        using (var watcher = new FileSetWatcher(fileSet, _logger))
                         {
                             await watcher.GetChangedFileAsync(cancellationToken);
 
-                            _reporter.Output($"File changed: {_projectFile}");
+                            _logger.LogInformation($"File changed: {_projectFile}");
                         }
                     }
                 }
@@ -177,7 +178,7 @@ namespace Microsoft.DotNet.Watcher.Internal
             var targetPath = searchPaths.Select(p => Path.Combine(p, WatchTargetsFileName)).FirstOrDefault(File.Exists);
             if (targetPath == null)
             {
-                _reporter.Error("Fatal error: could not find DotNetWatch.targets");
+                _logger.LogError("Fatal error: could not find DotNetWatch.targets");
                 return null;
             }
             return targetPath;

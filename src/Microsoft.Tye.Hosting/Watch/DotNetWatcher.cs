@@ -14,17 +14,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Watcher.Internal;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Watcher
 {
-    public interface IReporter
-    {
-        void Verbose(string message);
-        void Output(string message);
-        void Warn(string message);
-        void Error(string message);
-    }
-
     public interface IConsole
     {
         event ConsoleCancelEventHandler CancelKeyPress;
@@ -59,75 +52,6 @@ namespace Microsoft.DotNet.Watcher
             return obj;
         }
     }
-
-    /// <summary>
-    /// This API supports infrastructure and is not intended to be used
-    /// directly from your code. This API may change or be removed in future releases.
-    /// </summary>
-    public class ConsoleReporter : IReporter
-    {
-        private readonly object _writeLock = new object();
-
-        public ConsoleReporter(IConsole console)
-            : this(console, verbose: false, quiet: false)
-        { }
-
-        public ConsoleReporter(IConsole console, bool verbose, bool quiet)
-        {
-            Ensure.NotNull(console, nameof(console));
-
-            Console = console;
-            IsVerbose = verbose;
-            IsQuiet = quiet;
-        }
-
-        protected IConsole Console { get; }
-        public bool IsVerbose { get; set; }
-        public bool IsQuiet { get; set; }
-
-        protected virtual void WriteLine(TextWriter writer, string message, ConsoleColor? color)
-        {
-            lock (_writeLock)
-            {
-                if (color.HasValue)
-                {
-                    Console.ForegroundColor = color.Value;
-                }
-
-                writer.WriteLine(message);
-
-                if (color.HasValue)
-                {
-                    Console.ResetColor();
-                }
-            }
-        }
-
-        public virtual void Error(string message)
-            => WriteLine(Console.Error, message, ConsoleColor.Red);
-        public virtual void Warn(string message)
-            => WriteLine(Console.Out, message, ConsoleColor.Yellow);
-
-        public virtual void Output(string message)
-        {
-            if (IsQuiet)
-            {
-                return;
-            }
-            WriteLine(Console.Out, message, color: null);
-        }
-
-        public virtual void Verbose(string message)
-        {
-            if (!IsVerbose)
-            {
-                return;
-            }
-
-            WriteLine(Console.Out, message, ConsoleColor.DarkGray);
-        }
-    }
-
     internal static class ArgumentEscaper
     {
         /// <summary>
@@ -424,37 +348,15 @@ namespace Microsoft.DotNet.Watcher
         }
     }
 
-    public class NullReporter : IReporter
-    {
-        private NullReporter()
-        { }
-
-        public static IReporter Singleton { get; } = new NullReporter();
-
-        public void Verbose(string message)
-        { }
-
-        public void Output(string message)
-        { }
-
-        public void Warn(string message)
-        { }
-
-        public void Error(string message)
-        { }
-    }
-
     public class DotNetWatcher
     {
-        private readonly IReporter _reporter;
         private readonly ProcessRunner _processRunner;
+        private readonly ILogger _logger;
 
-        public DotNetWatcher(IReporter reporter)
+        public DotNetWatcher(ILogger logger)
         {
-            Ensure.NotNull(reporter, nameof(reporter));
-
-            _reporter = reporter;
-            _processRunner = new ProcessRunner(reporter);
+            _processRunner = new ProcessRunner(logger);
+            _logger = logger;
         }
 
         public async Task WatchAsync(ProcessSpec processSpec, IFileSetFactory fileSetFactory,
@@ -477,7 +379,7 @@ namespace Microsoft.DotNet.Watcher
 
                 if (fileSet == null)
                 {
-                    _reporter.Error("Failed to find a list of files to watch");
+                    _logger.LogError("Failed to find a list of files to watch");
                     return;
                 }
 
@@ -490,15 +392,15 @@ namespace Microsoft.DotNet.Watcher
                 using (var combinedCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(
                     cancellationToken,
                     currentRunCancellationSource.Token))
-                using (var fileSetWatcher = new FileSetWatcher(fileSet, _reporter))
+                using (var fileSetWatcher = new FileSetWatcher(fileSet, _logger))
                 {
                     var fileSetTask = fileSetWatcher.GetChangedFileAsync(combinedCancellationSource.Token);
                     var processTask = _processRunner.RunAsync(processSpec, combinedCancellationSource.Token);
 
                     var args = ArgumentEscaper.EscapeAndConcatenate(processSpec.Arguments);
-                    _reporter.Verbose($"Running {processSpec.ShortDisplayName()} with the following arguments: {args}");
+                    _logger.LogDebug($"Running {processSpec.ShortDisplayName()} with the following arguments: {args}");
 
-                    _reporter.Output("Started");
+                    _logger.LogInformation("Started");
 
                     var finishedTask = await Task.WhenAny(processTask, fileSetTask, cancelledTaskSource.Task);
 
@@ -512,11 +414,11 @@ namespace Microsoft.DotNet.Watcher
                     {
                         // Only show this error message if the process exited non-zero due to a normal process exit.
                         // Don't show this if dotnet-watch killed the inner process due to file change or CTRL+C by the user
-                        _reporter.Error($"Exited with error code {processTask.Result}");
+                        _logger.LogError($"Exited with error code {processTask.Result}");
                     }
                     else
                     {
-                        _reporter.Output("Exited");
+                        _logger.LogInformation("Exited");
                     }
 
                     if (finishedTask == cancelledTaskSource.Task || cancellationToken.IsCancellationRequested)
@@ -527,12 +429,12 @@ namespace Microsoft.DotNet.Watcher
                     if (finishedTask == processTask)
                     {
                         // Now wait for a file to change before restarting process
-                        await fileSetWatcher.GetChangedFileAsync(cancellationToken, () => _reporter.Warn("Waiting for a file to change before restarting dotnet..."));
+                        await fileSetWatcher.GetChangedFileAsync(cancellationToken, () => _logger.LogWarning("Waiting for a file to change before restarting dotnet..."));
                     }
 
                     if (!string.IsNullOrEmpty(fileSetTask.Result))
                     {
-                        _reporter.Output($"File changed: {fileSetTask.Result}");
+                        _logger.LogInformation($"File changed: {fileSetTask.Result}");
                     }
                 }
             }

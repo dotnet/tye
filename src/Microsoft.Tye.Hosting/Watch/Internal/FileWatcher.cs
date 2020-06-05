@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Watcher.Internal
 {
@@ -13,15 +14,11 @@ namespace Microsoft.DotNet.Watcher.Internal
         private bool _disposed;
 
         private readonly IDictionary<string, IFileSystemWatcher> _watchers;
-        private readonly IReporter _reporter;
+        private readonly ILogger _logger;
 
-        public FileWatcher()
-            : this(NullReporter.Singleton)
-        { }
-
-        public FileWatcher(IReporter reporter)
+        public FileWatcher(ILogger logger)
         {
-            _reporter = reporter ?? throw new ArgumentNullException(nameof(reporter));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _watchers = new Dictionary<string, IFileSystemWatcher>();
         }
 
@@ -90,7 +87,7 @@ namespace Microsoft.DotNet.Watcher.Internal
         {
             if (sender is IFileSystemWatcher watcher)
             {
-                _reporter.Warn($"The file watcher observing '{watcher.BasePath}' encountered an error: {error.Message}");
+                _logger.LogWarning($"The file watcher observing '{watcher.BasePath}' encountered an error: {error.Message}");
             }
         }
 

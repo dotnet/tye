@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Watcher.Internal
 {
@@ -13,12 +14,12 @@ namespace Microsoft.DotNet.Watcher.Internal
         private readonly FileWatcher _fileWatcher;
         private readonly IFileSet _fileSet;
 
-        public FileSetWatcher(IFileSet fileSet, IReporter reporter)
+        public FileSetWatcher(IFileSet fileSet, ILogger logger)
         {
             Ensure.NotNull(fileSet, nameof(fileSet));
 
             _fileSet = fileSet;
-            _fileWatcher = new FileWatcher(reporter);
+            _fileWatcher = new FileWatcher(logger);
         }
 
         public async Task<string> GetChangedFileAsync(CancellationToken cancellationToken, Action startedWatching)

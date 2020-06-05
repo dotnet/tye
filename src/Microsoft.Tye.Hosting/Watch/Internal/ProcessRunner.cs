@@ -6,18 +6,19 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Watcher.Internal
 {
     public class ProcessRunner
     {
-        private readonly IReporter _reporter;
+        private readonly ILogger _logger;
 
-        public ProcessRunner(IReporter reporter)
+        public ProcessRunner(ILogger reporter)
         {
             Ensure.NotNull(reporter, nameof(reporter));
 
-            _reporter = reporter;
+            _logger = reporter;
         }
 
         // May not be necessary in the future. See https://github.com/dotnet/corefx/issues/12039
@@ -30,7 +31,7 @@ namespace Microsoft.DotNet.Watcher.Internal
             var stopwatch = new Stopwatch();
 
             using (var process = CreateProcess(processSpec))
-            using (var processState = new ProcessState(process, _reporter))
+            using (var processState = new ProcessState(process, _logger))
             {
                 cancellationToken.Register(() => processState.TryKill());
 
@@ -52,7 +53,7 @@ namespace Microsoft.DotNet.Watcher.Internal
                 stopwatch.Start();
                 process.Start();
 
-                _reporter.Verbose($"Started '{processSpec.Executable}' with process id {process.Id}");
+                _logger.LogDebug($"Started '{processSpec.Executable}' with process id {process.Id}");
 
                 if (processSpec.IsOutputCaptured)
                 {
@@ -67,7 +68,7 @@ namespace Microsoft.DotNet.Watcher.Internal
 
                 exitCode = process.ExitCode;
                 stopwatch.Stop();
-                _reporter.Verbose($"Process id {process.Id} ran for {stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogDebug($"Process id {process.Id} ran for {stopwatch.ElapsedMilliseconds}ms");
             }
 
             return exitCode;
@@ -99,14 +100,14 @@ namespace Microsoft.DotNet.Watcher.Internal
 
         private class ProcessState : IDisposable
         {
-            private readonly IReporter _reporter;
+            private readonly ILogger _logger;
             private readonly Process _process;
             private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
             private volatile bool _disposed;
 
-            public ProcessState(Process process, IReporter reporter)
+            public ProcessState(Process process, ILogger logger)
             {
-                _reporter = reporter;
+                _logger = logger;
                 _process = process;
                 _process.Exited += OnExited;
                 Task = _tcs.Task.ContinueWith(_ =>
@@ -145,15 +146,15 @@ namespace Microsoft.DotNet.Watcher.Internal
                 {
                     if (!_process.HasExited)
                     {
-                        _reporter.Verbose($"Killing process {_process.Id}");
+                        _logger.LogDebug($"Killing process {_process.Id}");
                         _process.KillTree();
                     }
                 }
                 catch (Exception ex)
                 {
-                    _reporter.Verbose($"Error while killing process '{_process.StartInfo.FileName} {_process.StartInfo.Arguments}': {ex.Message}");
+                    _logger.LogDebug($"Error while killing process '{_process.StartInfo.FileName} {_process.StartInfo.Arguments}': {ex.Message}");
 #if DEBUG
-                    _reporter.Verbose(ex.ToString());
+                    _logger.LogDebug(ex.ToString());
 #endif
                 }
             }
