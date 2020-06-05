@@ -35,36 +35,38 @@ namespace Microsoft.DotNet.Watcher.Internal
             {
                 cancellationToken.Register(() => processState.TryKill());
 
-                process.OutputDataReceived += (_, a) =>
+                process.OutputDataReceived += (_, e) =>
                 {
-                    if (!string.IsNullOrEmpty(a.Data))
+                    if (e.Data != null)
                     {
-                        processSpec.OutputCapture.AddLine(a.Data);
+                        if (processSpec.OutputData != null)
+                        {
+                            processSpec.OutputData.Invoke(e.Data);
+                        }
                     }
                 };
-                process.ErrorDataReceived += (_, a) =>
+
+                process.ErrorDataReceived += (_, e) =>
                 {
-                    if (!string.IsNullOrEmpty(a.Data))
+                    if (e.Data != null)
                     {
-                        processSpec.OutputCapture.AddLine(a.Data);
+                        if (processSpec.ErrorData != null)
+                        {
+                            processSpec.ErrorData.Invoke(e.Data);
+                        }
                     }
                 };
 
                 stopwatch.Start();
                 process.Start();
+                processSpec.OnStart?.Invoke(process.Id);
+
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
 
                 _logger.LogDebug($"Started '{processSpec.Executable}' with process id {process.Id}");
 
-                if (processSpec.IsOutputCaptured)
-                {
-                    process.BeginErrorReadLine();
-                    process.BeginOutputReadLine();
-                    await processState.Task;
-                }
-                else
-                {
-                    await processState.Task;
-                }
+                await processState.Task;
 
                 exitCode = process.ExitCode;
                 stopwatch.Stop();
@@ -85,8 +87,9 @@ namespace Microsoft.DotNet.Watcher.Internal
                     Arguments = ArgumentEscaper.EscapeAndConcatenate(processSpec.Arguments),
                     UseShellExecute = false,
                     WorkingDirectory = processSpec.WorkingDirectory,
-                    RedirectStandardOutput = processSpec.IsOutputCaptured,
-                    RedirectStandardError = processSpec.IsOutputCaptured,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
                 }
             };
 

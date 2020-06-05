@@ -19,7 +19,6 @@ namespace Microsoft.DotNet.Watcher.Internal
         private const string WatchTargetsFileName = "DotNetWatch.targets";
         private readonly ILogger _logger;
         private readonly string _projectFile;
-        private readonly OutputSink _outputSink;
         private readonly ProcessRunner _processRunner;
         private readonly bool _waitOnError;
         private readonly IReadOnlyList<string> _buildFlags;
@@ -28,7 +27,7 @@ namespace Microsoft.DotNet.Watcher.Internal
             string projectFile,
             bool waitOnError,
             bool trace)
-            : this(reporter, projectFile, new OutputSink(), trace)
+            : this(reporter, projectFile, trace)
         {
             _waitOnError = waitOnError;
         }
@@ -36,16 +35,13 @@ namespace Microsoft.DotNet.Watcher.Internal
         // output sink is for testing
         internal MsBuildFileSetFactory(ILogger logger,
             string projectFile,
-            OutputSink outputSink,
             bool trace)
         {
             Ensure.NotNull(logger, nameof(logger));
             Ensure.NotNullOrEmpty(projectFile, nameof(projectFile));
-            Ensure.NotNull(outputSink, nameof(outputSink));
 
             _logger = logger;
             _projectFile = projectFile;
-            _outputSink = outputSink;
             _processRunner = new ProcessRunner(logger);
             _buildFlags = InitializeArgs(FindTargetsFile(), trace);
         }
@@ -61,7 +57,6 @@ namespace Microsoft.DotNet.Watcher.Internal
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    var capture = _outputSink.StartCapture();
                     // TODO adding files doesn't currently work. Need to provide a way to detect new files
                     // find files
                     var processSpec = new ProcessSpec
@@ -74,7 +69,12 @@ namespace Microsoft.DotNet.Watcher.Internal
                             _projectFile,
                             $"/p:_DotNetWatchListFile={watchList}"
                         }.Concat(_buildFlags),
-                        OutputCapture = capture
+                        OutputData = a =>
+                        {
+                        },
+                        ErrorData = a =>
+                        {
+                        }
                     };
 
                     _logger.LogDebug($"Running MSBuild target '{TargetName}' on '{_projectFile}'");
@@ -106,11 +106,6 @@ namespace Microsoft.DotNet.Watcher.Internal
 
                     _logger.LogInformation($"MSBuild output from target '{TargetName}':");
                     _logger.LogInformation(string.Empty);
-
-                    foreach (var line in capture.Lines)
-                    {
-                        _logger.LogInformation($"   {line}");
-                    }
 
                     _logger.LogInformation(string.Empty);
 

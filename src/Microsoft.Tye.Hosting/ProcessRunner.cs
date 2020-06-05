@@ -279,12 +279,37 @@ namespace Microsoft.Tye.Hosting
                                 waitOnError: true,
                                 trace: false);
                             environment["DOTNET_WATCH"] = "1";
+
                             var processInfo = new ProcessSpec
                             {
                                 Executable = path,
                                 WorkingDirectory = workingDirectory,
-                                Arguments = args.Split(' '), // TODO don't split her
-                                EnvironmentVariables = environment
+                                Arguments = args.Split(' '), // TODO don't split here
+                                EnvironmentVariables = environment,
+                                OutputData = data =>
+                                {
+                                    service.Logs.OnNext($"[{replica}]: {data}");
+                                },
+                                ErrorData = data => service.Logs.OnNext($"[{replica}]: {data}"),
+                                OnStart = pid =>
+                                {
+                                    if (hasPorts)
+                                    {
+                                        _logger.LogInformation("{ServiceName} running on process id {PID} bound to {Address}", replica, pid, string.Join(", ", ports.Select(p => $"{p.Protocol ?? "http"}://localhost:{p.Port}")));
+                                    }
+                                    else
+                                    {
+                                        _logger.LogInformation("{ServiceName} running on process id {PID}", replica, pid);
+                                    }
+
+                                    // Reset the backoff
+                                    backOff = TimeSpan.FromSeconds(5);
+
+                                    status.Pid = pid;
+
+                                    WriteReplicaToStore(pid.ToString());
+                                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
+                                }
                             };
 
                             await new DotNetWatcher(_logger)
