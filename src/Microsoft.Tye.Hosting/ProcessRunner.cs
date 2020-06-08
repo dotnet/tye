@@ -269,6 +269,38 @@ namespace Microsoft.Tye.Hosting
                     try
                     {
                         service.Logs.OnNext($"[{replica}]:{path} {args}");
+                        var processInfo = new ProcessSpec
+                        {
+                            Executable = path,
+                            WorkingDirectory = workingDirectory,
+                            Arguments = args,
+                            EnvironmentVariables = environment,
+                            OutputData = data =>
+                            {
+                                service.Logs.OnNext($"[{replica}]: {data}");
+                            },
+                            ErrorData = data => service.Logs.OnNext($"[{replica}]: {data}"),
+                            OnStart = pid =>
+                            {
+                                if (hasPorts)
+                                {
+                                    _logger.LogInformation("{ServiceName} running on process id {PID} bound to {Address}", replica, pid, string.Join(", ", ports.Select(p => $"{p.Protocol ?? "http"}://localhost:{p.Port}")));
+                                }
+                                else
+                                {
+                                    _logger.LogInformation("{ServiceName} running on process id {PID}", replica, pid);
+                                }
+
+                                // Reset the backoff
+                                backOff = TimeSpan.FromSeconds(5);
+
+                                status.Pid = pid;
+
+                                WriteReplicaToStore(pid.ToString());
+                                service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
+                            }
+                        };
+
                         if (_options.Watch && service.Description.RunInfo is ProjectRunInfo runInfo)
                         {
                             var projectFile = runInfo.ProjectFile.FullName;
@@ -279,75 +311,13 @@ namespace Microsoft.Tye.Hosting
                                 trace: false);
                             environment["DOTNET_WATCH"] = "1";
 
-                            var processInfo = new ProcessSpec
-                            {
-                                Executable = path,
-                                WorkingDirectory = workingDirectory,
-                                Arguments = args,
-                                EnvironmentVariables = environment,
-                                OutputData = data =>
-                                {
-                                    service.Logs.OnNext($"[{replica}]: {data}");
-                                },
-                                ErrorData = data => service.Logs.OnNext($"[{replica}]: {data}"),
-                                OnStart = pid =>
-                                {
-                                    if (hasPorts)
-                                    {
-                                        _logger.LogInformation("{ServiceName} running on process id {PID} bound to {Address}", replica, pid, string.Join(", ", ports.Select(p => $"{p.Protocol ?? "http"}://localhost:{p.Port}")));
-                                    }
-                                    else
-                                    {
-                                        _logger.LogInformation("{ServiceName} running on process id {PID}", replica, pid);
-                                    }
-
-                                    // Reset the backoff
-                                    backOff = TimeSpan.FromSeconds(5);
-
-                                    status.Pid = pid;
-
-                                    WriteReplicaToStore(pid.ToString());
-                                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
-                                }
-                            };
-
                             await new DotNetWatcher(_logger)
                                 .WatchAsync(processInfo, fileSetFactory, replica, status.StoppingTokenSource.Token);
                         }
                         else
                         {
-                            var result = await ProcessUtil.RunAsync(
-                                path,
-                                args,
-                                environmentVariables: environment,
-                                workingDirectory: workingDirectory,
-                                outputDataReceived: data =>
-                                {
-                                    service.Logs.OnNext($"[{replica}]: {data}");
-                                },
-                                errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
-                                onStart: pid =>
-                                {
-                                    if (hasPorts)
-                                    {
-                                        _logger.LogInformation("{ServiceName} running on process id {PID} bound to {Address}", replica, pid, string.Join(", ", ports.Select(p => $"{p.Protocol ?? "http"}://localhost:{p.Port}")));
-                                    }
-                                    else
-                                    {
-                                        _logger.LogInformation("{ServiceName} running on process id {PID}", replica, pid);
-                                    }
-
-                                    // Reset the backoff
-                                    backOff = TimeSpan.FromSeconds(5);
-
-                                    status.Pid = pid;
-
-                                    WriteReplicaToStore(pid.ToString());
-                                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
-                                },
-                                throwOnError: false,
-                                cancellationToken: status.StoppingTokenSource.Token);
-
+                            var result = await ProcessUtil.RunAsync(processInfo, status.StoppingTokenSource.Token, throwOnError: false);
+                               
                             status.ExitCode = result.ExitCode;
 
                             if (status.Pid != null)
