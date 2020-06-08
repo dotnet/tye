@@ -317,7 +317,7 @@ namespace Microsoft.Tye.Hosting
                         else
                         {
                             var result = await ProcessUtil.RunAsync(processInfo, status.StoppingTokenSource.Token, throwOnError: false);
-                               
+
                             status.ExitCode = result.ExitCode;
 
                             if (status.Pid != null)
