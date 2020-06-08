@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Watcher.Internal
 
         private readonly Func<string, FileSystemWatcher> _watcherFactory;
 
-        private FileSystemWatcher _fileSystemWatcher;
+        private FileSystemWatcher? _fileSystemWatcher;
 
         private readonly object _createLock = new object();
 
@@ -32,9 +32,9 @@ namespace Microsoft.DotNet.Watcher.Internal
             CreateFileSystemWatcher();
         }
 
-        public event EventHandler<string> OnFileChange;
+        public event EventHandler<string>? OnFileChange;
 
-        public event EventHandler<Exception> OnError;
+        public event EventHandler<Exception>? OnError;
 
         public string BasePath { get; }
 
@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.Watcher.Internal
 
         private void DisposeInnerWatcher()
         {
-            _fileSystemWatcher.EnableRaisingEvents = false;
+            _fileSystemWatcher!.EnableRaisingEvents = false;
 
             _fileSystemWatcher.Created -= WatcherChangeHandler;
             _fileSystemWatcher.Deleted -= WatcherChangeHandler;
@@ -145,8 +145,8 @@ namespace Microsoft.DotNet.Watcher.Internal
 
         public bool EnableRaisingEvents
         {
-            get => _fileSystemWatcher.EnableRaisingEvents;
-            set => _fileSystemWatcher.EnableRaisingEvents = value;
+            get => _fileSystemWatcher!.EnableRaisingEvents;
+            set => _fileSystemWatcher!.EnableRaisingEvents = value;
         }
 
         public void Dispose()

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -62,19 +61,13 @@ namespace Microsoft.DotNet.Watcher.Internal
                     var processSpec = new ProcessSpec
                     {
                         Executable = DotNetMuxer.MuxerPathOrDefault(),
-                        WorkingDirectory = projectDir,
+                        WorkingDirectory = projectDir!,
                         Arguments = new[]
                         {
                             "msbuild",
                             _projectFile,
                             $"/p:_DotNetWatchListFile={watchList}"
-                        }.Concat(_buildFlags),
-                        OutputData = a =>
-                        {
-                        },
-                        ErrorData = a =>
-                        {
-                        }
+                        }.Concat(_buildFlags)
                     };
 
                     _logger.LogDebug($"Running MSBuild target '{TargetName}' on '{_projectFile}'");
@@ -86,7 +79,7 @@ namespace Microsoft.DotNet.Watcher.Internal
                         var fileset = new FileSet(
                             File.ReadAllLines(watchList)
                                 .Select(l => l?.Trim())
-                                .Where(l => !string.IsNullOrEmpty(l)));
+                                .Where(l => !string.IsNullOrEmpty(l))!);
 
                         _logger.LogDebug($"Watching {fileset.Count} file(s) for changes");
 #if DEBUG
@@ -111,7 +104,7 @@ namespace Microsoft.DotNet.Watcher.Internal
 
                     if (!_waitOnError)
                     {
-                        return null;
+                        return null!;
                     }
                     else
                     {
@@ -162,19 +155,19 @@ namespace Microsoft.DotNet.Watcher.Internal
         private string FindTargetsFile()
         {
             var assemblyDir = Path.GetDirectoryName(typeof(MsBuildFileSetFactory).Assembly.Location);
-            var searchPaths = new[]
+            string[] searchPaths = new[]
             {
                 Path.Combine(AppContext.BaseDirectory, "Watch", "assets"),
-                Path.Combine(assemblyDir, "Watch", "assets"),
+                Path.Combine(assemblyDir!, "Watch", "assets"),
                 AppContext.BaseDirectory,
                 assemblyDir,
-            };
+            }!;
 
             var targetPath = searchPaths.Select(p => Path.Combine(p, WatchTargetsFileName)).FirstOrDefault(File.Exists);
             if (targetPath == null)
             {
                 _logger.LogError("Fatal error: could not find DotNetWatch.targets");
-                return null;
+                return null!;
             }
             return targetPath;
         }

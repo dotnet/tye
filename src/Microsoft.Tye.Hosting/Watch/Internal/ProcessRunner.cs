@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.Watcher.Internal
                 StartInfo =
                 {
                     FileName = processSpec.Executable,
-                    Arguments = ArgumentEscaper.EscapeAndConcatenate(processSpec.Arguments),
+                    Arguments = ArgumentEscaper.EscapeAndConcatenate(processSpec.Arguments!),
                     UseShellExecute = false,
                     WorkingDirectory = processSpec.WorkingDirectory,
                     RedirectStandardOutput = true,
@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.Watcher.Internal
             {
                 _logger = logger;
                 _process = process;
-                _process.Exited += OnExited;
+                _process.Exited += OnExited!;
                 Task = _tcs.Task.ContinueWith(_ =>
                 {
                     try
@@ -163,7 +163,7 @@ namespace Microsoft.DotNet.Watcher.Internal
             }
 
             private void OnExited(object sender, EventArgs args)
-                => _tcs.TrySetResult(null);
+                => _tcs.TrySetResult(null!);
 
             public void Dispose()
             {
@@ -171,7 +171,7 @@ namespace Microsoft.DotNet.Watcher.Internal
                 {
                     TryKill();
                     _disposed = true;
-                    _process.Exited -= OnExited;
+                    _process.Exited -= OnExited!;
                     _process.Dispose();
                 }
             }

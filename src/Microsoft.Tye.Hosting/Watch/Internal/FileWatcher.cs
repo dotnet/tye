@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Watcher.Internal
             _watchers = new Dictionary<string, IFileSystemWatcher>();
         }
 
-        public event Action<string> OnFileChange;
+        public event Action<string>? OnFileChange;
 
         public void WatchDirectory(string directory)
         {
@@ -41,8 +41,8 @@ namespace Microsoft.DotNet.Watcher.Internal
 
             foreach (var watcher in _watchers)
             {
-                watcher.Value.OnFileChange -= WatcherChangedHandler;
-                watcher.Value.OnError -= WatcherErrorHandler;
+                watcher.Value.OnFileChange -= WatcherChangedHandler!;
+                watcher.Value.OnError -= WatcherErrorHandler!;
                 watcher.Value.Dispose();
             }
 
@@ -76,8 +76,8 @@ namespace Microsoft.DotNet.Watcher.Internal
             }
 
             var newWatcher = FileWatcherFactory.CreateWatcher(directory);
-            newWatcher.OnFileChange += WatcherChangedHandler;
-            newWatcher.OnError += WatcherErrorHandler;
+            newWatcher.OnFileChange += WatcherChangedHandler!;
+            newWatcher.OnError += WatcherErrorHandler!;
             newWatcher.EnableRaisingEvents = true;
 
             _watchers.Add(directory, newWatcher);
@@ -111,8 +111,8 @@ namespace Microsoft.DotNet.Watcher.Internal
 
             watcher.EnableRaisingEvents = false;
 
-            watcher.OnFileChange -= WatcherChangedHandler;
-            watcher.OnError -= WatcherErrorHandler;
+            watcher.OnFileChange -= WatcherChangedHandler!;
+            watcher.OnError -= WatcherErrorHandler!;
 
             watcher.Dispose();
         }

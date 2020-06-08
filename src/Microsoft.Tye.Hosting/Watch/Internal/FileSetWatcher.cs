@@ -26,11 +26,11 @@ namespace Microsoft.DotNet.Watcher.Internal
         {
             foreach (var file in _fileSet)
             {
-                _fileWatcher.WatchDirectory(Path.GetDirectoryName(file));
+                _fileWatcher.WatchDirectory(Path.GetDirectoryName(file)!);
             }
 
             var tcs = new TaskCompletionSource<string>();
-            cancellationToken.Register(() => tcs.TrySetResult(null));
+            cancellationToken.Register(() => tcs.TrySetResult(null!));
 
             Action<string> callback = path =>
             {

@@ -160,7 +160,6 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-
         private void LaunchService(Application application, Service service)
         {
             var serviceDescription = service.Description;
@@ -286,6 +285,7 @@ namespace Microsoft.Tye.Hosting
                                 WorkingDirectory = workingDirectory,
                                 Arguments = args.Split(' '), // TODO don't split here
                                 EnvironmentVariables = environment,
+                                Replica = replica,
                                 OutputData = data =>
                                 {
                                     service.Logs.OnNext($"[{replica}]: {data}");
@@ -318,36 +318,36 @@ namespace Microsoft.Tye.Hosting
                         else
                         {
                             var result = await ProcessUtil.RunAsync(
-                                                      path,
-                                                      args,
-                                                      environmentVariables: environment,
-                                                      workingDirectory: workingDirectory,
-                                                      outputDataReceived: data =>
-                                                      {
-                                                          service.Logs.OnNext($"[{replica}]: {data}");
-                                                      },
-                                                      errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
-                                                      onStart: pid =>
-                                                      {
-                                                          if (hasPorts)
-                                                          {
-                                                              _logger.LogInformation("{ServiceName} running on process id {PID} bound to {Address}", replica, pid, string.Join(", ", ports.Select(p => $"{p.Protocol ?? "http"}://localhost:{p.Port}")));
-                                                          }
-                                                          else
-                                                          {
-                                                              _logger.LogInformation("{ServiceName} running on process id {PID}", replica, pid);
-                                                          }
+                                path,
+                                args,
+                                environmentVariables: environment,
+                                workingDirectory: workingDirectory,
+                                outputDataReceived: data =>
+                                {
+                                    service.Logs.OnNext($"[{replica}]: {data}");
+                                },
+                                errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
+                                onStart: pid =>
+                                {
+                                    if (hasPorts)
+                                    {
+                                        _logger.LogInformation("{ServiceName} running on process id {PID} bound to {Address}", replica, pid, string.Join(", ", ports.Select(p => $"{p.Protocol ?? "http"}://localhost:{p.Port}")));
+                                    }
+                                    else
+                                    {
+                                        _logger.LogInformation("{ServiceName} running on process id {PID}", replica, pid);
+                                    }
 
-                                                          // Reset the backoff
-                                                          backOff = TimeSpan.FromSeconds(5);
+                                    // Reset the backoff
+                                    backOff = TimeSpan.FromSeconds(5);
 
-                                                          status.Pid = pid;
+                                    status.Pid = pid;
 
-                                                          WriteReplicaToStore(pid.ToString());
-                                                          service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
-                                                      },
-                                                      throwOnError: false,
-                                                      cancellationToken: status.StoppingTokenSource.Token);
+                                    WriteReplicaToStore(pid.ToString());
+                                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
+                                },
+                                throwOnError: false,
+                                cancellationToken: status.StoppingTokenSource.Token);
 
                             status.ExitCode = result.ExitCode;
 
