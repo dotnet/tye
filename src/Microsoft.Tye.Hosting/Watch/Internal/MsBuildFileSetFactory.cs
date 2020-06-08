@@ -6,9 +6,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Tye;
 
 namespace Microsoft.DotNet.Watcher.Internal
 {
@@ -18,7 +20,6 @@ namespace Microsoft.DotNet.Watcher.Internal
         private const string WatchTargetsFileName = "DotNetWatch.targets";
         private readonly ILogger _logger;
         private readonly string _projectFile;
-        private readonly ProcessRunner _processRunner;
         private readonly bool _waitOnError;
         private readonly IReadOnlyList<string> _buildFlags;
 
@@ -31,17 +32,12 @@ namespace Microsoft.DotNet.Watcher.Internal
             _waitOnError = waitOnError;
         }
 
-        // output sink is for testing
         internal MsBuildFileSetFactory(ILogger logger,
             string projectFile,
             bool trace)
         {
-            Ensure.NotNull(logger, nameof(logger));
-            Ensure.NotNullOrEmpty(projectFile, nameof(projectFile));
-
             _logger = logger;
             _projectFile = projectFile;
-            _processRunner = new ProcessRunner(logger);
             _buildFlags = InitializeArgs(FindTargetsFile(), trace);
         }
 
@@ -56,25 +52,26 @@ namespace Microsoft.DotNet.Watcher.Internal
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    // TODO adding files doesn't currently work. Need to provide a way to detect new files
-                    // find files
+                    var args = new StringBuilder();
+                    args.Append($"msbuild {_projectFile} /p:_DotNetWatchListFile={watchList}");
+                    foreach (var flag in _buildFlags)
+                    {
+                        args.Append(" ");
+                        args.Append(flag);
+                    }
+
                     var processSpec = new ProcessSpec
                     {
-                        Executable = DotNetMuxer.MuxerPathOrDefault(),
+                        Executable = "dotnet",
                         WorkingDirectory = projectDir!,
-                        Arguments = new[]
-                        {
-                            "msbuild",
-                            _projectFile,
-                            $"/p:_DotNetWatchListFile={watchList}"
-                        }.Concat(_buildFlags)
+                        Arguments = args.ToString()
                     };
 
                     _logger.LogDebug($"Running MSBuild target '{TargetName}' on '{_projectFile}'");
 
-                    var exitCode = await _processRunner.RunAsync(processSpec, cancellationToken);
+                    var processResult = await ProcessUtil.RunAsync(processSpec, cancellationToken);
 
-                    if (exitCode == 0 && File.Exists(watchList))
+                    if (processResult.ExitCode == 0 && File.Exists(watchList))
                     {
                         var fileset = new FileSet(
                             File.ReadAllLines(watchList)

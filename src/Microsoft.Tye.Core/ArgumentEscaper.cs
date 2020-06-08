@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Microsoft.DotNet.Watcher
+namespace Microsoft.Tye
 {
-    internal static class ArgumentEscaper
+    public static class ArgumentEscaper
     {
         /// <summary>
         /// Undo the processing which took place to create string[] args in Main, so that the next process will

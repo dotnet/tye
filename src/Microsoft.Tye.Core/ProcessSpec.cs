@@ -6,18 +6,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-namespace Microsoft.DotNet.Watcher
+namespace Microsoft.Tye
 {
     public class ProcessSpec
     {
         public string? Executable { get; set; }
         public string? WorkingDirectory { get; set; }
         public IDictionary<string, string> EnvironmentVariables { get; set; } = new Dictionary<string, string>();
-        public IEnumerable<string>? Arguments { get; set; }
+        public string? Arguments { get; set; }
         public Action<string>? OutputData { get; set; }
         public Action<string>? ErrorData { get; set; }
         public Action<int>? OnStart { get; set; }
-        public string? Replica { get; set; }
         public string? ShortDisplayName()
             => Path.GetFileNameWithoutExtension(Executable);
     }

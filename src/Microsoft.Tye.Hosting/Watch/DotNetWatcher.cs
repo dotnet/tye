@@ -6,25 +6,22 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Watcher.Internal;
 using Microsoft.Extensions.Logging;
+using Microsoft.Tye;
 
 namespace Microsoft.DotNet.Watcher
 {
     public class DotNetWatcher
     {
-        private readonly ProcessRunner _processRunner;
         private readonly ILogger _logger;
 
         public DotNetWatcher(ILogger logger)
         {
-            _processRunner = new ProcessRunner(logger);
             _logger = logger;
         }
 
-        public async Task WatchAsync(ProcessSpec processSpec, IFileSetFactory fileSetFactory,
+        public async Task WatchAsync(ProcessSpec processSpec, IFileSetFactory fileSetFactory, string replica,
             CancellationToken cancellationToken)
         {
-            Ensure.NotNull(processSpec, nameof(processSpec));
-
             var cancelledTaskSource = new TaskCompletionSource<object>();
             cancellationToken.Register(state => ((TaskCompletionSource<object>)state!).TrySetResult(null!),
                 cancelledTaskSource);
@@ -56,12 +53,12 @@ namespace Microsoft.DotNet.Watcher
                 using (var fileSetWatcher = new FileSetWatcher(fileSet, _logger))
                 {
                     var fileSetTask = fileSetWatcher.GetChangedFileAsync(combinedCancellationSource.Token);
-                    var processTask = _processRunner.RunAsync(processSpec, combinedCancellationSource.Token);
+                    var processTask = ProcessUtil.RunAsync(processSpec, combinedCancellationSource.Token, throwOnError: false);
 
-                    var args = ArgumentEscaper.EscapeAndConcatenate(processSpec.Arguments!);
+                    var args = processSpec.Arguments!;
                     _logger.LogDebug($"Running {processSpec.ShortDisplayName()} with the following arguments: {args}");
 
-                    _logger.LogInformation("watch: {Replica} Started", processSpec.Replica);
+                    _logger.LogInformation("watch: {Replica} Started", replica);
 
                     var finishedTask = await Task.WhenAny(processTask, fileSetTask, cancelledTaskSource.Task);
 
@@ -71,7 +68,7 @@ namespace Microsoft.DotNet.Watcher
 
                     await Task.WhenAll(processTask, fileSetTask);
 
-                    if (processTask.Result != 0 && finishedTask == processTask && !cancellationToken.IsCancellationRequested)
+                    if (processTask.Result.ExitCode != 0 && finishedTask == processTask && !cancellationToken.IsCancellationRequested)
                     {
                         // Only show this error message if the process exited non-zero due to a normal process exit.
                         // Don't show this if dotnet-watch killed the inner process due to file change or CTRL+C by the user
@@ -79,7 +76,7 @@ namespace Microsoft.DotNet.Watcher
                     }
                     else
                     {
-                        _logger.LogInformation("watch: {Replica} Exited", processSpec.Replica);
+                        _logger.LogInformation("watch: {Replica} Exited", replica);
                     }
 
                     if (finishedTask == cancelledTaskSource.Task || cancellationToken.IsCancellationRequested)

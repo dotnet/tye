@@ -16,8 +16,6 @@ namespace Microsoft.DotNet.Watcher.Internal
 
         public FileSetWatcher(IFileSet fileSet, ILogger logger)
         {
-            Ensure.NotNull(fileSet, nameof(fileSet));
-
             _fileSet = fileSet;
             _fileWatcher = new FileWatcher(logger);
         }

@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.Watcher
+namespace Microsoft.Tye
 {
     internal static class ProcessExtensions
     {

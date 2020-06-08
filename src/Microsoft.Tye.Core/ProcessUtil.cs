@@ -42,7 +42,6 @@ namespace Microsoft.Tye
                 EnableRaisingEvents = true
             };
 
-
             if (workingDirectory != null)
             {
                 process.StartInfo.WorkingDirectory = workingDirectory;
@@ -132,12 +131,17 @@ namespace Microsoft.Tye
 
                     if (!process.HasExited)
                     {
-                        process.Kill();
+                        process.KillTree();
                     }
                 }
             }
 
             return await processLifetimeTask.Task;
+        }
+
+        public static  Task<ProcessResult> RunAsync(ProcessSpec processSpec, CancellationToken cancellationToken = default, bool throwOnError = true)
+        {
+            return RunAsync(processSpec.Executable!, processSpec.Arguments!, processSpec.WorkingDirectory, throwOnError: throwOnError, processSpec.EnvironmentVariables, processSpec.OutputData, processSpec.ErrorData, processSpec.OnStart, cancellationToken);
         }
 
         public static void KillProcess(int pid)

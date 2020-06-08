@@ -16,8 +16,6 @@ namespace Microsoft.DotNet.Watcher.Internal
         /// </summary>
         public static string FindMsBuildProject(string searchBase, string project)
         {
-            Ensure.NotNullOrEmpty(searchBase, nameof(searchBase));
-
             var projectPath = project ?? searchBase;
 
             if (!Path.IsPathRooted(projectPath))

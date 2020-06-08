@@ -24,9 +24,6 @@ namespace Microsoft.DotNet.Watcher.Internal
 
         internal DotnetFileWatcher(string watchedDirectory, Func<string, FileSystemWatcher> fileSystemWatcherFactory)
         {
-            Ensure.NotNull(fileSystemWatcherFactory, nameof(fileSystemWatcherFactory));
-            Ensure.NotNullOrEmpty(watchedDirectory, nameof(watchedDirectory));
-
             BasePath = watchedDirectory;
             _watcherFactory = fileSystemWatcherFactory;
             CreateFileSystemWatcher();
@@ -40,8 +37,6 @@ namespace Microsoft.DotNet.Watcher.Internal
 
         private static FileSystemWatcher DefaultWatcherFactory(string watchedDirectory)
         {
-            Ensure.NotNullOrEmpty(watchedDirectory, nameof(watchedDirectory));
-
             return new FileSystemWatcher(watchedDirectory);
         }
 

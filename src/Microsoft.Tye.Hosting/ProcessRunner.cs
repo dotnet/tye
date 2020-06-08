@@ -283,9 +283,8 @@ namespace Microsoft.Tye.Hosting
                             {
                                 Executable = path,
                                 WorkingDirectory = workingDirectory,
-                                Arguments = args.Split(' '), // TODO don't split here
+                                Arguments = args,
                                 EnvironmentVariables = environment,
-                                Replica = replica,
                                 OutputData = data =>
                                 {
                                     service.Logs.OnNext($"[{replica}]: {data}");
@@ -313,7 +312,7 @@ namespace Microsoft.Tye.Hosting
                             };
 
                             await new DotNetWatcher(_logger)
-                                .WatchAsync(processInfo, fileSetFactory, status.StoppingTokenSource.Token);
+                                .WatchAsync(processInfo, fileSetFactory, replica, status.StoppingTokenSource.Token);
                         }
                         else
                         {
