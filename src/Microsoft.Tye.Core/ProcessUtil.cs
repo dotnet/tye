@@ -131,7 +131,7 @@ namespace Microsoft.Tye
 
                     if (!process.HasExited)
                     {
-                        process.KillTree();
+                        process.Kill();
                     }
                 }
             }

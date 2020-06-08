@@ -247,7 +247,7 @@ namespace E2ETest
             });
         }
 
-        [Fact(Skip = "Mac")]
+        [Fact]
         public async Task FrontendBackendWatchRunTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
