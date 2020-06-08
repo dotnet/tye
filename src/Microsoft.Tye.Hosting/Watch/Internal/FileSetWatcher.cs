@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Watcher.Internal
 
         public Task<string> GetChangedFileAsync(CancellationToken cancellationToken)
         {
-            return GetChangedFileAsync(cancellationToken, () => {});
+            return GetChangedFileAsync(cancellationToken, () => { });
         }
 
         public void Dispose()
