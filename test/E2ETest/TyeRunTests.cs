@@ -284,7 +284,7 @@ namespace E2ETest
                 {
 
                     var logs = await client.GetStringAsync(new Uri(uri, $"/api/v1/logs/frontend"));
-                    
+
                     // "Application Started" should be logged twice due to the file change
                     if (logs.IndexOf("Application started") != logs.LastIndexOf("Application started"))
                     {
