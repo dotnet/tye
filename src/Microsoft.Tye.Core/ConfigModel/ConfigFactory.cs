@@ -39,6 +39,7 @@ namespace Microsoft.Tye.ConfigModel
             var application = new ConfigApplication()
             {
                 Source = file,
+                Name = NameInferer.InferApplicationName(file)
             };
 
             var service = new ConfigService()
@@ -57,6 +58,7 @@ namespace Microsoft.Tye.ConfigModel
             var application = new ConfigApplication()
             {
                 Source = file,
+                Name = NameInferer.InferApplicationName(file)
             };
 
             // BE CAREFUL modifying this code. Avoid proliferating MSBuild types
