@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>Microsoft.Tye</RootNamespace>
+    <RootNamespace>Tye</RootNamespace>
     <AssemblyName>Microsoft.Tye.Core</AssemblyName>
     <PackageId>Microsoft.Tye.Core</PackageId>
   </PropertyGroup>

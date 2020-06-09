@@ -73,7 +73,6 @@ namespace Tye.Serialization
             return app;
         }
 
-
         public static string GetScalarValue(YamlNode node)
         {
             if (node.NodeType != YamlNodeType.Scalar)
