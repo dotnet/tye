@@ -20,7 +20,7 @@ namespace Microsoft.Tye.Hosting
         public TransformProjectsIntoContainers(ILogger logger)
         {
             _logger = logger;
-            _certificateDirectory = new Lazy<TempDirectory>(() => TempDirectory.Create());
+            _certificateDirectory = new Lazy<TempDirectory>(() => TempDirectory.Create(preferUserDirectoryOnMacOS: true));
         }
 
         public Task StartAsync(Application application)
