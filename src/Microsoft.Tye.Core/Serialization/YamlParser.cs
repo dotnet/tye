@@ -54,6 +54,7 @@ namespace Tye.Serialization
             ConfigApplicationParser.HandleConfigApplication((YamlMappingNode)node, app);
 
             app.Source = _fileInfo!;
+            app.Name ??= NameInferer.InferApplicationName(_fileInfo!);
 
             // TODO confirm if these are ever null.
             foreach (var service in app.Services)
@@ -71,6 +72,7 @@ namespace Tye.Serialization
 
             return app;
         }
+
 
         public static string GetScalarValue(YamlNode node)
         {

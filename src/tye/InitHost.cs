@@ -64,7 +64,6 @@ services:
                 if (extension == ".sln" || extension == ".csproj" || extension == ".fsproj")
                 {
                     // If the input file is a project or solution then use that as the name
-                    application.Name = Path.GetFileNameWithoutExtension(path.Name).ToLowerInvariant();
                     application.Extensions = null!;
                     application.Ingress = null!;
 
@@ -81,9 +80,6 @@ services:
                 }
                 else
                 {
-                    // If the input file is a yaml, then use the directory name.
-                    application.Name = path.Directory.Name.ToLowerInvariant();
-
                     // If the input file is a yaml, then replace it.
                     outputFilePath = path.FullName;
                 }

@@ -27,7 +27,7 @@ namespace Microsoft.Tye
 
             // We don't need to know anything about the services, just the application name.
             var application = ConfigFactory.FromFile(path);
-            if (!String.IsNullOrEmpty(@namespace))
+            if (!string.IsNullOrEmpty(@namespace))
             {
                 application.Namespace = @namespace;
             }
@@ -71,7 +71,8 @@ namespace Microsoft.Tye
             // - handcrafing requests to list for each resource
             // - handcrafting requests to delete each resource
             var resources = new List<Resource>();
-            var applicationName = application.Name ?? application.Source.DirectoryName;
+
+            var applicationName = application.Name;
 
             try
             {
