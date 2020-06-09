@@ -10,6 +10,11 @@ namespace Microsoft.Tye.ConfigModel
     {
         public static string? InferApplicationName(FileInfo fileInfo)
         {
+            if (fileInfo == null)
+            {
+                return null;
+            }
+
             var extension = fileInfo.Extension;
             if (extension == ".sln" || extension == ".csproj" || extension == ".fsproj")
             {
