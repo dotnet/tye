@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Microsoft.Tye.ConfigModel
 {
-    public static class NameInferer
+    internal static class NameInferer
     {
         public static string? InferApplicationName(FileInfo fileInfo)
         {
