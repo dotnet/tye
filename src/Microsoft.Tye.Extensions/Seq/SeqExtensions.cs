@@ -32,7 +32,6 @@ namespace Microsoft.Tye.Extensions.Seq
                     {
                         new BindingBuilder()
                         {
-                            Name = "seq",
                             Port = 5340,
                             ContainerPort = 80,
                             Protocol = "http",
