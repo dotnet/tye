@@ -24,9 +24,7 @@ services:
   project: frontend/frontend.csproj
 ```
 
-The `logPath` property here configures the path where Seq will store its data. 
-
-> :bulb: Tye can successfully launch Seq without `logPath`, but ... It's *highly* recommended that you specify a path to store the logs and configuration (add to `.gitignore` if it's part of your repository). Kibana has some mandatory setup the first time you use it, and without persisting the data, you will have to go through it each time.
+The `logPath` property here configures the path where Seq will store its data.
 
 Now launch the application with Tye:
 
@@ -39,7 +37,7 @@ If you navigate to the Tye dashboard you should see an extra service (`seq`) in 
 
 <img width="1103" alt="image" src="https://user-images.githubusercontent.com/1769935/83251452-f26ffa00-a1ec-11ea-9642-29e4ec579178.png">
 
-Visit the first URI (`http://localhost:5340`) in your browser to access the Seq dashboard.
+Visit the first URI (`http://localhost:5341`) in your browser to access the Seq dashboard.
 
 Now you're ready to view the data! After it loads, it should look like the screenshot below:
 

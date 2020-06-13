@@ -32,7 +32,7 @@ namespace Microsoft.Tye.Extensions.Seq
                     {
                         new BindingBuilder()
                         {
-                            Port = 5340,
+                            Port = 5341,
                             ContainerPort = 80,
                             Protocol = "http",
                         },
@@ -67,7 +67,7 @@ namespace Microsoft.Tye.Extensions.Seq
                 if (context.Options!.LoggingProvider is null)
                 {
                     // For local development we hardcode the port and hostname
-                    context.Options.LoggingProvider = "seq=http://localhost:5340";
+                    context.Options.LoggingProvider = "seq=http://localhost:5341";
                 }
             }
             else if (context.Operation == ExtensionContext.OperationKind.Deploy)
