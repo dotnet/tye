@@ -76,7 +76,7 @@ namespace Microsoft.Tye.Hosting
                 else if (serviceDescription.RunInfo is FunctionRunInfo function)
                 {
                     // TODO this is a hack
-                    path = Environment. @"%APPDATA%\Roaming\npm\node_modules\azure-functions-core-tools\bin\func.exe";
+                    path = @"%APPDATA%\Roaming\npm\node_modules\azure-functions-core-tools\bin\func.exe";
                     // TODO fix directory path here.
                     workingDirectory = new DirectoryInfo(function.FunctionPath).FullName;
                     // todo make sure to exclude functions app from implied tye running.
