@@ -223,9 +223,20 @@ namespace Microsoft.Tye
 
                         continue;
                     }
+                    else if (!string.IsNullOrEmpty(configService.Function))
+                    {
+                        var functionBuilder = new FunctionServiceBuilder(configService.Name, configService.Function)
+                        {
+                            Args = configService.Args,
+                            Replicas = configService.Replicas ?? 1
+                        };
+
+                        // TODO liveness?
+                        service = functionBuilder;
+                    }
                     else if (configService.External)
                     {
-                        var external = new ExternalServiceBuilder(configService.Name!);
+                        var external = new ExternalServiceBuilder(configService.Name);
                         service = external;
                     }
                     else
@@ -248,6 +259,12 @@ namespace Microsoft.Tye
                         // HTTP is the default binding
                         service.Bindings.Add(new BindingBuilder() { Protocol = "http" });
                         service.Bindings.Add(new BindingBuilder() { Name = "https", Protocol = "https" });
+                    }
+                    else if (configService.Bindings.Count == 0 &&
+                        service is FunctionServiceBuilder project3)
+                    {
+                        // TODO need to figure out binding from host.json file. Supporting http for now.
+                        service.Bindings.Add(new BindingBuilder() { Protocol = "http" });
                     }
                     else
                     {

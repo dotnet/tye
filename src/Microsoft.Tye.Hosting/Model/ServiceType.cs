@@ -10,6 +10,7 @@ namespace Microsoft.Tye.Hosting.Model
         Project,
         Executable,
         Container,
+        Function,
         Ingress
     }
 }

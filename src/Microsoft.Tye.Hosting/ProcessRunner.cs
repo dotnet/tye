@@ -73,6 +73,18 @@ namespace Microsoft.Tye.Hosting
                     workingDirectory = executable.WorkingDirectory!;
                     args = executable.Args ?? "";
                 }
+                else if (serviceDescription.RunInfo is FunctionRunInfo function)
+                {
+                    // TODO this is a hack
+                    path = Environment. @"%APPDATA%\Roaming\npm\node_modules\azure-functions-core-tools\bin\func.exe";
+                    // TODO fix directory path here.
+                    workingDirectory = new DirectoryInfo(function.FunctionPath).FullName;
+                    // todo make sure to exclude functions app from implied tye running.
+
+                    // --build here?
+                    // TODO for .NET funcs, do we also build here?
+                    args = function.Args ?? $"start";// --port {serviceDescription.Bindings.Single().Port}";
+                }
                 else
                 {
                     continue;
@@ -156,6 +168,9 @@ namespace Microsoft.Tye.Hosting
                     case ServiceType.Project:
                         LaunchService(application, s.Value);
                         break;
+                    case ServiceType.Function:
+                        LaunchService(application, s.Value);
+                        break;
                 };
             }
         }
@@ -229,6 +244,13 @@ namespace Microsoft.Tye.Hosting
 
                     // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
                     environment["PORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
+                    environment["HOST__LOCALHTTPPORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
+                    environment["ASPNETCORE__HOST__LOCALHTTPPORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
+
+                    if (service.ServiceType == ServiceType.Function)
+                    {
+                        environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://{host}:{p.Port}"));
+                    }
                 }
 
                 var backOff = TimeSpan.FromSeconds(5);

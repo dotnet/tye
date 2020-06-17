@@ -6,3 +6,5 @@ services:
   project: backend/backend.csproj
 - name: frontend
   project: frontend/frontend.csproj
+- name: func
+  function: func/

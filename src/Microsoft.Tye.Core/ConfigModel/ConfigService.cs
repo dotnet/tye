@@ -40,5 +40,6 @@ namespace Microsoft.Tye.ConfigModel
         public List<string> Tags { get; set; } = new List<string>();
         public ConfigProbe? Liveness { get; set; }
         public ConfigProbe? Readiness { get; set; }
+        public string? Function { get; set; }
     }
 }

@@ -236,7 +236,9 @@ namespace Microsoft.Tye
 
             var targetFrameworks = projectInstance.GetPropertyValue("TargetFrameworks");
             project.TargetFrameworks = targetFrameworks.Split(';', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
-
+            
+            // Figure out if functions app.
+            // If so, run app with function host.
             project.RunCommand = projectInstance.GetPropertyValue("RunCommand");
             project.RunArguments = projectInstance.GetPropertyValue("RunArguments");
             project.TargetPath = projectInstance.GetPropertyValue("TargetPath");

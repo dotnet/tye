@@ -146,6 +146,9 @@ namespace Tye.Serialization
 
                         HandleServiceTags((child.Value as YamlSequenceNode)!, service.Tags);
                         break;
+                    case "function":
+                        service.Function = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
