@@ -27,7 +27,7 @@ namespace Microsoft.Tye
 
             // We don't need to know anything about the services, just the application name.
             var application = ConfigFactory.FromFile(path);
-            if (!String.IsNullOrEmpty(@namespace))
+            if (!string.IsNullOrEmpty(@namespace))
             {
                 application.Namespace = @namespace;
             }
@@ -72,12 +72,14 @@ namespace Microsoft.Tye
             // - handcrafting requests to delete each resource
             var resources = new List<Resource>();
 
+            var applicationName = application.Name;
+
             try
             {
                 output.WriteDebugLine("Querying services");
                 var response = await kubernetes.ListNamespacedServiceWithHttpMessagesAsync(
                     config.Namespace,
-                    labelSelector: $"app.kubernetes.io/part-of={application.Name}");
+                    labelSelector: $"app.kubernetes.io/part-of={applicationName}");
 
                 foreach (var resource in response.Body.Items)
                 {
@@ -99,7 +101,7 @@ namespace Microsoft.Tye
                 output.WriteDebugLine("Querying deployments");
                 var response = await kubernetes.ListNamespacedDeploymentWithHttpMessagesAsync(
                     config.Namespace,
-                    labelSelector: $"app.kubernetes.io/part-of={application.Name}");
+                    labelSelector: $"app.kubernetes.io/part-of={applicationName}");
 
                 foreach (var resource in response.Body.Items)
                 {
@@ -121,7 +123,7 @@ namespace Microsoft.Tye
                 output.WriteDebugLine("Querying secrets");
                 var response = await kubernetes.ListNamespacedSecretWithHttpMessagesAsync(
                     config.Namespace,
-                    labelSelector: $"app.kubernetes.io/part-of={application.Name}");
+                    labelSelector: $"app.kubernetes.io/part-of={applicationName}");
 
                 foreach (var resource in response.Body.Items)
                 {
@@ -144,7 +146,7 @@ namespace Microsoft.Tye
                 output.WriteDebugLine("Querying ingresses");
                 var response = await kubernetes.ListNamespacedIngressWithHttpMessagesAsync(
                     config.Namespace,
-                    labelSelector: $"app.kubernetes.io/part-of={application.Name}");
+                    labelSelector: $"app.kubernetes.io/part-of={applicationName}");
 
                 foreach (var resource in response.Body.Items)
                 {

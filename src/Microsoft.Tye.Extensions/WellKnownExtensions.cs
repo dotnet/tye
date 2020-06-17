@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Tye.Extensions.Dapr;
 using Microsoft.Tye.Extensions.Elastic;
+using Microsoft.Tye.Extensions.Seq;
 using Microsoft.Tye.Extensions.Zipkin;
 
 namespace Microsoft.Tye.Extensions
@@ -16,6 +17,7 @@ namespace Microsoft.Tye.Extensions
         {
             { "dapr", new DaprExtension() },
             { "elastic", new ElasticStackExtension() },
+            { "seq", new SeqExtension() },
             { "zipkin", new ZipkinExtension() },
         };
     }

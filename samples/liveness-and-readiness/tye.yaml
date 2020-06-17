@@ -12,7 +12,7 @@ services:
     replicas: 2
     liveness:
       http:
-        path: /healthy
+        path: /lively
       initialDelay: 1
     readiness:
       http:
