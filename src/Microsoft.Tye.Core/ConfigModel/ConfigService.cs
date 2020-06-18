@@ -10,11 +10,19 @@ namespace Microsoft.Tye.ConfigModel
 {
     public class ConfigService
     {
+        const string ErrorMessage = "A service name must consist of lower case alphanumeric characters or '-'," +
+            " start with an alphabetic character, and end with an alphanumeric character" +
+            " (e.g. 'my-name',  or 'abc-123', regex used for validation is '[a-z]([-a-z0-9]*[a-z0-9])?').";
+        const string MaxLengthErrorMessage = "Name cannot be more that 63 characters long.";
+
         [Required]
+        [RegularExpression("[a-z]([-a-z0-9]*[a-z0-9])?", ErrorMessage = ErrorMessage)]
+        [MaxLength(63, ErrorMessage = MaxLengthErrorMessage)]
         public string Name { get; set; } = default!;
         public bool External { get; set; }
         public string? Image { get; set; }
         public string? DockerFile { get; set; }
+        public Dictionary<string, string> DockerFileArgs { get; set; } = new Dictionary<string, string>();
         public string? DockerFileContext { get; set; }
         public string? Project { get; set; }
         public string? Include { get; set; }
@@ -29,5 +37,8 @@ namespace Microsoft.Tye.ConfigModel
         [YamlMember(Alias = "env")]
         public List<ConfigConfigurationSource> Configuration { get; set; } = new List<ConfigConfigurationSource>();
         public List<BuildProperty> BuildProperties { get; set; } = new List<BuildProperty>();
+        public List<string> Tags { get; set; } = new List<string>();
+        public ConfigProbe? Liveness { get; set; }
+        public ConfigProbe? Readiness { get; set; }
     }
 }

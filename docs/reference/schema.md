@@ -67,7 +67,7 @@ Allows storing the name of the container registry in configuration. This is used
 - Determining how to tag the images
 - Determining where to push the images
 
-The registry could be a DockerHub username (`exampleuser`) or the hostname of a container registry (`example.azureci.io`).
+The registry could be a DockerHub username (`exampleuser`) or the hostname of a container registry (`example.azurecr.io`).
 
 If this is not specified in configuration, interactive deployments will prompt for it.
 
@@ -133,7 +133,12 @@ services:
 
 #### `name` (string) *required*
 
-The service name. Each service must have a name, and it must be a legal DNS name: (`a-z` + `_`).
+The service name. Each service must have a name, and it must be a legal DNS name: (`a-z` + `-`). Specifically, the service name must:
+
+- Contain at most 63 characters
+- Contain only alphanumeric characters or ‘-’
+- Start with an alphanumeric character
+- End with an alphanumeric character
 
 #### `project` (string)
 
@@ -497,3 +502,122 @@ The path `/mypath` or `/mypath/` will match:
 #### `host` (`string`)
 
 The host to match. 
+
+## Liveness and Readiness
+
+`liveness` and `readiness` elements appear within the properties of a `Service`.  
+
+Tye uses the `liveness` and `readiness` to probe the replicas of a service.  
+Each replica of a service is probed independently.   
+
+### Replica State  
+
+Each replica of a service has three states it can be in  
+
+* `Started` - A replica is in this state when it has just been started, and hasn't been probed yet.  
+* `Healthy` - A replica is in this state when it passes the `liveness` probe, but not the `readiness` probe. 
+* `Ready` - A replica is in this state when it passes both the `liveness` and `readiness` probes.  
+
+`liveness` and `readiness` have similar schemas, but have different meaning to the life cycle of the service.  
+
+If a `liveness` probe fails for a replica, Tye restarts that replica.  
+If a `readiness` probe fails for a replica, Tye doesn't restart that replica, but demotes the state of that replica from `Ready` to `Healthy`, until the probe becomes successful again.  
+
+`Healthy` replicas are kept alive but Tye doesn't route traffic to them. (Neither via the service binding, nor via an ingress that routes to that service)  
+
+`liveness` and `readiness` are optional, and may only be defined once per `Service`.  
+
+### Liveness and Readiness Example
+
+```
+name: myapplication
+services:
+  - name: webapi
+    project: webapi/webapi.csproj
+    replicas: 3
+    liveness:
+      http:
+        path: /healthy
+    readiness:
+      http:
+        path: /ready
+```
+
+In this example, the `webapi` service has both a `liveness` probe and a `readiness` probe.  
+The `liveness` probe periodically calls the `/healthy` endpoint in the service and the `readiness` probe periodically calls the `/ready` endpoint in the service.  
+
+### Probe Properties
+
+(This refers both to the `liveness` probe and the `readiness` probe, since both have similar properties)
+
+#### `http` (`HttpProber`) *required*  
+
+The properties of the `HttpProber` that tell Tye how to probe a replica using HTTP.  
+
+#### `period` (`integer`)  
+
+The period (in seconds) in which Tye probes a replica.  (Default value: `1`, Minimum value: `1`)  
+
+#### `timeout` (`integer`)  
+
+The time (in seconds) that Tye waits for a replica to respond to a probe, before the probe fails. (Default value: `1`, Minimum value: `1`)  
+
+#### `successThreshold` (`integer`)  *only relevant for readiness probe*  
+
+Tye will wait for this number of successes from prober, before marking a `Healthy` replica as `Ready`. (Default value: `1`, Minimum value: `1`)
+
+#### `failureThreshold` (`integer`)  
+
+Tye will wait for this number of failures from the prober, before giving up.  (Default value: `3`, Minimum value: `1`)  
+
+Giving up in the context of `liveness` probe means killing the replica, and in the context of `readiness` probe it means marking a `Ready` replica as `Healthy`.  
+
+## HttpProber  
+
+`HttpProber` appears within the `http` property of the `liveness` and `readiness` elements.  
+The `HttpProber` tells Tye which endpoint, port, protocol and which headers to use to probe the replicas of a service.  
+
+### HttpProber Example  
+
+```
+...
+liveness:
+  # An HttpProber
+  http:
+    path: /healthy
+    port: 8080
+    protocol: http
+    headers:
+      - name: HeaderA
+        value: ValueA
+      - name: HeaderB
+        value: ValueB
+  ...
+...
+```
+
+In this example, the `liveness` probe defines an `HttpProber` that will probe the replicas of the service at the `/healthy` endpoint (*HTTP GET*), on port `8080`, using HTTP (*unsecure*), and providing two headers (`HeaderA` and `HeaderB`) with the values `ValueA` and `ValueB` respectively.  
+
+### HttpProber Properties
+
+#### `path` (`string`) *required*
+
+Tye will probe the replicas of the service at that path, using the *GET* method.
+
+#### `port` (`integer`)
+
+The service binding port that is used to probe the replicas of the service.  
+
+#### `protocol` (`string`)  
+
+The service binding protocol that is used to probe the replicas of the server. (i.e. `http`/`https`)
+
+*Note:  
+If neither `port` nor `protocol` are provided, Tye selects the first binding of the service.  
+If just `port` is provided, Tye selects the first binding with that `port`.  
+If just `protocol` is provided, Tye selects the first binding with that `protocol`.  
+If both `port` and `protocol` are provided, Tye selects the first biding with that `port` and `protocol`.*
+
+#### `headers` (`(name, value)[]`)  
+
+Array of headers that are sent as part of the HTTP request that probes the replicas of the service.  

@@ -1,42 +1,48 @@
-﻿kind: Deployment
+kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: dapr_test_project
+  name: dapr-test-project
   annotations:
     dapr.io/enabled: 'true'
-    dapr.io/id: 'dapr_test_project'
+    dapr.io/id: 'dapr-test-project'
     dapr.io/port: '80'
     dapr.io/config: 'tracing'
     dapr.io/log-level: 'debug'
   labels:
-    app.kubernetes.io/name: 'dapr_test_project'
+    app.kubernetes.io/name: 'dapr-test-project'
     app.kubernetes.io/part-of: 'dapr_test_application'
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: dapr_test_project
+      app.kubernetes.io/name: dapr-test-project
   template:
     metadata:
       annotations:
         dapr.io/enabled: 'true'
-        dapr.io/id: 'dapr_test_project'
+        dapr.io/id: 'dapr-test-project'
         dapr.io/port: '80'
         dapr.io/config: 'tracing'
         dapr.io/log-level: 'debug'
       labels:
-        app.kubernetes.io/name: 'dapr_test_project'
+        app.kubernetes.io/name: 'dapr-test-project'
         app.kubernetes.io/part-of: 'dapr_test_application'
     spec:
       containers:
-      - name: dapr_test_project
-        image: dapr_test_project:1.0.0
+      - name: dapr-test-project
+        image: dapr-test-project:1.0.0
         imagePullPolicy: Always
         env:
         - name: ASPNETCORE_URLS
           value: 'http://*'
         - name: PORT
           value: '80'
+        - name: SERVICE__DAPR-TEST-PROJECT__PROTOCOL
+          value: 'http'
+        - name: SERVICE__DAPR-TEST-PROJECT__PORT
+          value: '80'
+        - name: SERVICE__DAPR-TEST-PROJECT__HOST
+          value: 'dapr-test-project'
         ports:
         - containerPort: 80
 ...
@@ -44,13 +50,13 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: dapr_test_project
+  name: dapr-test-project
   labels:
-    app.kubernetes.io/name: 'dapr_test_project'
+    app.kubernetes.io/name: 'dapr-test-project'
     app.kubernetes.io/part-of: 'dapr_test_application'
 spec:
   selector:
-    app.kubernetes.io/name: dapr_test_project
+    app.kubernetes.io/name: dapr-test-project
   type: ClusterIP
   ports:
   - name: http

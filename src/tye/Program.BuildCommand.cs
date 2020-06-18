@@ -21,9 +21,10 @@ namespace Microsoft.Tye
                 CommonArguments.Path_Required,
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
+                StandardOptions.Tags
             };
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool>((console, path, verbosity, interactive) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, string[]>((console, path, verbosity, interactive, tags) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -31,7 +32,7 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                return BuildHost.BuildAsync(console, path, verbosity, interactive);
+                return BuildHost.BuildAsync(console, path, verbosity, interactive, tags);
             });
 
             return command;

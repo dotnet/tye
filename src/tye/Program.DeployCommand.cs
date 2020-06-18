@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Tye.ConfigModel;
@@ -23,6 +24,7 @@ namespace Microsoft.Tye
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
                 StandardOptions.Namespace,
+                StandardOptions.Tags,
             };
 
             command.AddOption(new Option(new[] { "-f", "--force" })
@@ -31,7 +33,7 @@ namespace Microsoft.Tye
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool, string>(async (console, path, verbosity, interactive, force, @namespace) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool, string, string[]>(async (console, path, verbosity, interactive, force, @namespace, tags) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -42,12 +44,15 @@ namespace Microsoft.Tye
                 var output = new OutputContext(console, verbosity);
 
                 output.WriteInfoLine("Loading Application Details...");
-                var application = await ApplicationFactory.CreateAsync(output, path);
+
+                var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(tags);
+
+                var application = await ApplicationFactory.CreateAsync(output, path, filter);
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
                 }
-                if (!String.IsNullOrEmpty(@namespace))
+                if (!string.IsNullOrEmpty(@namespace))
                 {
                     application.Namespace = @namespace;
                 }
@@ -59,6 +64,8 @@ namespace Microsoft.Tye
 
         private static async Task ExecuteDeployAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive, bool force)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
             if (!await KubectlDetector.Instance.IsKubectlInstalled.Value)
             {
                 throw new CommandException($"Cannot apply manifests because kubectl is not installed.");
@@ -98,6 +105,12 @@ namespace Microsoft.Tye
             };
 
             await executor.ExecuteAsync(application);
+
+            watch.Stop();
+
+            TimeSpan elapsedTime = watch.Elapsed;
+
+            output.WriteAlwaysLine($"Time Elapsed: {elapsedTime.Hours:00}:{elapsedTime.Minutes:00}:{elapsedTime.Seconds:00}:{elapsedTime.Milliseconds / 10:00}");
         }
 
         internal static void ApplyRegistry(OutputContext output, ApplicationBuilder application, bool interactive, bool requireRegistry)

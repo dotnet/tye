@@ -25,6 +25,12 @@ spec:
           value: 'http://*'
         - name: PORT
           value: '80'
+        - name: SERVICE__FRONTEND__PROTOCOL
+          value: 'http'
+        - name: SERVICE__FRONTEND__PORT
+          value: '80'
+        - name: SERVICE__FRONTEND__HOST
+          value: 'frontend'
         - name: SERVICE__DEPENDENCY__PROTOCOL
           valueFrom:
             secretKeyRef:

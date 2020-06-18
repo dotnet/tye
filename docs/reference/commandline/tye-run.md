@@ -7,7 +7,7 @@
 ## Synopsis 
 
 ```text
-tye run [-?|-h|--help] [--no-build] [--port <port>] [--dtrace] [--debug][-f|--force] [<PATH>]
+tye run [-?|-h|--help] [--no-build] [--port <port>] [--dtrace] [--debug] [-f|--force] [-v|--verbosity <verbosity>] [<PATH>]
 ```
 
 ## Description
@@ -50,6 +50,21 @@ If a directory path is specified, `tye run` will default to using these files, i
 - `--debug <service>`
 
     Waits for debugger attach to service. Specify `*` to wait to attach to all services.
+
+- `--verbosity <verbosity>`
+
+    Sets the output verbosity of the process.  
+    Possible values are 
+    
+    * `debug` - display all logs that the process outputs
+    * `info` - display only informational logs
+    * `quiet` - display only warnings and errors
+
+    The default value is `info`
+
+- `--watch`
+
+    Watches for file changes in all projects that are built by tye. Uses [`dotnet watch`](https://docs.microsoft.com/en-us/aspnet/core/tutorials/dotnet-watch?view=aspnetcore-3.1) to monitor for file changes. 
 
 ## Examples
 

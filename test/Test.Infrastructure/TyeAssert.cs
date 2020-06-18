@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Linq;
 using Microsoft.Tye.ConfigModel;
 using Xunit;
@@ -29,7 +30,7 @@ namespace Test.Infrastructure
                 {
                     var otherRule = otherIngress
                         .Rules
-                        .Where(o => o.Path == rule.Path && o.Host == rule.Host && o.Service == rule.Service)
+                        .Where(o => o.Path == rule.Path && o.Host == rule.Host && o.Service?.Equals(rule.Service, StringComparison.OrdinalIgnoreCase) == true)
                         .Single();
                     Assert.NotNull(otherRule);
                 }
@@ -43,13 +44,14 @@ namespace Test.Infrastructure
 
                     Assert.NotNull(otherBinding);
                 }
+                Assert.Equal(otherIngress.Tags, ingress.Tags);
             }
 
             foreach (var service in actual.Services)
             {
                 var otherService = expected
                     .Services
-                    .Where(o => o.Name == service.Name)
+                    .Where(o => o.Name.Equals(service.Name, StringComparison.OrdinalIgnoreCase))
                     .Single();
                 Assert.NotNull(otherService);
                 Assert.Equal(otherService.Args, service.Args);
@@ -60,20 +62,7 @@ namespace Test.Infrastructure
                 Assert.Equal(otherService.Project, service.Project);
                 Assert.Equal(otherService.Replicas, service.Replicas);
                 Assert.Equal(otherService.WorkingDirectory, service.WorkingDirectory);
-
-                foreach (var binding in service.Bindings)
-                {
-                    var otherBinding = otherService.Bindings
-                                    .Where(o => o.Name == binding.Name
-                                        && o.Port == binding.Port
-                                        && o.Protocol == binding.Protocol
-                                        && o.ConnectionString == binding.ConnectionString
-                                        && o.ContainerPort == binding.ContainerPort
-                                        && o.Host == binding.Host)
-                                    .Single();
-
-                    Assert.NotNull(otherBinding);
-                }
+                Assert.Equal(otherService.Tags, service.Tags);
 
                 foreach (var binding in service.Bindings)
                 {

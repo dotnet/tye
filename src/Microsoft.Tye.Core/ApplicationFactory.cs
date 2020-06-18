@@ -4,9 +4,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Tye.ConfigModel;
 
@@ -14,7 +14,7 @@ namespace Microsoft.Tye
 {
     public static class ApplicationFactory
     {
-        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source)
+        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, ApplicationFactoryFilter? filter = null)
         {
             if (source is null)
             {
@@ -27,7 +27,7 @@ namespace Microsoft.Tye
             var rootConfig = ConfigFactory.FromFile(source);
             rootConfig.Validate();
 
-            var root = new ApplicationBuilder(source, rootConfig.Name ?? source.Directory.Name.ToLowerInvariant());
+            var root = new ApplicationBuilder(source, rootConfig.Name!);
             root.Namespace = rootConfig.Namespace;
 
             queue.Enqueue((rootConfig, new HashSet<string>()));
@@ -70,7 +70,11 @@ namespace Microsoft.Tye
                     root.Extensions.Add(extension);
                 }
 
-                foreach (var configService in config.Services)
+                var services = filter?.ServicesFilter != null ?
+                    config.Services.Where(filter.ServicesFilter).ToList() :
+                    config.Services;
+
+                foreach (var configService in services)
                 {
                     ServiceBuilder service;
                     if (root.Services.Any(s => s.Name == configService.Name))
@@ -85,7 +89,7 @@ namespace Microsoft.Tye
                     {
                         var expandedProject = Environment.ExpandEnvironmentVariables(configService.Project);
                         var projectFile = new FileInfo(Path.Combine(config.Source.DirectoryName, expandedProject));
-                        var project = new ProjectServiceBuilder(configService.Name!, projectFile);
+                        var project = new DotnetProjectServiceBuilder(configService.Name!, projectFile);
                         service = project;
 
                         project.Build = configService.Build ?? true;
@@ -96,6 +100,9 @@ namespace Microsoft.Tye
                         }
                         project.Replicas = configService.Replicas ?? 1;
 
+                        project.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
+                        project.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
+
                         // We don't apply more container defaults here because we might need
                         // to prompt for the registry name.
                         project.ContainerInfo = new ContainerInfo() { UseMultiphaseDockerfile = false, };
@@ -105,16 +112,41 @@ namespace Microsoft.Tye
                         // Do k8s by default.
                         project.ManifestInfo = new KubernetesManifestInfo();
                     }
-                    else if (!string.IsNullOrEmpty(configService.Image) || !string.IsNullOrEmpty(configService.DockerFile))
+                    else if (!string.IsNullOrEmpty(configService.Image))
                     {
                         var container = new ContainerServiceBuilder(configService.Name!, configService.Image!)
                         {
                             Args = configService.Args,
-                            Replicas = configService.Replicas ?? 1,
-                            DockerFile = configService.DockerFile != null ? Path.Combine(source.DirectoryName, configService.DockerFile) : null,
-                            DockerFileContext = configService.DockerFileContext != null ? Path.Combine(source.DirectoryName, configService.DockerFileContext) : null
+                            Replicas = configService.Replicas ?? 1
                         };
                         service = container;
+
+                        container.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
+                        container.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
+                    }
+                    else if (!string.IsNullOrEmpty(configService.DockerFile))
+                    {
+                        var dockerFile = new DockerFileServiceBuilder(configService.Name!, configService.Image!)
+                        {
+                            Args = configService.Args,
+                            Build = configService.Build ?? true,
+                            Replicas = configService.Replicas ?? 1,
+                            DockerFile = Path.Combine(source.DirectoryName, configService.DockerFile),
+                            // Supplying an absolute path with trailing slashes fails for DockerFileContext when calling docker build, so trim trailing slash.
+                            DockerFileContext = GetDockerFileContext(source, configService),
+                            BuildArgs = configService.DockerFileArgs
+                        };
+                        service = dockerFile;
+
+                        dockerFile.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
+                        dockerFile.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
+
+                        // We don't apply more container defaults here because we might need
+                        // to prompt for the registry name.
+                        dockerFile.ContainerInfo = new ContainerInfo() { UseMultiphaseDockerfile = false, };
+
+                        // Do k8s by default.
+                        dockerFile.ManifestInfo = new KubernetesManifestInfo();
                     }
                     else if (!string.IsNullOrEmpty(configService.Executable))
                     {
@@ -137,6 +169,9 @@ namespace Microsoft.Tye
                             Replicas = configService.Replicas ?? 1
                         };
                         service = executable;
+
+                        executable.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
+                        executable.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
                     }
                     else if (!string.IsNullOrEmpty(configService.Include))
                     {
@@ -289,7 +324,11 @@ namespace Microsoft.Tye
                     }
                 }
 
-                foreach (var configIngress in config.Ingress)
+                var ingresses = filter?.IngressFilter != null ?
+                    config.Ingress.Where(filter.IngressFilter).ToList() :
+                    config.Ingress;
+
+                foreach (var configIngress in ingresses)
                 {
                     var ingress = new IngressBuilder(configIngress.Name!);
                     ingress.Replicas = configIngress.Replicas ?? 1;
@@ -323,6 +362,32 @@ namespace Microsoft.Tye
             return root;
         }
 
+        private static string? GetDockerFileContext(FileInfo source, ConfigService configService)
+        {
+            if (configService.DockerFileContext == null)
+            {
+                return null;
+            }
+
+            // On windows, calling docker build with an aboslute path that ends in a trailing slash fails,
+            // but it's the exact opposite on linux, where it needs to have the trailing slash.
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return Path.TrimEndingDirectorySeparator(Path.Combine(source.DirectoryName, configService.DockerFileContext));
+            }
+            else
+            {
+                var path = Path.Combine(source.DirectoryName, configService.DockerFileContext);
+
+                if (!Path.EndsInDirectorySeparator(path))
+                {
+                    return path += Path.DirectorySeparatorChar;
+                }
+
+                return path;
+            }
+        }
+
         private static ConfigApplication GetNestedConfig(ConfigApplication rootConfig, string? file)
         {
             var nestedConfig = ConfigFactory.FromFile(new FileInfo(file));
@@ -351,5 +416,23 @@ namespace Microsoft.Tye
                 }
             }
         }
+
+        private static ProbeBuilder GetProbeBuilder(ConfigProbe config) => new ProbeBuilder()
+        {
+            Http = config.Http != null ? GetHttpProberBuilder(config.Http) : null,
+            InitialDelay = config.InitialDelay,
+            Period = config.Period,
+            Timeout = config.Timeout,
+            SuccessThreshold = config.SuccessThreshold,
+            FailureThreshold = config.FailureThreshold
+        };
+
+        private static HttpProberBuilder GetHttpProberBuilder(ConfigHttpProber config) => new HttpProberBuilder()
+        {
+            Path = config.Path,
+            Headers = config.Headers,
+            Port = config.Port,
+            Protocol = config.Protocol
+        };
     }
 }

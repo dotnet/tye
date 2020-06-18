@@ -171,7 +171,8 @@ namespace Microsoft.Tye.Hosting
                 {
                     Name = replica.Value.Name,
                     Ports = replica.Value.Ports,
-                    Environment = replica.Value.Environment
+                    Environment = replica.Value.Environment,
+                    State = replica.Value.State
                 };
 
                 replicateDictionary[replica.Key] = replicaStatus;

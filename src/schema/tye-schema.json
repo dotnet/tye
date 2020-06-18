@@ -53,6 +53,9 @@
                         "$ref": "#/definitions/image"
                     },
                     {
+                        "$ref": "#/definitions/dockerFile"
+                    },
+                    {
                         "$ref": "#/definitions/project"
                     },
                     {
@@ -270,6 +273,48 @@
                     "description": "The name of a Docker image.",
                     "type": "string"
                 },
+                "env": {
+                    "description": "Environment variables to use when launching.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/env-var"
+                    }
+                },
+                "args": {
+                    "description": "Command-line arguments to use when launching.",
+                    "type": "string"
+                },
+                "replicas": {
+                    "description": "Number of service replicas to create.",
+                    "type": "integer"
+                },
+                "bindings": {
+                    "description": "The bindings provided by the service.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/binding"
+                    }
+                }
+            },
+            "required": [
+                "name",
+                "image"
+            ]
+        },
+        "dockerFile": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "The service name. Must be unique per-application.",
+                    "type": "string"
+                },
+                "volumes": {
+                    "description": "Volumes to mount to the container.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/volume"
+                    }
+                },
                 "dockerFile": {
                     "description": "The Dockerfile to use.",
                     "type": "string"
@@ -302,7 +347,8 @@
                 }
             },
             "required": [
-                "name"
+                "name",
+                "dockerFile"
             ]
         },
         "ingress": {

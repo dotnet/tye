@@ -3,15 +3,13 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.CommandLine.IO;
 using System.IO;
+using System.Linq;
 using System.Threading;
-using Microsoft.Tye.ConfigModel;
-using Microsoft.Tye.Extensions;
 using Microsoft.Tye.Hosting;
-using Microsoft.Tye.Hosting.Diagnostics;
 
 namespace Microsoft.Tye
 {
@@ -71,7 +69,12 @@ namespace Microsoft.Tye
                     Description = "Launch dashboard on run.",
                     Required = false
                 },
-
+                new Option("--watch")
+                {
+                    Description = "Watches for code changes for all dotnet projects.",
+                    Required = false
+                },
+                StandardOptions.Tags,
                 StandardOptions.Verbosity,
             };
 
@@ -83,10 +86,13 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                var output = new OutputContext(args.Console, Verbosity.Info);
+                var output = new OutputContext(args.Console, args.Verbosity);
 
                 output.WriteInfoLine("Loading Application Details...");
-                var application = await ApplicationFactory.CreateAsync(output, args.Path);
+
+                var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(args.Tags);
+
+                var application = await ApplicationFactory.CreateAsync(output, args.Path, filter);
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
@@ -103,6 +109,8 @@ namespace Microsoft.Tye
                     DistributedTraceProvider = args.Dtrace,
                     LoggingProvider = args.Logs,
                     MetricsProvider = args.Metrics,
+                    LogVerbosity = args.Verbosity,
+                    Watch = args.Watch
                 };
                 options.Debug.AddRange(args.Debug);
 
@@ -158,6 +166,12 @@ namespace Microsoft.Tye
             public FileInfo Path { get; set; } = default!;
 
             public int? Port { get; set; }
+
+            public Verbosity Verbosity { get; set; }
+
+            public bool Watch { get; set; }
+
+            public string[] Tags { get; set; } = Array.Empty<string>();
         }
     }
 }

@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -204,21 +205,6 @@ namespace Microsoft.Tye.Hosting
             var hostname = "host.docker.internal";
             var dockerImage = docker.Image ?? service.Description.Name;
 
-            if (docker.DockerFile != null)
-            {
-                var dockerBuildResult = await ProcessUtil.RunAsync(
-                    $"docker",
-                    $"build \"{docker.DockerFileContext?.DirectoryName ?? docker.DockerFile.DirectoryName}\" -t {dockerImage} -f \"{docker.DockerFile}\"",
-                    docker.WorkingDirectory,
-                    throwOnError: false);
-
-                if (dockerBuildResult.ExitCode != 0)
-                {
-                    _logger.LogInformation("Running docker command with exception info {ExceptionStdOut} {ExceptionStdErr}", dockerBuildResult.StandardOutput, dockerBuildResult.StandardError);
-                    throw new CommandException("'docker build' failed.");
-                }
-            }
-
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 // See: https://github.com/docker/for-linux/issues/264
@@ -229,9 +215,7 @@ namespace Microsoft.Tye.Hosting
                 hostname = addresses[0].ToString();
             }
 
-            var dockerInfo = new DockerInformation(new Task[service.Description.Replicas]);
-
-            async Task RunDockerContainer(IEnumerable<(int ExternalPort, int Port, int? ContainerPort, string? Protocol)> ports)
+            async Task RunDockerContainer(IEnumerable<(int ExternalPort, int Port, int? ContainerPort, string? Protocol)> ports, CancellationToken cancellationToken)
             {
                 var hasPorts = ports.Any();
 
@@ -248,6 +232,7 @@ namespace Microsoft.Tye.Hosting
                 if (hasPorts)
                 {
                     status.Ports = ports.Select(p => p.Port);
+                    status.Bindings = ports.Select(p => new ReplicaBinding() { Port = p.Port, ExternalPort = p.ExternalPort, Protocol = p.Protocol }).ToList();
 
                     // These are the ports that the application should use for binding
 
@@ -281,10 +266,10 @@ namespace Microsoft.Tye.Hosting
                 //
                 // The way we do proxying here doesn't really work for multi-container scenarios on linux
                 // without some more setup.
-                application.PopulateEnvironment(service, (key, value) => environment[key] = value, hostname);
+                application.PopulateEnvironment(service, (key, value) => environment[key] = value, hostname!);
 
                 environment["APP_INSTANCE"] = replica;
-                environment["CONTAINER_HOST"] = hostname;
+                environment["CONTAINER_HOST"] = hostname!;
 
                 status.Environment = environment;
 
@@ -320,14 +305,14 @@ namespace Microsoft.Tye.Hosting
                     "docker",
                     command,
                     throwOnError: false,
-                    cancellationToken: dockerInfo.StoppingTokenSource.Token,
+                    cancellationToken: cancellationToken,
                     outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
                     errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"));
 
                 if (result.ExitCode != 0)
                 {
                     _logger.LogError("docker run failed for {ServiceName} with exit code {ExitCode}:" + result.StandardError, service.Description.Name, result.ExitCode);
-                    service.Replicas.TryRemove(replica, out _);
+                    service.Replicas.TryRemove(replica, out var _);
                     service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
 
                     PrintStdOutAndErr(service, replica, result);
@@ -354,7 +339,7 @@ namespace Microsoft.Tye.Hosting
 
                 if (!string.IsNullOrEmpty(dockerNetwork))
                 {
-                    status.DockerNetworkAlias = docker.NetworkAlias ?? serviceDescription.Name;
+                    status.DockerNetworkAlias = docker.NetworkAlias ?? serviceDescription!.Name;
 
                     var networkCommand = $"network connect {dockerNetwork} {replica} --alias {status.DockerNetworkAlias}";
 
@@ -367,42 +352,73 @@ namespace Microsoft.Tye.Hosting
                     PrintStdOutAndErr(service, replica, result);
                 }
 
-                service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
+                var sentStartedEvent = false;
 
-                _logger.LogInformation("Collecting docker logs for {ContainerName}.", replica);
-
-                var backOff = TimeSpan.FromSeconds(5);
-
-                while (!dockerInfo.StoppingTokenSource.Token.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    var logsRes = await ProcessUtil.RunAsync("docker", $"logs -f {containerId}",
-                        outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
-                        errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
-                        throwOnError: false,
-                        cancellationToken: dockerInfo.StoppingTokenSource.Token);
-
-                    if (logsRes.ExitCode != 0)
+                    if (sentStartedEvent)
                     {
-                        break;
+                        using var restartCts = new CancellationTokenSource(DockerStopTimeout);
+                        result = await ProcessUtil.RunAsync("docker", $"restart {containerId}", throwOnError: false, cancellationToken: restartCts.Token);
+
+                        if (restartCts.IsCancellationRequested)
+                        {
+                            _logger.LogWarning($"Failed to restart container after {DockerStopTimeout.Seconds} seconds.", replica, shortContainerId);
+                            break; // implement retry mechanism?
+                        }
+                        else if (result.ExitCode != 0)
+                        {
+                            _logger.LogWarning($"Failed to restart container due to exit code {result.ExitCode}.", replica, shortContainerId);
+                            break;
+                        }
+
+                        service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
                     }
 
-                    if (!dockerInfo.StoppingTokenSource.IsCancellationRequested)
+                    using var stoppingCts = new CancellationTokenSource();
+                    status.StoppingTokenSource = stoppingCts;
+                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
+                    sentStartedEvent = true;
+
+                    await using var _ = cancellationToken.Register(() => status.StoppingTokenSource.Cancel());
+
+                    _logger.LogInformation("Collecting docker logs for {ContainerName}.", replica);
+
+                    var backOff = TimeSpan.FromSeconds(5);
+
+                    while (!status.StoppingTokenSource.Token.IsCancellationRequested)
                     {
-                        try
-                        {
-                            // Avoid spamming logs if restarts are happening
-                            await Task.Delay(backOff, dockerInfo.StoppingTokenSource.Token);
-                        }
-                        catch (OperationCanceledException)
+                        var logsRes = await ProcessUtil.RunAsync("docker", $"logs -f {containerId}",
+                            outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
+                            errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
+                            throwOnError: false,
+                            cancellationToken: status.StoppingTokenSource.Token);
+
+                        if (logsRes.ExitCode != 0)
                         {
                             break;
                         }
+
+                        if (!status.StoppingTokenSource.IsCancellationRequested)
+                        {
+                            try
+                            {
+                                // Avoid spamming logs if restarts are happening
+                                await Task.Delay(backOff, status.StoppingTokenSource.Token);
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                break;
+                            }
+                        }
+
+                        backOff *= 2;
                     }
 
-                    backOff *= 2;
-                }
+                    _logger.LogInformation("docker logs collection for {ContainerName} complete with exit code {ExitCode}", replica, result.ExitCode);
 
-                _logger.LogInformation("docker logs collection for {ContainerName} complete with exit code {ExitCode}", replica, result.ExitCode);
+                    status.StoppingTokenSource = null;
+                }
 
                 // Docker has a tendency to get stuck so we're going to timeout this shutdown process
                 var timeoutCts = new CancellationTokenSource(DockerStopTimeout);
@@ -418,7 +434,10 @@ namespace Microsoft.Tye.Hosting
 
                 PrintStdOutAndErr(service, replica, result);
 
-                service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
+                if (sentStartedEvent)
+                {
+                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
+                }
 
                 _logger.LogInformation("Stopped container {ContainerName} with ID {ContainerId} exited with {ExitCode}", replica, shortContainerId, result.ExitCode);
 
@@ -433,38 +452,90 @@ namespace Microsoft.Tye.Hosting
 
                 _logger.LogInformation("Removed container {ContainerName} with ID {ContainerId} exited with {ExitCode}", replica, shortContainerId, result.ExitCode);
 
-                service.Replicas.TryRemove(replica, out _);
+                service.Replicas.TryRemove(replica, out var _);
 
                 service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
             };
 
-            if (serviceDescription.Bindings.Count > 0)
+            async Task DockerBuildAsync(CancellationToken cancellationToken)
             {
-                // Each replica is assigned a list of internal ports, one mapped to each external
-                // port
-                for (var i = 0; i < serviceDescription.Replicas; i++)
+                if (docker.DockerFile != null)
                 {
-                    var ports = new List<(int, int, int?, string?)>();
-                    foreach (var binding in serviceDescription.Bindings)
-                    {
-                        if (binding.Port == null)
-                        {
-                            continue;
-                        }
+                    _logger.LogInformation("Building docker image {Image} from docker file", dockerImage);
 
-                        ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.ContainerPort, binding.Protocol));
+                    void Log(string data)
+                    {
+                        _logger.LogInformation("[" + serviceDescription!.Name + "]:" + data);
+                        service.Logs.OnNext(data);
                     }
 
-                    dockerInfo.Tasks[i] = RunDockerContainer(ports);
+                    var arguments = new StringBuilder($"build \"{docker.DockerFileContext?.FullName}\" -t {dockerImage} -f \"{docker.DockerFile}\"");
+
+                    foreach (var buildArg in docker.BuildArgs)
+                    {
+                        arguments.Append($" --build-arg {buildArg.Key}={buildArg.Value}");
+                    }
+
+                    var dockerBuildResult = await ProcessUtil.RunAsync(
+                        $"docker",
+                        arguments.ToString(),
+                        outputDataReceived: Log,
+                        errorDataReceived: Log,
+                        workingDirectory: docker.WorkingDirectory,
+                        cancellationToken: cancellationToken,
+                        throwOnError: false);
+
+                    if (dockerBuildResult.ExitCode != 0)
+                    {
+                        throw new CommandException("'docker build' failed.");
+                    }
                 }
             }
-            else
+
+            Task DockerRunAsync(CancellationToken cancellationToken)
             {
-                for (var i = 0; i < service.Description.Replicas; i++)
+                var tasks = new Task[serviceDescription!.Replicas];
+
+                if (serviceDescription.Bindings.Count > 0)
                 {
-                    dockerInfo.Tasks[i] = RunDockerContainer(Enumerable.Empty<(int, int, int?, string?)>());
+                    // Each replica is assigned a list of internal ports, one mapped to each external
+                    // port
+                    for (var i = 0; i < serviceDescription.Replicas; i++)
+                    {
+                        var ports = new List<(int, int, int?, string?)>();
+                        foreach (var binding in serviceDescription.Bindings)
+                        {
+                            if (binding.Port == null)
+                            {
+                                continue;
+                            }
+
+                            ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.ContainerPort, binding.Protocol));
+                        }
+
+                        tasks[i] = RunDockerContainer(ports, cancellationToken);
+                    }
                 }
+                else
+                {
+                    for (var i = 0; i < service.Description.Replicas; i++)
+                    {
+                        tasks[i] = RunDockerContainer(Enumerable.Empty<(int, int, int?, string?)>(), cancellationToken);
+                    }
+                }
+
+                return Task.WhenAll(tasks);
             }
+
+            async Task BuildAndRunAsync(CancellationToken cancellationToken)
+            {
+                await DockerBuildAsync(cancellationToken);
+
+                await DockerRunAsync(cancellationToken);
+            }
+
+            var dockerInfo = new DockerInformation();
+            dockerInfo.Task = BuildAndRunAsync(dockerInfo.StoppingTokenSource.Token);
 
             service.Items[typeof(DockerInformation)] = dockerInfo;
         }
@@ -476,7 +547,7 @@ namespace Microsoft.Tye.Hosting
             {
                 var container = replica["container"];
                 await ProcessUtil.RunAsync("docker", $"rm -f {container}", throwOnError: false);
-                _logger.LogInformation("removed contaienr {container} from previous run", container);
+                _logger.LogInformation("removed container {container} from previous run", container);
             }
 
             _replicaRegistry.DeleteStore(DockerReplicaStore);
@@ -512,7 +583,7 @@ namespace Microsoft.Tye.Hosting
             {
                 di.StoppingTokenSource.Cancel();
 
-                return Task.WhenAll(di.Tasks);
+                return di.Task;
             }
 
             return Task.CompletedTask;
@@ -520,12 +591,7 @@ namespace Microsoft.Tye.Hosting
 
         private class DockerInformation
         {
-            public DockerInformation(Task[] tasks)
-            {
-                Tasks = tasks;
-            }
-
-            public Task[] Tasks { get; }
+            public Task Task { get; set; } = default!;
             public CancellationTokenSource StoppingTokenSource { get; } = new CancellationTokenSource();
         }
 

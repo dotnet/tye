@@ -10,7 +10,7 @@ namespace Microsoft.Tye
 {
     internal static class HelmChartGenerator
     {
-        public static async Task GenerateAsync(OutputContext output, ApplicationBuilder application, ProjectServiceBuilder project, ContainerInfo container, HelmChartStep chart, DirectoryInfo outputDirectory)
+        public static async Task GenerateAsync(OutputContext output, ApplicationBuilder application, DotnetProjectServiceBuilder project, ContainerInfo container, HelmChartStep chart, DirectoryInfo outputDirectory)
         {
             if (output is null)
             {

@@ -1,3 +1,4 @@
+
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -28,6 +29,10 @@
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Compile Remove="testassets\**\*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.6.1" />
   </ItemGroup>
 
 </Project>

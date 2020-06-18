@@ -9,7 +9,7 @@ namespace Microsoft.Tye.Hosting.Model
 {
     public class ProjectRunInfo : RunInfo
     {
-        public ProjectRunInfo(ProjectServiceBuilder project)
+        public ProjectRunInfo(DotnetProjectServiceBuilder project)
         {
             ProjectFile = project.ProjectFile;
             Args = project.Args;

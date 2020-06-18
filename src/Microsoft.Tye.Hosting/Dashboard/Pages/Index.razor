@@ -21,7 +21,16 @@
             var logsPath = $"logs/{service.Description.Name}";
             var servicePath = $"services/{service.Description.Name}";
             <tr @key="service.Description.Name">
-                <td><a href="@servicePath">@service.Description.Name</a></td>
+                <td>
+                    @if(service.ServiceType == ServiceType.External)
+                    {
+                        <span>@service.Description.Name</span>
+                    }
+                    else
+                    {
+                        <a href="@servicePath">@service.Description.Name</a>
+                    }
+                </td>
                 <td>
                     @service.ServiceType
                 </td>
@@ -63,11 +72,16 @@
                         <p>none</p>
                     }
                 </td>
-                <td>@service.Replicas.Count/@service.Description.Replicas</td>
-                <td>@service.Restarts</td>
-                <td>
-                    <NavLink href="@logsPath">View</NavLink>
-                </td>
+                @if(service.ServiceType == ServiceType.External)
+                {
+                    <td colspan=3></td>
+                }
+                else
+                {
+                    <td>@service.Replicas.Count/@service.Description.Replicas</td>
+                    <td>@service.Restarts</td>
+                    <td><NavLink href="@logsPath">View</NavLink></td>
+                }
             </tr>
         }
     </tbody>

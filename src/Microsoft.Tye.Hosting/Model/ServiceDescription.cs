@@ -20,5 +20,7 @@ namespace Microsoft.Tye.Hosting.Model
         public List<ServiceBinding> Bindings { get; } = new List<ServiceBinding>();
         public List<EnvironmentVariable> Configuration { get; } = new List<EnvironmentVariable>();
         public List<string> Dependencies { get; } = new List<string>();
+        public Probe? Liveness { get; set; }
+        public Probe? Readiness { get; set; }
     }
 }

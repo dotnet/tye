@@ -1,0 +1,20 @@
+name: liveness-and-readiness
+ingress:
+    - name: ingress
+      bindings:
+          - port: 8080
+      rules:
+        - path: /
+          service: simple-webapi
+services:
+  - name: simple-webapi
+    project: webapi/webapi.csproj
+    replicas: 2
+    liveness:
+      http:
+        path: /lively
+      initialDelay: 1
+    readiness:
+      http:
+        path: /ready
+      initialDelay: 1

@@ -23,5 +23,9 @@ namespace Microsoft.Tye
         public int Replicas { get; set; } = 1;
 
         public List<EnvironmentVariableBuilder> EnvironmentVariables { get; } = new List<EnvironmentVariableBuilder>();
+
+        public ProbeBuilder? Liveness { get; set; }
+
+        public ProbeBuilder? Readiness { get; set; }
     }
 }
