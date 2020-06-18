@@ -133,7 +133,8 @@ namespace Microsoft.Tye
                             Replicas = configService.Replicas ?? 1,
                             DockerFile = Path.Combine(source.DirectoryName, configService.DockerFile),
                             // Supplying an absolute path with trailing slashes fails for DockerFileContext when calling docker build, so trim trailing slash.
-                            DockerFileContext = GetDockerFileContext(source, configService)
+                            DockerFileContext = GetDockerFileContext(source, configService),
+                            BuildArgs = configService.DockerFileArgs
                         };
                         service = dockerFile;
 

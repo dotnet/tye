@@ -273,5 +273,20 @@ services:
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
             Assert.Contains(errorMessage, exception.Message);
         }
+
+        [Fact]
+        public void DockerFileWithArgs()
+        {
+            var input = @"
+services:
+    - name: web
+      dockerFile: Dockerfile
+      dockerFileArgs: 
+      - pat: thisisapat";
+
+            using var parser = new YamlParser(input);
+            var app = parser.ParseConfigApplication();
+            app.Validate();
+        }
     }
 }

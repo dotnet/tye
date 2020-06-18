@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Tye.ConfigModel;
 using YamlDotNet.RepresentationModel;
 
@@ -45,6 +46,14 @@ namespace Tye.Serialization
                         break;
                     case "dockerFile":
                         service.DockerFile = YamlParser.GetScalarValue(key, child.Value);
+                        break;
+                    case "dockerFileArgs":
+                        if (child.Value.NodeType != YamlNodeType.Sequence)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
+                        }
+
+                        HandleDockerFileArgs((child.Value as YamlSequenceNode)!, service.DockerFileArgs);
                         break;
                     case "dockerFileContext":
                         service.DockerFileContext = YamlParser.GetScalarValue(key, child.Value);
@@ -399,6 +408,14 @@ namespace Tye.Serialization
                 buildProperties.Add(buildProperty);
             }
         }
+        private static void HandleDockerFileArgs(YamlSequenceNode yamlSequenceNode, Dictionary<string, string> dockerArguments)
+        {
+            foreach (var child in yamlSequenceNode.Children)
+            {
+                YamlParser.ThrowIfNotYamlMapping(child);
+                HandleServiceDockerArgsNameMapping((YamlMappingNode)child, dockerArguments);
+            }
+        }
 
         private static void HandleServiceConfiguration(YamlSequenceNode yamlSequenceNode, List<ConfigConfigurationSource> configuration)
         {
@@ -457,6 +474,21 @@ namespace Tye.Serialization
             {
                 var tag = YamlParser.GetScalarValue(child);
                 tags.Add(tag);
+            }
+        }
+        private static void HandleServiceDockerArgsNameMapping(YamlMappingNode yamlMappingNode, IDictionary<string, string> dockerArguments)
+        {
+            foreach (var child in yamlMappingNode!.Children)
+            {
+                var key = YamlParser.GetScalarValue(child.Key);
+                var value = YamlParser.GetScalarValue(key, child.Value);
+
+                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
+                {
+                    throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
+                }
+
+                dockerArguments.Add(key, value);
             }
         }
     }
