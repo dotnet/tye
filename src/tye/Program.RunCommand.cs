@@ -74,17 +74,7 @@ namespace Microsoft.Tye
                     Description = "Watches for code changes for all dotnet projects.",
                     Required = false
                 },
-
-                new Option("--tags")
-                {
-                    Argument = new Argument<List<string>>("tags")
-                    {
-                        Arity = ArgumentArity.OneOrMore
-                    },
-                    Description = "Filter by tags.",
-                    Required = false
-                },
-
+                StandardOptions.Tags,
                 StandardOptions.Verbosity,
             };
 
@@ -100,15 +90,7 @@ namespace Microsoft.Tye
 
                 output.WriteInfoLine("Loading Application Details...");
 
-                ApplicationFactoryFilter? filter = null;
-
-                if (args.Tags.Any())
-                {
-                    filter = new ApplicationFactoryFilter
-                    {
-                        ServicesFilter = service => args.Tags.Any(b => service.Tags.Contains(b))
-                    };
-                }
+                var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(args.Tags);
 
                 var application = await ApplicationFactory.CreateAsync(output, args.Path, filter);
                 if (application.Services.Count == 0)

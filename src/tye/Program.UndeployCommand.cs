@@ -22,6 +22,7 @@ namespace Microsoft.Tye
                 StandardOptions.Namespace,
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
+                StandardOptions.Tags,
 
                 new Option(new[]{ "--what-if", }, "print what would be deleted without making changes")
                 {
@@ -29,7 +30,7 @@ namespace Microsoft.Tye
                 },
             };
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, string, bool, bool>((console, path, verbosity, @namespace, interactive, whatIf) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, string, bool, bool, string[]>((console, path, verbosity, @namespace, interactive, whatIf, tags) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -37,7 +38,7 @@ namespace Microsoft.Tye
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                return UndeployHost.UndeployAsync(console, path, verbosity, @namespace, interactive, whatIf);
+                return UndeployHost.UndeployAsync(console, path, verbosity, @namespace, interactive, whatIf, tags);
             });
 
             return command;
