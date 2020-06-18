@@ -76,14 +76,14 @@ namespace Microsoft.Tye.Hosting
                 else if (serviceDescription.RunInfo is FunctionRunInfo function)
                 {
                     // TODO this is a hack
-                    path = @"%APPDATA%\Roaming\npm\node_modules\azure-functions-core-tools\bin\func.exe";
+                    path = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\Users\jukotali\AppData\Roaming\npm\node_modules\azure-functions-core-tools\bin\func.exe" : "/usr/local/lib/node_modules/azure-functions-core-tools/bin/func";
                     // TODO fix directory path here.
                     workingDirectory = new DirectoryInfo(function.FunctionPath).FullName;
                     // todo make sure to exclude functions app from implied tye running.
 
                     // --build here?
                     // TODO for .NET funcs, do we also build here?
-                    args = function.Args ?? $"start";// --port {serviceDescription.Bindings.Single().Port}";
+                    args = function.Args ?? $"start --port {serviceDescription.Bindings.Single().Port}";
                 }
                 else
                 {
