@@ -44,6 +44,7 @@ namespace Test.Infrastructure
 
                     Assert.NotNull(otherBinding);
                 }
+                Assert.Equal(otherIngress.Tags, ingress.Tags);
             }
 
             foreach (var service in actual.Services)
@@ -61,20 +62,7 @@ namespace Test.Infrastructure
                 Assert.Equal(otherService.Project, service.Project);
                 Assert.Equal(otherService.Replicas, service.Replicas);
                 Assert.Equal(otherService.WorkingDirectory, service.WorkingDirectory);
-
-                foreach (var binding in service.Bindings)
-                {
-                    var otherBinding = otherService.Bindings
-                                    .Where(o => o.Name == binding.Name
-                                        && o.Port == binding.Port
-                                        && o.Protocol == binding.Protocol
-                                        && o.ConnectionString == binding.ConnectionString
-                                        && o.ContainerPort == binding.ContainerPort
-                                        && o.Host == binding.Host)
-                                    .Single();
-
-                    Assert.NotNull(otherBinding);
-                }
+                Assert.Equal(otherService.Tags, service.Tags);
 
                 foreach (var binding in service.Bindings)
                 {

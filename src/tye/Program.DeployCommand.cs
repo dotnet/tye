@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Tye.ConfigModel;
@@ -23,6 +24,7 @@ namespace Microsoft.Tye
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
                 StandardOptions.Namespace,
+                StandardOptions.Tags,
             };
 
             command.AddOption(new Option(new[] { "-f", "--force" })
@@ -31,7 +33,7 @@ namespace Microsoft.Tye
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool, string>(async (console, path, verbosity, interactive, force, @namespace) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool, string, string[]>(async (console, path, verbosity, interactive, force, @namespace, tags) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -42,12 +44,15 @@ namespace Microsoft.Tye
                 var output = new OutputContext(console, verbosity);
 
                 output.WriteInfoLine("Loading Application Details...");
-                var application = await ApplicationFactory.CreateAsync(output, path);
+
+                var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(tags);
+
+                var application = await ApplicationFactory.CreateAsync(output, path, filter);
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
                 }
-                if (!String.IsNullOrEmpty(@namespace))
+                if (!string.IsNullOrEmpty(@namespace))
                 {
                     application.Namespace = @namespace;
                 }

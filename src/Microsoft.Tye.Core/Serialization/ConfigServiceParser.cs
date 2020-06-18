@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Build.Evaluation;
 using Microsoft.Tye.ConfigModel;
 using YamlDotNet.RepresentationModel;
 
@@ -130,6 +128,14 @@ namespace Tye.Serialization
                     case "readiness":
                         service.Readiness = new ConfigProbe();
                         HandleServiceProbe((YamlMappingNode)child.Value, service.Readiness!);
+                        break;
+                    case "tags":
+                        if (child.Value.NodeType != YamlNodeType.Sequence)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
+                        }
+
+                        HandleServiceTags((child.Value as YamlSequenceNode)!, service.Tags);
                         break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
@@ -442,6 +448,15 @@ namespace Tye.Serialization
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
+            }
+        }
+
+        private static void HandleServiceTags(YamlSequenceNode yamlSequenceNode, List<string> tags)
+        {
+            foreach (var child in yamlSequenceNode!.Children)
+            {
+                var tag = YamlParser.GetScalarValue(child);
+                tags.Add(tag);
             }
         }
     }

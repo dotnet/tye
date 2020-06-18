@@ -3,15 +3,13 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.CommandLine.IO;
 using System.IO;
+using System.Linq;
 using System.Threading;
-using Microsoft.Tye.ConfigModel;
-using Microsoft.Tye.Extensions;
 using Microsoft.Tye.Hosting;
-using Microsoft.Tye.Hosting.Diagnostics;
 
 namespace Microsoft.Tye
 {
@@ -76,8 +74,7 @@ namespace Microsoft.Tye
                     Description = "Watches for code changes for all dotnet projects.",
                     Required = false
                 },
-
-
+                StandardOptions.Tags,
                 StandardOptions.Verbosity,
             };
 
@@ -92,7 +89,10 @@ namespace Microsoft.Tye
                 var output = new OutputContext(args.Console, args.Verbosity);
 
                 output.WriteInfoLine("Loading Application Details...");
-                var application = await ApplicationFactory.CreateAsync(output, args.Path);
+
+                var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(args.Tags);
+
+                var application = await ApplicationFactory.CreateAsync(output, args.Path, filter);
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
@@ -170,6 +170,8 @@ namespace Microsoft.Tye
             public Verbosity Verbosity { get; set; }
 
             public bool Watch { get; set; }
+
+            public string[] Tags { get; set; } = Array.Empty<string>();
         }
     }
 }

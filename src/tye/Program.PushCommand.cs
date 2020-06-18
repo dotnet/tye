@@ -18,6 +18,7 @@ namespace Microsoft.Tye
                 CommonArguments.Path_Required,
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
+                StandardOptions.Tags
             };
 
             command.AddOption(new Option(new[] { "-f", "--force" })
@@ -26,7 +27,7 @@ namespace Microsoft.Tye
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool>(async (console, path, verbosity, interactive, force) =>
+            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool, string[]>(async (console, path, verbosity, interactive, force, tags) =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (path is null)
@@ -37,7 +38,9 @@ namespace Microsoft.Tye
                 var output = new OutputContext(console, verbosity);
 
                 output.WriteInfoLine("Loading Application Details...");
-                var application = await ApplicationFactory.CreateAsync(output, path);
+                var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(tags);
+
+                var application = await ApplicationFactory.CreateAsync(output, path, filter);
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
