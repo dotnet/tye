@@ -32,22 +32,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="testassets\generate\dockerfile.yaml" />
-    <None Remove="testassets\projects\single-phase-dockerfile-multi-args\appsettings.json" />
-    <None Remove="testassets\projects\single-phase-dockerfile-multi-args\Dockerfile" />
-    <None Remove="testassets\projects\single-phase-dockerfile-multi-args\Properties\launchSettings.json" />
-    <None Remove="testassets\projects\single-phase-dockerfile-multi-args\tye.yaml" />
-    <None Remove="testassets\projects\single-phase-dockerfile-args-duplicates\appsettings.json" />
-    <None Remove="testassets\projects\single-phase-dockerfile-args-duplicates\Dockerfile" />
-    <None Remove="testassets\projects\single-phase-dockerfile-args-duplicates\Properties\launchSettings.json" />
-    <None Remove="testassets\projects\single-phase-dockerfile-args-duplicates\tye.yaml" />
-    <None Remove="testassets\projects\single-phase-dockerfile-args\appsettings.json" />
-    <None Remove="testassets\projects\single-phase-dockerfile-args\Dockerfile" />
-    <None Remove="testassets\projects\single-phase-dockerfile-args\Properties\launchSettings.json" />
-    <None Remove="testassets\projects\single-phase-dockerfile-args\tye.yaml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.6.1" />
   </ItemGroup>
 
