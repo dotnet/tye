@@ -150,10 +150,6 @@ namespace Microsoft.Tye.Hosting.Model
                 var protocol = b.Protocol;
                 var host = b.Host ?? defaultHost ?? (isDockerRunInfo ? service.Description.Name : "");
                 var port = b.Port;
-                if (b.Port is object && isDockerRunInfo)
-                {
-                    port = b.ContainerPort ?? b.Port.Value;
-                }
 
                 bindings.Add(new EffectiveBinding(
                     service.Description.Name,
