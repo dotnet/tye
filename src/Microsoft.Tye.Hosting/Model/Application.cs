@@ -132,34 +132,39 @@ namespace Microsoft.Tye.Hosting.Model
         {
             var bindings = new List<EffectiveBinding>();
 
+            var isDockerRunInfo = service.Description.RunInfo is DockerRunInfo;
+            GetEffectiveBindings(isDockerRunInfo, defaultHost, bindings, service);
+
             foreach (var serv in service.Description.Dependencies)
             {
-                var s = Services[serv];
-
-                foreach (var b in s.Description.Bindings)
-                {
-                    var protocol = b.Protocol;
-                    // Just ignored the binding host.
-                    var host = service.Description.RunInfo is DockerRunInfo ? s.Description.Name : defaultHost;
-
-                    var port = b.Port;
-                    if (b.Port is object && service.Description.RunInfo is DockerRunInfo)
-                    {
-                        port = b.ContainerPort ?? b.Port.Value;
-                    }
-
-                    bindings.Add(new EffectiveBinding(
-                        s.Description.Name,
-                        b.Name,
-                        protocol,
-                        host,
-                        port,
-                        b.ConnectionString,
-                        s.Description.Configuration));
-                }
+                GetEffectiveBindings(isDockerRunInfo, defaultHost, bindings, Services[serv]);
             }
 
             return bindings;
+        }
+
+        private static void GetEffectiveBindings(bool isDockerRunInfo, string defaultHost, List<EffectiveBinding> bindings, Service service)
+        {
+            foreach (var b in service.Description.Bindings)
+            {
+                var protocol = b.Protocol;
+                var host = isDockerRunInfo ? service.Description.Name : defaultHost;
+
+                var port = b.Port;
+                if (b.Port is object && isDockerRunInfo)
+                {
+                    port = b.ContainerPort ?? b.Port.Value;
+                }
+
+                bindings.Add(new EffectiveBinding(
+                    service.Description.Name,
+                    b.Name,
+                    protocol,
+                    host,
+                    port,
+                    b.ConnectionString,
+                    service.Description.Configuration));
+            }
         }
     }
 }
