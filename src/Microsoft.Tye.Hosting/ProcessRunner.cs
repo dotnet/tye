@@ -361,7 +361,7 @@ namespace Microsoft.Tye.Hosting
                         }
                         else
                         {
-                            var result = await ProcessUtil.RunAsync(processInfo, status.StoppingTokenSource.Token, throwOnError: false);
+                            await ProcessUtil.RunAsync(processInfo, status.StoppingTokenSource.Token, throwOnError: false);
                         }
                     }
                     catch (Exception ex)
