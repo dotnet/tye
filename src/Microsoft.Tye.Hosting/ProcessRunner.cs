@@ -237,13 +237,17 @@ namespace Microsoft.Tye.Hosting
                 {
                     var replica = serviceName + "_" + Guid.NewGuid().ToString().Substring(0, 10).ToLower();
                     var status = new ProcessStatus(service, replica);
-                    service.Replicas[replica] = status;
 
                     using var stoppingCts = new CancellationTokenSource();
                     status.StoppingTokenSource = stoppingCts;
                     await using var _ = processInfo.StoppedTokenSource.Token.Register(() => status.StoppingTokenSource.Cancel());
 
-                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
+                    if (!_options.Watch)
+                    {
+                        // 
+                        service.Replicas[replica] = status;
+                        service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
+                    }
 
                     // This isn't your host name
                     environment["APP_INSTANCE"] = replica;
@@ -298,8 +302,14 @@ namespace Microsoft.Tye.Hosting
 
                                 WriteReplicaToStore(pid.ToString());
 
-                                service.Replicas[replica] = status;
-                                service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
+                                if (_options.Watch && service.Description.RunInfo is ProjectRunInfo runInfo)
+                                {
+                                    // OnStart/OnStop will be called multiple times for watch.
+                                    // Watch will constantly be adding and removing from the list, so only add here for watch.
+                                    service.Replicas[replica] = status;
+                                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
+                                }
+
                                 service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
                             },
                             OnStop = exitCode =>
@@ -311,12 +321,14 @@ namespace Microsoft.Tye.Hosting
                                     service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
                                 }
 
-                                if (_options.Watch)
+                                if (!_options.Watch)
                                 {
+                                    // Only increase backoff when not watching project as watch will wait for file changes before rebuild.
                                     backOff *= 2;
                                 }
 
                                 service.Restarts++;
+
                                 service.Replicas.TryRemove(replica, out var _);
                                 service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
 
@@ -352,7 +364,6 @@ namespace Microsoft.Tye.Hosting
                         {
                             var result = await ProcessUtil.RunAsync(processInfo, status.StoppingTokenSource.Token, throwOnError: false);
                         }
-
                     }
                     catch (Exception ex)
                     {
@@ -367,8 +378,6 @@ namespace Microsoft.Tye.Hosting
                             // Swallow cancellation exceptions and continue
                         }
                     }
-
-
                 }
             }
 
