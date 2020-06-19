@@ -310,9 +310,20 @@ namespace Microsoft.Tye.Hosting
                                 {
                                     service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
                                 }
+
+                                if (_options.Watch)
+                                {
+                                    backOff *= 2;
+                                }
+
                                 service.Restarts++;
                                 service.Replicas.TryRemove(replica, out var _);
                                 service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
+
+                                if (status.ExitCode != null)
+                                {
+                                    _logger.LogInformation("{ServiceName} process exited with exit code {ExitCode}", replica, status.ExitCode);
+                                }
                             },
                             Build = async () =>
                             {
@@ -340,13 +351,6 @@ namespace Microsoft.Tye.Hosting
                         else
                         {
                             var result = await ProcessUtil.RunAsync(processInfo, status.StoppingTokenSource.Token, throwOnError: false);
-
-                            status.ExitCode = result.ExitCode;
-
-                            if (status.Pid != null)
-                            {
-                                service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
-                            }
                         }
 
                     }
@@ -364,18 +368,7 @@ namespace Microsoft.Tye.Hosting
                         }
                     }
 
-                    backOff *= 2;
-
-                    service.Restarts++;
-
-                    if (status.ExitCode != null)
-                    {
-                        _logger.LogInformation("{ServiceName} process exited with exit code {ExitCode}", replica, status.ExitCode);
-                    }
-
-                    // Remove the replica from the set
-                    service.Replicas.TryRemove(replica, out var _);
-                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
+                  
                 }
             }
 
