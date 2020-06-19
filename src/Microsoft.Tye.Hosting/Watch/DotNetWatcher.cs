@@ -31,6 +31,11 @@ namespace Microsoft.DotNet.Watcher
 
             while (true)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 processSpec.EnvironmentVariables["DOTNET_WATCH_ITERATION"] = iteration.ToString(CultureInfo.InvariantCulture);
                 iteration++;
 
@@ -39,11 +44,6 @@ namespace Microsoft.DotNet.Watcher
                 if (fileSet == null)
                 {
                     _logger.LogError("watch: Failed to find a list of files to watch");
-                    return;
-                }
-
-                if (cancellationToken.IsCancellationRequested)
-                {
                     return;
                 }
 
