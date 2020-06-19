@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
@@ -16,8 +17,10 @@ namespace Microsoft.Tye
         public IDictionary<string, string> EnvironmentVariables { get; set; } = new Dictionary<string, string>();
         public string? Arguments { get; set; }
         public Action<string>? OutputData { get; set; }
+        public Func<Task<int>>? Build { get; set; }
         public Action<string>? ErrorData { get; set; }
         public Action<int>? OnStart { get; set; }
+        public Action<int>? OnStop { get; set; }
         public string? ShortDisplayName()
             => Path.GetFileNameWithoutExtension(Executable);
     }

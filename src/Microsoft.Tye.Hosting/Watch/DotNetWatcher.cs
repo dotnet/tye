@@ -31,6 +31,11 @@ namespace Microsoft.DotNet.Watcher
 
             while (true)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 processSpec.EnvironmentVariables["DOTNET_WATCH_ITERATION"] = iteration.ToString(CultureInfo.InvariantCulture);
                 iteration++;
 
@@ -39,11 +44,6 @@ namespace Microsoft.DotNet.Watcher
                 if (fileSet == null)
                 {
                     _logger.LogError("watch: Failed to find a list of files to watch");
-                    return;
-                }
-
-                if (cancellationToken.IsCancellationRequested)
-                {
                     return;
                 }
 
@@ -94,6 +94,21 @@ namespace Microsoft.DotNet.Watcher
                     if (!string.IsNullOrEmpty(fileSetTask.Result))
                     {
                         _logger.LogInformation($"watch: File changed: {fileSetTask.Result}");
+                    }
+
+                    if (processSpec.Build != null)
+                    {
+                        while (true)
+                        {
+                            var exitCode = await processSpec.Build();
+                            if (exitCode == 0)
+                            {
+                                break;
+                                // Build failed, keep retrying builds until successful build. 
+                            }
+
+                            await fileSetWatcher.GetChangedFileAsync(cancellationToken, () => _logger.LogWarning("Waiting for a file to change before restarting dotnet..."));
+                        }
                     }
                 }
             }
