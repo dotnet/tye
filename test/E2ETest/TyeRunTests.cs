@@ -291,7 +291,7 @@ namespace E2ETest
                         return;
                     }
 
-                    await Task.Delay(500);
+                    await Task.Delay(5000);
                 }
 
                 throw new Exception("Failed to relaunch project with dotnet watch");
