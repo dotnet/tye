@@ -20,6 +20,7 @@ namespace Microsoft.Tye
         public Func<Task<int>>? Build { get; set; }
         public Action<string>? ErrorData { get; set; }
         public Action<int>? OnStart { get; set; }
+        public Action<int>? OnStop { get; set; }
         public string? ShortDisplayName()
             => Path.GetFileNameWithoutExtension(Executable);
     }

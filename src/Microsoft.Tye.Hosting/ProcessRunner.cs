@@ -297,7 +297,22 @@ namespace Microsoft.Tye.Hosting
                                 status.Pid = pid;
 
                                 WriteReplicaToStore(pid.ToString());
+
+                                service.Replicas[replica] = status;
+                                service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
                                 service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
+                            },
+                            OnStop = exitCode =>
+                            {
+                                status.ExitCode = exitCode;
+
+                                if (status.Pid != null)
+                                {
+                                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
+                                }
+                                service.Restarts++;
+                                service.Replicas.TryRemove(replica, out var _);
+                                service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
                             },
                             Build = async () =>
                             {
