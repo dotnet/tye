@@ -95,6 +95,11 @@ namespace Microsoft.DotNet.Watcher
                     {
                         _logger.LogInformation($"watch: File changed: {fileSetTask.Result}");
                     }
+
+                    if (processSpec.Build != null)
+                    {
+                        await processSpec.Build();
+                    }
                 }
             }
         }

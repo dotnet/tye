@@ -298,15 +298,16 @@ namespace Microsoft.Tye.Hosting
 
                                 WriteReplicaToStore(pid.ToString());
                                 service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
+                            },
+                            Build = async () =>
+                            {
+                                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
                             }
                         };
 
                         if (_options.Watch && service.Description.RunInfo is ProjectRunInfo runInfo)
                         {
                             var projectFile = runInfo.ProjectFile.FullName;
-                            processInfo.Executable = "dotnet";
-                            processInfo.Arguments = $"run {service.Status.ProjectFilePath} --no-launch-profile {processInfo.Arguments}";
-
                             var fileSetFactory = new MsBuildFileSetFactory(_logger,
                                 projectFile,
                                 waitOnError: true,
