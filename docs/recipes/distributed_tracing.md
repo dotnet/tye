@@ -97,7 +97,7 @@ To use zipkin for distributed tracing in a deployed application, we first need t
 Run the following to deploy a minimal zipkin configuration:
 
 ```sh
-kubectl apply -f https://github.com/dotnet/tye/blob/master/docs/recipes/zipkin.yaml
+kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/master/docs/recipes/zipkin.yaml
 ```
 
 > :warning: This is the most basic possible deployment of zipkin. There's no data persistence here!
