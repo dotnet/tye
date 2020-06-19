@@ -98,7 +98,17 @@ namespace Microsoft.DotNet.Watcher
 
                     if (processSpec.Build != null)
                     {
-                        await processSpec.Build();
+                        while (true)
+                        {
+                            var exitCode = await processSpec.Build();
+                            if (exitCode == 0)
+                            {
+                                break;
+                                // Build failed, keep retrying builds until successful build. 
+                            }
+
+                            await fileSetWatcher.GetChangedFileAsync(cancellationToken, () => _logger.LogWarning("Waiting for a file to change before restarting dotnet..."));
+                        }
                     }
                 }
             }

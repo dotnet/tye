@@ -302,6 +302,11 @@ namespace Microsoft.Tye.Hosting
                             Build = async () =>
                             {
                                 var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
+                                if (buildResult.ExitCode != 0)
+                                {
+                                    _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
+                                }
+                                return buildResult.ExitCode;
                             }
                         };
 
