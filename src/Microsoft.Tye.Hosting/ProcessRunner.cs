@@ -304,6 +304,8 @@ namespace Microsoft.Tye.Hosting
                         if (_options.Watch && service.Description.RunInfo is ProjectRunInfo runInfo)
                         {
                             var projectFile = runInfo.ProjectFile.FullName;
+                            processInfo.Executable = "dotnet";
+                            processInfo.Arguments = $"run {service.Status.ProjectFilePath} --no-launch-profile {processInfo.Arguments}";
 
                             var fileSetFactory = new MsBuildFileSetFactory(_logger,
                                 projectFile,
