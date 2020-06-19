@@ -244,7 +244,6 @@ namespace Microsoft.Tye.Hosting
 
                     if (!_options.Watch)
                     {
-                        // 
                         service.Replicas[replica] = status;
                         service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
                     }
