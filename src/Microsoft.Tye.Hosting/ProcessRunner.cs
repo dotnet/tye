@@ -368,7 +368,7 @@ namespace Microsoft.Tye.Hosting
                         }
                     }
 
-                  
+
                 }
             }
 
