@@ -11,6 +11,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Watcher;
+using Microsoft.DotNet.Watcher.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Tye.Hosting.Model;
 
@@ -22,7 +24,6 @@ namespace Microsoft.Tye.Hosting
 
         private readonly ILogger _logger;
         private readonly ProcessRunnerOptions _options;
-
         private readonly ReplicaRegistry _replicaRegistry;
 
         public ProcessRunner(ILogger logger, ReplicaRegistry replicaRegistry, ProcessRunnerOptions options)
@@ -268,15 +269,18 @@ namespace Microsoft.Tye.Hosting
                     try
                     {
                         service.Logs.OnNext($"[{replica}]:{path} {args}");
-
-                        var result = await ProcessUtil.RunAsync(
-                            path,
-                            args,
-                            environmentVariables: environment,
-                            workingDirectory: workingDirectory,
-                            outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
-                            errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
-                            onStart: pid =>
+                        var processInfo = new ProcessSpec
+                        {
+                            Executable = path,
+                            WorkingDirectory = workingDirectory,
+                            Arguments = args,
+                            EnvironmentVariables = environment,
+                            OutputData = data =>
+                            {
+                                service.Logs.OnNext($"[{replica}]: {data}");
+                            },
+                            ErrorData = data => service.Logs.OnNext($"[{replica}]: {data}"),
+                            OnStart = pid =>
                             {
                                 if (hasPorts)
                                 {
@@ -294,16 +298,34 @@ namespace Microsoft.Tye.Hosting
 
                                 WriteReplicaToStore(pid.ToString());
                                 service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
-                            },
-                            throwOnError: false,
-                            cancellationToken: status.StoppingTokenSource.Token);
+                            }
+                        };
 
-                        status.ExitCode = result.ExitCode;
-
-                        if (status.Pid != null)
+                        if (_options.Watch && service.Description.RunInfo is ProjectRunInfo runInfo)
                         {
-                            service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
+                            var projectFile = runInfo.ProjectFile.FullName;
+
+                            var fileSetFactory = new MsBuildFileSetFactory(_logger,
+                                projectFile,
+                                waitOnError: true,
+                                trace: false);
+                            environment["DOTNET_WATCH"] = "1";
+
+                            await new DotNetWatcher(_logger)
+                                .WatchAsync(processInfo, fileSetFactory, replica, status.StoppingTokenSource.Token);
                         }
+                        else
+                        {
+                            var result = await ProcessUtil.RunAsync(processInfo, status.StoppingTokenSource.Token, throwOnError: false);
+
+                            status.ExitCode = result.ExitCode;
+
+                            if (status.Pid != null)
+                            {
+                                service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
+                            }
+                        }
+
                     }
                     catch (Exception ex)
                     {

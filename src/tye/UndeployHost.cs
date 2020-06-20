@@ -17,7 +17,7 @@ namespace Microsoft.Tye
 {
     public static class UndeployHost
     {
-        public static async Task UndeployAsync(IConsole console, FileInfo path, Verbosity verbosity, string @namespace, bool interactive, bool whatIf)
+        public static async Task UndeployAsync(IConsole console, FileInfo path, Verbosity verbosity, string @namespace, bool interactive, bool whatIf, string[] tags)
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -25,9 +25,9 @@ namespace Microsoft.Tye
 
             output.WriteInfoLine("Loading Application Details...");
 
-            // We don't need to know anything about the services, just the application name.
-            var application = ConfigFactory.FromFile(path);
-            if (!String.IsNullOrEmpty(@namespace))
+            var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(tags);
+            var application = await ApplicationFactory.CreateAsync(output, path, filter);
+            if (!string.IsNullOrEmpty(@namespace))
             {
                 application.Namespace = @namespace;
             }
@@ -41,7 +41,7 @@ namespace Microsoft.Tye
             output.WriteAlwaysLine($"Time Elapsed: {elapsedTime.Hours:00}:{elapsedTime.Minutes:00}:{elapsedTime.Seconds:00}:{elapsedTime.Milliseconds / 10:00}");
         }
 
-        public static async Task ExecuteUndeployAsync(OutputContext output, ConfigApplication application, string @namespace, bool interactive, bool whatIf)
+        public static async Task ExecuteUndeployAsync(OutputContext output, ApplicationBuilder application, string @namespace, bool interactive, bool whatIf)
         {
             var config = KubernetesClientConfiguration.BuildDefaultConfig();
 
@@ -72,12 +72,14 @@ namespace Microsoft.Tye
             // - handcrafting requests to delete each resource
             var resources = new List<Resource>();
 
+            var applicationName = application.Name;
+
             try
             {
                 output.WriteDebugLine("Querying services");
                 var response = await kubernetes.ListNamespacedServiceWithHttpMessagesAsync(
                     config.Namespace,
-                    labelSelector: $"app.kubernetes.io/part-of={application.Name}");
+                    labelSelector: $"app.kubernetes.io/part-of={applicationName}");
 
                 foreach (var resource in response.Body.Items)
                 {
@@ -99,7 +101,7 @@ namespace Microsoft.Tye
                 output.WriteDebugLine("Querying deployments");
                 var response = await kubernetes.ListNamespacedDeploymentWithHttpMessagesAsync(
                     config.Namespace,
-                    labelSelector: $"app.kubernetes.io/part-of={application.Name}");
+                    labelSelector: $"app.kubernetes.io/part-of={applicationName}");
 
                 foreach (var resource in response.Body.Items)
                 {
@@ -121,7 +123,7 @@ namespace Microsoft.Tye
                 output.WriteDebugLine("Querying secrets");
                 var response = await kubernetes.ListNamespacedSecretWithHttpMessagesAsync(
                     config.Namespace,
-                    labelSelector: $"app.kubernetes.io/part-of={application.Name}");
+                    labelSelector: $"app.kubernetes.io/part-of={applicationName}");
 
                 foreach (var resource in response.Body.Items)
                 {
@@ -144,7 +146,7 @@ namespace Microsoft.Tye
                 output.WriteDebugLine("Querying ingresses");
                 var response = await kubernetes.ListNamespacedIngressWithHttpMessagesAsync(
                     config.Namespace,
-                    labelSelector: $"app.kubernetes.io/part-of={application.Name}");
+                    labelSelector: $"app.kubernetes.io/part-of={applicationName}");
 
                 foreach (var resource in response.Body.Items)
                 {

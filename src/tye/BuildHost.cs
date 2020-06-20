@@ -11,10 +11,11 @@ namespace Microsoft.Tye
 {
     public static class BuildHost
     {
-        public static async Task BuildAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive)
+        public static async Task BuildAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive, string[] tags)
         {
             var output = new OutputContext(console, verbosity);
-            var application = await ApplicationFactory.CreateAsync(output, path);
+            var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(tags);
+            var application = await ApplicationFactory.CreateAsync(output, path, filter);
             if (application.Services.Count == 0)
             {
                 throw new CommandException($"No services found in \"{application.Source.Name}\"");

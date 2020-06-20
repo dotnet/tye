@@ -13,6 +13,10 @@
   <ItemGroup>
     <EmbeddedResource Include="wwwroot\**" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Watch\assets\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="Bedrock.Framework" Version="0.1.38-alpha.gd25d5b37ad" />

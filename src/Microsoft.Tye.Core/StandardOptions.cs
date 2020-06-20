@@ -30,6 +30,22 @@ namespace Microsoft.Tye
             }
         }
 
+        public static Option Tags
+        {
+            get
+            {
+                return new Option("--tags", "--filter")
+                {
+                    Argument = new Argument<List<string>>("tags")
+                    {
+                        Arity = ArgumentArity.OneOrMore
+                    },
+                    Description = "Filter the group of running services by tag.",
+                    Required = false
+                };
+            }
+        }
+
         public static Option Force
         {
             get

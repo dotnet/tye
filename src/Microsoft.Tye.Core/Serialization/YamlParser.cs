@@ -54,6 +54,7 @@ namespace Tye.Serialization
             ConfigApplicationParser.HandleConfigApplication((YamlMappingNode)node, app);
 
             app.Source = _fileInfo!;
+            app.Name ??= NameInferer.InferApplicationName(_fileInfo!);
 
             // TODO confirm if these are ever null.
             foreach (var service in app.Services)
@@ -61,12 +62,14 @@ namespace Tye.Serialization
                 service.Bindings ??= new List<ConfigServiceBinding>();
                 service.Configuration ??= new List<ConfigConfigurationSource>();
                 service.Volumes ??= new List<ConfigVolume>();
+                service.Tags ??= new List<string>();
             }
 
             foreach (var ingress in app.Ingress)
             {
                 ingress.Bindings ??= new List<ConfigIngressBinding>();
                 ingress.Rules ??= new List<ConfigIngressRule>();
+                ingress.Tags ??= new List<string>();
             }
 
             return app;

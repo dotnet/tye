@@ -4,42 +4,46 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 
 namespace webapi
 {
-    class SetDTO
-    {
-        public bool? Healthy { get; set; }
-        public bool? Ready { get; set; }
-        public int? Timeout{ get; set; }
-    }
-
     public class Startup
     {
         private string _id;
-        private bool _healthy;
-        private bool _ready;
+
+        private ConcurrentDictionary<string, bool> _statusDictionary;
 
         public Startup()
         {
             _id = Guid.NewGuid().ToString();
-            _healthy = true;
-            _ready = true;
+            _statusDictionary = new ConcurrentDictionary<string, bool>()
+            {
+                ["someLivenessCheck"] = true,
+                ["someReadinessCheck"] = true
+            };
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services
+                .AddHealthChecks()
+                // this registers a "liveness" check. A service that fails a liveness check is considered to be unrecoverable and has to be restarted by the orchestrator (Tye/Kubernetes).
+                // for example: you may consider failing this check if your service has encountered a fatal exception, or if you've detected a memory leak or a substantially long average response time
+                .AddCheck("someLivenessCheck", new MyGenericCheck(_statusDictionary, "someLivenessCheck"), failureStatus: HealthStatus.Unhealthy, tags: new[] { "liveness" })
+                // this registers a "readiness" check. A service that fails a readiness check is considered to be unable to serve traffic temporarily. The orchestrator doesn't restart a service that fails this check, but stops sending traffic to it until it responds to this check positively again.
+                // for example: you may consider failing this check if your service is currently unable to connect to some external service such as your database, cache service, etc...
+                .AddCheck("someReadinessCheck", new MyGenericCheck(_statusDictionary, "someReadinessCheck"), failureStatus: HealthStatus.Unhealthy, tags: new[] { "readiness" });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -56,37 +60,39 @@ namespace webapi
             {
                 endpoints.MapGet("/", async context =>
                 {
-                    await context.Response.WriteAsync($"Hello World! Process Id: {_id}");
+                    context.Response.ContentType = "text/html";
+                    await context.Response.WriteAsync($@"
+                    Hello World! Process Id: {_id}<br />
+                    This sample service exposes an HTTP GET endpoint <b>/set</b> that allows you to change the results of the liveness/readiness probes. <br /><br />
+                    Examples: <br /><br />
+                    <b>GET /set?someReadinessCheck=false&timeout=10</b> will cause the readiness probe to fail for 10 seconds.<br />
+                    <b>GET /set?someLivenessCheck=false</b> will cause the liveness probe to fail, resulting in a restart of that replica.
+                    ");
                 });
 
-                endpoints.MapGet("/healthy", async context =>
+                // this endpoint returns HTTP 200 if all "liveness" checks have passed, otherwise, it returns HTTP 500
+                endpoints.MapHealthChecks("/lively", new HealthCheckOptions()
                 {
-                    context.Response.StatusCode = _healthy ? 200 : 500;
-                    await context.Response.WriteAsync($"Status Code: {context.Response.StatusCode}");
+                    Predicate = reg => reg.Tags.Contains("liveness")
                 });
 
-                endpoints.MapGet("/ready", async context =>
+                // this endpoint returns HTTP 200 if all "readiness" checks have passed, otherwise, it returns HTTP 500
+                endpoints.MapHealthChecks("/ready", new HealthCheckOptions()
                 {
-                    context.Response.StatusCode = _ready ? 200 : 500;
-                    await context.Response.WriteAsync($"Status Code: {context.Response.StatusCode}");
+                    Predicate = reg => reg.Tags.Contains("readiness")
                 });
 
                 // Should be technically POST/PUT, but it's just for tests...
                 endpoints.MapGet("/set", async context =>
                 {
                     var query = context.Request.Query.ToDictionary(kv => kv.Key).ToDictionary(kv => kv.Key, kv => kv.Value.Value.First());
+                    var statusesFromQuery = query.Where(kv => kv.Key != "timeout").ToDictionary(kv => kv.Key, kv => kv.Value.Trim().ToLower() == "true");
 
-                    var originalHealthy = _healthy;
-                    var originalReady = _ready;
+                    var statusesSnapshot = _statusDictionary.Where(kv => statusesFromQuery.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
 
-                    if (query.ContainsKey("healthy") && bool.TryParse(query["healthy"], out var healthy))
+                    foreach (var status in statusesFromQuery)
                     {
-                        _healthy = healthy;
-                    }
-
-                    if (query.ContainsKey("ready") && bool.TryParse(query["ready"], out var ready))
-                    {
-                        _ready = ready;
+                        _statusDictionary[status.Key] = status.Value;
                     }
 
                     if (query.ContainsKey("timeout") && int.TryParse(query["timeout"], out var timeout))
@@ -94,8 +100,10 @@ namespace webapi
                         var _ = Task.Delay(TimeSpan.FromSeconds(timeout))
                             .ContinueWith(_ =>
                             {
-                                _healthy = originalHealthy;
-                                _ready = originalReady;
+                                foreach (var previousStatus in statusesSnapshot)
+                                {
+                                    _statusDictionary[previousStatus.Key] = previousStatus.Value;
+                                }
                             });
                     }
 

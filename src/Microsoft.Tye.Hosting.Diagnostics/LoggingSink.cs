@@ -170,7 +170,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
         }
 
         // This is the logger factory for application logs. It allows re-routing event pipe collected logs (structured logs)
-        // to any of the supported sinks, currently (elastic search and app insights)
+        // to any of the supported sinks, currently (elastic search, console, seq,  and app insights)
         private void ConfigureLogging(string serviceName, string replicaName, ILoggingBuilder builder)
         {
             if (string.Equals(_provider.Key, "elastic", StringComparison.OrdinalIgnoreCase) &&

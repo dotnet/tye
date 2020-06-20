@@ -4,7 +4,6 @@
 
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using Tye;
 using YamlDotNet.Serialization;
 
 namespace Microsoft.Tye.ConfigModel
@@ -23,6 +22,7 @@ namespace Microsoft.Tye.ConfigModel
         public bool External { get; set; }
         public string? Image { get; set; }
         public string? DockerFile { get; set; }
+        public Dictionary<string, string> DockerFileArgs { get; set; } = new Dictionary<string, string>();
         public string? DockerFileContext { get; set; }
         public string? Project { get; set; }
         public string? Include { get; set; }
@@ -37,6 +37,7 @@ namespace Microsoft.Tye.ConfigModel
         [YamlMember(Alias = "env")]
         public List<ConfigConfigurationSource> Configuration { get; set; } = new List<ConfigConfigurationSource>();
         public List<BuildProperty> BuildProperties { get; set; } = new List<BuildProperty>();
+        public List<string> Tags { get; set; } = new List<string>();
         public ConfigProbe? Liveness { get; set; }
         public ConfigProbe? Readiness { get; set; }
     }

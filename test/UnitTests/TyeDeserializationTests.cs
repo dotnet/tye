@@ -46,6 +46,9 @@ ingress:
       - host: b.example.com
         service: appB
     replicas: 2
+    tags:
+      - tagA
+      - tagC
 services:
   - name: appA
     project: ApplicationA/ApplicationA.csproj
@@ -53,6 +56,9 @@ services:
     - name: Configuration
     - value: Debug
     replicas: 2
+    tags:
+      - tagA
+      - tagC
     external: false
     image: abc
     build: false
@@ -66,8 +72,8 @@ services:
       value: ""test2""
     volumes:
     - name: volume
-      source: /data 
-      target: /data 
+      source: /data
+      target: /data
     bindings:
     - name: test
       port: 4444
@@ -77,7 +83,10 @@ services:
       protocol: http
   - name: appB
     project: ApplicationB/ApplicationB.csproj
-    replicas: 2";
+    replicas: 2
+    tags:
+      - tagB
+      - tagD";
 
             using var parser = new YamlParser(input);
             var app = parser.ParseConfigApplication();
@@ -115,10 +124,14 @@ ingress:
         [Fact]
         public void ServicesSetCorrectly()
         {
-            var input = @"services:
+            var input = @"
+services:
   - name: appA
     project: ApplicationA/ApplicationA.csproj
     replicas: 2
+    tags:
+      - A
+      - B
     external: false
     image: abc
     build: false
@@ -132,8 +145,8 @@ ingress:
       value: ""test2""
     volumes:
     - name: volume
-      source: /data 
-      target: /data 
+      source: /data
+      target: /data
     bindings:
     - name: test
       port: 4444
@@ -143,7 +156,10 @@ ingress:
       protocol: http
   - name: appB
     project: ApplicationB/ApplicationB.csproj
-    replicas: 2";
+    replicas: 2
+    tags:
+      - tC
+      - tD";
             using var parser = new YamlParser(input);
             var actual = parser.ParseConfigApplication();
 
@@ -436,6 +452,38 @@ services:
             Assert.Contains(CoreStrings.FormatUnrecognizedKey("abc"), exception.Message);
         }
 
+
+        [Fact]
+        public void Ingress_Tags_MustBeSequence()
+        {
+            using var parser = new YamlParser(
+@"ingress:
+  - name: ingress
+    tags: abc");
+
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Contains(CoreStrings.FormatExpectedYamlSequence("tags"), exception.Message);
+        }
+
+        [Fact]
+        public void Ingress_Tags_SetCorrectly()
+        {
+            var input = @"
+ingress:
+  - name: ingress
+    tags:
+      - tagA
+      - with space
+      - ""C.X""
+";
+            using var parser = new YamlParser(input);
+            var actual = parser.ParseConfigApplication();
+
+            var expected = _deserializer.Deserialize<ConfigApplication>(new StringReader(input));
+
+            TyeAssert.Equal(expected, actual);
+        }
+
         [Fact]
         public void Services_External_MustBeBool()
         {
@@ -498,15 +546,46 @@ services:
         }
 
         [Fact]
+        public void Services_Tags_MustBeSequence()
+        {
+            using var parser = new YamlParser(
+@"services:
+  - name: ingress
+    tags: abc");
+
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Contains(CoreStrings.FormatExpectedYamlSequence("tags"), exception.Message);
+        }
+
+        [Fact]
+        public void Services_Tags_SetCorrectly()
+        {
+            var input = @"
+services:
+  - name: ingress
+    tags:
+      - tagA
+      - with space
+      - ""C.X""
+";
+            using var parser = new YamlParser(input);
+            var actual = parser.ParseConfigApplication();
+
+            var expected = _deserializer.Deserialize<ConfigApplication>(new StringReader(input));
+
+            TyeAssert.Equal(expected, actual);
+        }
+
+        [Fact]
         public void Services_UnrecognizedKey()
         {
             using var parser = new YamlParser(
 @"services:
   - name: ingress
-    env: abc");
+    xyz: abc");
 
             var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
-            Assert.Contains(CoreStrings.FormatExpectedYamlSequence("env"), exception.Message);
+            Assert.Contains(CoreStrings.FormatUnrecognizedKey("xyz"), exception.Message);
         }
 
         [Theory]

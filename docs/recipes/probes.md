@@ -66,20 +66,20 @@ tye run
 
 The sample has a single service with a `liveness` and a `readiness` probe, as shown in this snippet
 
-```
+```yaml
 services:
   - name: simple-webapi
     project: webapi/webapi.csproj
     replicas: 2
     liveness:
       http:
-        path: /healthy
+        path: /lively
     readiness:
       http:
         path: /ready
 ```
 
-The service is configured to respond successfully to both the `liveness` and `readiness` probes, so after executing `tye run`, you should see these log lines  
+After executing `tye run`, you should see these log lines  
 
 ```
 [18:14:05 INF] Replica simple-webapi_a2d67bd9-4 is moving to an healthy state
@@ -90,49 +90,27 @@ The service is configured to respond successfully to both the `liveness` and `re
 
 As you can see, both replicas pass the `liveness` probe and get prompted to an `Healthy` state, and shortly after, both replica pass the `readiness` probe and get promoted to a `Ready` state.  
 
-The sample application exposes an endpoint that allows you modify the responses that the `/healthy` and `/ready` endpoints, in order to see the probes in action.  
-
-For example, if you send an *HTTP GET* to `http://localhost:8080/set?ready=false&timeout=10` or enter that address in the browser,  
-It will make `/ready` return *HTTP 500* for 10 seconds.   
-
-Shortly after issuing that requests, you should see this log line in the terminal 
+If the `readiness` probe fails, a replica will move from a `Ready` state to an `Healthy` state.
 
 ```
 [18:14:18 INF] Replica simple-webapi_a2d67bd9-4 is moving to an healthy state
 ```
 
-meaning that the replica got demoted from `Ready` to `Healthy`, due to failing the `readiness` probe.  
-
-After *about* 10 seconds, you should see this log line in the terminal  
+If after some time, the `readiness` probe becomes successful again, a replica will move from an `Healthy` state to a `Ready` state.
 
 ```
 [18:14:26 INF] Replica simple-webapi_a2d67bd9-4 is moving to a ready state
 ```
 
-meaning that the replica got demoted from `Healthy` to `Ready` again, due to passing the `readiness` probe.
-
-(*The reason it's a bit less than 10 seconds, is because Tye doesn't fail the probe immediately. It waits for a certain number of consecutive failures, as described in the schema document.*)  
-
-You can use the same method to make the `liveness` probe fail, and watch as Tye restarts the replica.  
-
-Send an *HTTP GET* request to this endpoint `http://localhost:8080/set?healthy=false`
-
-
-And watch for this log line  
+If the `liveness` probe fails, a replica will be killed, and the orchestrator will spawn a new replica in its stead
 
 ```
 [18:25:08 INF] Killing replica simple-webapi_a9c2e2f4-d because it has failed the liveness probe
-```
-
-Shortly after, you should see this log lines  
-
-```
+...
 [18:25:08 INF] Launching service simple-webapi_0e7fe12d-7
 [18:25:09 INF] Replica simple-webapi_0e7fe12d-7 is moving to an healthy state
 [18:25:11 INF] Replica simple-webapi_0e7fe12d-7 is moving to a ready state
 ```
-
-Showing that Tye launches a new replica instead of the replica that it has killed.
 
 ## Deploying with Liveness and Readiness Probes
 
@@ -160,6 +138,6 @@ kubectl describe deploy simple-webapi
 And you will notice that the deployment has `Liveness` and `Readiness` in its description  
 
 ```
-Liveness:   http-get http://:80/healthy delay=0s timeout=1s period=1s #success=1 #failure=3
+Liveness:   http-get http://:80/lively delay=0s timeout=1s period=1s #success=1 #failure=3
 Readiness:  http-get http://:80/ready delay=0s timeout=1s period=1s #success=1 #failure=3
 ```

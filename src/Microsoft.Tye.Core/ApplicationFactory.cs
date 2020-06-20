@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -15,7 +14,7 @@ namespace Microsoft.Tye
 {
     public static class ApplicationFactory
     {
-        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, string host = "127.0.0.1")
+        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, ApplicationFactoryFilter? filter = null, string host = "127.0.0.1")
         {
             if (source is null)
             {
@@ -28,7 +27,7 @@ namespace Microsoft.Tye
             var rootConfig = ConfigFactory.FromFile(source);
             rootConfig.Validate();
 
-            var root = new ApplicationBuilder(source, rootConfig.Name ?? source.Directory.Name.ToLowerInvariant());
+            var root = new ApplicationBuilder(source, rootConfig.Name!);
             root.Host = host;
             root.Namespace = rootConfig.Namespace;
 
@@ -72,7 +71,11 @@ namespace Microsoft.Tye
                     root.Extensions.Add(extension);
                 }
 
-                foreach (var configService in config.Services)
+                var services = filter?.ServicesFilter != null ?
+                    config.Services.Where(filter.ServicesFilter).ToList() :
+                    config.Services;
+
+                foreach (var configService in services)
                 {
                     ServiceBuilder service;
                     if (root.Services.Any(s => s.Name == configService.Name))
@@ -131,7 +134,8 @@ namespace Microsoft.Tye
                             Replicas = configService.Replicas ?? 1,
                             DockerFile = Path.Combine(source.DirectoryName, configService.DockerFile),
                             // Supplying an absolute path with trailing slashes fails for DockerFileContext when calling docker build, so trim trailing slash.
-                            DockerFileContext = GetDockerFileContext(source, configService)
+                            DockerFileContext = GetDockerFileContext(source, configService),
+                            BuildArgs = configService.DockerFileArgs
                         };
                         service = dockerFile;
 
@@ -321,7 +325,11 @@ namespace Microsoft.Tye
                     }
                 }
 
-                foreach (var configIngress in config.Ingress)
+                var ingresses = filter?.IngressFilter != null ?
+                    config.Ingress.Where(filter.IngressFilter).ToList() :
+                    config.Ingress;
+
+                foreach (var configIngress in ingresses)
                 {
                     var ingress = new IngressBuilder(configIngress.Name!);
                     ingress.Replicas = configIngress.Replicas ?? 1;

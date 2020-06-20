@@ -14,5 +14,6 @@ namespace Microsoft.Tye.ConfigModel
         public int? Replicas { get; set; }
         public List<ConfigIngressRule> Rules { get; set; } = new List<ConfigIngressRule>();
         public List<ConfigIngressBinding> Bindings { get; set; } = new List<ConfigIngressBinding>();
+        public List<string> Tags { get; set; } = new List<string>();
     }
 }
