@@ -149,7 +149,7 @@ namespace Microsoft.Tye.Hosting.Model
             {
                 var protocol = b.Protocol;
 
-                var host = b.Host ?? defaultHost ?? (isDockerRunInfo ? service.Description.Name : "");
+                var host = /* b.Host ?? */ defaultHost ?? (isDockerRunInfo ? service.Description.Name : "");
                 var port = b.Port;
 
                 bindings.Add(new EffectiveBinding(
