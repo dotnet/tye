@@ -14,9 +14,11 @@ extensions:
   # config allows you to pass additional configuration into the dapr sidecar
   # config will be interpreted as a named k8s resource when deployed, and will be interpreted as
   # a file on disk when running locally at `./components/myconfig.yaml`
-  #
+  # 
   # config: myconfig
-  
+
+  # components-path configures the components path of the dapr sidecard
+  components-path: "./components/"
 services:
 - name: orders
   project: orders/orders.csproj
@@ -33,3 +35,10 @@ services:
   image: redis
   bindings: 
   - port: 6379
+# To ensure that your are running a dapr placement container with the right binding port.
+# (50005 as HostPort)
+- name: placement
+  image: daprio/dapr
+  args: ./placement
+  bindings:
+    - port: 50005
