@@ -70,7 +70,11 @@ namespace Microsoft.Tye.Extensions.Dapr
                     {
                         proxy.Args += $" -log-level {logLevel}";
                     }
-
+                    
+                    if (config.Data.TryGetValue("components-path", out obj) && obj?.ToString() is string componentsPath)
+                    {
+                        proxy.Args += $" -components-path {componentsPath}";
+                    }
                     // Add dapr proxy as a service available to everyone.
                     proxy.Dependencies.UnionWith(context.Application.Services.Select(s => s.Name));
 
