@@ -5,8 +5,6 @@ services:
   - name: health-proxy
     project: api/api.csproj
     replicas: 2
-    bindings:
-      - port: 8005
     liveness:
       http:
         path: /healthy

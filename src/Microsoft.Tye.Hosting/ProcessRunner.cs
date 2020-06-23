@@ -237,13 +237,16 @@ namespace Microsoft.Tye.Hosting
                 {
                     var replica = serviceName + "_" + Guid.NewGuid().ToString().Substring(0, 10).ToLower();
                     var status = new ProcessStatus(service, replica);
-                    service.Replicas[replica] = status;
 
                     using var stoppingCts = new CancellationTokenSource();
                     status.StoppingTokenSource = stoppingCts;
                     await using var _ = processInfo.StoppedTokenSource.Token.Register(() => status.StoppingTokenSource.Cancel());
 
-                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
+                    if (!_options.Watch)
+                    {
+                        service.Replicas[replica] = status;
+                        service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
+                    }
 
                     // This isn't your host name
                     environment["APP_INSTANCE"] = replica;
@@ -297,14 +300,56 @@ namespace Microsoft.Tye.Hosting
                                 status.Pid = pid;
 
                                 WriteReplicaToStore(pid.ToString());
+
+                                if (_options.Watch && service.Description.RunInfo is ProjectRunInfo runInfo)
+                                {
+                                    // OnStart/OnStop will be called multiple times for watch.
+                                    // Watch will constantly be adding and removing from the list, so only add here for watch.
+                                    service.Replicas[replica] = status;
+                                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
+                                }
+
                                 service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Started, status));
+                            },
+                            OnStop = exitCode =>
+                            {
+                                status.ExitCode = exitCode;
+
+                                if (status.Pid != null)
+                                {
+                                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
+                                }
+
+                                if (!_options.Watch)
+                                {
+                                    // Only increase backoff when not watching project as watch will wait for file changes before rebuild.
+                                    backOff *= 2;
+                                }
+
+                                service.Restarts++;
+
+                                service.Replicas.TryRemove(replica, out var _);
+                                service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
+
+                                if (status.ExitCode != null)
+                                {
+                                    _logger.LogInformation("{ServiceName} process exited with exit code {ExitCode}", replica, status.ExitCode);
+                                }
+                            },
+                            Build = async () =>
+                            {
+                                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
+                                if (buildResult.ExitCode != 0)
+                                {
+                                    _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
+                                }
+                                return buildResult.ExitCode;
                             }
                         };
 
                         if (_options.Watch && service.Description.RunInfo is ProjectRunInfo runInfo)
                         {
                             var projectFile = runInfo.ProjectFile.FullName;
-
                             var fileSetFactory = new MsBuildFileSetFactory(_logger,
                                 projectFile,
                                 waitOnError: true,
@@ -316,16 +361,8 @@ namespace Microsoft.Tye.Hosting
                         }
                         else
                         {
-                            var result = await ProcessUtil.RunAsync(processInfo, status.StoppingTokenSource.Token, throwOnError: false);
-
-                            status.ExitCode = result.ExitCode;
-
-                            if (status.Pid != null)
-                            {
-                                service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
-                            }
+                            await ProcessUtil.RunAsync(processInfo, status.StoppingTokenSource.Token, throwOnError: false);
                         }
-
                     }
                     catch (Exception ex)
                     {
@@ -340,19 +377,6 @@ namespace Microsoft.Tye.Hosting
                             // Swallow cancellation exceptions and continue
                         }
                     }
-
-                    backOff *= 2;
-
-                    service.Restarts++;
-
-                    if (status.ExitCode != null)
-                    {
-                        _logger.LogInformation("{ServiceName} process exited with exit code {ExitCode}", replica, status.ExitCode);
-                    }
-
-                    // Remove the replica from the set
-                    service.Replicas.TryRemove(replica, out var _);
-                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
                 }
             }
 

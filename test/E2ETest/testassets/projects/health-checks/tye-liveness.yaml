@@ -5,8 +5,6 @@ services:
   - name: health-liveness
     project: api/api.csproj
     replicas: 3
-    bindings:
-      - port: 8002
     liveness:
       http:
         path: /healthy

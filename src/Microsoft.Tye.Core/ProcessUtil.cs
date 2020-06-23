@@ -26,6 +26,7 @@ namespace Microsoft.Tye
             Action<string>? outputDataReceived = null,
             Action<string>? errorDataReceived = null,
             Action<int>? onStart = null,
+            Action<int>? onStop = null,
             CancellationToken cancellationToken = default)
         {
             using var process = new Process()
@@ -136,12 +137,14 @@ namespace Microsoft.Tye
                 }
             }
 
-            return await processLifetimeTask.Task;
+            var processResult = await processLifetimeTask.Task;
+            onStop?.Invoke(processResult.ExitCode);
+            return processResult;
         }
 
         public static Task<ProcessResult> RunAsync(ProcessSpec processSpec, CancellationToken cancellationToken = default, bool throwOnError = true)
         {
-            return RunAsync(processSpec.Executable!, processSpec.Arguments!, processSpec.WorkingDirectory, throwOnError: throwOnError, processSpec.EnvironmentVariables, processSpec.OutputData, processSpec.ErrorData, processSpec.OnStart, cancellationToken);
+            return RunAsync(processSpec.Executable!, processSpec.Arguments!, processSpec.WorkingDirectory, throwOnError: throwOnError, processSpec.EnvironmentVariables, processSpec.OutputData, processSpec.ErrorData, processSpec.OnStart, processSpec.OnStop, cancellationToken);
         }
 
         public static void KillProcess(int pid)
