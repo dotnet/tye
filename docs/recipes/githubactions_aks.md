@@ -1,5 +1,7 @@
 # Deployment to Azure Kubernetes Service using GitHub Actions
 
+Github Actions gives you the flexibilty to build automated workflows and deployments based on actions. There are now Kubernetes actions to get deployments to AKS. This is a simple recipe on how to use tye with Azure Kuberntes Service, Azure Container Service and GitHub Actions.
+
 ## Setting up AKS
 
 The kubernetes cluster deployment can be deployed via the Azure portal or using the Azure CLI. It would be assumed that the cluster is deployed when implementing the recipe, however in this example Azure Container Registry (ACR) is used for storing the container images and as such integration is needed between these resources. The following deployment script ensures this is complete.
