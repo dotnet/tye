@@ -228,7 +228,10 @@ namespace Microsoft.Tye
                         var functionBuilder = new FunctionServiceBuilder(configService.Name, configService.Function)
                         {
                             Args = configService.Args,
-                            Replicas = configService.Replicas ?? 1
+                            Replicas = configService.Replicas ?? 1,
+                            Architecture = configService.Architecture,
+                            Version = configService.Version,
+                            FuncExecutablePath = configService.FuncExecutable
                         };
 
                         // TODO liveness?

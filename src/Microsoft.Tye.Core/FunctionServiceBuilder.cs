@@ -15,5 +15,8 @@ namespace Microsoft.Tye
         public int Replicas { get; set; } = 1;
         public string? Args { get; set; }
         public string FunctionPath { get; }
+        public string? Version { get; set; }
+        public string? Architecture { get; set; }
+        public string? FuncExecutablePath { get; set; }
     }
 }

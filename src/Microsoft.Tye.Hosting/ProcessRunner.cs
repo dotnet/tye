@@ -75,15 +75,11 @@ namespace Microsoft.Tye.Hosting
                 }
                 else if (serviceDescription.RunInfo is FunctionRunInfo function)
                 {
-                    // TODO this is a hack
-                    path = await FuncDownloader.GetPathToFunc("v2");
-
+                    path = function.FuncExecutablePath!;
                     workingDirectory = new DirectoryInfo(function.FunctionPath).FullName;
                     // todo make sure to exclude functions app from implied tye running.
 
-                    // --build here?
-                    // TODO for .NET funcs, do we also build here?
-                    args = function.Args ?? $"start --port {serviceDescription.Bindings.Single().Port} --build";
+                    args = function.Args ?? $"start --build";
                 }
                 else
                 {
@@ -281,6 +277,16 @@ namespace Microsoft.Tye.Hosting
                     {
                         status.Ports = ports.Select(p => p.Port);
                         status.Bindings = ports.Select(p => new ReplicaBinding() { Port = p.Port, ExternalPort = p.ExternalPort, Protocol = p.Protocol }).ToList();
+                        if (service.ServiceType == ServiceType.Function && hasPorts)
+                        {
+                            // Need to inject port and UseHttps as an argument to func.exe rather than environment variables.
+                            var binding = status.Bindings.First();
+                            args += $" --port {binding.Port}";
+                            if (binding.Protocol == "https")
+                            {
+                                args += " --useHttps";
+                            }
+                        }
                     }
 
                     // TODO clean this up.

@@ -287,10 +287,10 @@ namespace Microsoft.Tye.Hosting
                 new ProxyService(logger),
                 new HttpProxyService(logger),
                 new DockerImagePuller(logger),
+                new FuncDownloader(logger),
                 new ReplicaMonitor(logger),
                 new DockerRunner(logger, replicaRegistry),
                 new ProcessRunner(logger, replicaRegistry, ProcessRunnerOptions.FromHostOptions(options))
-                //new FunctionRunner(logger, replicaRegistry, ProcessRunnerOptions.FromHostOptions(options))
             };
 
             // If the docker command is specified then transform the ProjectRunInfo into DockerRunInfo
