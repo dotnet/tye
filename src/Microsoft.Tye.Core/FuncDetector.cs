@@ -22,9 +22,12 @@ namespace Microsoft.Tye
         // Same folder which VS installs azure apps to.
         private const string WindowsFuncDownloadLocation = "%LOCALAPPDATA%/AzureFunctionsTools/Tye";
 
-        private const string MacOSFuncDownloadLocation = "";
-        private const string LinuxFuncDownloadLocation = "~/.tye";
+        // REVIEW: Are these folders okay to download to?
+        private const string MacOSFuncDownloadLocation = "~/.tye/AzureFunctionTools/Tye";
+        private const string LinuxFuncDownloadLocation = "~/.tye/AzureFunctionTools/Tye";
 
+        // Default to v3 as it's highly backwards compatible with v2. Diagnostics with v2
+        // don't work by default as 
         public const string DefaultFuncVersion = "v3";
 
         private Dictionary<string, string> _pathsToFunc;
@@ -57,7 +60,7 @@ namespace Microsoft.Tye
                 case "x86":
                     return arch;
                 default:
-                    throw new NotSupportedException("Unrecognized architecture for function");
+                    throw new NotSupportedException("Unrecognized architecture for function.");
             }
         }
 
@@ -90,24 +93,15 @@ namespace Microsoft.Tye
             // Do this check earlier (before running multiple functions) to avoid race conditions for downloading
             // Add logs
             // cancellation token
-            // tests
-            // default x64 but allow x86
             // https://go.microsoft.com/fwlink/?linkid=2109029
-            // TODO consider not newing up client.
             var osName = GetOsName();
             using var client = new HttpClient();
 
-            // TODO patch version if v isn't first character
-
-            (string preciseVersion, string uri) = await GetDownloadInfo(version, client, arch, osName);
-
-            // function extension version
-            // allow specifying path to func.exe
+            (var preciseVersion, var uri) = await GetDownloadInfo(version, client, arch, osName);
 
             var directoryToInstallTo = GetDirectoryToInstallTo(preciseVersion);
             var funcPath = Path.Combine(directoryToInstallTo, "func.exe");
 
-            // Check if exists first.
             if (Directory.Exists(directoryToInstallTo))
             {
                 return funcPath;
@@ -124,7 +118,6 @@ namespace Microsoft.Tye
                     await responseStream.CopyToAsync(stream);
                 }
 
-                // unzip to folder.
                 ZipFile.ExtractToDirectory(tempFile.FilePath, directoryToInstallTo);
                 return funcPath;
             }
@@ -132,9 +125,7 @@ namespace Microsoft.Tye
 
         private static async Task<(string uri, string preciseVersion)> GetDownloadInfo(string version, HttpClient client, string arch, string os)
         {
-            // To avoid downloading this file every time we run a function.
-
-            // Using VS maintained list of function downloads
+            // Using VS/VSCode maintained list of function downloads
             var responseString = await client.GetStringAsync("https://go.microsoft.com/fwlink/?linkid=2109029");
 
             JToken json;
@@ -142,9 +133,13 @@ namespace Microsoft.Tye
             {
                 json = JObject.ReadFrom(reader);
             }
-
+            
+            // Get the version for the folder
+            // and the download link for the zip.
             var versionInfo = (JValue)json["tags"][version]["release"];
-            var downloadLink = (JValue)json["releases"][(string)versionInfo]["standaloneCli"].Where(s => (((string)s["OS"])?.Equals(os) == true || ((string)s["OperatingSystem"])?.Equals(os) == true) && ((string)s["Architecture"]).Equals(arch)).Single()["downloadLink"];
+            var downloadLink = (JValue)json["releases"][(string)versionInfo]["standaloneCli"]
+                                .Where(s => (((string)s["OS"])?.Equals(os) == true || ((string)s["OperatingSystem"])?.Equals(os) == true) && ((string)s["Architecture"]).Equals(arch))
+                                .Single()["downloadLink"];
 
             return ((string)versionInfo, (string)downloadLink);
         }
