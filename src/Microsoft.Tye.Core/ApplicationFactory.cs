@@ -181,11 +181,13 @@ namespace Microsoft.Tye
                         {
                             project.BuildProperties.Add(buildProperty.Name, buildProperty.Value);
                         }
-                        if (framework != null
-                            && !project.BuildProperties.ContainsKey("TargetFramework"))
+
+                        if (framework != null && !project.BuildProperties.ContainsKey("TargetFramework"))
                         {
+                            // Only use the TargetFramework for the "--framework" if it's not defined already from the YAML
                             project.BuildProperties.Add("TargetFramework", framework);
                         }
+
                         project.Replicas = configService.Replicas ?? 1;
 
                         project.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
