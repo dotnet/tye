@@ -51,7 +51,7 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-none.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             await RunHostingApplication(application, new HostOptions(), async (host, uri) =>
             {
@@ -80,7 +80,7 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             await RunHostingApplication(application, new HostOptions() { Docker = true }, async (host, uri) =>
               {

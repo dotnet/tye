@@ -65,7 +65,7 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-none.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
@@ -82,7 +82,7 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-readiness.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
@@ -99,7 +99,7 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-readiness.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
@@ -122,7 +122,7 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-liveness.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
@@ -146,7 +146,7 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-all.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
@@ -175,7 +175,7 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-all.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
@@ -204,7 +204,7 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-all.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
@@ -239,7 +239,7 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-proxy.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
@@ -300,7 +300,7 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-ingress.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
@@ -354,7 +354,7 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-all.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {

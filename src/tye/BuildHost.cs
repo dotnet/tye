@@ -15,7 +15,7 @@ namespace Microsoft.Tye
         {
             var output = new OutputContext(console, verbosity);
             var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(tags);
-            var application = await ApplicationFactory.CreateAsync(output, path, filter);
+            var application = await ApplicationFactory.CreateAsync(output, path, null, filter);
             if (application.Services.Count == 0)
             {
                 throw new CommandException($"No services found in \"{application.Source.Name}\"");

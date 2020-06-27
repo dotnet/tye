@@ -53,7 +53,7 @@ namespace E2ETest
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             var handler = new HttpClientHandler
             {
@@ -129,7 +129,7 @@ services:
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             var handler = new HttpClientHandler
             {
@@ -165,7 +165,7 @@ services:
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, $"tye-{buildConfiguration.ToLower()}-configuration.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             var handler = new HttpClientHandler
             {
@@ -205,7 +205,7 @@ services:
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             // Transform the backend into a docker image for testing
             var project = (DotnetProjectServiceBuilder)application.Services.First(s => s.Name == "backend");
@@ -252,7 +252,7 @@ services:
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             // Transform the backend into a docker image for testing
             var project = (DotnetProjectServiceBuilder)application.Services.First(s => s.Name == "frontend");
@@ -300,7 +300,7 @@ services:
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             var handler = new HttpClientHandler
             {
@@ -352,7 +352,7 @@ services:
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "backend-baseimage.csproj"));
 
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             // Transform the backend into a docker image for testing
             var project = (DotnetProjectServiceBuilder)application.Services.First(s => s.Name == "backend-baseimage");
@@ -376,7 +376,7 @@ services:
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             // Add a volume
             var project = ((ProjectServiceBuilder)application.Services[0]);
@@ -430,7 +430,7 @@ services:
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             var dockerNetwork = "tye_docker_network_test" + Guid.NewGuid().ToString().Substring(0, 10);
             application.Network = dockerNetwork;
@@ -487,7 +487,7 @@ services:
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             var dockerNetwork = "tye_docker_network_test" + Guid.NewGuid().ToString().Substring(0, 10);
             application.Network = dockerNetwork;
@@ -532,7 +532,7 @@ services:
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             // Add a volume
             var project = (ProjectServiceBuilder)application.Services[0];
@@ -574,7 +574,7 @@ services:
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             var handler = new HttpClientHandler
             {
@@ -622,7 +622,7 @@ services:
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             var handler = new HttpClientHandler
             {
@@ -686,7 +686,7 @@ services:
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             var handler = new HttpClientHandler
             {
@@ -727,7 +727,7 @@ services:
 
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
             await using var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
                 Sink = _sink,
@@ -746,7 +746,7 @@ services:
 
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             var handler = new HttpClientHandler
             {
@@ -791,7 +791,7 @@ services:
 
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile));
+            var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile), null);
 
             var handler = new HttpClientHandler
             {
@@ -822,7 +822,7 @@ services:
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
 
             var handler = new HttpClientHandler
             {
@@ -874,7 +874,7 @@ services:
             var projectFile = Path.Combine(projectDirectory.DirectoryPath, "tye.yaml");
             await File.WriteAllTextAsync(projectFile, content);
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(projectFile));
+            var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(projectFile), null);
 
             var handler = new HttpClientHandler
             {
