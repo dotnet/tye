@@ -74,6 +74,15 @@ namespace Microsoft.Tye
                     Description = "Watches for code changes for all dotnet projects.",
                     Required = false
                 },
+                new Option(new string[]{"-f", "--framework" })
+                {
+                    Description = "The target framework to run for. The target framework must also be specified in the project file.",
+                    Argument = new Argument<string>("framework")
+                    {
+                        Arity = ArgumentArity.ExactlyOne
+                    },
+                    Required = false
+                },
                 StandardOptions.Tags,
                 StandardOptions.Verbosity,
             };
@@ -170,6 +179,8 @@ namespace Microsoft.Tye
             public Verbosity Verbosity { get; set; }
 
             public bool Watch { get; set; }
+
+            public string Framework { get; set; } = default!;
 
             public string[] Tags { get; set; } = Array.Empty<string>();
         }
