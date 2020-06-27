@@ -17,7 +17,7 @@ namespace Microsoft.Tye
 {
     public static class ApplicationFactory
     {
-        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, ApplicationFactoryFilter? filter = null)
+        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, string? framework, ApplicationFactoryFilter? filter = null)
         {
             if (source is null)
             {
@@ -180,6 +180,11 @@ namespace Microsoft.Tye
                         foreach (var buildProperty in configService.BuildProperties)
                         {
                             project.BuildProperties.Add(buildProperty.Name, buildProperty.Value);
+                        }
+                        if (framework != null
+                            && !project.BuildProperties.ContainsKey("TargetFramework"))
+                        {
+                            project.BuildProperties.Add("TargetFramework", framework);
                         }
                         project.Replicas = configService.Replicas ?? 1;
 
