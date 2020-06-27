@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Tye.Extensions;
 using Microsoft.Tye.Hosting.Model;
@@ -122,7 +123,14 @@ namespace Microsoft.Tye
                 {
                     if (project.TargetFrameworks.Length > 1)
                     {
-                        if (!project.BuildProperties.TryGetValue("TargetFramework", out var targetFramework))
+                        if (project.BuildProperties.TryGetValue("TargetFramework", out var targetFramework))
+                        {
+                            if (!project.TargetFrameworks.Contains(targetFramework))
+                            {
+                                throw new InvalidOperationException($"Unable to run {project.Name}. The specified TargetFramework is not one of the existing TargetFrameworks in the project.");
+                            }
+                        }
+                        else
                         {
                             throw new InvalidOperationException($"Unable to run {project.Name}. Multi-targeted projects are not supported.");
                         }
