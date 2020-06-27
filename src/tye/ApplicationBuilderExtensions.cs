@@ -122,7 +122,10 @@ namespace Microsoft.Tye
                 {
                     if (project.TargetFrameworks.Length > 1)
                     {
-                        throw new InvalidOperationException($"Unable to run {project.Name}. Multi-targeted projects are not supported.");
+                        if (!project.BuildProperties.TryGetValue("TargetFramework", out var targetFramework))
+                        {
+                            throw new InvalidOperationException($"Unable to run {project.Name}. Multi-targeted projects are not supported.");
+                        }
                     }
 
                     if (project.RunCommand == null)
