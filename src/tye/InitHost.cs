@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Microsoft.Tye.ConfigModel;
 using Microsoft.Tye.Serialization;
 
@@ -94,6 +97,8 @@ services:
 ".TrimStart() + serializer.Serialize(application);
             }
 
+            AddToSolutionItems(path);
+
             return (template, outputFilePath);
         }
 
@@ -103,6 +108,31 @@ services:
             if (File.Exists(tyeYaml))
             {
                 throw new CommandException($"File '{tyeYaml}' already exists. Use --force to override the {yml} file if desired.");
+            }
+        }
+
+        private static void AddToSolutionItems(FileInfo? path)
+        {
+            var fileGuid = Guid.NewGuid().ToString("B").ToUpper();
+
+            var slnFiles = Directory.GetFiles(path!.DirectoryName, "*.sln");
+            // noop if there are no sln files
+            if (slnFiles.Length > 0)
+            {
+                // assume the first one is the one wanted.
+                var sln = slnFiles[0];
+                //format
+                var insertItem = @$"Project(""{fileGuid}\"") = ""Solution Items"", ""Solution Items"", ""{fileGuid}""
+    ProjectSection(SolutionItems) = preProject
+        tye.yaml = tye.yaml
+    EndProjectSection
+EndProject";
+
+                var lines = File.ReadAllLines(sln).ToList<string>();
+                var insertAt = lines.LastIndexOf("EndProject");
+                lines.Insert(insertAt + 1, insertItem);
+
+                File.WriteAllLines(sln, lines.ToArray());
             }
         }
     }
