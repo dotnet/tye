@@ -50,51 +50,7 @@ namespace Microsoft.Tye.Hosting
                 return;
             }
 
-            var proxies = new List<Service>();
-            foreach (var service in application.Services.Values)
-            {
-                if (service.Description.RunInfo is DockerRunInfo || service.Description.Bindings.Count == 0)
-                {
-                    continue;
-                }
-
-                // Inject a proxy per non-container service. This allows the container to use normal host names within the
-                // container network to talk to services on the host
-                var proxyContanier = new DockerRunInfo($"mcr.microsoft.com/dotnet/core/sdk:3.1", "dotnet Microsoft.Tye.Proxy.dll")
-                {
-                    WorkingDirectory = "/app",
-                    NetworkAlias = service.Description.Name,
-                    Private = true
-                };
-                var proxyLocation = Path.GetDirectoryName(typeof(Microsoft.Tye.Proxy.Program).Assembly.Location);
-                proxyContanier.VolumeMappings.Add(new DockerVolume(proxyLocation, name: null, target: "/app"));
-                var proxyDescription = new ServiceDescription($"{service.Description.Name}-proxy", proxyContanier);
-                foreach (var binding in service.Description.Bindings)
-                {
-                    if (binding.Port == null)
-                    {
-                        continue;
-                    }
-
-                    var b = new ServiceBinding()
-                    {
-                        ConnectionString = binding.ConnectionString,
-                        Host = binding.Host,
-                        ContainerPort = binding.ContainerPort,
-                        Name = binding.Name,
-                        Port = binding.Port,
-                        Protocol = binding.Protocol
-                    };
-                    b.ReplicaPorts.Add(b.Port.Value);
-                    proxyDescription.Bindings.Add(b);
-                }
-                var proxyContanierService = new Service(proxyDescription);
-                containers.Add(proxyContanierService);
-                proxies.Add(proxyContanierService);
-            }
-
             string? dockerNetwork = null;
-
             if (!string.IsNullOrEmpty(application.Network))
             {
                 var dockerNetworkResult = await ProcessUtil.RunAsync("docker", $"network ls --filter \"name={application.Network}\" --format \"{{{{.ID}}}}\"", throwOnError: false);
@@ -119,26 +75,85 @@ namespace Microsoft.Tye.Hosting
                 }
             }
 
-            // We're going to be making containers, only make a network if we have more than one (we assume they'll need to talk)
-            if (string.IsNullOrEmpty(dockerNetwork) && containers.Count > 1)
+            // We use the host network when possible. Creating a network is a priviledged operation,
+            // and not permitted in rootless podman usage.
+            bool useHostNetwork = dockerNetwork == null && RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+            var proxies = new List<Service>();                   // when useHostNetwork = false, tracks proxies running on network.
+            List<string> localhostServices = new List<string>(); // when useHostNetwork = true, tracks service names running on host network.
+            if (!useHostNetwork)
             {
-                dockerNetwork = "tye_network_" + Guid.NewGuid().ToString().Substring(0, 10);
-
-                application.Items["dockerNetwork"] = dockerNetwork;
-
-                _logger.LogInformation("Creating docker network {Network}", dockerNetwork);
-
-                var command = $"network create --driver bridge {dockerNetwork}";
-
-                _logger.LogInformation("Running docker command {Command}", command);
-
-                var dockerNetworkResult = await ProcessUtil.RunAsync("docker", command, throwOnError: false);
-
-                if (dockerNetworkResult.ExitCode != 0)
+                foreach (var service in application.Services.Values)
                 {
-                    _logger.LogInformation("Running docker command with exception info {ExceptionStdOut} {ExceptionStdErr}", dockerNetworkResult.StandardOutput, dockerNetworkResult.StandardError);
+                    if (service.Description.RunInfo is DockerRunInfo || service.Description.Bindings.Count == 0)
+                    {
+                        continue;
+                    }
 
-                    throw new CommandException("Run docker network create command failed");
+                    // Inject a proxy per non-container service. This allows the container to use normal host names within the
+                    // container network to talk to services on the host
+                    var proxyContanier = new DockerRunInfo($"mcr.microsoft.com/dotnet/core/sdk:3.1", "dotnet Microsoft.Tye.Proxy.dll")
+                    {
+                        WorkingDirectory = "/app",
+                        NetworkAlias = service.Description.Name,
+                        Private = true
+                    };
+                    var proxyLocation = Path.GetDirectoryName(typeof(Microsoft.Tye.Proxy.Program).Assembly.Location);
+                    proxyContanier.VolumeMappings.Add(new DockerVolume(proxyLocation, name: null, target: "/app"));
+                    var proxyDescription = new ServiceDescription($"{service.Description.Name}-proxy", proxyContanier);
+                    foreach (var binding in service.Description.Bindings)
+                    {
+                        if (binding.Port == null)
+                        {
+                            continue;
+                        }
+
+                        var b = new ServiceBinding()
+                        {
+                            ConnectionString = binding.ConnectionString,
+                            Host = binding.Host,
+                            ContainerPort = binding.ContainerPort,
+                            Name = binding.Name,
+                            Port = binding.Port,
+                            Protocol = binding.Protocol
+                        };
+                        b.ReplicaPorts.Add(b.Port.Value);
+                        proxyDescription.Bindings.Add(b);
+                    }
+                    var proxyContanierService = new Service(proxyDescription);
+                    containers.Add(proxyContanierService);
+                    proxies.Add(proxyContanierService);
+                }
+
+
+                // We're going to be making containers, only make a network if we have more than one (we assume they'll need to talk)
+                if (string.IsNullOrEmpty(dockerNetwork) && containers.Count > 1)
+                {
+                    dockerNetwork = "tye_network_" + Guid.NewGuid().ToString().Substring(0, 10);
+
+                    application.Items["dockerNetwork"] = dockerNetwork;
+
+                    _logger.LogInformation("Creating docker network {Network}", dockerNetwork);
+
+                    var command = $"network create --driver bridge {dockerNetwork}";
+
+                    _logger.LogInformation("Running docker command {Command}", command);
+
+                    var dockerNetworkResult = await ProcessUtil.RunAsync("docker", command, throwOnError: false);
+
+                    if (dockerNetworkResult.ExitCode != 0)
+                    {
+                        _logger.LogInformation("Running docker command with exception info {ExceptionStdOut} {ExceptionStdErr}", dockerNetworkResult.StandardOutput, dockerNetworkResult.StandardError);
+
+                        throw new CommandException("Run docker network create command failed");
+                    }
+                }
+                useHostNetwork = string.IsNullOrEmpty(dockerNetwork);
+            }
+            else
+            {
+                foreach (var s in application.Services.Values)
+                {
+                    localhostServices.Add(s.Description.Name);
                 }
             }
 
@@ -152,7 +167,7 @@ namespace Microsoft.Tye.Hosting
             {
                 var docker = (DockerRunInfo)s.Description.RunInfo!;
 
-                tasks[index++] = StartContainerAsync(application, s, docker, dockerNetwork);
+                tasks[index++] = StartContainerAsync(application, s, useHostNetwork, localhostServices, docker, dockerNetwork);
             }
 
             await Task.WhenAll(tasks);
@@ -196,23 +211,32 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        private async Task StartContainerAsync(Application application, Service service, DockerRunInfo docker, string? dockerNetwork)
+        private async Task StartContainerAsync(Application application, Service service, bool useHostNetwork, List<string> localhostServices, DockerRunInfo docker, string? dockerNetwork)
         {
             var serviceDescription = service.Description;
             var environmentArguments = "";
             var volumes = "";
             var workingDirectory = docker.WorkingDirectory != null ? $"-w {docker.WorkingDirectory}" : "";
-            var hostname = "host.docker.internal";
             var dockerImage = docker.Image ?? service.Description.Name;
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            string dockerHostHostname;
+            if (useHostNetwork)
             {
+                dockerHostHostname = "localhost";
+            }
+            else
+            {
+                dockerHostHostname = "host.docker.internal";
+
                 // See: https://github.com/docker/for-linux/issues/264
                 //
                 // host.docker.internal is making it's way into linux docker but doesn't work yet
                 // instead we use the machine IP
-                var addresses = await Dns.GetHostAddressesAsync(Dns.GetHostName());
-                hostname = addresses[0].ToString();
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    var addresses = await Dns.GetHostAddressesAsync(Dns.GetHostName());
+                    dockerHostHostname = addresses[0].ToString();
+                }
             }
 
             async Task RunDockerContainer(IEnumerable<(int ExternalPort, int Port, int? ContainerPort, string? Protocol)> ports, CancellationToken cancellationToken)
@@ -266,10 +290,10 @@ namespace Microsoft.Tye.Hosting
                 //
                 // The way we do proxying here doesn't really work for multi-container scenarios on linux
                 // without some more setup.
-                application.PopulateEnvironment(service, (key, value) => environment[key] = value, hostname!);
+                application.PopulateEnvironment(service, (key, value) => environment[key] = value, dockerHostHostname!);
 
                 environment["APP_INSTANCE"] = replica;
-                environment["CONTAINER_HOST"] = hostname!;
+                environment["CONTAINER_HOST"] = dockerHostHostname!;
 
                 status.Environment = environment;
 
@@ -291,7 +315,23 @@ namespace Microsoft.Tye.Hosting
                     }
                 }
 
-                var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {dockerImage} {docker.Args ?? ""}";
+                // When running on the host network, make service names resolve to 127.0.0.1.
+                // When running on a specific network, service names are resolved via aliases passed to the 'network connect' command.
+                string hostNetworkArgs = "";
+                if (useHostNetwork)
+                {
+                    hostNetworkArgs = $"--network host";
+                    foreach (var serviceName in localhostServices)
+                    {
+                        hostNetworkArgs += $" --add-host {serviceName}:127.0.0.1";
+                    }
+                }
+
+                // Workaround podman issue: https://github.com/containers/libpod/issues/6508
+                // Fixed in podman v2.
+                bool isPodman = await DockerDetector.Instance.IsPodman.Value;
+                string restartArg = isPodman ? "always" : "unless-stopped";
+                var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} {hostNetworkArgs} --name {replica} --restart={restartArg} {dockerImage} {docker.Args ?? ""}";
 
                 _logger.LogInformation("Running image {Image} for {Replica}", docker.Image, replica);
 

@@ -15,11 +15,14 @@ namespace Microsoft.Tye
         {
             IsDockerInstalled = new Lazy<Task<bool>>(DetectDockerInstalled);
             IsDockerConnectedToDaemon = new Lazy<Task<bool>>(DetectDockerConnectedToDaemon);
+            IsPodman = new Lazy<Task<bool>>(DetectDockerIsPodman);
         }
 
         public Lazy<Task<bool>> IsDockerInstalled { get; }
 
         public Lazy<Task<bool>> IsDockerConnectedToDaemon { get; }
+
+        public Lazy<Task<bool>> IsPodman { get; }
 
         private async Task<bool> DetectDockerInstalled()
         {
@@ -41,6 +44,20 @@ namespace Microsoft.Tye
             {
                 var result = await ProcessUtil.RunAsync("docker", "version", throwOnError: false);
                 return result.ExitCode == 0;
+            }
+            catch (Exception)
+            {
+                // Unfortunately, process throws
+                return false;
+            }
+        }
+
+        private async Task<bool> DetectDockerIsPodman()
+        {
+            try
+            {
+                await ProcessUtil.RunAsync("podman", "version", throwOnError: false);
+                return true;
             }
             catch (Exception)
             {
