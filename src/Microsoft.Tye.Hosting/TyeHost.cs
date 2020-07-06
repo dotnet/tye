@@ -69,6 +69,21 @@ namespace Microsoft.Tye.Hosting
 
         public async Task<WebApplication> StartAsync()
         {
+            // TODO: move to proper location.
+
+            if (string.IsNullOrEmpty(Application.Network))
+            {
+                // rootless podman doesn't permit creation of networks.
+                // Use the host network instead, and perform communication between applications using "localhost".
+
+                bool isPodman = await DockerDetector.Instance.IsPodman.Value;
+                Application.UseHostNetwork = isPodman;
+            }
+            else if (Application.Network == "host")
+            {
+                Application.UseHostNetwork = true;
+            }
+
             var app = BuildWebApplication(_application, _options, Sink);
             DashboardWebApplication = app;
 
@@ -326,20 +341,11 @@ namespace Microsoft.Tye.Hosting
         {
             try
             {
-                // https://github.com/dotnet/corefx/issues/10361
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                System.Diagnostics.Process.Start(new ProcessStartInfo
                 {
-                    url = url.Replace("&", "^&");
-                    System.Diagnostics.Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    System.Diagnostics.Process.Start("xdg-open", url);
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                {
-                    System.Diagnostics.Process.Start("open", url);
-                }
+                    FileName = url,
+                    UseShellExecute = true
+                });
             }
             catch (Exception ex)
             {

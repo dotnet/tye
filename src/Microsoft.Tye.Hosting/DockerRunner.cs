@@ -51,36 +51,9 @@ namespace Microsoft.Tye.Hosting
             }
 
             string? dockerNetwork = null;
-            if (!string.IsNullOrEmpty(application.Network))
-            {
-                var dockerNetworkResult = await ProcessUtil.RunAsync("docker", $"network ls --filter \"name={application.Network}\" --format \"{{{{.ID}}}}\"", throwOnError: false);
-                if (dockerNetworkResult.ExitCode != 0)
-                {
-                    _logger.LogError("{Network}: Run docker network ls command failed", application.Network);
-
-                    throw new CommandException("Run docker network ls command failed");
-                }
-
-                if (!string.IsNullOrWhiteSpace(dockerNetworkResult.StandardOutput))
-                {
-                    _logger.LogInformation("The specified network {Network} exists", application.Network);
-
-                    dockerNetwork = application.Network;
-                }
-                else
-                {
-                    _logger.LogWarning("The specified network {Network} doesn't exist.", application.Network);
-
-                    application.Network = null;
-                }
-            }
-
-            // We use the host network when possible. Creating a network is a priviledged operation,
-            // and not permitted in rootless podman usage.
-            bool useHostNetwork = dockerNetwork == null && RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-            var proxies = new List<Service>();                   // when useHostNetwork = false, tracks proxies running on network.
-            List<string> localhostServices = new List<string>(); // when useHostNetwork = true, tracks service names running on host network.
-            if (!useHostNetwork)
+            var proxies = new List<Service>();
+            List<string>? localhostServices = null;
+            if (!application.UseHostNetwork)
             {
                 foreach (var service in application.Services.Values)
                 {
@@ -124,6 +97,29 @@ namespace Microsoft.Tye.Hosting
                     proxies.Add(proxyContanierService);
                 }
 
+                if (!string.IsNullOrEmpty(application.Network))
+                {
+                    var dockerNetworkResult = await ProcessUtil.RunAsync("docker", $"network ls --filter \"name={application.Network}\" --format \"{{{{.ID}}}}\"", throwOnError: false);
+                    if (dockerNetworkResult.ExitCode != 0)
+                    {
+                        _logger.LogError("{Network}: Run docker network ls command failed", application.Network);
+
+                        throw new CommandException("Run docker network ls command failed");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(dockerNetworkResult.StandardOutput))
+                    {
+                        _logger.LogInformation("The specified network {Network} exists", application.Network);
+
+                        dockerNetwork = application.Network;
+                    }
+                    else
+                    {
+                        _logger.LogWarning("The specified network {Network} doesn't exist.", application.Network);
+
+                        application.Network = null;
+                    }
+                }
 
                 // We're going to be making containers, only make a network if we have more than one (we assume they'll need to talk)
                 if (string.IsNullOrEmpty(dockerNetwork) && containers.Count > 1)
@@ -147,10 +143,10 @@ namespace Microsoft.Tye.Hosting
                         throw new CommandException("Run docker network create command failed");
                     }
                 }
-                useHostNetwork = string.IsNullOrEmpty(dockerNetwork);
             }
             else
             {
+                localhostServices = new List<string>();
                 foreach (var s in application.Services.Values)
                 {
                     localhostServices.Add(s.Description.Name);
@@ -167,7 +163,7 @@ namespace Microsoft.Tye.Hosting
             {
                 var docker = (DockerRunInfo)s.Description.RunInfo!;
 
-                tasks[index++] = StartContainerAsync(application, s, useHostNetwork, localhostServices, docker, dockerNetwork);
+                tasks[index++] = StartContainerAsync(application, s, localhostServices, docker, dockerNetwork);
             }
 
             await Task.WhenAll(tasks);
@@ -211,7 +207,7 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        private async Task StartContainerAsync(Application application, Service service, bool useHostNetwork, List<string> localhostServices, DockerRunInfo docker, string? dockerNetwork)
+        private async Task StartContainerAsync(Application application, Service service, List<string>? localhostServices, DockerRunInfo docker, string? dockerNetwork)
         {
             var serviceDescription = service.Description;
             var environmentArguments = "";
@@ -220,7 +216,7 @@ namespace Microsoft.Tye.Hosting
             var dockerImage = docker.Image ?? service.Description.Name;
 
             string dockerHostHostname;
-            if (useHostNetwork)
+            if (application.UseHostNetwork)
             {
                 dockerHostHostname = "localhost";
             }
@@ -255,6 +251,18 @@ namespace Microsoft.Tye.Hosting
 
                 if (hasPorts)
                 {
+                    if (application.UseHostNetwork)
+                    {
+                        foreach (var p in ports)
+                        {
+                            if (p.ContainerPort.HasValue && p.Port != p.ContainerPort)
+                            {
+                                // TODO: verify
+                                throw new InvalidOperationException("Host network does not support port mapping.");
+                            }
+                        }
+                    }
+
                     status.Ports = ports.Select(p => p.Port);
                     status.Bindings = ports.Select(p => new ReplicaBinding() { Port = p.Port, ExternalPort = p.ExternalPort, Protocol = p.Protocol }).ToList();
 
@@ -318,10 +326,10 @@ namespace Microsoft.Tye.Hosting
                 // When running on the host network, make service names resolve to 127.0.0.1.
                 // When running on a specific network, service names are resolved via aliases passed to the 'network connect' command.
                 string hostNetworkArgs = "";
-                if (useHostNetwork)
+                if (application.UseHostNetwork)
                 {
                     hostNetworkArgs = $"--network host";
-                    foreach (var serviceName in localhostServices)
+                    foreach (var serviceName in localhostServices!)
                     {
                         hostNetworkArgs += $" --add-host {serviceName}:127.0.0.1";
                     }

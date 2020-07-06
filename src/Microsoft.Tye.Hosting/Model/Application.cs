@@ -29,6 +29,9 @@ namespace Microsoft.Tye.Hosting.Model
 
         public string? Network { get; set; }
 
+        // All services and application run on the container host.
+        public bool UseHostNetwork { get; set; }
+
         public void PopulateEnvironment(Service service, Action<string, string> set, string defaultHost = "localhost")
         {
             var bindings = ComputeBindings(service, defaultHost);

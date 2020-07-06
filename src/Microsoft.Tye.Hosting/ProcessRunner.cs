@@ -207,10 +207,15 @@ namespace Microsoft.Tye.Hosting
 
                 if (hasPorts)
                 {
+                    var host = "localhost";
+
                     // We need to bind to all interfaces on linux since the container -> host communication won't work
                     // if we use the IP address to reach out of the host. This works fine on osx and windows
                     // but doesn't work on linux.
-                    var host = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "*" : "localhost";
+                    if (!application.UseHostNetwork && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    {
+                        host = "*";
+                    }
 
                     // These are the ports that the application should use for binding
 
