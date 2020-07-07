@@ -33,7 +33,8 @@ namespace Test.Infrastructure
             }
 
             var lines = builder.ToString().Split(new[] { '\r', '\n', }, StringSplitOptions.RemoveEmptyEntries);
-            if (lines.Any(line => line == repository))
+            if (lines.Any(line => line == repository ||
+                                  line == $"localhost/{repository}")) // podman format
             {
                 return;
             }

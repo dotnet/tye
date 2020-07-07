@@ -77,6 +77,7 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        [SkipIfPodman] // test maps ports
         public async Task FrontendBackendRunTestWithDocker()
         {
             using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
@@ -111,10 +112,17 @@ namespace E2ETest
 
         [ConditionalTheory]
         [SkipIfDockerNotRunning]
+        [SkipIfPodman] // test maps ports
         [InlineData("Debug")]
         [InlineData("Release")]
         public async Task FrontendBackendRunTestWithDockerAndBuildConfigurationAsProperty(string buildConfiguration)
         {
+            // TODO
+            if (DockerDetector.Instance.IsPodman.Value.GetAwaiter().GetResult())
+            {
+                return;
+            }
+
             using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, $"tye-{buildConfiguration.ToLower()}-configuration.yaml"));
@@ -153,6 +161,7 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        [SkipIfPodman] // test maps ports
         public async Task FrontendProjectBackendDocker()
         {
             using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
@@ -200,6 +209,7 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        [SkipIfPodman] // test maps ports
         public async Task FrontendDockerBackendProject()
         {
             using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
@@ -324,6 +334,7 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        [SkipIfPodman] // test maps ports
         public async Task DockerNamedVolumeTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("volume-test");
@@ -378,6 +389,7 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        [SkipIfPodman] // network ls is not supported for rootless mode
         public async Task DockerNetworkAssignmentTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
@@ -435,6 +447,7 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        [SkipIfPodman] // network ls is not supported for rootless mode
         public async Task DockerNetworkAssignmentForNonExistingNetworkTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
@@ -480,6 +493,7 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        [SkipIfPodman] // test maps ports
         public async Task DockerHostVolumeTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("volume-test");
@@ -604,6 +618,7 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        [SkipIfPodman] // test maps ports
         public async Task NginxIngressTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("nginx-ingress");
@@ -740,6 +755,7 @@ services:
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        [SkipIfPodman] // test maps ports
         public async Task DockerFileTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("dockerfile");
@@ -771,6 +787,7 @@ services:
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        [SkipIfPodman] // test maps ports
         public async Task DockerFileChangeContextTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("dockerfile");

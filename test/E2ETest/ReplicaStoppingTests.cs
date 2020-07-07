@@ -74,6 +74,7 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        [SkipIfPodman] // test maps ports
         public async Task MultiProjectDockerStoppingTests()
         {
             using var projectDirectory = CopyTestProjectDirectory("multi-project");

@@ -257,7 +257,8 @@ namespace Microsoft.Tye.Hosting
                         {
                             if (p.ContainerPort.HasValue && p.Port != p.ContainerPort)
                             {
-                                // TODO: verify
+                                // TODO: this exception doesn't surface well in tests.
+                                service.Logs.OnNext($"[{replica}]: Host network does not support port mapping");
                                 throw new InvalidOperationException("Host network does not support port mapping.");
                             }
                         }

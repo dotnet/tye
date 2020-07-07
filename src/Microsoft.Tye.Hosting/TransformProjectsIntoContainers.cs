@@ -79,7 +79,7 @@ namespace Microsoft.Tye.Hosting
                 IsAspNet = project.IsAspNet
             };
 
-            dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: project.PublishOutputPath, name: null, target: "/app"));
+            dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: project.PublishOutputPath, name: null, target: "/app:z"));
 
             // Make volume mapping works when running as a container
             dockerRunInfo.VolumeMappings.AddRange(project.VolumeMappings);
@@ -87,10 +87,10 @@ namespace Microsoft.Tye.Hosting
             // This is .NET specific
             var userSecretStore = GetUserSecretsPathFromSecrets();
 
-            if (!string.IsNullOrEmpty(userSecretStore))
+            if (!string.IsNullOrEmpty(userSecretStore) && Directory.Exists(userSecretStore))
             {
                 // Map the user secrets on this drive to user secrets
-                dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: userSecretStore, name: null, target: "/root/.microsoft/usersecrets:ro"));
+                dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: userSecretStore, name: null, target: "/root/.microsoft/usersecrets:ro,z"));
             }
 
             // Default to development environment
