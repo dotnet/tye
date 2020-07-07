@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Stackexchange.Redis" Version="2.0.601" />
+    <PackageReference Include="Azure.Storage.Queues" Version="12.3.2" />
   </ItemGroup>
 
 </Project>

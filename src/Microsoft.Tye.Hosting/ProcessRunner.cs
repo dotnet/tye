@@ -247,6 +247,17 @@ namespace Microsoft.Tye.Hosting
                     {
                         environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://{host}:{p.Port}"));
                     }
+
+                    if (service.ServiceType == ServiceType.Function)
+                    {
+                        // Need to inject port and UseHttps as an argument to func.exe rather than environment variables.
+                        var binding = ports.First();
+                        args += $" --port {binding.Port}";
+                        if (binding.Protocol == "https")
+                        {
+                            args += " --useHttps";
+                        }
+                    }
                 }
 
                 var backOff = TimeSpan.FromSeconds(5);
@@ -277,16 +288,6 @@ namespace Microsoft.Tye.Hosting
                     {
                         status.Ports = ports.Select(p => p.Port);
                         status.Bindings = ports.Select(p => new ReplicaBinding() { Port = p.Port, ExternalPort = p.ExternalPort, Protocol = p.Protocol }).ToList();
-                        if (service.ServiceType == ServiceType.Function && hasPorts)
-                        {
-                            // Need to inject port and UseHttps as an argument to func.exe rather than environment variables.
-                            var binding = status.Bindings.First();
-                            args += $" --port {binding.Port}";
-                            if (binding.Protocol == "https")
-                            {
-                                args += " --useHttps";
-                            }
-                        }
                     }
 
                     // TODO clean this up.
