@@ -4,8 +4,10 @@ services:
   project: vote/vote.csproj
 - name: worker
   function: worker-function/
-# - name: azurite
-#   image: azurite
+- name: azure-storage
+  external: true
+  bindings:
+  - connectionString: "UseDevelopmentStorage=true"
 - name: postgres
   image:  postgres
   env:

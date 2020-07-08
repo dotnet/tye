@@ -42,7 +42,7 @@ namespace Vote.Pages
 
                 var plainTextBytes = Encoding.UTF8.GetBytes(data);
 
-                QueueClient queueClient = new QueueClient("UseDevelopmentStorage=true", "test-queue");
+                QueueClient queueClient = new QueueClient(Configuration.GetConnectionString("azure-storage"), "test-queue");
                 queueClient.CreateIfNotExists();
                 await queueClient.SendMessageAsync(Convert.ToBase64String(plainTextBytes));
             }
