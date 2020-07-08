@@ -44,10 +44,22 @@ namespace Microsoft.Tye.Hosting
 
                 foreach (var binding in service.Description.Bindings)
                 {
-                    // Auto assign a port
+                    // We assign a port to each binding.
+                    // When we use the host network, port mapping is not supported.
+                    // The ContainerPort and Port need to match.
                     if (binding.Port == null)
                     {
-                        binding.Port = GetNextPort();
+                        // UseHostNetwork: ContainerPort exposes the service on localhost
+                        //                 Set Port to match ContainerPort.
+                        if (application.UseHostNetwork && binding.ContainerPort.HasValue)
+                        {
+                            binding.Port = binding.ContainerPort.Value;
+                        }
+                        else
+                        {
+                            // Pick a random port.
+                            binding.Port = GetNextPort();
+                        }
                     }
 
                     if (service.Description.Readiness == null && service.Description.Replicas == 1)
@@ -75,15 +87,19 @@ namespace Microsoft.Tye.Hosting
                 var httpBinding = service.Description.Bindings.FirstOrDefault(b => b.Protocol == "http");
                 var httpsBinding = service.Description.Bindings.FirstOrDefault(b => b.Protocol == "https");
 
-                // Default the first http and https port to 80 and 443
+                // Set ContainerPort for the first http and https port.
+                // For ASP.NET we'll match the Port when UseHostNetwork. ASPNETCORE_URLS will configure the application.
+                // For other applications, we use the default ports 80 and 443.
+                bool isAspNetWithHostNetwork = application.UseHostNetwork &&
+                                               (service.Description.RunInfo as DockerRunInfo)?.IsAspNet == true;
                 if (httpBinding != null)
                 {
-                    httpBinding.ContainerPort ??= 80;
+                    httpBinding.ContainerPort ??= isAspNetWithHostNetwork ? httpBinding.Port : 80;
                 }
 
                 if (httpsBinding != null)
                 {
-                    httpsBinding.ContainerPort ??= 443;
+                    httpsBinding.ContainerPort ??= isAspNetWithHostNetwork ? httpsBinding.Port : 443;
                 }
             }
 

@@ -77,7 +77,6 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        [SkipIfPodman] // test maps ports
         public async Task FrontendBackendRunTestWithDocker()
         {
             using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
@@ -112,7 +111,6 @@ namespace E2ETest
 
         [ConditionalTheory]
         [SkipIfDockerNotRunning]
-        [SkipIfPodman] // test maps ports
         [InlineData("Debug")]
         [InlineData("Release")]
         public async Task FrontendBackendRunTestWithDockerAndBuildConfigurationAsProperty(string buildConfiguration)
@@ -161,7 +159,6 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        [SkipIfPodman] // test maps ports
         public async Task FrontendProjectBackendDocker()
         {
             using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
@@ -179,7 +176,7 @@ namespace E2ETest
             {
                 IsAspNet = true
             };
-            container.Volumes.Add(new VolumeBuilder(project.PublishDir, name: null, target: "/app"));
+            container.Volumes.Add(new VolumeBuilder(project.PublishDir, name: null, target: "/app:z"));
             container.Args = $"dotnet /app/{outputFileName} {project.Args}";
             container.Bindings.AddRange(project.Bindings.Where(b => b.Protocol != "https"));
 
@@ -209,7 +206,6 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        [SkipIfPodman] // test maps ports
         public async Task FrontendDockerBackendProject()
         {
             using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
@@ -228,7 +224,7 @@ namespace E2ETest
                 IsAspNet = true
             };
             container.Dependencies.UnionWith(project.Dependencies);
-            container.Volumes.Add(new VolumeBuilder(project.PublishDir, name: null, target: "/app"));
+            container.Volumes.Add(new VolumeBuilder(project.PublishDir, name: null, target: "/app:z"));
             container.Args = $"dotnet /app/{outputFileName} {project.Args}";
             // We're not setting up the dev cert here
             container.Bindings.AddRange(project.Bindings.Where(b => b.Protocol != "https"));
@@ -334,7 +330,6 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        [SkipIfPodman] // test maps ports
         public async Task DockerNamedVolumeTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("volume-test");
@@ -493,7 +488,6 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        [SkipIfPodman] // test maps ports
         public async Task DockerHostVolumeTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("volume-test");
@@ -755,7 +749,7 @@ services:
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        [SkipIfPodman] // test maps ports
+        [SkipIfPodman] // test uses priviledged port (80)
         public async Task DockerFileTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("dockerfile");
@@ -787,7 +781,7 @@ services:
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        [SkipIfPodman] // test maps ports
+        [SkipIfPodman] // host network doesn't allow multiple containers to use same container port.
         public async Task DockerFileChangeContextTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("dockerfile");
