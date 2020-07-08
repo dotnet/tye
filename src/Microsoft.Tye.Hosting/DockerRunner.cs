@@ -210,8 +210,6 @@ namespace Microsoft.Tye.Hosting
         private async Task StartContainerAsync(Application application, Service service, List<string>? localhostServices, DockerRunInfo docker, string? dockerNetwork)
         {
             var serviceDescription = service.Description;
-            var environmentArguments = "";
-            var volumes = "";
             var workingDirectory = docker.WorkingDirectory != null ? $"-w {docker.WorkingDirectory}" : "";
             var dockerImage = docker.Image ?? service.Description.Name;
 
@@ -251,20 +249,6 @@ namespace Microsoft.Tye.Hosting
 
                 if (hasPorts)
                 {
-                    // Host network doesn't support port mapping.
-                    // Verify ContainerPort and Port are the same.
-                    if (application.UseHostNetwork)
-                    {
-                        foreach (var p in ports)
-                        {
-                            if (p.ContainerPort.HasValue && p.Port != p.ContainerPort)
-                            {
-                                service.Logs.OnNext($"[{replica}]: Host network does not support port mapping");
-                                throw new InvalidOperationException("Host network does not support port mapping.");
-                            }
-                        }
-                    }
-
                     status.Ports = ports.Select(p => p.Port);
                     status.Bindings = ports.Select(p => new ReplicaBinding() { Port = p.Port, ExternalPort = p.ExternalPort, Protocol = p.Protocol }).ToList();
 
@@ -307,11 +291,13 @@ namespace Microsoft.Tye.Hosting
 
                 status.Environment = environment;
 
+                var environmentArguments = "";
                 foreach (var pair in environment)
                 {
                     environmentArguments += $"-e \"{pair.Key}={pair.Value}\" ";
                 }
 
+                var volumes = "";
                 foreach (var volumeMapping in docker.VolumeMappings)
                 {
                     if (volumeMapping.Source != null)

@@ -606,7 +606,7 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        [SkipIfPodman] // test maps ports
+        [SkipIfPodman] // nginx and .NET applications use same container port.
         public async Task NginxIngressTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("nginx-ingress");
