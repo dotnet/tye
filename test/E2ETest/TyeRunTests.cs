@@ -115,12 +115,6 @@ namespace E2ETest
         [InlineData("Release")]
         public async Task FrontendBackendRunTestWithDockerAndBuildConfigurationAsProperty(string buildConfiguration)
         {
-            // TODO
-            if (DockerDetector.Instance.IsPodman.Value.GetAwaiter().GetResult())
-            {
-                return;
-            }
-
             using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, $"tye-{buildConfiguration.ToLower()}-configuration.yaml"));
