@@ -21,8 +21,16 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
         }
 
-        public Task StartAsync(Application application)
+        public async Task StartAsync(Application application)
         {
+            // rootless podman doesn't permit creation of networks.
+            // Use the host network instead, and perform communication between applications using "localhost".
+            if (string.IsNullOrEmpty(application.Network))
+            {
+                bool isPodman = await DockerDetector.Instance.IsPodman.Value;
+                application.UseHostNetwork = isPodman;
+            }
+
             foreach (var service in application.Services.Values)
             {
                 if (service.Description.RunInfo == null)
@@ -84,12 +92,11 @@ namespace Microsoft.Tye.Hosting
                         binding.Name ?? binding.Protocol);
                 }
 
-                var httpBinding = service.Description.Bindings.FirstOrDefault(b => b.Protocol == "http");
-                var httpsBinding = service.Description.Bindings.FirstOrDefault(b => b.Protocol == "https");
-
                 // Set ContainerPort for the first http and https port.
                 // For ASP.NET we'll match the Port when UseHostNetwork. ASPNETCORE_URLS will configure the application.
                 // For other applications, we use the default ports 80 and 443.
+                var httpBinding = service.Description.Bindings.FirstOrDefault(b => b.Protocol == "http");
+                var httpsBinding = service.Description.Bindings.FirstOrDefault(b => b.Protocol == "https");
                 bool isAspNetWithHostNetwork = application.UseHostNetwork &&
                                                (service.Description.RunInfo as DockerRunInfo)?.IsAspNet == true;
                 if (httpBinding != null)
@@ -102,8 +109,6 @@ namespace Microsoft.Tye.Hosting
                     httpsBinding.ContainerPort ??= isAspNetWithHostNetwork ? httpsBinding.Port : 443;
                 }
             }
-
-            return Task.CompletedTask;
         }
 
         public Task StopAsync(Application application)
