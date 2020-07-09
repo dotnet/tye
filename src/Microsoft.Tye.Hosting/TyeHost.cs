@@ -58,7 +58,11 @@ namespace Microsoft.Tye.Hosting
                 await StartAsync();
 
                 var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-                _lifetime?.ApplicationStopping.Register(obj => waitForStop.TrySetResult(null), null);
+                _lifetime?.ApplicationStopping.Register(obj =>
+                {
+                    _logger?.LogInformation("Tye Host is stopping...");
+                    waitForStop.TrySetResult(null);
+                }, null);
                 await waitForStop.Task;
             }
             finally
