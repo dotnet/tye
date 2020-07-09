@@ -117,7 +117,7 @@ services:
 
             var slnFiles = Directory.GetFiles(path!.DirectoryName, "*.sln");
             // noop if there are no sln files
-            if (slnFiles.Length > 0)
+            if (slnFiles.Length == 1)
             {
                 // assume the first one is the one wanted.
                 var sln = slnFiles[0];
