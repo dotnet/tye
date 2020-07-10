@@ -73,7 +73,7 @@ namespace Microsoft.Tye.Hosting
                     workingDirectory = executable.WorkingDirectory!;
                     args = executable.Args ?? "";
                 }
-                else if (serviceDescription.RunInfo is FunctionRunInfo function)
+                else if (serviceDescription.RunInfo is AzureFunctionRunInfo function)
                 {
                     path = function.FuncExecutablePath!;
                     workingDirectory = new DirectoryInfo(function.FunctionPath).FullName;

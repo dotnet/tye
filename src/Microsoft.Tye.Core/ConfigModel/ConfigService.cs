@@ -40,7 +40,7 @@ namespace Microsoft.Tye.ConfigModel
         public List<string> Tags { get; set; } = new List<string>();
         public ConfigProbe? Liveness { get; set; }
         public ConfigProbe? Readiness { get; set; }
-        public string? Function { get; set; }
+        public string? AzureFunction { get; set; }
         public string? FuncExecutable { get; set; }
         public string? Version { get; set; }
         public string? Architecture { get; set; }

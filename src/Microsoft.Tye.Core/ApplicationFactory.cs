@@ -223,9 +223,9 @@ namespace Microsoft.Tye
 
                         continue;
                     }
-                    else if (!string.IsNullOrEmpty(configService.Function))
+                    else if (!string.IsNullOrEmpty(configService.AzureFunction))
                     {
-                        var functionBuilder = new FunctionServiceBuilder(configService.Name, configService.Function)
+                        var functionBuilder = new AzureFunctionServiceBuilder(configService.Name, configService.AzureFunction)
                         {
                             Args = configService.Args,
                             Replicas = configService.Replicas ?? 1,
@@ -264,7 +264,7 @@ namespace Microsoft.Tye
                         service.Bindings.Add(new BindingBuilder() { Name = "https", Protocol = "https" });
                     }
                     else if (configService.Bindings.Count == 0 &&
-                        service is FunctionServiceBuilder project3)
+                        service is AzureFunctionServiceBuilder project3)
                     {
                         // TODO need to figure out binding from host.json file. Supporting http for now.
                         service.Bindings.Add(new BindingBuilder() { Protocol = "http" });

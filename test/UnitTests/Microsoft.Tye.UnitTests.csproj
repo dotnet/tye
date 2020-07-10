@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="1.0.1" />
+    <PackageReference Include=".collector" Version="1.0.1" />
     <PackageReference Include="coverlet.msbuild" Version="2.8.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

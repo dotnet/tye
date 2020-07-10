@@ -147,9 +147,9 @@ namespace Microsoft.Tye
                         env.Add(entry.ToHostingEnvironmentVariable());
                     }
                 }
-                else if (service is FunctionServiceBuilder function)
+                else if (service is AzureFunctionServiceBuilder function)
                 {
-                    var functionInfo = new FunctionRunInfo(function);
+                    var functionInfo = new AzureFunctionRunInfo(function);
 
                     runInfo = functionInfo;
                     replicas = function.Replicas;

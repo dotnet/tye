@@ -59,7 +59,7 @@ namespace Microsoft.Tye.Hosting.Model
                     return ServiceType.Ingress;
                 }
 
-                if (Description.RunInfo is FunctionRunInfo)
+                if (Description.RunInfo is AzureFunctionRunInfo)
                 {
                     return ServiceType.Function;
                 }

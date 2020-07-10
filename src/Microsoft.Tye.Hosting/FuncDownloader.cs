@@ -20,11 +20,11 @@ namespace Microsoft.Tye.Hosting
 
         public async Task StartAsync(Application application)
         {
-            var functions = new HashSet<FunctionRunInfo>();
+            var functions = new HashSet<AzureFunctionRunInfo>();
 
             foreach (var s in application.Services)
             {
-                if (s.Value.Description.RunInfo is FunctionRunInfo function)
+                if (s.Value.Description.RunInfo is AzureFunctionRunInfo function)
                 {
                     functions.Add(function);
                 }
@@ -38,7 +38,7 @@ namespace Microsoft.Tye.Hosting
 
             foreach (var func in functions)
             {
-                func.FuncExecutablePath ??= await FuncDetector.Instance.PathToFunc(func.Version, func.Architecture, _logger);
+                func.FuncExecutablePath ??= await FuncDetector.Instance.PathToFunc(func.Version, func.Architecture, func.DownloadPath, _logger);
             }
         }
 

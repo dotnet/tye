@@ -4,9 +4,9 @@
 
 namespace Microsoft.Tye
 {
-    public class FunctionServiceBuilder : ServiceBuilder
+    public class AzureFunctionServiceBuilder : ServiceBuilder
     {
-        public FunctionServiceBuilder(string name, string path)
+        public AzureFunctionServiceBuilder(string name, string path)
             : base(name)
         {
             FunctionPath = path;

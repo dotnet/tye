@@ -32,20 +32,20 @@ namespace Microsoft.Tye
 
         private Dictionary<string, string> _pathsToFunc;
 
-        private FuncDetector()
+        internal FuncDetector()
         {
             _pathsToFunc = new Dictionary<string, string>();
         }
 
         public static FuncDetector Instance { get; } = new FuncDetector();
 
-        public async Task<string> PathToFunc(string? version, string? arch, ILogger logger)
+        public async Task<string> PathToFunc(string? version, string? arch, string? downloadPath, ILogger logger, bool dryRun = false)
         {
-            version = ValidateAndConvertVersion(version ?? DefaultFuncVersion);
+            version = ValidateAndConvertVersion(version ?? DefaultFuncVersion, logger);
             arch = ValidateArch(arch ?? "x64");
             if (!_pathsToFunc.ContainsKey(version))
             {
-                _pathsToFunc[version] = await GetPathToFunc(version, arch, logger);
+                _pathsToFunc[version] = await GetPathToFunc(version, arch, downloadPath, logger, dryRun);
             }
 
             return _pathsToFunc[version];
@@ -69,7 +69,7 @@ namespace Microsoft.Tye
         /// </summary>
         /// <param name="version"></param>
         /// <returns></returns>
-        private string ValidateAndConvertVersion(string version)
+        private string ValidateAndConvertVersion(string version, ILogger logger)
         {
             switch (version)
             {
@@ -82,13 +82,14 @@ namespace Microsoft.Tye
                 case "1":
                 case "v1":
                     // TODO maybe don't throw here and just log a warning.
-                    throw new NotSupportedException("V1 functions are not supported by tye");
+                    logger.LogWarning("Functions V1 are unsupported and untested in Tye. Use at your own risk!");
+                    return "v1";
                 default:
                     return version;
             }
         }
 
-        private static async Task<string> GetPathToFunc(string version, string arch, ILogger logger)
+        private static async Task<string> GetPathToFunc(string version, string arch, string? downloadPath, ILogger logger, bool dryRun)
         {
             // Do this check earlier (before running multiple functions) to avoid race conditions for downloading
             // Add logs
@@ -99,7 +100,8 @@ namespace Microsoft.Tye
 
             (var preciseVersion, var uri) = await GetDownloadInfo(version, client, arch, osName);
 
-            var directoryToInstallTo = GetDirectoryToInstallTo(preciseVersion);
+            var directoryToInstallTo = downloadPath ?? GetDirectoryToInstallTo(preciseVersion);
+            // TODO fix for mac and linux 
             var funcPath = Path.Combine(directoryToInstallTo, "func.exe");
 
             if (Directory.Exists(directoryToInstallTo))
@@ -108,7 +110,7 @@ namespace Microsoft.Tye
             }
 
             var response = await client.GetAsync(uri);
-
+            
             using (var tempFile = TempFile.Create())
             {
                 {

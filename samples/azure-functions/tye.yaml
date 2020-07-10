@@ -3,7 +3,7 @@ services:
 - name: vote
   project: vote/vote.csproj
 - name: worker
-  function: worker-function/
+  azureFunction: worker-function/
 - name: azure-storage
   external: true
   bindings:

@@ -2,11 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Extensions.Logging;
+
 namespace Microsoft.Tye.Hosting.Model
 {
-    public class FunctionRunInfo : RunInfo
+    public class AzureFunctionRunInfo : RunInfo
     {
-        public FunctionRunInfo(FunctionServiceBuilder function)
+        public AzureFunctionRunInfo(AzureFunctionServiceBuilder function)
         {
             Args = function.Args;
             FunctionPath = function.FunctionPath;
@@ -20,5 +22,6 @@ namespace Microsoft.Tye.Hosting.Model
         public string? Version { get; }
         public string? Architecture { get; }
         public string? FuncExecutablePath { get; set; }
+        public string? DownloadPath { get; }
     }
 }
