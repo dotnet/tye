@@ -4,6 +4,9 @@
     "runtimes": {
       "dotnet": [
         "3.1.2"
+      ],
+      "aspnetcore": [
+        "3.1.4"
       ]
     }
   },
