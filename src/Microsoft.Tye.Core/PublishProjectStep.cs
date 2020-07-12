@@ -36,11 +36,15 @@ namespace Microsoft.Tye
             var outputDirectory = TempDirectory.Create();
 
             output.WriteDebugLine("Running 'dotnet publish'.");
-            output.WriteCommandLine("dotnet", $"publish \"{project.ProjectFile.FullName}\" -c Release -o \"{outputDirectory.DirectoryPath}\"");
+            var dotnetPublishArguments = project.BuildProperties.TryGetValue("TargetFramework", out var framework)
+                ? $"publish \"{project.ProjectFile.FullName}\" -c Release -f {framework} -o \"{outputDirectory.DirectoryPath}\""
+                : $"publish \"{project.ProjectFile.FullName}\" -c Release -o \"{outputDirectory.DirectoryPath}\"";
+
+            output.WriteCommandLine("dotnet", dotnetPublishArguments);
 
             var publishResult = await ProcessUtil.RunAsync(
                 $"dotnet",
-                $"publish \"{project.ProjectFile.FullName}\" -c Release -o \"{outputDirectory.DirectoryPath}\"",
+                dotnetPublishArguments,
                 project.ProjectFile.DirectoryName,
                 throwOnError: false);
 
