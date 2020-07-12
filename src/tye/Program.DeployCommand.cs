@@ -24,6 +24,16 @@ namespace Microsoft.Tye
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
                 StandardOptions.Namespace,
+
+                new Option(new string[]{"--framework" })
+                {
+                    Description = "The target framework to run for. The target framework must also be specified in the project file.",
+                    Argument = new Argument<string>("framework")
+                    {
+                        Arity = ArgumentArity.ExactlyOne
+                    },
+                    Required = false
+                },
                 StandardOptions.Tags,
             };
 
@@ -33,30 +43,32 @@ namespace Microsoft.Tye
                 Required = false
             });
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, bool, string, string[]>(async (console, path, verbosity, interactive, force, @namespace, tags) =>
+            command.Handler = CommandHandler.Create<DeployCommandArguments>(async args =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
-                if (path is null)
+                if (args.Path is null)
                 {
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                var output = new OutputContext(console, verbosity);
-
+                var output = new OutputContext(args.Console, args.Verbosity);
                 output.WriteInfoLine("Loading Application Details...");
 
-                var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(tags);
+                var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(args.Tags);
 
-                var application = await ApplicationFactory.CreateAsync(output, path, null, filter);
+                var application = await ApplicationFactory.CreateAsync(output, args.Path, args.Framework, filter);
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
                 }
-                if (!string.IsNullOrEmpty(@namespace))
+
+                if (!string.IsNullOrEmpty(args.Namespace))
                 {
-                    application.Namespace = @namespace;
+                    application.Namespace = args.Namespace;
                 }
-                await ExecuteDeployAsync(new OutputContext(console, verbosity), application, environment: "production", interactive, force);
+
+                var executeOutput = new OutputContext(args.Console, args.Verbosity);
+                await ExecuteDeployAsync(executeOutput, application, environment: "production", args.Interactive, args.Force);
             });
 
             return command;
@@ -131,6 +143,25 @@ namespace Microsoft.Tye
             {
                 // No registry specified, and that's OK!
             }
+        }
+
+        public class DeployCommandArguments
+        {
+            public IConsole Console { get; set; } = default!;
+
+            public FileInfo Path { get; set; } = default!;
+
+            public Verbosity Verbosity { get; set; }
+
+            public string Namespace { get; set; } = default!;
+
+            public bool Interactive { get; set; } = false;
+
+            public string Framework { get; set; } = default!;
+
+            public bool Force { get; set; } = false;
+
+            public string[] Tags { get; set; } = Array.Empty<string>();
         }
     }
 }
