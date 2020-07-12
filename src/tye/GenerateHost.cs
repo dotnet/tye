@@ -13,13 +13,10 @@ namespace Microsoft.Tye
 {
     public static class GenerateHost
     {
-        public static async Task GenerateAsync(IConsole console, FileInfo path, Verbosity verbosity, bool interactive, string ns, string[] tags)
+        public static async Task GenerateAsync(OutputContext output, FileInfo path, bool interactive, string framework, string ns, ApplicationFactoryFilter? filter = null)
         {
-            var output = new OutputContext(console, verbosity);
+            var application = await ApplicationFactory.CreateAsync(output, path, framework, filter);
 
-            output.WriteInfoLine("Loading Application Details...");
-            var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(tags);
-            var application = await ApplicationFactory.CreateAsync(output, path, null, filter);
             if (application.Services.Count == 0)
             {
                 throw new CommandException($"No services found in \"{application.Source.Name}\"");
