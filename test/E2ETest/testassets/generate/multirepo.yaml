@@ -84,6 +84,8 @@ spec:
         image: worker:1.0.0
         imagePullPolicy: Always
         env:
+        - name: DOTNET_LOGGING__CONSOLE__DISABLECOLORS
+          value: 'true'
         - name: ASPNETCORE_URLS
           value: 'http://*'
         - name: PORT

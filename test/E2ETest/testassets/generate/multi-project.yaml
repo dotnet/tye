@@ -21,6 +21,8 @@ spec:
         image: test/backend:1.0.0
         imagePullPolicy: Always
         env:
+        - name: DOTNET_LOGGING__CONSOLE__DISABLECOLORS
+          value: 'true'
         - name: ASPNETCORE_URLS
           value: 'http://*:7000'
         - name: PORT
@@ -97,6 +99,8 @@ spec:
         image: test/frontend:1.0.0
         imagePullPolicy: Always
         env:
+        - name: DOTNET_LOGGING__CONSOLE__DISABLECOLORS
+          value: 'true'
         - name: ASPNETCORE_URLS
           value: 'http://*:8000'
         - name: PORT
@@ -173,6 +177,8 @@ spec:
         image: test/worker:1.0.0
         imagePullPolicy: Always
         env:
+        - name: DOTNET_LOGGING__CONSOLE__DISABLECOLORS
+          value: 'true'
         - name: SERVICE__BACKEND__PROTOCOL
           value: 'http'
         - name: SERVICE__BACKEND__PORT

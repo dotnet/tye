@@ -141,6 +141,9 @@ namespace Microsoft.Tye
             }
 
             container.ImageTag ??= "latest";
+
+            // Disable color in the logs
+            project.EnvironmentVariables.Add(new EnvironmentVariableBuilder("DOTNET_LOGGING__CONSOLE__DISABLECOLORS") { Value = "true" });
         }
     }
 }
