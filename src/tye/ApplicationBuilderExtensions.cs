@@ -132,7 +132,7 @@ namespace Microsoft.Tye
                         }
                         else
                         {
-                            throw new InvalidOperationException($"Unable to run {project.Name}. Multi-targeted projects are not supported.");
+                            throw new InvalidOperationException($"Unable to run {project.Name}. Your project targets multiple frameworks. Specify which framework to run using '--framework'.");
                         }
                     }
 
