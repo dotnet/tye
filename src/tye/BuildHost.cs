@@ -11,7 +11,7 @@ namespace Microsoft.Tye
 {
     public static class BuildHost
     {
-        public static async Task BuildAsync(OutputContext output, FileInfo path, bool interactive, string? framework, ApplicationFactoryFilter? filter = null)
+        public static async Task BuildAsync(OutputContext output, FileInfo path, bool interactive, string? framework = null, ApplicationFactoryFilter? filter = null)
         {
             var application = await ApplicationFactory.CreateAsync(output, path, framework, filter);
             if (application.Services.Count == 0)

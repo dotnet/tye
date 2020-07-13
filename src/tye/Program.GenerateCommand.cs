@@ -53,7 +53,7 @@ namespace Microsoft.Tye
 
                 var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(args.Tags);
 
-                return GenerateHost.GenerateAsync(output, args.Path, args.Interactive, args.Framework, args.Namespace, filter);
+                return GenerateHost.GenerateAsync(output, args.Path, args.Interactive, args.Namespace, args.Framework, filter);
             });
 
             return command;

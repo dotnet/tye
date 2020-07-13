@@ -13,7 +13,7 @@ namespace Microsoft.Tye
 {
     public static class GenerateHost
     {
-        public static async Task GenerateAsync(OutputContext output, FileInfo path, bool interactive, string framework, string ns, ApplicationFactoryFilter? filter = null)
+        public static async Task GenerateAsync(OutputContext output, FileInfo path, bool interactive, string ns, string? framework = null, ApplicationFactoryFilter? filter = null)
         {
             var application = await ApplicationFactory.CreateAsync(output, path, framework, filter);
 
