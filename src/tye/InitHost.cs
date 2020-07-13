@@ -154,4 +154,5 @@ EndProject";
                 File.WriteAllLines(sln, lines.ToArray());
             }
         }
+    }
 }
