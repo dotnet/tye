@@ -57,6 +57,17 @@ namespace Microsoft.Tye
             }
         }
 
+        public static Option Framework =>
+                    new Option(new string[] { "-f", "--framework" })
+                    {
+                        Description = "The target framework to run for. The target framework must also be specified in the project file.",
+                        Argument = new Argument<string>("framework")
+                        {
+                            Arity = ArgumentArity.ExactlyOne
+                        },
+                        Required = false
+                    };
+
         public static Option Interactive
         {
             get
