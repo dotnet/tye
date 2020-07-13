@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -28,7 +29,7 @@ namespace Microsoft.Tye
 
         // Default to v3 as it's highly backwards compatible with v2. Diagnostics with v2
         // don't work by default as 
-        public const string DefaultFuncVersion = "v3";
+        private const string DefaultFuncVersion = "v3";
 
         private Dictionary<string, string> _pathsToFunc;
 
@@ -39,13 +40,13 @@ namespace Microsoft.Tye
 
         public static FuncDetector Instance { get; } = new FuncDetector();
 
-        public async Task<string> PathToFunc(string? version, string? arch, string? downloadPath, ILogger logger, bool dryRun = false)
+        public async Task<string> PathToFunc(string? version, string? arch, string? downloadPath, ILogger logger, CancellationToken cancellation, bool dryRun = false)
         {
             version = ValidateAndConvertVersion(version ?? DefaultFuncVersion, logger);
             arch = ValidateArch(arch ?? "x64");
             if (!_pathsToFunc.ContainsKey(version))
             {
-                _pathsToFunc[version] = await GetPathToFunc(version, arch, downloadPath, logger, dryRun);
+                _pathsToFunc[version] = await GetPathToFunc(version, arch, downloadPath, logger, cancellation, dryRun);
             }
 
             return _pathsToFunc[version];
@@ -89,28 +90,29 @@ namespace Microsoft.Tye
             }
         }
 
-        private static async Task<string> GetPathToFunc(string version, string arch, string? downloadPath, ILogger logger, bool dryRun)
+        private static async Task<string> GetPathToFunc(string version, string arch, string? downloadPath, ILogger logger, CancellationToken cancellation, bool dryRun)
         {
-            // Do this check earlier (before running multiple functions) to avoid race conditions for downloading
-            // Add logs
-            // cancellation token
-            // https://go.microsoft.com/fwlink/?linkid=2109029
             var osName = GetOsName();
             using var client = new HttpClient();
 
-            (var preciseVersion, var uri) = await GetDownloadInfo(version, client, arch, osName);
+            (var preciseVersion, var uri) = await GetDownloadInfo(version, client, arch, osName, logger, cancellation);
 
-            var directoryToInstallTo = downloadPath ?? GetDirectoryToInstallTo(preciseVersion);
-            // TODO fix for mac and linux 
-            var funcPath = Path.Combine(directoryToInstallTo, "func.exe");
+            var directoryToInstallTo = downloadPath ?? GetAzureFunctionDirectoryWithVersion(preciseVersion);
 
-            if (Directory.Exists(directoryToInstallTo))
+            var funcPath = Path.Combine(directoryToInstallTo, GetFuncName());
+
+            if (Directory.Exists(directoryToInstallTo) && File.Exists(funcPath))
             {
                 return funcPath;
             }
 
             var response = await client.GetAsync(uri);
-            
+           
+            if (dryRun)
+            {
+                return funcPath;
+            }
+
             using (var tempFile = TempFile.Create())
             {
                 {
@@ -125,17 +127,35 @@ namespace Microsoft.Tye
             }
         }
 
-        private static async Task<(string uri, string preciseVersion)> GetDownloadInfo(string version, HttpClient client, string arch, string os)
+        private static async Task<(string uri, string preciseVersion)> GetDownloadInfo(string version, HttpClient client, string arch, string os, ILogger logger, CancellationToken cancellation)
         {
-            // Using VS/VSCode maintained list of function downloads
-            var responseString = await client.GetStringAsync("https://go.microsoft.com/fwlink/?linkid=2109029");
+            var directory = GetAzureFunctionDirectory();
+
+            var feedJsonFile = Path.Combine(GetAzureFunctionDirectory(), "feed-v3.json");
 
             JToken json;
-            using (JsonTextReader reader = new JsonTextReader(new StringReader(responseString)))
+            if (File.Exists(feedJsonFile) && (DateTime.Now - File.GetLastWriteTimeUtc(feedJsonFile)).TotalDays < 90)
             {
-                json = JObject.ReadFrom(reader);
+                // don't bother rewriting it.
+                using (JsonTextReader reader = new JsonTextReader(new StreamReader(feedJsonFile)))
+                {
+                    json = JObject.ReadFrom(reader);
+                }
             }
-            
+            else
+            {
+                // Using VS/VSCode maintained list of function downloads
+                var response = await client.GetAsync("https://go.microsoft.com/fwlink/?linkid=2109029", cancellation);
+
+                var responseString = await response.Content.ReadAsStringAsync();
+                using (JsonTextReader reader = new JsonTextReader(new StringReader(responseString)))
+                {
+                    json = JObject.ReadFrom(reader);
+                }
+
+                await File.WriteAllTextAsync(feedJsonFile, responseString, cancellation);
+            }
+
             // Get the version for the folder
             // and the download link for the zip.
             var versionInfo = (JValue)json["tags"][version]["release"];
@@ -146,24 +166,58 @@ namespace Microsoft.Tye
             return ((string)versionInfo, (string)downloadLink);
         }
 
-        private static string GetDirectoryToInstallTo(string preciseVersion)
+
+        public static string GetAzureFunctionDirectory()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // Default is min.win for whatever reason, probably minified win
-                return Environment.ExpandEnvironmentVariables(Path.Combine(WindowsFuncDownloadLocation, preciseVersion));
+                return Environment.ExpandEnvironmentVariables(WindowsFuncDownloadLocation);
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                return Environment.ExpandEnvironmentVariables(Path.Combine(MacOSFuncDownloadLocation, preciseVersion));
+                return Environment.ExpandEnvironmentVariables(MacOSFuncDownloadLocation);
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                return Environment.ExpandEnvironmentVariables(Path.Combine(LinuxFuncDownloadLocation, preciseVersion));
+                return Environment.ExpandEnvironmentVariables(LinuxFuncDownloadLocation);
             }
             else
             {
                 throw new NotSupportedException("OS platform not supported.");
+            }
+        }
+
+        public static string GetAzureFunctionDirectoryWithVersion(string preciseVersion)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Default is min.win for whatever reason, probably minified win
+                return Environment.ExpandEnvironmentVariables(WindowsFuncDownloadLocation);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return Environment.ExpandEnvironmentVariables(MacOSFuncDownloadLocation);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return Environment.ExpandEnvironmentVariables(LinuxFuncDownloadLocation);
+            }
+            else
+            {
+                throw new NotSupportedException("OS platform not supported.");
+            }
+        }
+
+        public static string GetFuncName()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return "func.exe";
+            }
+            else
+            {
+                return "func";
             }
         }
 
@@ -174,7 +228,7 @@ namespace Microsoft.Tye
                 // Default is min.win for whatever reason, probably minified win
                 return "Windows";
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 return "MacOS";
             }

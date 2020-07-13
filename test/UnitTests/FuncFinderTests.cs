@@ -2,24 +2,21 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Testing;
 using Microsoft.Tye.Hosting;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Microsoft.Tye.UnitTests
 {
-    public class FuncFinderTests 
+    public class FuncFinderTests : LoggedTest 
     {
-        public FuncFinderTests(ITestOutputHelper output)
-        {
-            _logger = output.
-        }
 
         [Fact]
         public async Task TestFunc()
         {
             var funcDownloader = new FuncDetector();
-            await funcDownloader.PathToFunc("v2", "x64", downloadPath: null, logger: output, dryRun: true);
+            var res = await funcDownloader.PathToFunc("v2", "x64", downloadPath: null, logger: LoggerFactory.CreateLogger("AzureFunctionTest"), default, dryRun: true);
         }
 
         // Different arch
