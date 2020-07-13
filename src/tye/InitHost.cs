@@ -113,27 +113,45 @@ services:
 
         private static void AddToSolutionItems(FileInfo? path)
         {
-            var fileGuid = Guid.NewGuid().ToString("B").ToUpper();
-
             var slnFiles = Directory.GetFiles(path!.DirectoryName, "*.sln");
-            // noop if there are no sln files
             if (slnFiles.Length == 1)
             {
-                // assume the first one is the one wanted.
                 var sln = slnFiles[0];
-                //format
-                var insertItem = @$"Project(""{fileGuid}\"") = ""Solution Items"", ""Solution Items"", ""{fileGuid}""
+
+                var lines = File.ReadAllLines(sln).ToList<string>();
+                var insertAt = 0;
+                var exists = false;
+
+                lines.ForEach(l =>
+                {
+                    if (l.IndexOf("(SolutionItems)") > 0)
+                        exists = true;
+
+                    if (!exists)
+                        insertAt++;
+                });
+
+                var insertItem = string.Empty;
+                if (exists)
+                {
+                    insertItem = "        tye.yaml = tye.yaml";
+                    lines.Insert(insertAt + 1, insertItem);
+                }
+                else
+                {
+                    var fileGuid = Guid.NewGuid().ToString("B").ToUpper();
+
+                    insertItem = @$"Project(""{fileGuid}"") = ""Solution Items"", ""Solution Items"", ""{fileGuid}""
     ProjectSection(SolutionItems) = preProject
         tye.yaml = tye.yaml
     EndProjectSection
 EndProject";
 
-                var lines = File.ReadAllLines(sln).ToList<string>();
-                var insertAt = lines.LastIndexOf("EndProject");
-                lines.Insert(insertAt + 1, insertItem);
+                    insertAt = lines.LastIndexOf("EndProject");
+                    lines.Insert(insertAt + 1, insertItem);
+                }
 
                 File.WriteAllLines(sln, lines.ToArray());
             }
         }
-    }
 }
