@@ -124,6 +124,9 @@ namespace Microsoft.Tye
             }
 
             container.ImageTag ??= project.Version?.Replace("+", "-") ?? "latest";
+
+            // Disable color in the logs
+            project.EnvironmentVariables.Add(new EnvironmentVariableBuilder("DOTNET_LOGGING__CONSOLE__DISABLECOLORS") { Value = "true" });
         }
 
         public static void ApplyContainerDefaults(ApplicationBuilder application, DockerFileServiceBuilder project, ContainerInfo container)
