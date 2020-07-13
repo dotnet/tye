@@ -21,6 +21,8 @@ spec:
         image: backend:latest
         imagePullPolicy: Always
         env:
+        - name: DOTNET_LOGGING__CONSOLE__DISABLECOLORS
+          value: 'true'
         - name: ASPNETCORE_URLS
           value: 'http://*'
         - name: PORT
