@@ -57,13 +57,13 @@ namespace Microsoft.Tye
                 }
 
                 var executeOutput = new OutputContext(args.Console, args.Verbosity);
-                await ExecutePushAsync(output, application, environment: "production", args.Interactive, args.Force);
+                await ExecutePushAsync(output, application, environment: "production", args.Interactive);
             });
 
             return command;
         }
 
-        private static async Task ExecutePushAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive, bool force)
+        private static async Task ExecutePushAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive)
         {
             await application.ProcessExtensionsAsync(options: null, output, ExtensionContext.OperationKind.Deploy);
             ApplyRegistry(output, application, interactive, requireRegistry: true);
@@ -94,8 +94,6 @@ namespace Microsoft.Tye
             public bool Interactive { get; set; } = false;
 
             public string Framework { get; set; } = default!;
-
-            public bool Force { get; set; } = false;
 
             public string[] Tags { get; set; } = Array.Empty<string>();
         }
