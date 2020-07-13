@@ -17,7 +17,7 @@ namespace Microsoft.Tye
 {
     public static class ApplicationFactory
     {
-        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, string? framework, ApplicationFactoryFilter? filter = null)
+        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, string? framework = null, ApplicationFactoryFilter? filter = null)
         {
             if (source is null)
             {
