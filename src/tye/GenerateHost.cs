@@ -21,7 +21,7 @@ namespace Microsoft.Tye
             {
                 throw new CommandException($"No services found in \"{application.Source.Name}\"");
             }
-            if (!String.IsNullOrEmpty(ns))
+            if (!string.IsNullOrEmpty(ns))
             {
                 application.Namespace = ns;
             }
