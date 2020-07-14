@@ -20,13 +20,8 @@ namespace Microsoft.Tye
             var command = new Command("init", "create a yaml manifest")
             {
                 CommonArguments.Path_Optional,
+                StandardOptions.CreateForce("Overrides the tye.yaml file if already present for project.")
             };
-
-            command.AddOption(new Option(new[] { "-f", "--force" })
-            {
-                Description = "Overrides the tye.yaml file if already present for project.",
-                Required = false
-            });
 
             command.Handler = CommandHandler.Create<IConsole, FileInfo?, bool>((console, path, force) =>
             {

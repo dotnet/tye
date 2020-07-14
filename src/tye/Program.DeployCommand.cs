@@ -26,13 +26,8 @@ namespace Microsoft.Tye
                 StandardOptions.Namespace,
                 StandardOptions.Framework,
                 StandardOptions.Tags,
+                StandardOptions.CreateForce("Override validation and force deployment.")
             };
-
-            command.AddOption(new Option(new[] { "-f", "--force" })
-            {
-                Description = "Override validation and force deployment.",
-                Required = false
-            });
 
             command.Handler = CommandHandler.Create<DeployCommandArguments>(async args =>
             {

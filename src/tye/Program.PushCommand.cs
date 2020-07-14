@@ -21,13 +21,8 @@ namespace Microsoft.Tye
                 StandardOptions.Verbosity,
                 StandardOptions.Tags,
                 StandardOptions.Framework,
+                StandardOptions.CreateForce("Override validation and force push.")
             };
-
-            command.AddOption(new Option(new[] { "-f", "--force" })
-            {
-                Description = "Override validation and force push.",
-                Required = false
-            });
 
             command.Handler = CommandHandler.Create<PushCommandArguments>(async args =>
             {
