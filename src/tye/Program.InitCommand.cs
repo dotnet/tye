@@ -23,21 +23,31 @@ namespace Microsoft.Tye
                 StandardOptions.CreateForce("Overrides the tye.yaml file if already present for project.")
             };
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo?, bool>((console, path, force) =>
+            command.Handler = CommandHandler.Create<InitCommandArguments>(args =>
             {
                 var watch = System.Diagnostics.Stopwatch.StartNew();
 
-                var outputFilePath = InitHost.CreateTyeFile(path, force);
-                console.Out.WriteLine($"Created '{outputFilePath}'.");
+                var output = new OutputContext(args.Console, args.Verbosity);
+                var outputFilePath = InitHost.CreateTyeFile(args.Path, args.Force);
+                output.WriteInfoLine($"Created '{outputFilePath}'.");
 
                 watch.Stop();
-
-                TimeSpan elapsedTime = watch.Elapsed;
-
-                console.Out.WriteLine($"Time Elapsed: {elapsedTime.Hours:00}:{elapsedTime.Minutes:00}:{elapsedTime.Seconds:00}:{elapsedTime.Milliseconds / 10:00}");
+                var elapsedTime = watch.Elapsed;
+                output.WriteInfoLine($"Time Elapsed: {elapsedTime.Hours:00}:{elapsedTime.Minutes:00}:{elapsedTime.Seconds:00}:{elapsedTime.Milliseconds / 10:00}");
             });
 
             return command;
+        }
+
+        public class InitCommandArguments
+        {
+            public IConsole Console { get; set; } = default!;
+
+            public FileInfo Path { get; set; } = default!;
+
+            public Verbosity Verbosity { get; set; }
+
+            public bool Force { get; set; } = false;
         }
     }
 }
