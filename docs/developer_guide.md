@@ -120,10 +120,26 @@ On macOS/Linux:
 
 ## Using local builds
 
-The easiest way to use a custom build of tye is to `dotnet run -p <path to tye projet>`. 
+The easiest way to use a custom build of tye is to `dotnet run -p <path to tye projet>`.
 
-If you want to install your build as a dotnet global tool, that is possible as well. Building the repo will create packages in the artifacts folder that can be used.
+If you want to install your build as a dotnet global tool, that is possible as well with the following steps:
+
+1. Building the repo and create packages in the artifacts folder that can be used
+
+On Windows:
+
+```ps1
+.\build.cmd -pack
+```
+
+On macOS/Linux:
+
+```bash
+./build.sh --pack
+```
+
+2. Install the package
 
 ```sh
-dotnet install tye -g --version "0.1.0-dev" --add-source ./artifacts/packages/Debug/Shipping
+dotnet tool install microsoft.tye -g --version "0.4.0-dev" --add-source ./artifacts/packages/Debug/Shipping
 ```
