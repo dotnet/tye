@@ -3,7 +3,9 @@ Voting sample app inspired by https://github.com/dockersamples/example-voting-ap
 
 ## For running
 
-The project should be immediately runnable by calling `tye run` from the directory.
+To run, first make sure the azure storage emulator is running. You can use [Azurite](https://docs.microsoft.com/en-us/azure/storage/common/storage-use-azurite) cross platform or use the [Azure Storage Emulator](https://docs.microsoft.com/en-us/azure/storage/common/storage-use-emulator?toc=/azure/storage/blobs/toc.json) on Windows.
+
+Next, all you need to do is execute `tye run` and navigate to the dashboard.
 
 ## For deployment
 
