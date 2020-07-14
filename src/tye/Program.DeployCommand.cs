@@ -24,16 +24,7 @@ namespace Microsoft.Tye
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
                 StandardOptions.Namespace,
-
-                new Option(new string[]{"--framework" })
-                {
-                    Description = "The target framework to run for. The target framework must also be specified in the project file.",
-                    Argument = new Argument<string>("framework")
-                    {
-                        Arity = ArgumentArity.ExactlyOne
-                    },
-                    Required = false
-                },
+                StandardOptions.Framework,
                 StandardOptions.Tags,
             };
 

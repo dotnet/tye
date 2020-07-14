@@ -23,16 +23,7 @@ namespace Microsoft.Tye
                 StandardOptions.Interactive,
                 StandardOptions.Tags,
                 StandardOptions.Verbosity,
-
-                new Option(new string[]{"-f", "--framework" })
-                {
-                    Description = "The target framework to run for. The target framework must also be specified in the project file.",
-                    Argument = new Argument<string>("framework")
-                    {
-                        Arity = ArgumentArity.ExactlyOne
-                    },
-                    Required = false
-                }
+                StandardOptions.Framework,
             };
 
             command.Handler = CommandHandler.Create<BuildCommandArguments>(args =>

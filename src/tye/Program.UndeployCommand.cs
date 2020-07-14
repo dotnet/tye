@@ -24,16 +24,7 @@ namespace Microsoft.Tye
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
                 StandardOptions.Tags,
-
-                new Option(new string[]{"-f", "--framework" })
-                {
-                    Description = "The target framework to run for. The target framework must also be specified in the project file.",
-                    Argument = new Argument<string>("framework")
-                    {
-                        Arity = ArgumentArity.ExactlyOne
-                    },
-                    Required = false
-                },
+                StandardOptions.Framework,
 
                 new Option(new[]{ "--what-if", }, "print what would be deleted without making changes")
                 {
