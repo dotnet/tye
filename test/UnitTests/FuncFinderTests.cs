@@ -10,9 +10,23 @@ namespace Microsoft.Tye.UnitTests
         [Theory]
         [InlineData("v2", "x64", "2.")]
         [InlineData("v3", "x64", "3.")]
+        public async Task FuncInstallerReturnsRightPaths(string version, string arch, string expectedVersionPart)
+        {
+            var funcDownloader = new FuncDetector();
+            var path = await funcDownloader.PathToFunc(version, arch, downloadPath: null, logger: LoggerFactory.CreateLogger("AzureFunctionTest"), default, dryRun: true);
+
+            // Verifying this path is a bit tricky, version isn't easily associated.
+            // Using partial matches
+            Assert.Contains(FuncDetector.GetAzureFunctionDirectory(), path);
+            Assert.Contains(expectedVersionPart, path);
+        }
+
+        [Theory]
+        [OSSkipCondition(OperatingSystems.Linux)]
+        [OSSkipCondition(OperatingSystems.MacOSX)]
         [InlineData("v2", "x86", "2.")]
         [InlineData("v3", "x86", "3.")]
-        public async Task FuncInstallerReturnsRightPaths(string version, string arch, string expectedVersionPart)
+        public async Task FuncInstallerReturnsRightPathsWindows(string version, string arch, string expectedVersionPart)
         {
             var funcDownloader = new FuncDetector();
             var path = await funcDownloader.PathToFunc(version, arch, downloadPath: null, logger: LoggerFactory.CreateLogger("AzureFunctionTest"), default, dryRun: true);
@@ -31,14 +45,6 @@ namespace Microsoft.Tye.UnitTests
             var path = await funcDownloader.PathToFunc("v3", "x64", tmp.DirectoryPath, logger: LoggerFactory.CreateLogger("AzureFunctionTest"), default, dryRun: true);
 
             Assert.Contains(tmp.DirectoryPath, path);
-        }
-
-        [Fact]
-        public async Task FuncInstallerThrowsForInvalidVersion()
-        {
-            var funcDownloader = new FuncDetector();
-            await Assert.ThrowsAsync<NotSupportedException>(async () =>
-                await funcDownloader.PathToFunc("v3z", "x64", downloadPath: null, logger: LoggerFactory.CreateLogger("AzureFunctionTest"), default, dryRun: true));
         }
 
         [Fact]

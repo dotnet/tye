@@ -158,6 +158,7 @@ namespace Microsoft.Tye
                 // Don't write file during dry run.
                 if (!dryRun)
                 {
+                    Directory.CreateDirectory(new FileInfo(feedJsonFile).DirectoryName);
                     await File.WriteAllTextAsync(feedJsonFile, responseString, cancellation);
                 }
             }
