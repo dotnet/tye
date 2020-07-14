@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Microsoft.Tye.UnitTests
 {
-    public class FuncFinderTests : LoggedTest 
+    public class FuncFinderTests : LoggedTest
     {
         [Theory]
         [InlineData("v2", "x64", "2.")]
