@@ -16,7 +16,7 @@
     <ItemGroup>
       <AssemblyAttribute Include="Xunit.TestFramework">
         <_Parameter1>Microsoft.AspNetCore.Testing.AspNetTestFramework</_Parameter1>
-        <_Parameter2>Microsoft.AspNetCore.Testing</_Parameter2>
+        <_Parameter2>Test.Infrastructure</_Parameter2>
       </AssemblyAttribute>
 
       <AssemblyAttribute Include="Microsoft.AspNetCore.Testing.TestFrameworkFileLoggerAttribute">

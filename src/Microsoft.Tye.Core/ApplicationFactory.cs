@@ -225,7 +225,9 @@ namespace Microsoft.Tye
                     }
                     else if (!string.IsNullOrEmpty(configService.AzureFunction))
                     {
-                        var functionBuilder = new AzureFunctionServiceBuilder(configService.Name, configService.AzureFunction)
+                        var functionBuilder = new AzureFunctionServiceBuilder(
+                            configService.Name,
+                            Path.Combine(config.Source.DirectoryName, configService.AzureFunction))
                         {
                             Args = configService.Args,
                             Replicas = configService.Replicas ?? 1,

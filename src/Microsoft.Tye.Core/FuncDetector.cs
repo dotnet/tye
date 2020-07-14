@@ -28,7 +28,7 @@ namespace Microsoft.Tye
         private const string LinuxFuncDownloadLocation = "~/.tye/AzureFunctionTools/Tye";
 
         // Default to v3 as it's highly backwards compatible with v2. Diagnostics with v2
-        // don't work by default as 
+        // don't work by default as v2 uses 2.2. 
         private const string DefaultFuncVersion = "v3";
 
         private Dictionary<string, string> _pathsToFunc;
@@ -43,6 +43,8 @@ namespace Microsoft.Tye
         public async Task<string> PathToFunc(string? version, string? arch, string? downloadPath, ILogger logger, CancellationToken cancellation, bool dryRun = false)
         {
             version = ValidateAndConvertVersion(version ?? DefaultFuncVersion, logger);
+
+            // Default to x64
             arch = ValidateArch(arch ?? "x64");
             if (!_pathsToFunc.ContainsKey(version))
             {
@@ -95,7 +97,7 @@ namespace Microsoft.Tye
             var osName = GetOsName();
             using var client = new HttpClient();
 
-            (var preciseVersion, var uri) = await GetDownloadInfo(version, client, arch, osName, logger, cancellation);
+            (var preciseVersion, var uri) = await GetDownloadInfo(version, client, arch, osName, logger, cancellation, dryRun);
 
             var directoryToInstallTo = downloadPath ?? GetAzureFunctionDirectoryWithVersion(preciseVersion);
 
@@ -107,7 +109,7 @@ namespace Microsoft.Tye
             }
 
             var response = await client.GetAsync(uri);
-           
+
             if (dryRun)
             {
                 return funcPath;
@@ -127,7 +129,7 @@ namespace Microsoft.Tye
             }
         }
 
-        private static async Task<(string uri, string preciseVersion)> GetDownloadInfo(string version, HttpClient client, string arch, string os, ILogger logger, CancellationToken cancellation)
+        private static async Task<(string, string)> GetDownloadInfo(string version, HttpClient client, string arch, string os, ILogger logger, CancellationToken cancellation, bool dryRun)
         {
             var directory = GetAzureFunctionDirectory();
 
@@ -153,15 +155,27 @@ namespace Microsoft.Tye
                     json = JObject.ReadFrom(reader);
                 }
 
-                await File.WriteAllTextAsync(feedJsonFile, responseString, cancellation);
+                // Don't write file during dry run.
+                if (!dryRun)
+                {
+                    await File.WriteAllTextAsync(feedJsonFile, responseString, cancellation);
+                }
             }
 
             // Get the version for the folder
             // and the download link for the zip.
             var versionInfo = (JValue)json["tags"][version]["release"];
-            var downloadLink = (JValue)json["releases"][(string)versionInfo]["standaloneCli"]
-                                .Where(s => (((string)s["OS"])?.Equals(os) == true || ((string)s["OperatingSystem"])?.Equals(os) == true) && ((string)s["Architecture"]).Equals(arch))
-                                .Single()["downloadLink"];
+            JValue? downloadLink;
+            if (version == "v1")
+            {
+                downloadLink = (JValue)json["releases"][(string)versionInfo]["cli"];
+            }
+            else
+            {
+                downloadLink = (JValue)json["releases"][(string)versionInfo]["standaloneCli"]
+                                            .Where(s => (((string)s["OS"])?.Equals(os) == true || ((string)s["OperatingSystem"])?.Equals(os) == true) && ((string)s["Architecture"]).Equals(arch))
+                                            .Single()["downloadLink"];
+            }
 
             return ((string)versionInfo, (string)downloadLink);
         }
@@ -193,15 +207,15 @@ namespace Microsoft.Tye
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // Default is min.win for whatever reason, probably minified win
-                return Environment.ExpandEnvironmentVariables(WindowsFuncDownloadLocation);
+                return Environment.ExpandEnvironmentVariables(Path.Combine(WindowsFuncDownloadLocation, preciseVersion));
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                return Environment.ExpandEnvironmentVariables(MacOSFuncDownloadLocation);
+                return Environment.ExpandEnvironmentVariables(Path.Combine(MacOSFuncDownloadLocation, preciseVersion));
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                return Environment.ExpandEnvironmentVariables(LinuxFuncDownloadLocation);
+                return Environment.ExpandEnvironmentVariables(Path.Combine(LinuxFuncDownloadLocation, preciseVersion));
             }
             else
             {
