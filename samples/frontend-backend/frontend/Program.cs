@@ -14,9 +14,6 @@ namespace Frontend
         {
             Activity.DefaultIdFormat = ActivityIdFormat.W3C;
             CreateHostBuilder(args).Build().Run();
-
-            
-
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
