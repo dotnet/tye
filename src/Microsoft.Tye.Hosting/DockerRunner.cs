@@ -283,11 +283,11 @@ namespace Microsoft.Tye.Hosting
                     if (volumeMapping.Source != null)
                     {
                         var sourcePath = Path.GetFullPath(Path.Combine(application.ContextDirectory, volumeMapping.Source));
-                        volumes += $"-v {sourcePath}:{volumeMapping.Target} ";
+                        volumes += $"-v \"{sourcePath}:{volumeMapping.Target}\" ";
                     }
                     else if (volumeMapping.Name != null)
                     {
-                        volumes += $"-v {volumeMapping.Name}:{volumeMapping.Target} ";
+                        volumes += $"-v \"{volumeMapping.Name}:{volumeMapping.Target}\" ";
                     }
                 }
 
