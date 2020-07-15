@@ -21,7 +21,7 @@ namespace Microsoft.Tye.UnitTests
             Assert.Contains(expectedVersionPart, path);
         }
 
-        [Theory]
+        [ConditionalTheory]
         [OSSkipCondition(OperatingSystems.Linux)]
         [OSSkipCondition(OperatingSystems.MacOSX)]
         [InlineData("v2", "x86", "2.")]
