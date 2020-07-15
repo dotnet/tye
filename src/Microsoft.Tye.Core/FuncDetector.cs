@@ -128,6 +128,7 @@ namespace Microsoft.Tye
 
                 logger.LogInformation("Installing func to {FuncPath}", directoryToInstallTo);
                 ZipFile.ExtractToDirectory(tempFile.FilePath, directoryToInstallTo);
+                // For some reason, func isn't marked as executable via unzipping.
                 return funcPath;
             }
         }
@@ -232,14 +233,7 @@ namespace Microsoft.Tye
 
         public static string GetFuncName()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                return "func.exe";
-            }
-            else
-            {
-                return "func";
-            }
+            return "func.dll";
         }
 
         private static string GetOsName()
