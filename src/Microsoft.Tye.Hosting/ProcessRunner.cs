@@ -144,19 +144,19 @@ namespace Microsoft.Tye.Hosting
                     _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
                     return;
                 }
+            }
 
-                foreach (var s in application.Services)
+            foreach (var s in application.Services)
+            {
+                switch (s.Value.ServiceType)
                 {
-                    switch (s.Value.ServiceType)
-                    {
-                        case ServiceType.Executable:
-                            LaunchService(application, s.Value);
-                            break;
-                        case ServiceType.Project:
-                            LaunchService(application, s.Value);
-                            break;
-                    };
-                }
+                    case ServiceType.Executable:
+                        LaunchService(application, s.Value);
+                        break;
+                    case ServiceType.Project:
+                        LaunchService(application, s.Value);
+                        break;
+                };
             }
         }
 
