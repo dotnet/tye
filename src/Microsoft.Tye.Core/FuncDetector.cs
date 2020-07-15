@@ -141,6 +141,8 @@ namespace Microsoft.Tye
             if (File.Exists(feedJsonFile) && (DateTime.Now - File.GetLastWriteTimeUtc(feedJsonFile)).TotalDays < 90)
             {
                 logger.LogInformation("Using existing feed file in {FeedJsonFile}", feedJsonFile);
+                logger.LogInformation(new FileInfo(feedJsonFile).FullName);
+                logger.LogInformation(new FileInfo(feedJsonFile).DirectoryName);
                 // don't bother rewriting it.
                 using (JsonTextReader reader = new JsonTextReader(new StreamReader(feedJsonFile)))
                 {
