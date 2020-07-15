@@ -50,6 +50,9 @@
                         "$ref": "#/definitions/external"
                     },
                     {
+                        "$ref": "#/definitions/azureFunction"
+                    },
+                    {
                         "$ref": "#/definitions/image"
                     },
                     {
@@ -164,6 +167,61 @@
             ],
             "additionalProperties": false
         },
+        "azureFunction": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "The service name. Must be unique per-application.",
+                    "type": "string"
+                },
+                "azureFunction": {
+                    "description": "The directory path to the azure function.",
+                    "type": "string"
+                },
+                "env": {
+                    "description": "Environment variables to use when launching.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/env-var"
+                    }
+                },
+                "args": {
+                    "description": "Command-line arguments to use when launching.",
+                    "type": "string"
+                },
+                "replicas": {
+                    "description": "Number of service replicas to create.",
+                    "type": "integer"
+                },
+                "bindings": {
+                    "description": "The bindings provided by the service.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/binding"
+                    }
+                },
+                "arch":
+                {
+
+                },
+                "version":
+                {
+
+                },
+                "funcDownloadPath":
+                {
+
+                },
+                "funcExePath":
+                {
+                    
+                }
+            },
+            "required": [
+                "name",
+                "azureFunction"
+            ]
+        },
         "executable": {
             "type": "object",
             "properties": {
@@ -217,6 +275,13 @@
                     "description": "Designates as service as external. External services will not be launched and can only provide bindings.",
                     "type": "boolean",
                     "const": true
+                },
+                "bindings": {
+                    "description": "The bindings provided by the service.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/binding"
+                    }
                 }
             },
             "additionalProperties": false

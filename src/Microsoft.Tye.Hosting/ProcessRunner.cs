@@ -73,6 +73,14 @@ namespace Microsoft.Tye.Hosting
                     workingDirectory = executable.WorkingDirectory!;
                     args = executable.Args ?? "";
                 }
+                else if (serviceDescription.RunInfo is AzureFunctionRunInfo function)
+                {
+                    path = function.FuncExecutablePath!;
+                    workingDirectory = new DirectoryInfo(function.FunctionPath).FullName;
+                    // todo make sure to exclude functions app from implied tye running.
+
+                    args = function.Args ?? $"start --build";
+                }
                 else
                 {
                     continue;
@@ -156,6 +164,9 @@ namespace Microsoft.Tye.Hosting
                     case ServiceType.Project:
                         LaunchService(application, s.Value);
                         break;
+                    case ServiceType.Function:
+                        LaunchService(application, s.Value);
+                        break;
                 };
             }
         }
@@ -229,6 +240,24 @@ namespace Microsoft.Tye.Hosting
 
                     // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
                     environment["PORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
+                    environment["HOST__LOCALHTTPPORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
+                    environment["ASPNETCORE__HOST__LOCALHTTPPORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
+
+                    if (service.ServiceType == ServiceType.Function)
+                    {
+                        environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://{host}:{p.Port}"));
+                    }
+
+                    if (service.ServiceType == ServiceType.Function)
+                    {
+                        // Need to inject port and UseHttps as an argument to func.exe rather than environment variables.
+                        var binding = ports.First();
+                        args += $" --port {binding.Port}";
+                        if (binding.Protocol == "https")
+                        {
+                            args += " --useHttps";
+                        }
+                    }
                 }
 
                 var backOff = TimeSpan.FromSeconds(5);

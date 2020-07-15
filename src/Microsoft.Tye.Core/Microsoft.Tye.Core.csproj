@@ -23,6 +23,7 @@
     <!-- Hoisted to avoid a conflict with Microsoft.Build -->
     <PackageReference Include="System.Security.Principal.Windows" Version="4.7.0" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.5" />
   </ItemGroup>
 
   <ItemGroup>

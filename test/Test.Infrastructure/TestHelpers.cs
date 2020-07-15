@@ -101,7 +101,7 @@ namespace Test.Infrastructure
             return temp;
         }
 
-        public static async Task<bool> DoOperationAndWaitForReplicasToChangeState(TyeHost host, ReplicaState desiredState, int n, HashSet<string>? toChange, HashSet<string>? rest, Func<ReplicaEvent, string> entitySelector, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
+        public static async Task<bool> DoOperationAndWaitForReplicasToChangeState(TyeHost host, ReplicaState desiredState, int n, HashSet<string> toChange, HashSet<string> rest, Func<ReplicaEvent, string> entitySelector, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
         {
             if (toChange != null && rest != null && rest.Overlaps(toChange))
             {
@@ -156,7 +156,7 @@ namespace Test.Infrastructure
             }
         }
 
-        public static async Task<bool> DoOperationAndWaitForReplicasToRestart(TyeHost host, HashSet<string> toRestart, HashSet<string>? rest, Func<ReplicaEvent, string> entitySelector, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
+        public static async Task<bool> DoOperationAndWaitForReplicasToRestart(TyeHost host, HashSet<string> toRestart, HashSet<string> rest, Func<ReplicaEvent, string> entitySelector, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
         {
             if (rest != null && rest.Overlaps(toRestart))
             {
@@ -219,13 +219,13 @@ namespace Test.Infrastructure
             }
         }
 
-        public static Task<bool> DoOperationAndWaitForReplicasToChangeState(TyeHost host, ReplicaState desiredState, int n, HashSet<string>? toChange, HashSet<string>? rest, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
+        public static Task<bool> DoOperationAndWaitForReplicasToChangeState(TyeHost host, ReplicaState desiredState, int n, HashSet<string> toChange, HashSet<string> rest, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
             => DoOperationAndWaitForReplicasToChangeState(host, desiredState, n, toChange, rest, ev => ev.Replica.Name, waitUntilSuccess, operation);
 
-        public static Task<bool> DoOperationAndWaitForReplicasToRestart(TyeHost host, HashSet<string> toRestart, HashSet<string>? rest, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
+        public static Task<bool> DoOperationAndWaitForReplicasToRestart(TyeHost host, HashSet<string> toRestart, HashSet<string> rest, TimeSpan waitUntilSuccess, Func<TyeHost, Task> operation)
             => DoOperationAndWaitForReplicasToRestart(host, toRestart, rest, ev => ev.Replica.Name, waitUntilSuccess, operation);
 
-        public static async Task StartHostAndWaitForReplicasToStart(TyeHost host, string[]? services = null, ReplicaState desiredState = ReplicaState.Started)
+        public static async Task StartHostAndWaitForReplicasToStart(TyeHost host, string[] services = null, ReplicaState desiredState = ReplicaState.Started)
         {
             if (services == null)
             {

@@ -29,9 +29,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Tye.Proxy", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Tye.Extensions.Configuration.Tests", "test\Microsoft.Tye.Extensions.Configuration.Tests\Microsoft.Tye.Extensions.Configuration.Tests.csproj", "{FCE7C889-16D1-42E7-A514-EA096E9D41A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Infrastructure", "test\Test.Infrastructure\Test.Infrastructure.csproj", "{F9A7C801-26F3-4D20-B084-2A6A6343E869}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Infrastructure", "test\Test.Infrastructure\Test.Infrastructure.csproj", "{F9A7C801-26F3-4D20-B084-2A6A6343E869}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tye-diag-agent", "src\tye-diag-agent\tye-diag-agent.csproj", "{7173D2B6-B102-4DCA-8000-5DAE684BFC13}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "tye-diag-agent", "src\tye-diag-agent\tye-diag-agent.csproj", "{7173D2B6-B102-4DCA-8000-5DAE684BFC13}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

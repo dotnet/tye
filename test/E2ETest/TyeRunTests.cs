@@ -75,6 +75,36 @@ namespace E2ETest
             });
         }
 
+        [Fact]
+        public async Task FrontendBackendAzureFunctionTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("azure-functions");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var frontendUri = await GetServiceUrl(client, uri, "frontend");
+                var backendUri = await GetServiceUrl(client, uri, "backend");
+
+                var backendResponse = await client.GetAsync(backendUri);
+                var frontendResponse = await client.GetAsync(frontendUri);
+
+                Assert.True(backendResponse.IsSuccessStatusCode);
+                Assert.True(frontendResponse.IsSuccessStatusCode);
+            });
+        }
+
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task FrontendBackendRunTestWithDocker()
