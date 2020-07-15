@@ -124,6 +124,7 @@ namespace Microsoft.Tye
                     await responseStream.CopyToAsync(stream);
                 }
 
+                logger.LogInformation("Installing func to {FuncPath}", directoryToInstallTo);
                 ZipFile.ExtractToDirectory(tempFile.FilePath, directoryToInstallTo);
                 return funcPath;
             }
@@ -147,6 +148,7 @@ namespace Microsoft.Tye
             else
             {
                 // Using VS/VSCode maintained list of function downloads
+                logger.LogInformation("Retrieving list of azure function versions from internet.");
                 var response = await client.GetAsync("https://go.microsoft.com/fwlink/?linkid=2109029", cancellation);
 
                 var responseString = await response.Content.ReadAsStringAsync();
@@ -158,6 +160,7 @@ namespace Microsoft.Tye
                 // Don't write file during dry run.
                 if (!dryRun)
                 {
+                    logger.LogInformation("Writing list of azure function versions to {FeedJsonFile}.", feedJsonFile);
                     Directory.CreateDirectory(new FileInfo(feedJsonFile).DirectoryName);
                     await File.WriteAllTextAsync(feedJsonFile, responseString, cancellation);
                 }
