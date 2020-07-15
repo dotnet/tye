@@ -105,6 +105,7 @@ namespace Microsoft.Tye
 
             if (Directory.Exists(directoryToInstallTo) && File.Exists(funcPath))
             {
+                logger.LogInformation("Using func to {FuncPath}", funcPath);
                 return funcPath;
             }
 
@@ -139,6 +140,7 @@ namespace Microsoft.Tye
             JToken json;
             if (File.Exists(feedJsonFile) && (DateTime.Now - File.GetLastWriteTimeUtc(feedJsonFile)).TotalDays < 90)
             {
+                logger.LogInformation("Using existing feed file in {FeedJsonFile}", feedJsonFile);
                 // don't bother rewriting it.
                 using (JsonTextReader reader = new JsonTextReader(new StreamReader(feedJsonFile)))
                 {
