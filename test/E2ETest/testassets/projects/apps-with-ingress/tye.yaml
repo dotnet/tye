@@ -18,8 +18,6 @@ ingress:
         service: appA
       - host: b.example.com
         service: appB
-      - host: ui.example.com
-        service: appC-ui
 
 services:
 - name: appA
@@ -27,7 +25,4 @@ services:
   replicas: 2
 - name: appB
   project: ApplicationB/ApplicationB.csproj
-  replicas: 2
-- name: appC-ui
-  project: ApplicationC-UI/ApplicationC-UI.csproj
   replicas: 2
