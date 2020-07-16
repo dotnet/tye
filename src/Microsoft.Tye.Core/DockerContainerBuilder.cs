@@ -36,7 +36,7 @@ namespace Microsoft.Tye
 
             var dockerFileInfo = new FileInfo(containerService.DockerFile);
             var contextDirectory = containerService.DockerFileContext ?? dockerFileInfo.DirectoryName;
-            var dockerFilePath = Path.Combine(dockerFileInfo.DirectoryName, "Dockerfile");
+            var dockerFilePath = Path.Combine(dockerFileInfo.DirectoryName!, "Dockerfile");
 
             output.WriteDebugLine($"Using existing Dockerfile '{dockerFilePath}'.");
 
@@ -83,7 +83,7 @@ namespace Microsoft.Tye
             }
 
             string contextDirectory;
-            var dockerFilePath = Path.Combine(project.ProjectFile.DirectoryName, "Dockerfile");
+            var dockerFilePath = Path.Combine(project.ProjectFile.DirectoryName!, "Dockerfile");
 
             TempFile? tempFile = null;
             TempDirectory? tempDirectory = null;
