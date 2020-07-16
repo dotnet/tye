@@ -7,12 +7,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
 {
     public class FuncFinder : IApplicationProcessor
     {
+        private ILogger _logger;
+
+        public FuncFinder(ILogger logger)
+        {
+            _logger = logger;
+        }
+
         public Task StartAsync(Application application)
         {
             var functions = new HashSet<AzureFunctionRunInfo>();
@@ -41,12 +49,13 @@ namespace Microsoft.Tye.Hosting
 
         private string? FindFuncForVersion(AzureFunctionRunInfo func)
         {
-            // Only looking for npm on linux.
             var npmFuncDllPath = GetFuncNpmPath();
             if (!File.Exists(npmFuncDllPath))
             {
                 throw new FileNotFoundException("Could not find func installation. Please install the azure function core tools via: `npm install -g azure-functions-core-tools@3`");
             }
+
+            _logger.LogDebug("Using func for running azure functions located at {Func}.", npmFuncDllPath);
             return npmFuncDllPath;
         }
 

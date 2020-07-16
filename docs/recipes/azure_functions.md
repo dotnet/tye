@@ -11,6 +11,14 @@ To start, create an Azure Function project in a folder called `backend-function`
 - [Visual Studio](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-your-first-function-visual-studio)
 - [Commandline](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-azure-function-azure-cli?tabs=bash%2Cbrowser&pivots=programming-language-csharp)
 
+Next, you must have the [Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=windows%2Ccsharp%2Cbash) through npm. By default, if you created an azure function through VSCode or Commandline, you will already have installed it. Otherwise, you can install the core tools by running:
+
+```bash
+npm install -g azure-functions-core-tools@3
+```
+
+You can also specify a path to func by specifying `pathToFunc` for the azure function service.
+
 Next, create an HttpTrigger called `MyHttpTrigger` in your functions project. Change the contents of MyHttpTrigger to the following:
 
 ```c#
