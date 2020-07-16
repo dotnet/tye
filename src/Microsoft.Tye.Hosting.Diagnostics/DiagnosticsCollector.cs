@@ -31,7 +31,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
 
         public TracingSink? TracingSink { get; set; }
 
-        public TimeSpan SelectProcessTimeout { get; set; } = TimeSpan.FromSeconds(5);
+        public TimeSpan SelectProcessTimeout { get; set; } = Debugger.IsAttached ? TimeSpan.FromMinutes(1) : TimeSpan.FromSeconds(5);
 
         public Task CollectAsync(ReplicaInfo replicaInfo, CancellationToken cancellationToken)
         {

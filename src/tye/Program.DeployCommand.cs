@@ -66,12 +66,12 @@ namespace Microsoft.Tye
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            if (!await KubectlDetector.Instance.IsKubectlInstalled.Value)
+            if (!await KubectlDetector.IsKubectlInstalledAsync(output))
             {
                 throw new CommandException($"Cannot apply manifests because kubectl is not installed.");
             }
 
-            if (!await KubectlDetector.Instance.IsKubectlConnectedToCluster.Value)
+            if (!await KubectlDetector.IsKubectlConnectedToClusterAsync(output))
             {
                 throw new CommandException($"Cannot apply manifests because kubectl is not connected to a cluster.");
             }

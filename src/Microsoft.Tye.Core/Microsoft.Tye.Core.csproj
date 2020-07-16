@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>Tye</RootNamespace>
     <AssemblyName>Microsoft.Tye.Core</AssemblyName>
     <PackageId>Microsoft.Tye.Core</PackageId>
@@ -13,7 +13,7 @@
       The Microsoft.Build.Locator package takes care of dynamically loading these assemblies
       at runtime. We don't need/want to ship them, just to have them as references.
     -->
-    <PackageReference Include="Microsoft.Build" Version="16.3.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build" Version="16.6.0" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.2.6" />
     <!-- Hoisted to avoid a conflict with Microsoft.Build -->
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
@@ -23,6 +23,7 @@
     <!-- Hoisted to avoid a conflict with Microsoft.Build -->
     <PackageReference Include="System.Security.Principal.Windows" Version="4.7.0" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.5" />
   </ItemGroup>
 
   <ItemGroup>

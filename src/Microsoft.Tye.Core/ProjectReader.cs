@@ -237,6 +237,8 @@ namespace Microsoft.Tye
             var targetFrameworks = projectInstance.GetPropertyValue("TargetFrameworks");
             project.TargetFrameworks = targetFrameworks.Split(';', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
 
+            // Figure out if functions app.
+            // If so, run app with function host.
             project.RunCommand = projectInstance.GetPropertyValue("RunCommand");
             project.RunArguments = projectInstance.GetPropertyValue("RunArguments");
             project.TargetPath = projectInstance.GetPropertyValue("TargetPath");
@@ -252,9 +254,9 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"IntermediateOutputPath={project.IntermediateOutputPath}");
 
             // Normalize directories to their absolute paths
-            project.IntermediateOutputPath = Path.Combine(project.ProjectFile.DirectoryName, NormalizePath(project.IntermediateOutputPath));
-            project.TargetPath = Path.Combine(project.ProjectFile.DirectoryName, NormalizePath(project.TargetPath));
-            project.PublishDir = Path.Combine(project.ProjectFile.DirectoryName, NormalizePath(project.PublishDir));
+            project.IntermediateOutputPath = Path.Combine(project.ProjectFile.DirectoryName!, NormalizePath(project.IntermediateOutputPath));
+            project.TargetPath = Path.Combine(project.ProjectFile.DirectoryName!, NormalizePath(project.TargetPath));
+            project.PublishDir = Path.Combine(project.ProjectFile.DirectoryName!, NormalizePath(project.PublishDir));
 
             var targetFramework = projectInstance.GetPropertyValue("TargetFramework");
             project.TargetFramework = targetFramework;

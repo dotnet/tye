@@ -287,6 +287,7 @@ namespace Microsoft.Tye.Hosting
                 new ProxyService(logger),
                 new HttpProxyService(logger),
                 new DockerImagePuller(logger),
+                new FuncFinder(logger),
                 new ReplicaMonitor(logger),
                 new DockerRunner(logger, replicaRegistry),
                 new ProcessRunner(logger, replicaRegistry, ProcessRunnerOptions.FromHostOptions(options))

@@ -71,7 +71,7 @@ namespace Microsoft.Tye.ConfigModel
                 //
                 // We want a *fast* heuristic that excludes unit test projects and class libraries without
                 // having to load all of the projects. 
-                var launchSettings = Path.Combine(projectFile.DirectoryName, "Properties", "launchSettings.json");
+                var launchSettings = Path.Combine(projectFile.DirectoryName!, "Properties", "launchSettings.json");
                 if (File.Exists(launchSettings) || ContainsOutputTypeExe(projectFile))
                 {
                     var service = new ConfigService()

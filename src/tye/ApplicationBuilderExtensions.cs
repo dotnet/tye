@@ -64,7 +64,7 @@ namespace Microsoft.Tye
                         }
                         else
                         {
-                            dockerRunInfo.DockerFileContext = new FileInfo(dockerRunInfo.DockerFile.DirectoryName);
+                            dockerRunInfo.DockerFileContext = new FileInfo(dockerRunInfo.DockerFile.DirectoryName!);
                         }
                     }
 
@@ -146,6 +146,15 @@ namespace Microsoft.Tye
                     {
                         env.Add(entry.ToHostingEnvironmentVariable());
                     }
+                }
+                else if (service is AzureFunctionServiceBuilder function)
+                {
+                    var functionInfo = new AzureFunctionRunInfo(function);
+
+                    runInfo = functionInfo;
+                    replicas = function.Replicas;
+                    liveness = null;
+                    readiness = null;
                 }
                 else
                 {

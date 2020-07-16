@@ -61,7 +61,7 @@ namespace Microsoft.Tye.Hosting
                 if (serviceDescription.RunInfo is ProjectRunInfo project)
                 {
                     path = project.RunCommand;
-                    workingDirectory = project.ProjectFile.Directory.FullName;
+                    workingDirectory = project.ProjectFile.Directory!.FullName;
                     args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
                     buildProperties = project.BuildProperties.Aggregate(string.Empty, (current, property) => current + $";{property.Key}={property.Value}").TrimStart(';');
 
@@ -72,6 +72,14 @@ namespace Microsoft.Tye.Hosting
                     path = executable.Executable;
                     workingDirectory = executable.WorkingDirectory!;
                     args = executable.Args ?? "";
+                }
+                else if (serviceDescription.RunInfo is AzureFunctionRunInfo function)
+                {
+                    path = function.FuncExecutablePath!;
+                    workingDirectory = new DirectoryInfo(function.FunctionPath).FullName;
+                    // todo make sure to exclude functions app from implied tye running.
+
+                    args = function.Args ?? $"start --build";
                 }
                 else
                 {
@@ -144,19 +152,22 @@ namespace Microsoft.Tye.Hosting
                     _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
                     return;
                 }
+            }
 
-                foreach (var s in application.Services)
+            foreach (var s in application.Services)
+            {
+                switch (s.Value.ServiceType)
                 {
-                    switch (s.Value.ServiceType)
-                    {
-                        case ServiceType.Executable:
-                            LaunchService(application, s.Value);
-                            break;
-                        case ServiceType.Project:
-                            LaunchService(application, s.Value);
-                            break;
-                    };
-                }
+                    case ServiceType.Executable:
+                        LaunchService(application, s.Value);
+                        break;
+                    case ServiceType.Project:
+                        LaunchService(application, s.Value);
+                        break;
+                    case ServiceType.Function:
+                        LaunchService(application, s.Value);
+                        break;
+                };
             }
         }
 
@@ -200,7 +211,7 @@ namespace Microsoft.Tye.Hosting
 
                 application.PopulateEnvironment(service, (k, v) => environment[k] = v);
 
-                if (_options.DebugMode && (_options.DebugAllServices || _options.ServicesToDebug.Contains(serviceName, StringComparer.OrdinalIgnoreCase)))
+                if (_options.DebugMode && (_options.DebugAllServices || _options.ServicesToDebug!.Contains(serviceName, StringComparer.OrdinalIgnoreCase)))
                 {
                     environment["DOTNET_STARTUP_HOOKS"] = typeof(Hosting.Runtime.HostingRuntimeHelpers).Assembly.Location;
                 }
@@ -229,6 +240,17 @@ namespace Microsoft.Tye.Hosting
 
                     // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
                     environment["PORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
+
+                    if (service.ServiceType == ServiceType.Function)
+                    {
+                        // Need to inject port and UseHttps as an argument to func.exe rather than environment variables.
+                        var binding = ports.First();
+                        args += $" --port {binding.Port}";
+                        if (binding.Protocol == "https")
+                        {
+                            args += " --useHttps";
+                        }
+                    }
                 }
 
                 var backOff = TimeSpan.FromSeconds(5);
@@ -368,6 +390,15 @@ namespace Microsoft.Tye.Hosting
                     {
                         _logger.LogError(0, ex, "Failed to launch process for service {ServiceName}", replica);
 
+                        if (!_options.Watch)
+                        {
+                            // Only increase backoff when not watching project as watch will wait for file changes before rebuild.
+                            backOff *= 2;
+                        }
+
+                        service.Restarts++;
+                        service.Replicas.TryRemove(replica, out var _);
+
                         try
                         {
                             await Task.Delay(backOff, processInfo.StoppedTokenSource.Token);
@@ -479,7 +510,7 @@ namespace Microsoft.Tye.Hosting
         private static string GetEntryPointFilePath()
         {
             using var process = Process.GetCurrentProcess();
-            return process.MainModule.FileName;
+            return process.MainModule!.FileName!;
         }
 
         private class ProcessInfo
