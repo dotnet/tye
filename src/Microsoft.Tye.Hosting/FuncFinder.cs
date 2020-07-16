@@ -54,7 +54,6 @@ namespace Microsoft.Tye.Hosting
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                // Default is min.win for whatever reason, probably minified win
                 return Environment.ExpandEnvironmentVariables("%APPDATA%/npm/node_modules/azure-functions-core-tools/bin/func.dll");
             }
             else
