@@ -397,6 +397,15 @@ namespace Microsoft.Tye.Hosting
                     {
                         _logger.LogError(0, ex, "Failed to launch process for service {ServiceName}", replica);
 
+                        if (!_options.Watch)
+                        {
+                            // Only increase backoff when not watching project as watch will wait for file changes before rebuild.
+                            backOff *= 2;
+                        }
+
+                        service.Restarts++;
+                        service.Replicas.TryRemove(replica, out var _);
+
                         try
                         {
                             await Task.Delay(backOff, processInfo.StoppedTokenSource.Token);
