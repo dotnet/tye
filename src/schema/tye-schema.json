@@ -200,21 +200,10 @@
                         "$ref": "#/definitions/binding"
                     }
                 },
-                "arch":
+                "pathToFunc":
                 {
-
-                },
-                "version":
-                {
-
-                },
-                "funcDownloadPath":
-                {
-
-                },
-                "funcExePath":
-                {
-                    
+                    "description": "Optional path to the function host to be used when launching functions. Can point to either func.dll or the binary.",
+                    "type": "string"
                 }
             },
             "required": [
