@@ -22,12 +22,12 @@ ingress:
         service: appC-ui
 
 services:
-  - name: appA
-    project: ApplicationA/ApplicationA.csproj
-    replicas: 2
-  - name: appB
-    project: ApplicationB/ApplicationB.csproj
-    replicas: 2
-  - name: appC-ui
-    project: ApplicationC-UI/ApplicationC-UI.csproj
-    replicas: 2
+- name: appA
+  project: ApplicationA/ApplicationA.csproj
+  replicas: 2
+- name: appB
+  project: ApplicationB/ApplicationB.csproj
+  replicas: 2
+- name: appC-ui
+  project: ApplicationC-UI/ApplicationC-UI.csproj
+  replicas: 2
