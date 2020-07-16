@@ -240,13 +240,6 @@ namespace Microsoft.Tye.Hosting
 
                     // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
                     environment["PORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
-                    environment["HOST__LOCALHTTPPORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
-                    environment["ASPNETCORE__HOST__LOCALHTTPPORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
-
-                    if (service.ServiceType == ServiceType.Function)
-                    {
-                        environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://{host}:{p.Port}"));
-                    }
 
                     if (service.ServiceType == ServiceType.Function)
                     {

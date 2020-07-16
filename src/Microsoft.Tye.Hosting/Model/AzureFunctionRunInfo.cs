@@ -12,16 +12,11 @@ namespace Microsoft.Tye.Hosting.Model
         {
             Args = function.Args;
             FunctionPath = function.FunctionPath;
-            Version = function.Version;
-            Architecture = function.Architecture;
             FuncExecutablePath = function.FuncExecutablePath;
         }
 
         public string? Args { get; }
         public string FunctionPath { get; }
-        public string? Version { get; }
-        public string? Architecture { get; }
         public string? FuncExecutablePath { get; set; }
-        public string? DownloadPath { get; }
     }
 }

@@ -216,6 +216,14 @@ A path to another tye.yaml to be used by the application.
 
 A reference to a repository that will be cloned and used by the application. By default, it is a string that would be passed after `git clone`.
 
+#### `azureFunction` (string)
+
+A path to a folder which contains an azure function project.
+
+#### `pathToFunc` (string)
+
+An optional path to the Azure Functions host to be used instead of the default one installed by npm.
+
 ## Environment Variables
 
 `EnvironmentVariable` elements appear in a list inside the `env` property of a `Service`.
