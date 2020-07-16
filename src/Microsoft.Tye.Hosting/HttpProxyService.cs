@@ -161,16 +161,8 @@ namespace Microsoft.Tye.Hosting
                             await context.ProxyRequest(invoker, uri.Uri);
                         };
 
-                        IEndpointConventionBuilder conventions = null!;
-
-                        if (rule.Path != null)
-                        {
-                            conventions = ((IEndpointRouteBuilder)webApp).Map(rule.Path.TrimEnd('/') + "/{**path}", del);
-                        }
-                        else
-                        {
-                            conventions = webApp.MapFallback(del);
-                        }
+                        IEndpointConventionBuilder conventions =
+                            ((IEndpointRouteBuilder)webApp).Map((rule.Path?.TrimEnd('/') ?? "") + "/{**path}", del);
 
                         if (rule.Host != null)
                         {

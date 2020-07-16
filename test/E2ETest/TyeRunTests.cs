@@ -601,6 +601,36 @@ namespace E2ETest
                 Assert.Equal("?key1=value1&key2=value2", responseContent["query"]);
             });
         }
+        
+        [Fact]
+        public async Task IngressStaticFilesTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
+            
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = true
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var ingressUri = await GetServiceUrl(client, uri, "ingress");
+
+                var cssRequest = new HttpRequestMessage(HttpMethod.Get,
+                    ingressUri + "/css/site.css");
+                cssRequest.Headers.Host = "ui.example.com";
+
+                var cssResponse = await client.SendAsync(cssRequest);
+                cssResponse.EnsureSuccessStatusCode();
+            });
+        }
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
