@@ -231,8 +231,6 @@ namespace Microsoft.Tye
                         {
                             Args = configService.Args,
                             Replicas = configService.Replicas ?? 1,
-                            Architecture = configService.Architecture,
-                            Version = configService.Version,
                             FuncExecutablePath = configService.FuncExecutable
                         };
 

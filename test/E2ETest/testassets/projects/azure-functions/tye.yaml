@@ -4,5 +4,6 @@ name: frontend-backend
 services:
 - name: backend
   azureFunction: backend/
+  pathToFunc: /npm/node_modules/node_modules/azure-functions-core-tools/bin/func.dll
 - name: frontend
   project: frontend/frontend.csproj
