@@ -7,50 +7,57 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    internal class KubectlDetector
+    internal static class KubectlDetector
     {
-        private static bool? _kubectlInstalled = null;
-        private static bool? _kubectlConnectedToCluster = null;
+        private static Lazy<Task<bool>> _kubectlInstalled = new Lazy<Task<bool>>(DetectKubectlInstalled);
+        private static Lazy<Task<bool>> _kubectlConnectedToCluster = new Lazy<Task<bool>>(DetectKubectlConnectedToCluster);
 
-        public static async Task<bool> IsKubectlInstalledAsync(OutputContext output)
+        public static Task<bool> IsKubectlInstalledAsync(OutputContext output)
         {
-            if (!_kubectlInstalled.HasValue)
+            if (!_kubectlInstalled.IsValueCreated)
             {
                 output.WriteInfoLine("Verifying kubectl installation...");
-                try
-                {
-                    // Ignoring the exit code and relying on Process to throw if kubectl is not found
-                    // kubectl version will return non-zero if you're not connected to a cluster.
-                    await ProcessUtil.RunAsync("kubectl", "version", throwOnError: false);
-                    _kubectlInstalled = true;
-                }
-                catch (Exception)
-                {
-                    // Unfortunately, process throws
-                    _kubectlInstalled = false;
-                }
             }
-
             return _kubectlInstalled.Value;
         }
 
-        public static async Task<bool> IsKubectlConnectedToClusterAsync(OutputContext output)
+        public static Task<bool> IsKubectlConnectedToClusterAsync(OutputContext output)
         {
-            if (!_kubectlConnectedToCluster.HasValue)
+            if (!_kubectlConnectedToCluster.IsValueCreated)
             {
                 output.WriteInfoLine("Verifying kubectl connection to cluster...");
-                try
-                {
-                    var result = await ProcessUtil.RunAsync("kubectl", "cluster-info", throwOnError: false);
-                    _kubectlConnectedToCluster = result.ExitCode == 0;
-                }
-                catch (Exception)
-                {
-                    // Unfortunately, process throws
-                    _kubectlConnectedToCluster = false;
-                }
             }
             return _kubectlConnectedToCluster.Value;
+        }
+
+        private static async Task<bool> DetectKubectlInstalled()
+        {
+            try
+            {
+                // Ignoring the exit code and relying on Process to throw if kubectl is not found
+                // kubectl version will return non-zero if you're not connected to a cluster.
+                await ProcessUtil.RunAsync("kubectl", "version", throwOnError: false);
+                return true;
+            }
+            catch (Exception)
+            {
+                // Unfortunately, process throws
+                return false;
+            }
+        }
+
+        private static async Task<bool> DetectKubectlConnectedToCluster()
+        {
+            try
+            {
+                var result = await ProcessUtil.RunAsync("kubectl", "cluster-info", throwOnError: false);
+                return result.ExitCode == 0;
+            }
+            catch (Exception)
+            {
+                // Unfortunately, process throws
+                return false;
+            }
         }
     }
 }
