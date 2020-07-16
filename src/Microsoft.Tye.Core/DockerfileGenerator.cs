@@ -112,7 +112,7 @@ namespace Microsoft.Tye
             }
 
             container.BuildImageName ??= "mcr.microsoft.com/dotnet/core/sdk";
-            container.BuildImageTag ??= project.TargetFrameworkName == "net" ? "5.0" : "3.1";
+            container.BuildImageTag ??= project.TargetFrameworkVersion;
 
             if (container.ImageName == null && application.Registry?.Hostname == null)
             {
