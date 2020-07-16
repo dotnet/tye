@@ -147,7 +147,7 @@ namespace Microsoft.Tye.Hosting
 
                 var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{projectPath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
 
-                if (buildResult.ExitCode != 0 && !_options.Watch)
+                if (buildResult.ExitCode != 0)
                 {
                     _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
                     // TODO consider calling IApplicationLifetime.Stop as an ugly exception message afterwards.
