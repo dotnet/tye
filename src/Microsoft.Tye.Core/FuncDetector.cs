@@ -165,7 +165,7 @@ namespace Microsoft.Tye
                 if (!dryRun)
                 {
                     logger.LogInformation("Writing list of azure function versions to {FeedJsonFile}.", feedJsonFile);
-                    Directory.CreateDirectory(new FileInfo(feedJsonFile).DirectoryName);
+                    Directory.CreateDirectory(new FileInfo(feedJsonFile).DirectoryName!);
                     await File.WriteAllTextAsync(feedJsonFile, responseString, cancellation);
                 }
             }

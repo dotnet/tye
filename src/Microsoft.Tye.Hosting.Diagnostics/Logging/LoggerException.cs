@@ -29,18 +29,18 @@ namespace Microsoft.Tye.Hosting.Diagnostics.Logging
             info.AddValue("RemoteStackTraceString", StackTrace, typeof(string)); // Do not rename (binary serialization)
             info.AddValue("RemoteStackIndex", 0, typeof(int)); // Do not rename (binary serialization)
             info.AddValue("ExceptionMethod", null, typeof(string)); // Do not rename (binary serialization)
-            info.AddValue("HResult", int.Parse(_exceptionMessage.GetProperty("HResult").GetString())); // Do not rename (binary serialization)
+            info.AddValue("HResult", int.Parse(_exceptionMessage.GetProperty("HResult").GetString()!)); // Do not rename (binary serialization)
             info.AddValue("Source", Source, typeof(string)); // Do not rename (binary serialization
             info.AddValue("WatsonBuckets", null, typeof(byte[])); // Do not rename (binary serialization)
         }
 
-        public override string Message => _exceptionMessage.GetProperty("Message").GetString();
+        public override string Message => _exceptionMessage.GetProperty("Message").GetString()!;
 
-        public override string StackTrace => _exceptionMessage.GetProperty("VerboseMessage").GetString();
+        public override string StackTrace => _exceptionMessage.GetProperty("VerboseMessage").GetString()!;
 
         public override string ToString()
         {
-            return _exceptionMessage.GetProperty("VerboseMessage").GetString();
+            return _exceptionMessage.GetProperty("VerboseMessage").GetString()!;
         }
     }
 }

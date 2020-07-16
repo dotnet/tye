@@ -61,7 +61,7 @@ namespace Microsoft.Tye.Hosting
                 if (serviceDescription.RunInfo is ProjectRunInfo project)
                 {
                     path = project.RunCommand;
-                    workingDirectory = project.ProjectFile.Directory.FullName;
+                    workingDirectory = project.ProjectFile.Directory!.FullName;
                     args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
                     buildProperties = project.BuildProperties.Aggregate(string.Empty, (current, property) => current + $";{property.Key}={property.Value}").TrimStart(';');
 
@@ -211,7 +211,7 @@ namespace Microsoft.Tye.Hosting
 
                 application.PopulateEnvironment(service, (k, v) => environment[k] = v);
 
-                if (_options.DebugMode && (_options.DebugAllServices || _options.ServicesToDebug.Contains(serviceName, StringComparer.OrdinalIgnoreCase)))
+                if (_options.DebugMode && (_options.DebugAllServices || _options.ServicesToDebug!.Contains(serviceName, StringComparer.OrdinalIgnoreCase)))
                 {
                     environment["DOTNET_STARTUP_HOOKS"] = typeof(Hosting.Runtime.HostingRuntimeHelpers).Assembly.Location;
                 }
@@ -517,7 +517,7 @@ namespace Microsoft.Tye.Hosting
         private static string GetEntryPointFilePath()
         {
             using var process = Process.GetCurrentProcess();
-            return process.MainModule.FileName;
+            return process.MainModule!.FileName!;
         }
 
         private class ProcessInfo

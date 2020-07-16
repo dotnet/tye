@@ -182,7 +182,7 @@ namespace Microsoft.Tye
                     {
                         if (TryFindProjectFile(token, out var filePath, out var errorMessage))
                         {
-                            return new FileInfo(filePath);
+                            return new FileInfo(filePath!);
                         }
                         else
                         {
