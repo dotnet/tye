@@ -669,12 +669,12 @@ services:
             {
                 var ingressUri = await GetServiceUrl(client, uri, "ingress");
 
-                var cssRequest = new HttpRequestMessage(HttpMethod.Get,
-                    ingressUri + "/css/site.css");
-                cssRequest.Headers.Host = "ui.example.com";
+                var htmlRequest = new HttpRequestMessage(HttpMethod.Get,
+                    ingressUri + "/index.html");
+                htmlRequest.Headers.Host = "ui.example.com";
 
-                var cssResponse = await client.SendAsync(cssRequest);
-                cssResponse.EnsureSuccessStatusCode();
+                var htmlResponse = await client.SendAsync(htmlRequest);
+                htmlResponse.EnsureSuccessStatusCode();
             });
         }
 
