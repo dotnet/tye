@@ -601,12 +601,12 @@ namespace E2ETest
                 Assert.Equal("?key1=value1&key2=value2", responseContent["query"]);
             });
         }
-        
+
         [Fact]
         public async Task IngressStaticFilesTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
-            
+
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
