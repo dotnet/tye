@@ -87,7 +87,7 @@ namespace Microsoft.Tye.Hosting
 
             return events.Where(e => !string.IsNullOrEmpty(e.Trim()))
                 .Select(e => JsonSerializer.Deserialize<IDictionary<string, string>>(e))
-                .ToList()!;
+                .ToList();
         }
 
         private object GetLockForStore(string storeName)

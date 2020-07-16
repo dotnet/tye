@@ -31,21 +31,26 @@ function Write-PipelineTelemetryError {
     return
   fi
 
+  message="(NETCORE_ENGINEERING_TELEMETRY=$telemetry_category) $message"
+  function_args+=("$message")
   if [[ $force == true ]]; then
     function_args+=("-force")
   fi
-  message="(NETCORE_ENGINEERING_TELEMETRY=$telemetry_category) $message"
-  function_args+=("$message")
-  Write-PipelineTaskError ${function_args[@]}
+
+  Write-PipelineTaskError $function_args
 }
 
 function Write-PipelineTaskError {
+  if [[ $force != true ]] && [[ "$ci" != true ]]; then
+    echo "$@" >&2
+    return
+  fi
+
   local message_type="error"
   local sourcepath=''
   local linenumber=''
   local columnnumber=''
   local error_code=''
-  local force=false
 
   while [[ $# -gt 0 ]]; do
     opt="$(echo "${1/#--/-}" | awk '{print tolower($0)}')"
@@ -70,9 +75,6 @@ function Write-PipelineTaskError {
         error_code=$2
         shift
         ;;
-      -force|-f)
-        force=true
-        ;;
       *)
         break
         ;;
@@ -80,11 +82,6 @@ function Write-PipelineTaskError {
 
     shift
   done
-
-  if [[ $force != true ]] && [[ "$ci" != true ]]; then
-    echo "$@" >&2
-    return
-  fi
 
   local message="##vso[task.logissue"
 

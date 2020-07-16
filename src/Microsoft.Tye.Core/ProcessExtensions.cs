@@ -109,13 +109,13 @@ namespace Microsoft.Tye
             var process = System.Diagnostics.Process.Start(startInfo);
 
             stdout = null;
-            if (process?.WaitForExit((int)timeout.TotalMilliseconds) == true)
+            if (process.WaitForExit((int)timeout.TotalMilliseconds))
             {
-                stdout = process?.StandardOutput.ReadToEnd();
+                stdout = process.StandardOutput.ReadToEnd();
             }
             else
             {
-                process?.Kill();
+                process.Kill();
             }
         }
     }

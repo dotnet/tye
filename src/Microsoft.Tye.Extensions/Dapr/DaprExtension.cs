@@ -55,7 +55,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                     // we'll assume the filename and config name are the same.
                     if (config.Data.TryGetValue("config", out var obj) && obj?.ToString() is string daprConfig)
                     {
-                        var configFile = Path.Combine(context.Application.Source.DirectoryName!, "components", $"{daprConfig}.yaml");
+                        var configFile = Path.Combine(context.Application.Source.DirectoryName, "components", $"{daprConfig}.yaml");
                         if (File.Exists(configFile))
                         {
                             proxy.Args += $" -config \"{configFile}\"";

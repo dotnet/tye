@@ -52,7 +52,7 @@ namespace Microsoft.Tye
             {
                 foreach (var kvp in environmentVariables)
                 {
-                    process.StartInfo.Environment.Add(kvp!);
+                    process.StartInfo.Environment.Add(kvp);
                 }
             }
 

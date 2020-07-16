@@ -25,7 +25,7 @@ namespace Microsoft.Tye
                 return Task.CompletedTask;
             }
 
-            var chartDirectory = Path.Combine(project.ProjectFile.DirectoryName!, "charts");
+            var chartDirectory = Path.Combine(project.ProjectFile.DirectoryName, "charts");
             if (Directory.Exists(chartDirectory) && !Force)
             {
                 throw new CommandException("'charts' directory already exists for project. use '--force' to overwrite.");
