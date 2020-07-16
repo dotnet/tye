@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.Build.Globbing.Extensions;
 using Microsoft.DotNet.Watcher;
 using Microsoft.DotNet.Watcher.Internal;
 using Microsoft.Extensions.Hosting;
@@ -26,15 +26,13 @@ namespace Microsoft.Tye.Hosting
 
         private readonly ILogger _logger;
         private readonly ProcessRunnerOptions _options;
-        private readonly IHostApplicationLifetime _lifetime;
         private readonly ReplicaRegistry _replicaRegistry;
 
-        public ProcessRunner(ILogger logger, ReplicaRegistry replicaRegistry, ProcessRunnerOptions options, IHostApplicationLifetime lifetime)
+        public ProcessRunner(ILogger logger, ReplicaRegistry replicaRegistry, ProcessRunnerOptions options)
         {
             _logger = logger;
             _replicaRegistry = replicaRegistry;
             _options = options;
-            _lifetime = lifetime;
         }
 
         public async Task StartAsync(Application application)
@@ -153,9 +151,7 @@ namespace Microsoft.Tye.Hosting
 
                 if (buildResult.ExitCode != 0)
                 {
-                    _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
-                    _lifetime.StopApplication();
-                    return;
+                    throw new TyeBuildException($"Building projects failed with exit code {buildResult.ExitCode}: \r\n{buildResult.StandardOutput}");
                 }
             }
 

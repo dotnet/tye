@@ -248,7 +248,7 @@ namespace Test.Infrastructure
             {
                 var logger = host.DashboardWebApplication!.Logger;
                 var replicaRegistry = new ReplicaRegistry(host.Application.ContextDirectory, logger);
-                var processRunner = new ProcessRunner(logger, replicaRegistry, new ProcessRunnerOptions(), host.DashboardWebApplication.ApplicationLifetime);
+                var processRunner = new ProcessRunner(logger, replicaRegistry, new ProcessRunnerOptions());
                 var dockerRunner = new DockerRunner(logger, replicaRegistry);
 
                 await processRunner.StartAsync(new Application(new FileInfo(host.Application.Source), new Dictionary<string, Service>()));
