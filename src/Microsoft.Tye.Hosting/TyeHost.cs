@@ -85,7 +85,7 @@ namespace Microsoft.Tye.Hosting
 
             _replicaRegistry = new ReplicaRegistry(_application.ContextDirectory, _logger);
 
-            _processor = CreateApplicationProcessor(_replicaRegistry, _options, _logger);
+            _processor = CreateApplicationProcessor(_replicaRegistry, _options, _logger, _lifetime);
 
             await app.StartAsync();
 
@@ -257,7 +257,7 @@ namespace Microsoft.Tye.Hosting
             return false;
         }
 
-        private static AggregateApplicationProcessor CreateApplicationProcessor(ReplicaRegistry replicaRegistry, HostOptions options, Microsoft.Extensions.Logging.ILogger logger)
+        private static AggregateApplicationProcessor CreateApplicationProcessor(ReplicaRegistry replicaRegistry, HostOptions options, Microsoft.Extensions.Logging.ILogger logger, IHostApplicationLifetime lifetime)
         {
             var diagnosticsCollector = new DiagnosticsCollector(logger)
             {
@@ -290,7 +290,7 @@ namespace Microsoft.Tye.Hosting
                 new FuncFinder(logger),
                 new ReplicaMonitor(logger),
                 new DockerRunner(logger, replicaRegistry),
-                new ProcessRunner(logger, replicaRegistry, ProcessRunnerOptions.FromHostOptions(options))
+                new ProcessRunner(logger, replicaRegistry, ProcessRunnerOptions.FromHostOptions(options), lifetime)
             };
 
             // If the docker command is specified then transform the ProjectRunInfo into DockerRunInfo
