@@ -120,7 +120,7 @@ On macOS/Linux:
 
 ## Using local builds
 
-The easiest way to use a custom build of tye is to `dotnet run -p <path to tye projet>`.
+The easiest way to use a custom build of tye is to `dotnet run -p <path to tye project>`.
 
 If you want to install your build as a dotnet global tool, that is possible as well with the following steps:
 
