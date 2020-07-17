@@ -648,6 +648,36 @@ services:
             });
         }
 
+        [Fact]
+        public async Task IngressStaticFilesTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-ui.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = true
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var ingressUri = await GetServiceUrl(client, uri, "ingress");
+
+                var htmlRequest = new HttpRequestMessage(HttpMethod.Get,
+                    ingressUri + "/index.html");
+                htmlRequest.Headers.Host = "ui.example.com";
+
+                var htmlResponse = await client.SendAsync(htmlRequest);
+                htmlResponse.EnsureSuccessStatusCode();
+            });
+        }
+
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task NginxIngressTest()
