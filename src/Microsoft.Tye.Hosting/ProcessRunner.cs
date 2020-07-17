@@ -181,7 +181,7 @@ namespace Microsoft.Tye.Hosting
             var path = service.Status.ExecutablePath!;
             var workingDirectory = service.Status.WorkingDirectory!;
 
-            async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol)> ports)
+            async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol)> ports, string copiedArgs)
             {
                 // Make sure we yield before trying to start the process, this is important so we don't block startup
                 await Task.Yield();
@@ -244,10 +244,10 @@ namespace Microsoft.Tye.Hosting
                     {
                         // Need to inject port and UseHttps as an argument to func.exe rather than environment variables.
                         var binding = ports.First();
-                        args += $" --port {binding.Port}";
+                        copiedArgs += $" --port {binding.Port}";
                         if (binding.Protocol == "https")
                         {
-                            args += " --useHttps";
+                            copiedArgs += " --useHttps";
                         }
                     }
                 }
@@ -285,19 +285,19 @@ namespace Microsoft.Tye.Hosting
                     // TODO clean this up.
                     foreach (var env in environment)
                     {
-                        args = args.Replace($"%{env.Key}%", env.Value);
+                        copiedArgs = copiedArgs.Replace($"%{env.Key}%", env.Value);
                     }
 
-                    _logger.LogInformation("Launching service {ServiceName}: {ExePath} {args}", replica, path, args);
+                    _logger.LogInformation("Launching service {ServiceName}: {ExePath} {args}", replica, path, copiedArgs);
 
                     try
                     {
-                        service.Logs.OnNext($"[{replica}]:{path} {args}");
+                        service.Logs.OnNext($"[{replica}]:{path} {copiedArgs}");
                         var processInfo = new ProcessSpec
                         {
                             Executable = path,
                             WorkingDirectory = workingDirectory,
-                            Arguments = args,
+                            Arguments = copiedArgs,
                             EnvironmentVariables = environment,
                             OutputData = data =>
                             {
@@ -444,14 +444,14 @@ namespace Microsoft.Tye.Hosting
                         ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.Protocol));
                     }
 
-                    processInfo.Tasks[i] = RunApplicationAsync(ports);
+                    processInfo.Tasks[i] = RunApplicationAsync(ports, args);
                 }
             }
             else
             {
                 for (int i = 0; i < service.Description.Replicas; i++)
                 {
-                    processInfo.Tasks[i] = RunApplicationAsync(Enumerable.Empty<(int, int, string?)>());
+                    processInfo.Tasks[i] = RunApplicationAsync(Enumerable.Empty<(int, int, string?)>(), args);
                 }
             }
 
