@@ -149,8 +149,7 @@ namespace Microsoft.Tye.Hosting
 
                 if (buildResult.ExitCode != 0)
                 {
-                    _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
-                    return;
+                    throw new TyeBuildException($"Building projects failed with exit code {buildResult.ExitCode}: \r\n{buildResult.StandardOutput}");
                 }
             }
 
