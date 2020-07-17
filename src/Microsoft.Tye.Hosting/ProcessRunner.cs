@@ -323,7 +323,7 @@ namespace Microsoft.Tye.Hosting
 
                                 WriteReplicaToStore(pid.ToString());
 
-                                if (_options.Watch && service.Description.RunInfo is ProjectRunInfo runInfo)
+                                if (_options.Watch)
                                 {
                                     // OnStart/OnStop will be called multiple times for watch.
                                     // Watch will constantly be adding and removing from the list, so only add here for watch.
@@ -360,18 +360,34 @@ namespace Microsoft.Tye.Hosting
                             },
                             Build = async () =>
                             {
-                                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
-                                if (buildResult.ExitCode != 0)
+                                if (service.Description.RunInfo is ProjectRunInfo)
                                 {
-                                    _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
+                                    var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
+                                    if (buildResult.ExitCode != 0)
+                                    {
+                                        _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
+                                    }
+                                    return buildResult.ExitCode;
                                 }
-                                return buildResult.ExitCode;
+                                return 0; 
                             }
                         };
 
-                        if (_options.Watch && service.Description.RunInfo is ProjectRunInfo runInfo)
+                        if (_options.Watch && (service.Description.RunInfo is ProjectRunInfo runInfo))
                         {
                             var projectFile = runInfo.ProjectFile.FullName;
+                            var fileSetFactory = new MsBuildFileSetFactory(_logger,
+                                projectFile,
+                                waitOnError: true,
+                                trace: false);
+                            environment["DOTNET_WATCH"] = "1";
+
+                            await new DotNetWatcher(_logger)
+                                .WatchAsync(processInfo, fileSetFactory, replica, status.StoppingTokenSource.Token);
+                        }
+                        else if (_options.Watch && (service.Description.RunInfo is AzureFunctionRunInfo azureFunctionRunInfo) && !string.IsNullOrEmpty(azureFunctionRunInfo.ProjectFile))
+                        {
+                            var projectFile = azureFunctionRunInfo.ProjectFile;
                             var fileSetFactory = new MsBuildFileSetFactory(_logger,
                                 projectFile,
                                 waitOnError: true,

@@ -100,6 +100,11 @@ namespace Microsoft.DotNet.Watcher
                     {
                         while (true)
                         {
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                break;
+                            }
+
                             var exitCode = await processSpec.Build();
                             if (exitCode == 0)
                             {
