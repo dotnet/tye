@@ -186,7 +186,7 @@ namespace Microsoft.Tye
                     else if (!string.IsNullOrEmpty(configService.Repository))
                     {
                         // clone to .tye folder
-                        var path = Path.Join(rootConfig.Source.DirectoryName, ".tye", "deps");
+                        var path = configService.CloneDirectory ?? Path.Join(rootConfig.Source.DirectoryName, ".tye", "deps");
                         if (!Directory.Exists(path))
                         {
                             Directory.CreateDirectory(path);
@@ -225,14 +225,26 @@ namespace Microsoft.Tye
                     }
                     else if (!string.IsNullOrEmpty(configService.AzureFunction))
                     {
+                        var azureFunctionDirectory = Path.Combine(config.Source.DirectoryName!, configService.AzureFunction);
+
                         var functionBuilder = new AzureFunctionServiceBuilder(
                             configService.Name,
-                            Path.Combine(config.Source.DirectoryName, configService.AzureFunction))
+                            azureFunctionDirectory)
                         {
                             Args = configService.Args,
                             Replicas = configService.Replicas ?? 1,
-                            FuncExecutablePath = configService.FuncExecutable
+                            FuncExecutablePath = configService.FuncExecutable,
                         };
+
+                        foreach (var proj in Directory.EnumerateFiles(azureFunctionDirectory))
+                        {
+                            var fileInfo = new FileInfo(proj);
+                            if (fileInfo.Extension == ".csproj" || fileInfo.Extension == ".fsproj")
+                            {
+                                functionBuilder.ProjectFile = fileInfo.FullName;
+                                break;
+                            }
+                        }
 
                         // TODO liveness?
                         service = functionBuilder;

@@ -13,10 +13,12 @@ namespace Microsoft.Tye.Hosting.Model
             Args = function.Args;
             FunctionPath = function.FunctionPath;
             FuncExecutablePath = function.FuncExecutablePath;
+            ProjectFile = function.ProjectFile;
         }
 
         public string? Args { get; }
         public string FunctionPath { get; }
         public string? FuncExecutablePath { get; set; }
+        public string? ProjectFile { get; set; }
     }
 }

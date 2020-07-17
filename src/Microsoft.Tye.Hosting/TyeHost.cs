@@ -91,7 +91,15 @@ namespace Microsoft.Tye.Hosting
 
             _logger.LogInformation("Dashboard running on {Address}", app.Addresses.First());
 
-            await _processor.StartAsync(_application);
+            try
+            {
+                await _processor.StartAsync(_application);
+            }
+            catch (TyeBuildException ex)
+            {
+                _logger.LogError(ex.Message);
+                _lifetime.StopApplication();
+            }
 
             if (_options.Dashboard)
             {
