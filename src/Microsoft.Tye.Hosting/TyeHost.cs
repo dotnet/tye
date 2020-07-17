@@ -85,7 +85,7 @@ namespace Microsoft.Tye.Hosting
 
             _replicaRegistry = new ReplicaRegistry(_application.ContextDirectory, _logger);
 
-            _processor = CreateApplicationProcessor(_replicaRegistry, _options, _logger, _lifetime);
+            _processor = CreateApplicationProcessor(_replicaRegistry, _options, _logger);
 
             await app.StartAsync();
 
@@ -265,7 +265,7 @@ namespace Microsoft.Tye.Hosting
             return false;
         }
 
-        private static AggregateApplicationProcessor CreateApplicationProcessor(ReplicaRegistry replicaRegistry, HostOptions options, Microsoft.Extensions.Logging.ILogger logger, IHostApplicationLifetime lifetime)
+        private static AggregateApplicationProcessor CreateApplicationProcessor(ReplicaRegistry replicaRegistry, HostOptions options, Microsoft.Extensions.Logging.ILogger logger)
         {
             var diagnosticsCollector = new DiagnosticsCollector(logger)
             {

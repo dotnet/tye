@@ -11,10 +11,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Build.Globbing.Extensions;
 using Microsoft.DotNet.Watcher;
 using Microsoft.DotNet.Watcher.Internal;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Tye.Hosting.Model;
 
