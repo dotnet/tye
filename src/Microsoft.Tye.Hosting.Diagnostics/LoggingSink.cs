@@ -112,7 +112,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
                     if (message.TryGetProperty("{OriginalFormat}", out var formatElement))
                     {
                         var formatString = formatElement.GetString();
-                        var formatter = new LogValuesFormatter(formatString!);
+                        var formatter = new LogValuesFormatter(formatString);
                         var args = new object[formatter.ValueNames.Count];
                         for (var i = 0; i < args.Length; i++)
                         {
@@ -126,7 +126,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
                                 break;
                             }
 
-                            args[i] = argValue.GetString()!;
+                            args[i] = argValue.GetString();
                         }
 
                         logger.Log(logLevel, new EventId(eventId, eventName), exception, formatString, args);

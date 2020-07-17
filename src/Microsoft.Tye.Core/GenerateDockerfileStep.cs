@@ -32,7 +32,7 @@ namespace Microsoft.Tye
 
             container.UseMultiphaseDockerfile ??= true;
 
-            var dockerFilePath = Path.Combine(project.ProjectFile.DirectoryName!, "Dockerfile");
+            var dockerFilePath = Path.Combine(project.ProjectFile.DirectoryName, "Dockerfile");
             if (File.Exists(dockerFilePath) && !Force)
             {
                 throw new CommandException("'Dockerfile' already exists for project. use '--force' to overwrite.");

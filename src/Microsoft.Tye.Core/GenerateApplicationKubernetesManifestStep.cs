@@ -16,7 +16,7 @@ namespace Microsoft.Tye
 
         public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application)
         {
-            var outputFilePath = Path.GetFullPath(Path.Combine(application.Source.DirectoryName!, $"{application.Name}-generate-{Environment}.yaml"));
+            var outputFilePath = Path.GetFullPath(Path.Combine(application.Source.DirectoryName, $"{application.Name}-generate-{Environment}.yaml"));
             output.WriteInfoLine($"Writing output to '{outputFilePath}'.");
             {
                 File.Delete(outputFilePath);

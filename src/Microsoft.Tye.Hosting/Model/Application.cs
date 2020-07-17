@@ -15,7 +15,7 @@ namespace Microsoft.Tye.Hosting.Model
         public Application(FileInfo source, Dictionary<string, Service> services)
         {
             Source = source.FullName;
-            ContextDirectory = source.DirectoryName!;
+            ContextDirectory = source.DirectoryName;
             Services = services;
         }
 

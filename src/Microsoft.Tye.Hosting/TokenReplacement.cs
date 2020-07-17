@@ -79,12 +79,12 @@ namespace Microsoft.Tye.Hosting
             }
             else if (keys.Length == 3 && keys[0] == "service")
             {
-                binding = bindings.FirstOrDefault(b => b.Service == keys[1] && b.Name == null)!;
+                binding = bindings.FirstOrDefault(b => b.Service == keys[1] && b.Name == null);
                 return GetValueFromBinding(binding, keys[2]);
             }
             else if (keys.Length == 4 && keys[0] == "service")
             {
-                binding = bindings.FirstOrDefault(b => b.Service == keys[1] && b.Name == keys[2])!;
+                binding = bindings.FirstOrDefault(b => b.Service == keys[1] && b.Name == keys[2]);
                 return GetValueFromBinding(binding, keys[3]);
             }
 

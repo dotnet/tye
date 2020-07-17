@@ -88,7 +88,7 @@ namespace Microsoft.Tye
                     if (!string.IsNullOrEmpty(configService.Project))
                     {
                         var expandedProject = Environment.ExpandEnvironmentVariables(configService.Project);
-                        var projectFile = new FileInfo(Path.Combine(config.Source.DirectoryName!, expandedProject));
+                        var projectFile = new FileInfo(Path.Combine(config.Source.DirectoryName, expandedProject));
                         var project = new DotnetProjectServiceBuilder(configService.Name!, projectFile);
                         service = project;
 
@@ -131,7 +131,7 @@ namespace Microsoft.Tye
                             Args = configService.Args,
                             Build = configService.Build ?? true,
                             Replicas = configService.Replicas ?? 1,
-                            DockerFile = Path.Combine(source.DirectoryName!, configService.DockerFile),
+                            DockerFile = Path.Combine(source.DirectoryName, configService.DockerFile),
                             // Supplying an absolute path with trailing slashes fails for DockerFileContext when calling docker build, so trim trailing slash.
                             DockerFileContext = GetDockerFileContext(source, configService),
                             BuildArgs = configService.DockerFileArgs
@@ -156,7 +156,7 @@ namespace Microsoft.Tye
                         // Special handling of .dlls as executables (it will be executed as dotnet {dll})
                         if (Path.GetExtension(expandedExecutable) == ".dll")
                         {
-                            expandedExecutable = Path.GetFullPath(Path.Combine(config.Source.Directory!.FullName, expandedExecutable));
+                            expandedExecutable = Path.GetFullPath(Path.Combine(config.Source.Directory.FullName, expandedExecutable));
                             workingDirectory = Path.GetDirectoryName(expandedExecutable)!;
                         }
 
@@ -164,7 +164,7 @@ namespace Microsoft.Tye
                         {
                             Args = configService.Args,
                             WorkingDirectory = configService.WorkingDirectory != null ?
-                            Path.GetFullPath(Path.Combine(config.Source.Directory!.FullName, Environment.ExpandEnvironmentVariables(configService.WorkingDirectory))) :
+                            Path.GetFullPath(Path.Combine(config.Source.Directory.FullName, Environment.ExpandEnvironmentVariables(configService.WorkingDirectory))) :
                             workingDirectory,
                             Replicas = configService.Replicas ?? 1
                         };
@@ -177,7 +177,7 @@ namespace Microsoft.Tye
                     {
                         var expandedYaml = Environment.ExpandEnvironmentVariables(configService.Include);
 
-                        var nestedConfig = GetNestedConfig(rootConfig, Path.Combine(config.Source.DirectoryName!, expandedYaml));
+                        var nestedConfig = GetNestedConfig(rootConfig, Path.Combine(config.Source.DirectoryName, expandedYaml));
                         queue.Enqueue((nestedConfig, new HashSet<string>()));
 
                         AddToRootServices(root, dependencies, configService.Name);
@@ -405,11 +405,11 @@ namespace Microsoft.Tye
             // but it's the exact opposite on linux, where it needs to have the trailing slash.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return Path.TrimEndingDirectorySeparator(Path.Combine(source.DirectoryName!, configService.DockerFileContext));
+                return Path.TrimEndingDirectorySeparator(Path.Combine(source.DirectoryName, configService.DockerFileContext));
             }
             else
             {
-                var path = Path.Combine(source.DirectoryName!, configService.DockerFileContext);
+                var path = Path.Combine(source.DirectoryName, configService.DockerFileContext);
 
                 if (!Path.EndsInDirectorySeparator(path))
                 {
@@ -422,7 +422,7 @@ namespace Microsoft.Tye
 
         private static ConfigApplication GetNestedConfig(ConfigApplication rootConfig, string? file)
         {
-            var nestedConfig = ConfigFactory.FromFile(new FileInfo(file!));
+            var nestedConfig = ConfigFactory.FromFile(new FileInfo(file));
             nestedConfig.Validate();
 
             if (nestedConfig.Name != rootConfig.Name)

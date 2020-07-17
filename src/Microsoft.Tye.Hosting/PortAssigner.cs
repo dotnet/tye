@@ -39,7 +39,7 @@ namespace Microsoft.Tye.Hosting
                     // reuse being enabled by default by the OS.
                     using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                     socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-                    return ((IPEndPoint)socket.LocalEndPoint!).Port;
+                    return ((IPEndPoint)socket.LocalEndPoint).Port;
                 }
 
                 foreach (var binding in service.Description.Bindings)
