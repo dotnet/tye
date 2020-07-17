@@ -16,5 +16,6 @@ namespace Microsoft.Tye
         public string? Args { get; set; }
         public string FunctionPath { get; }
         public string? FuncExecutablePath { get; set; }
+        public string? ProjectFile { get; set; }
     }
 }
