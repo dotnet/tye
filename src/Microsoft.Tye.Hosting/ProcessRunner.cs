@@ -369,7 +369,8 @@ namespace Microsoft.Tye.Hosting
                                     }
                                     return buildResult.ExitCode;
                                 }
-                                return 0; 
+
+                                return 0;
                             }
                         };
 
