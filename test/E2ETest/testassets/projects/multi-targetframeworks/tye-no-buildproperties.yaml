@@ -2,7 +2,7 @@
 # read all about it at https://github.com/dotnet/tye
 name: multi-targetframeworks
 services:
-- name: backend
-  project: backend/backend.csproj
+- name: multi-targetframeworks
+  project: multi-targetframeworks/multi-targetframeworks.csproj
   bindings:
   - port: 7000

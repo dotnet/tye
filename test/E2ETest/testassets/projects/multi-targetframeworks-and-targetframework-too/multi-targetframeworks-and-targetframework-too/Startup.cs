@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http;
 using System.Reflection;
 using System.Runtime.Versioning;
 
-namespace Backend
+namespace MultiTargetFrameworks
 {
     public class Startup
     {

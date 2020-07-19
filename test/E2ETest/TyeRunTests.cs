@@ -926,7 +926,7 @@ services:
             await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
             {
                 // make sure it is running
-                var backendUri = await GetServiceUrl(client, uri, "backend");
+                var backendUri = await GetServiceUrl(client, uri, "multi-targetframeworks");
 
                 var backendResponse = await client.GetAsync(backendUri);
                 Assert.True(backendResponse.IsSuccessStatusCode);
@@ -957,7 +957,7 @@ services:
             await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
             {
                 // make sure it is running
-                var backendUri = await GetServiceUrl(client, uri, "backend");
+                var backendUri = await GetServiceUrl(client, uri, "multi-targetframeworks");
 
                 var backendResponse = await client.GetAsync(backendUri);
                 Assert.True(backendResponse.IsSuccessStatusCode);
@@ -988,7 +988,7 @@ services:
             await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
             {
                 // make sure it is running
-                var backendUri = await GetServiceUrl(client, uri, "backend");
+                var backendUri = await GetServiceUrl(client, uri, "multi-targetframeworks");
 
                 var backendResponse = await client.GetAsync(backendUri);
                 Assert.True(backendResponse.IsSuccessStatusCode);
@@ -1019,7 +1019,7 @@ services:
             await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
             {
                 // make sure it is running
-                var backendUri = await GetServiceUrl(client, uri, "backend");
+                var backendUri = await GetServiceUrl(client, uri, "multi-targetframeworks-and-targetframework-too");
 
                 var backendResponse = await client.GetAsync(backendUri);
                 Assert.True(backendResponse.IsSuccessStatusCode);

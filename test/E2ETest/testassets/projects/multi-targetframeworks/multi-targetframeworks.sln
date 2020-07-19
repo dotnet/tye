@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "backend", "backend\backend.csproj", "{CA427ACE-098F-4883-8A91-02F766FC2D46}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "multi-targetframeworks", "multi-targetframeworks\multi-targetframeworks.csproj", "{CA427ACE-098F-4883-8A91-02F766FC2D46}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

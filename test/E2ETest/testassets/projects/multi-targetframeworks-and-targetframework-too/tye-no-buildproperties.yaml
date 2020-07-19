@@ -1,8 +1,8 @@
 ﻿# tye application configuration file
 # read all about it at https://github.com/dotnet/tye
-name: multi-targetframeworks
+name: multi-targetframeworks-and-targetframework-too
 services:
-- name: backend
-  project: backend/backend.csproj
+- name: multi-targetframeworks-and-targetframework-too
+  project: multi-targetframeworks-and-targetframework-too/multi-targetframeworks-and-targetframework-too.csproj
   bindings:
   - port: 7000

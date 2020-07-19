@@ -10,7 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore;
 #endif
 
-namespace Backend
+namespace MultiTargetFrameworks
 {
     public class Program
     {
