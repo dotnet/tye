@@ -1,0 +1,9 @@
+﻿# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: multi-targetframeworks
+services:
+- name: backend
+  project: backend/backend.csproj
+  buildProperties:
+    - name: TargetFramework
+      value: netcoreapp2.1
