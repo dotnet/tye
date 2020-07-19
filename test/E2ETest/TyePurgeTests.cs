@@ -37,7 +37,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var tyeDir = new DirectoryInfo(Path.Combine(projectDirectory.DirectoryPath, ".tye"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
             var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
                 Sink = _sink,
@@ -75,7 +75,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
             var tyeDir = new DirectoryInfo(Path.Combine(projectDirectory.DirectoryPath, ".tye"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
             var host = new TyeHost(application.ToHostingApplication(), new HostOptions())
             {
                 Sink = _sink,

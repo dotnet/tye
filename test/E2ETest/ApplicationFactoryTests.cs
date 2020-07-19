@@ -27,11 +27,12 @@ services:
 - name: test-project
   include: tye.yaml";
             var yamlFile = Path.Combine(projectDirectory.DirectoryPath, "tye.yaml");
-
             await File.WriteAllTextAsync(yamlFile, content);
+
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile), null);
+            var projectFile = new FileInfo(yamlFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             Assert.Empty(application.Services);
         }
@@ -52,7 +53,8 @@ services:
 
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile), null);
+            var projectFile = new FileInfo(yamlFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             Assert.Equal(5, application.Services.Count);
 
@@ -100,7 +102,8 @@ services:
 
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile), null);
+            var projectFile = new FileInfo(yamlFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             Assert.Equal(4, application.Services.Count);
             var redisService = application.Services.Single(s => s.Name == "redis");

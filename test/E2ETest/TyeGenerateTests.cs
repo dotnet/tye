@@ -38,7 +38,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Need to add docker registry for generate
             application.Registry = new ContainerRegistry("test");
@@ -76,7 +76,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Need to add docker registry for generate
             application.Registry = new ContainerRegistry("test");
@@ -117,7 +117,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Need to add docker registry for generate
             application.Registry = new ContainerRegistry("test");
@@ -158,7 +158,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             try
             {
@@ -193,7 +193,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             try
             {
@@ -228,7 +228,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             try
             {
@@ -263,7 +263,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             try
             {
@@ -298,7 +298,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             try
             {
@@ -335,7 +335,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "results", "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             try
             {
@@ -371,7 +371,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             try
             {
@@ -408,7 +408,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-all.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             try
             {
@@ -444,7 +444,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, null);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             try
             {
