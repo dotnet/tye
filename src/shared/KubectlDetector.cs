@@ -7,19 +7,28 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
-    internal class KubectlDetector
+    internal static class KubectlDetector
     {
-        public static KubectlDetector Instance { get; } = new KubectlDetector();
+        private static Lazy<Task<bool>> _kubectlInstalled = new Lazy<Task<bool>>(DetectKubectlInstalled);
+        private static Lazy<Task<bool>> _kubectlConnectedToCluster = new Lazy<Task<bool>>(DetectKubectlConnectedToCluster);
 
-        private KubectlDetector()
+        public static Task<bool> IsKubectlInstalledAsync(OutputContext output)
         {
-            IsKubectlInstalled = new Lazy<Task<bool>>(DetectKubectlInstalled);
-            IsKubectlConnectedToCluster = new Lazy<Task<bool>>(DetectKubectlConnectedToCluster);
+            if (!_kubectlInstalled.IsValueCreated)
+            {
+                output.WriteInfoLine("Verifying kubectl installation...");
+            }
+            return _kubectlInstalled.Value;
         }
 
-        public Lazy<Task<bool>> IsKubectlInstalled { get; }
-
-        public Lazy<Task<bool>> IsKubectlConnectedToCluster { get; }
+        public static Task<bool> IsKubectlConnectedToClusterAsync(OutputContext output)
+        {
+            if (!_kubectlConnectedToCluster.IsValueCreated)
+            {
+                output.WriteInfoLine("Verifying kubectl connection to cluster...");
+            }
+            return _kubectlConnectedToCluster.Value;
+        }
 
         private static async Task<bool> DetectKubectlInstalled()
         {

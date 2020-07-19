@@ -147,6 +147,15 @@ namespace Microsoft.Tye
                         env.Add(entry.ToHostingEnvironmentVariable());
                     }
                 }
+                else if (service is AzureFunctionServiceBuilder function)
+                {
+                    var functionInfo = new AzureFunctionRunInfo(function);
+
+                    runInfo = functionInfo;
+                    replicas = function.Replicas;
+                    liveness = null;
+                    readiness = null;
+                }
                 else
                 {
                     throw new InvalidOperationException($"Cannot figure out how to run service '{service.Name}'.");

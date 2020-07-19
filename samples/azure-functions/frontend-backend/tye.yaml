@@ -1,0 +1,8 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: frontend-backend
+services:
+- name: backend
+  azureFunction: backend/
+- name: frontend
+  project: frontend/frontend.csproj

@@ -24,7 +24,7 @@ namespace Test.Infrastructure
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
-            HttpResponseMessage? response = null;
+            HttpResponseMessage response = null;
             var delay = InitialRetryDelay;
             for (var i = 0; i < MaxRetries; i++)
             {

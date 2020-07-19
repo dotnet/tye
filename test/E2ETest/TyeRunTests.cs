@@ -16,6 +16,7 @@ using Microsoft.Tye;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
 using Microsoft.Tye.Hosting.Model.V1;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
@@ -51,6 +52,51 @@ namespace E2ETest
             using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var frontendUri = await GetServiceUrl(client, uri, "frontend");
+                var backendUri = await GetServiceUrl(client, uri, "backend");
+
+                var backendResponse = await client.GetAsync(backendUri);
+                var frontendResponse = await client.GetAsync(frontendUri);
+
+                Assert.True(backendResponse.IsSuccessStatusCode);
+                Assert.True(frontendResponse.IsSuccessStatusCode);
+            });
+        }
+
+        [Fact(Skip = "Need to figure out how to install func before running")]
+        public async Task FrontendBackendAzureFunctionTest()
+        {
+            // Install to directory
+            using var tmp = TempDirectory.Create();
+            await ProcessUtil.RunAsync("npm", "install azure-functions-core-tools@3`", workingDirectory: tmp.DirectoryPath);
+            using var projectDirectory = CopyTestProjectDirectory("azure-functions");
+
+            var content = @$"
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: frontend-backend
+services:
+- name: backend
+  azureFunction: backend/
+  pathToFunc: {tmp.DirectoryPath}/node_modules/azure-functions-core-tools/bin/func.dll
+- name: frontend
+  project: frontend/frontend.csproj";
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            await File.WriteAllTextAsync(projectFile.FullName, content);
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
@@ -291,7 +337,7 @@ namespace E2ETest
                         return;
                     }
 
-                    await Task.Delay(500);
+                    await Task.Delay(5000);
                 }
 
                 throw new Exception("Failed to relaunch project with dotnet watch");
@@ -599,6 +645,36 @@ namespace E2ETest
 
                 Assert.Equal("some content", responseContent["content"]);
                 Assert.Equal("?key1=value1&key2=value2", responseContent["query"]);
+            });
+        }
+
+        [Fact]
+        public async Task IngressStaticFilesTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-ui.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = true
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var ingressUri = await GetServiceUrl(client, uri, "ingress");
+
+                var htmlRequest = new HttpRequestMessage(HttpMethod.Get,
+                    ingressUri + "/index.html");
+                htmlRequest.Headers.Host = "ui.example.com";
+
+                var htmlResponse = await client.SendAsync(htmlRequest);
+                htmlResponse.EnsureSuccessStatusCode();
             });
         }
 

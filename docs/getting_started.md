@@ -8,13 +8,13 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
 2. Install tye via the following command:
 
     ```text
-    dotnet tool install -g Microsoft.Tye --version "0.3.0-alpha.20318.3"
+    dotnet tool install -g Microsoft.Tye --version "0.3.0-alpha.20319.3"
     ```
 
     OR if you already have Tye installed and want to update:
 
     ```text
-    dotnet tool update -g Microsoft.Tye --version "0.3.0-alpha.20318.3"
+    dotnet tool update -g Microsoft.Tye --version "0.3.0-alpha.20319.3"
     ```
 
 ## Next steps
@@ -28,13 +28,13 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
 This will install the newest available build from our CI.
 
 ```txt
-dotnet tool install -g Microsoft.Tye --version "0.3.0-*" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json
+dotnet tool install -g Microsoft.Tye --version "0.4.0-*" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json
 ```
 
 If you already have a build installed and you want to update, replace `install` with `update`:
 
 ```txt
-dotnet tool update -g Microsoft.Tye --version "0.3.0-*" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json
+dotnet tool update -g Microsoft.Tye --version "0.4.0-*" --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json
 ```
 
 > :bulb: Note that the version numbers for our CI builds and released packages will usually be different. 

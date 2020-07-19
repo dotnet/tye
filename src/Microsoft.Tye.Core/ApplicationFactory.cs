@@ -187,7 +187,7 @@ namespace Microsoft.Tye
                     else if (!string.IsNullOrEmpty(configService.Repository))
                     {
                         // clone to .tye folder
-                        var path = Path.Join(rootConfig.Source.DirectoryName, ".tye", "deps");
+                        var path = configService.CloneDirectory ?? Path.Join(rootConfig.Source.DirectoryName, ".tye", "deps");
                         if (!Directory.Exists(path))
                         {
                             Directory.CreateDirectory(path);
@@ -224,9 +224,35 @@ namespace Microsoft.Tye
 
                         continue;
                     }
+                    else if (!string.IsNullOrEmpty(configService.AzureFunction))
+                    {
+                        var azureFunctionDirectory = Path.Combine(config.Source.DirectoryName!, configService.AzureFunction);
+
+                        var functionBuilder = new AzureFunctionServiceBuilder(
+                            configService.Name,
+                            azureFunctionDirectory)
+                        {
+                            Args = configService.Args,
+                            Replicas = configService.Replicas ?? 1,
+                            FuncExecutablePath = configService.FuncExecutable,
+                        };
+
+                        foreach (var proj in Directory.EnumerateFiles(azureFunctionDirectory))
+                        {
+                            var fileInfo = new FileInfo(proj);
+                            if (fileInfo.Extension == ".csproj" || fileInfo.Extension == ".fsproj")
+                            {
+                                functionBuilder.ProjectFile = fileInfo.FullName;
+                                break;
+                            }
+                        }
+
+                        // TODO liveness?
+                        service = functionBuilder;
+                    }
                     else if (configService.External)
                     {
-                        var external = new ExternalServiceBuilder(configService.Name!);
+                        var external = new ExternalServiceBuilder(configService.Name);
                         service = external;
                     }
                     else
@@ -249,6 +275,12 @@ namespace Microsoft.Tye
                         // HTTP is the default binding
                         service.Bindings.Add(new BindingBuilder() { Protocol = "http" });
                         service.Bindings.Add(new BindingBuilder() { Name = "https", Protocol = "https" });
+                    }
+                    else if (configService.Bindings.Count == 0 &&
+                        service is AzureFunctionServiceBuilder project3)
+                    {
+                        // TODO need to figure out binding from host.json file. Supporting http for now.
+                        service.Bindings.Add(new BindingBuilder() { Protocol = "http" });
                     }
                     else
                     {
