@@ -126,7 +126,7 @@ Now that we have two applications running, let's make them communicate. By defau
 4. Add a reference to the `Microsoft.Tye.Extensions.Configuration` package to the frontend project
 
     ```txt
-    dotnet add frontend/frontend.csproj package Microsoft.Tye.Extensions.Configuration  --version "0.3.0-*"
+    dotnet add frontend/frontend.csproj package Microsoft.Tye.Extensions.Configuration  --version "0.4.0-*"
     ```
 
 5. Now register this client in `frontend` by adding the following to the existing `ConfigureServices` method to the existing `Startup.cs` file:
