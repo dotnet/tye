@@ -1,6 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Diagnostics.Tracing.Parsers.FrameworkEventSource;
 using Microsoft.Tye;
 using Test.Infrastructure;
 using Xunit;
@@ -134,14 +136,51 @@ services:
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var projectFile = new FileInfo(yamlFile);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
+            var applicationBuilder = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
 
-            Assert.Single(application.Services);
-            var service = application.Services.Single(s => s.Name == "multi-targetframeworks");
+            Assert.Single(applicationBuilder.Services);
+            var service = applicationBuilder.Services.Single(s => s.Name == "multi-targetframeworks");
 
             var containsTargetFramework = ((DotnetProjectServiceBuilder)service).BuildProperties.TryGetValue("TargetFramework", out var targetFramework);
             Assert.True(containsTargetFramework);
             Assert.Equal("netcoreapp3.1", targetFramework);
+        }
+
+        [Fact]
+        public async Task ThrowIfNoSpecificTargetFramework()
+        {
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory(Path.Combine("multi-targetframeworks"));
+            var yamlFile = Path.Combine(projectDirectory.DirectoryPath, "tye-no-buildproperties.yaml");
+
+            // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var projectFile = new FileInfo(yamlFile);
+            var applicationBuilder = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            Assert.Single(applicationBuilder.Services);
+            var service = applicationBuilder.Services.Single(s => s.Name == "multi-targetframeworks");
+
+            var containsTargetFramework = ((DotnetProjectServiceBuilder)service).BuildProperties.TryGetValue("TargetFramework", out var targetFramework);
+            Assert.False(containsTargetFramework);
+
+            Assert.Throws<InvalidOperationException>(() => applicationBuilder.ToHostingApplication());
+        }
+
+        [Fact]
+        public async Task ThrowIfSpecifyTargetFrameworkNotDefinedIsCsproj()
+        {
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory(Path.Combine("multi-targetframeworks"));
+            var yamlFile = Path.Combine(projectDirectory.DirectoryPath, "tye-with-netcoreapp21.yaml");
+
+            // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var projectFile = new FileInfo(yamlFile);
+            var applicationBuilder = await ApplicationFactory.CreateAsync(outputContext, projectFile, "foobar");
+
+            Assert.Single(applicationBuilder.Services);
+            var service = applicationBuilder.Services.Single(s => s.Name == "multi-targetframeworks");
+
+            Assert.Throws<InvalidOperationException>(() => applicationBuilder.ToHostingApplication());
         }
     }
 }
