@@ -124,5 +124,24 @@ services:
             var wrongProjectPath = Path.Combine(projectDirectory.DirectoryPath, "backend1/backend.csproj");
             Assert.Equal($"Failed to locate project: '{wrongProjectPath}'.", exception.Message);
         }
+
+        [Fact]
+        public async Task TargetFrameworkFromCliArgsOverwriteYaml()
+        {
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory(Path.Combine("multi-targetframeworks"));
+            var yamlFile = Path.Combine(projectDirectory.DirectoryPath, "tye-with-netcoreapp21.yaml");
+
+            // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var projectFile = new FileInfo(yamlFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
+
+            Assert.Single(application.Services);
+            var service = application.Services.Single(s => s.Name == "multi-targetframeworks");
+
+            var containsTargetFramework = ((DotnetProjectServiceBuilder)service).BuildProperties.TryGetValue("TargetFramework", out var targetFramework);
+            Assert.True(containsTargetFramework);
+            Assert.Equal("netcoreapp3.1", targetFramework);
+        }
     }
 }
