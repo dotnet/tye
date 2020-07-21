@@ -138,7 +138,7 @@ jobs:
 
     - name: 🛠 Install Tye tools
       run: |
-        dotnet tool install -g Microsoft.Tye --version "0.3.0-alpha.20319.3"
+        dotnet tool install -g Microsoft.Tye --version "0.4.0-alpha.20371.1"
 
     - name: 🔐 Login to ACR
       uses: Azure/docker-login@v1  
