@@ -19,7 +19,8 @@
 |**[Logging with Elastic Stack](recipes/logging_elastic.md)** | Using Elastic Stack for logging.
 |**[Logging with Seq](recipes/logging_seq.md)** | Using Seq for logging.
 |**[Using Dapr with Tye](recipes/dapr.md)** | Using `tye` for local development and deployment with a [Dapr](https://dapr.io) application.
-
+|**[Using Azure Functions with Tye](recipes/azure_functions.md)** | Using `tye` for local development with Azure Functions
+|**[AKS and Github Actions](recipes/githubactions_aks.md)** | Learn how to deploy an application to AKS with Github Actions
 
 ## Reference documentation
 

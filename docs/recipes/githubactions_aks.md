@@ -1,6 +1,6 @@
 # Deployment to Azure Kubernetes Service using GitHub Actions
 
-Github Actions gives you the flexibilty to build automated workflows and deployments based on actions. There are now Kubernetes actions to get deployments to AKS. This is a simple recipe on how to use tye with Azure Kuberntes Service, Azure Container Service and GitHub Actions.
+Github Actions gives you the flexibility to build automated workflows and deployments based on actions. There are now Kubernetes actions to get deployments to AKS. This is a simple recipe on how to use tye with Azure Kubernetes Service, Azure Container Service and GitHub Actions.
 
 ## Setting up AKS
 
