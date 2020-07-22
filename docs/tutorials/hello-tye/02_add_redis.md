@@ -99,7 +99,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
 5. Run the `tye` command line in the solution root
 
-   > :bulb: Make sure your command-line is in the `microservices/` directory. One of the previous steps had you change directories to edit a specific project.
+   > :bulb: Make sure your command-line is in the `microservice/` directory. One of the previous steps had you change directories to edit a specific project.
 
    ```
    tye run
