@@ -7,6 +7,8 @@ To run, first make sure the azure storage emulator is running. You can use [Azur
 
 Next, all you need to do is execute `tye run` and navigate to the dashboard.
 
+> :bulb: Note, you may need to create a [local.settings.json](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=windows%2Ccsharp%2Cbash#local-settings-file) file to specify the language default. Tye currently doesn't specify the language by default.
+
 ## For deployment
 
 Deployment is currently not supported for Azure Functions.

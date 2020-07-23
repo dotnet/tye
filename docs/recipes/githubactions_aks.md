@@ -1,6 +1,6 @@
 # Deployment to Azure Kubernetes Service using GitHub Actions
 
-Github Actions gives you the flexibilty to build automated workflows and deployments based on actions. There are now Kubernetes actions to get deployments to AKS. This is a simple recipe on how to use tye with Azure Kuberntes Service, Azure Container Service and GitHub Actions.
+Github Actions gives you the flexibility to build automated workflows and deployments based on actions. There are now Kubernetes actions to get deployments to AKS. This is a simple recipe on how to use tye with Azure Kubernetes Service, Azure Container Service and GitHub Actions.
 
 ## Setting up AKS
 
@@ -138,7 +138,7 @@ jobs:
 
     - name: 🛠 Install Tye tools
       run: |
-        dotnet tool install -g Microsoft.Tye --version "0.3.0-alpha.20319.3"
+        dotnet tool install -g Microsoft.Tye --version "0.4.0-alpha.20371.1"
 
     - name: 🔐 Login to ACR
       uses: Azure/docker-login@v1  
