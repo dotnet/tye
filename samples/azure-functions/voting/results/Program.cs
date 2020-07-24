@@ -24,5 +24,6 @@ namespace Results
                 {
                     webBuilder.UseStartup<Startup>();
                 });
+                
     }
 }

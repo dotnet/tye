@@ -79,20 +79,22 @@
         try
         {
             var response = await _client.GetStringAsync(Configuration.GetServiceUri("worker")!.AbsoluteUri + "api/GetResults");
-            var results = JsonSerializer.Deserialize<VotingResult[]>(response);
-            //Reset votes because if there are zero votes there will be no entry from the query.
             DogVotes = new VotingResult { Vote = "a", Count = 0 };
             CatVotes = new VotingResult { Vote = "b", Count = 0 };
 
-            foreach (var vote in results)
+            if (!string.IsNullOrEmpty(response))
             {
-                if (vote.Vote == "a")
+                var results = JsonSerializer.Deserialize<VotingResult[]>(response);
+                foreach (var vote in results)
                 {
-                    DogVotes = vote;
-                }
-                else
-                {
-                    CatVotes = vote;
+                    if (vote.Vote == "a")
+                    {
+                        DogVotes = vote;
+                    }
+                    else
+                    {
+                        CatVotes = vote;
+                    }
                 }
             }
 

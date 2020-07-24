@@ -26,7 +26,6 @@ namespace worker_function
             using (var connection = new NpgsqlConnection(_configuration.GetConnectionString("postgres")))
             {
                 var vote = JsonSerializer.Deserialize<Vote>(data);
-                // TODO
                 connection.Open();
                 await connection.ExecuteAsync(@"CREATE TABLE IF NOT EXISTS votes (
                                                 Id VARCHAR(255) NOT NULL UNIQUE,

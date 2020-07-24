@@ -30,8 +30,15 @@ namespace worker_function
             log.LogInformation(_configuration.GetConnectionString("postgres"));
             using (var connection = new NpgsqlConnection(_configuration.GetConnectionString("postgres")))
             {
-                var newResults = await connection.QueryAsync<QueueTrigger.VoteCount>("SELECT Vote, COUNT(Id) AS Count FROM votes GROUP BY Vote ORDER BY Vote");
-                return new OkObjectResult(JsonSerializer.Serialize(newResults));
+                try
+                {
+                    var newResults = await connection.QueryAsync<QueueTrigger.VoteCount>("SELECT Vote, COUNT(Id) AS Count FROM votes GROUP BY Vote ORDER BY Vote");
+                    return new OkObjectResult(JsonSerializer.Serialize(newResults));
+                }
+                catch (Exception ex)
+                {
+                    return new OkResult();
+                }
             }
         }
     }
