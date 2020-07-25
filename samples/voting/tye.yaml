@@ -19,3 +19,11 @@ services:
     connectionString: Server=${host};Port=${port};User Id=postgres;Password=${env:POSTGRES_PASSWORD};
 - name: results
   project: results/results.csproj
+  bindings:
+  - name: https
+    protocol: https 
+- name: identityserver
+  project: IdentityServer/IdentityServer.csproj
+  bindings:
+  - name: https
+    protocol: https 

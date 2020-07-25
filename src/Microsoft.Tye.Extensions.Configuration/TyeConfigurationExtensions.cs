@@ -24,6 +24,22 @@ namespace Microsoft.Extensions.Configuration
             return new Uri(protocol + "://" + host + ":" + port + "/");
         }
 
+        public static Uri? GetHttpsServiceUri(this IConfiguration configuration, string name, string? binding = null)
+        {
+            var key = GetKey(name, binding);
+
+            var host = configuration[$"service:{key}:host"];
+            var port = configuration[$"service:{key}:https:port"];
+            var protocol = "https";
+
+            if (string.IsNullOrEmpty(host) || port == null)
+            {
+                return null;
+            }
+
+            return new Uri(protocol + "://" + host + ":" + port + "/");
+        }
+
         public static string? GetConnectionString(this IConfiguration configuration, string name, string? binding)
         {
             if (binding == null)
