@@ -240,6 +240,12 @@ namespace Microsoft.Tye
             // Figure out if functions app.
             // If so, run app with function host.
             project.RunCommand = projectInstance.GetPropertyValue("RunCommand");
+            if (string.IsNullOrEmpty(project.RunCommand) && projectInstance.GetPropertyValue("OutputType")?.ToLower() == "exe")
+            {
+                var outputPath = Path.Combine(Directory.GetCurrentDirectory(), projectInstance.GetPropertyValue("OutputPath"), project.TargetFrameworks[0], $"{projectInstance.GetPropertyValue("AssemblyName")}.exe");
+                project.RunCommand = Path.GetFullPath(new Uri(outputPath).LocalPath);
+            }
+
             project.RunArguments = projectInstance.GetPropertyValue("RunArguments");
             project.TargetPath = projectInstance.GetPropertyValue("TargetPath");
             project.PublishDir = projectInstance.GetPropertyValue("PublishDir");
