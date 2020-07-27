@@ -10,6 +10,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Components.Authorization;
+using Results.Areas.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Results
 {
@@ -26,13 +30,15 @@ namespace Results
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAuthorization(o => o.FallbackPolicy = o.DefaultPolicy);
             services.AddRazorPages(); 
             services.AddServerSideBlazor();
+            services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
 
             services.AddCors();
 
             JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
-
+            
             services.AddAuthentication(options =>
                 {
                     options.DefaultScheme = "Cookies";
@@ -45,7 +51,6 @@ namespace Results
                     options.ClientId = "interactive";
                     options.ClientSecret = "49C1A7E1-0C79-4A89-A3D6-A37998FB86B0";
                     options.ResponseType = "code";
-
                     options.SaveTokens = true;
                 });
         }
@@ -71,6 +76,7 @@ namespace Results
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapBlazorHub().RequireAuthorization();

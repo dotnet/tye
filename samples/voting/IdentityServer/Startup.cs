@@ -15,6 +15,7 @@ using System;
 using IdentityServer4.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace IdentityServer
 {
@@ -51,7 +52,7 @@ namespace IdentityServer
 
             // in-memory, code config
             builder.AddInMemoryIdentityResources(Config.IdentityResources);
-            builder.AddInMemoryApiScopes(Config.ApiScopes);
+            // builder.AddInMemoryApiScopes(Config.ApiScopes);
             Console.WriteLine(Configuration.GetServiceUri("results:https"));
             builder.AddInMemoryClients(new Client[]
             {
@@ -64,13 +65,13 @@ namespace IdentityServer
                     
                     AllowedGrantTypes = GrantTypes.Code,
 
-                    RedirectUris = { $"{Configuration.GetServiceUri("results:https")}/signin-oidc/" },
-                    FrontChannelLogoutUri = $"{Configuration.GetServiceUri("results:https")}/signout-oidc/",
-                    PostLogoutRedirectUris = { $"{Configuration.GetServiceUri("results:https")}/signout-callback-oidc/" },
+                    RedirectUris = { $"{Configuration.GetServiceUri("results:https")}signin-oidc" },
+                    FrontChannelLogoutUri = $"{Configuration.GetServiceUri("results:https")}signout-oidc",
+                    PostLogoutRedirectUris = { $"{Configuration.GetServiceUri("results:https")}signout-callback-oidc" },
 
                     AllowOfflineAccess = true,
                     // AllowedCorsOrigins = { $"{Configuration.GetServiceUri("results:https")}" },
-                    AllowedScopes = new List<string>{IdentityServerConstants.StandardScopes.OpenId,IdentityServerConstants.StandardScopes.Profile}
+                    AllowedScopes = new List<string>{IdentityServerConstants.StandardScopes.OpenId,IdentityServerConstants.StandardScopes.Profile, "scope"}
                 },
             });
 

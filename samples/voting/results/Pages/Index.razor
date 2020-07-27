@@ -12,37 +12,10 @@
 @using Microsoft.AspNetCore.Authentication
 
 @inject IConfiguration Configuration
-@* @inject HttpContext Context
-@inject AuthenticationStateProvider AuthenticationStateProvider *@
-
-@* <div id="result">
-    <span>Dog Votes: @DogVotes.Count</span>
-    <span>Cat Votes: @CatVotes.Count</span>
-</div> *@
 
 <div id="result">
     <ChartJsPieChart @ref="_pieChartJs" Config="@_config" Width="600" Height="300" />
 </div>
-
-@* <h2>Claims</h2>
-
-<dl>
-    @foreach (var claim in User.Claims)
-    {
-        <dt>@claim.Type</dt>
-        <dd>@claim.Value</dd>
-    }
-</dl>
-
-<h2>Properties</h2>
-
-<dl>
-    @foreach (var prop in (await Context.AuthenticateAsync()).Properties.Items)
-    {
-        <dt>@prop.Key</dt>
-        <dd>@prop.Value</dd>
-    }
-</dl> *@
 
 @code {
     private VotingResult DogVotes = new VotingResult { Vote = "a", Count = 0 };
