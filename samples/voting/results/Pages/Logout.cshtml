@@ -1,0 +1,11 @@
+﻿@page
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Authentication
+@attribute [IgnoreAntiforgeryToken]
+@functions {
+    public async Task OnPost()
+    {
+        await HttpContext.SignOutAsync("Cookies");
+        await HttpContext.SignOutAsync("oidc");
+    }
+}

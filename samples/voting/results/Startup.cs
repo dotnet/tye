@@ -62,6 +62,7 @@ namespace Results
             
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapControllers();
                 endpoints.MapBlazorHub().RequireAuthorization();
                 endpoints.MapFallbackToPage("/_Host");
             });
