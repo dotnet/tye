@@ -33,10 +33,6 @@ namespace IdentityServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
-            services.AddSingleton<DefaultCorsPolicyService>((sp) =>
-            {
-                return new DefaultCorsPolicyService(sp.GetRequiredService<ILogger<DefaultCorsPolicyService>>()){AllowAll = true};
-            });
 
             var builder = services.AddIdentityServer(options =>
             {

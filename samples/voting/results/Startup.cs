@@ -24,8 +24,6 @@ namespace Results
             services.AddRazorPages(); 
             services.AddServerSideBlazor();
 
-            services.AddCors();
-
             JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
             
             services.AddAuthentication(options =>
@@ -57,10 +55,6 @@ namespace Results
             }
 
             app.UseStaticFiles();
-            app.UseCors(builder =>
-            {
-               builder.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin(); 
-            });
 
             app.UseRouting();
             app.UseAuthentication();
