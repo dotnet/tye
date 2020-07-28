@@ -10,6 +10,9 @@
 }
 else
 {
+    <div>
+        <button type="button" class="btn btn-primary" @onclick=ClearLogs>Clear Log</button>
+    </div>
     <div style="overflow-y: scroll;position: absolute;height: 84%; width:75%; color:white;background-color:black;padding:10px">
         @foreach (var log in ApplicationLogs)
         {
@@ -46,6 +49,14 @@ else
         }
 
         base.OnInitialized();
+    }
+
+    private void ClearLogs()
+    {
+        InvokeAsync(() => {
+            ApplicationLogs?.Clear();
+            StateHasChanged();
+        });
     }
 
     void IDisposable.Dispose()
