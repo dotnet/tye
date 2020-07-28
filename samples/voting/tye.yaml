@@ -20,10 +20,17 @@ services:
 - name: results
   project: results/results.csproj
   bindings:
-  - name: https
-    protocol: https 
+  - name: http
+    protocol: http
 - name: identityserver
   project: IdentityServer/IdentityServer.csproj
   bindings:
-  - name: https
-    protocol: https 
+  - name: http
+    protocol: http
+# ingress:
+#   - name: ingress
+#     rules:
+#       - path: /vote
+#         service: vote
+#       - path: /results
+#         service: results

@@ -49,7 +49,6 @@ namespace IdentityServer
             // in-memory, code config
             builder.AddInMemoryIdentityResources(Config.IdentityResources);
             // builder.AddInMemoryApiScopes(Config.ApiScopes);
-            Console.WriteLine(Configuration.GetServiceUri("results:https"));
             builder.AddInMemoryClients(new Client[]
             {
                 // m2m client credentials flow client
@@ -61,30 +60,18 @@ namespace IdentityServer
                     
                     AllowedGrantTypes = GrantTypes.Code,
 
-                    RedirectUris = { $"{Configuration.GetServiceUri("results:https")}signin-oidc" },
-                    FrontChannelLogoutUri = $"{Configuration.GetServiceUri("results:https")}signout-oidc",
-                    PostLogoutRedirectUris = { $"{Configuration.GetServiceUri("results:https")}signout-callback-oidc" },
+                    RedirectUris = { $"{Configuration.GetServiceUri("results:http")}signin-oidc" },
+                    FrontChannelLogoutUri = $"{Configuration.GetServiceUri("results:http")}signout-oidc",
+                    PostLogoutRedirectUris = { $"{Configuration.GetServiceUri("results:http")}signout-callback-oidc" },
 
                     AllowOfflineAccess = true,
-                    // AllowedCorsOrigins = { $"{Configuration.GetServiceUri("results:https")}" },
+                    // AllowedCorsOrigins = { $"{Configuration.GetServiceUri("results")}" },
                     AllowedScopes = new List<string>{IdentityServerConstants.StandardScopes.OpenId,IdentityServerConstants.StandardScopes.Profile, "scope"}
                 },
             });
 
             // not recommended for production - you need to store your key material somewhere secure
             builder.AddDeveloperSigningCredential();
-
-            services.AddAuthentication()
-                .AddGoogle(options =>
-                {
-                    options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
-
-                    // register your IdentityServer with Google at https://console.developers.google.com
-                    // enable the Google+ API
-                    // set the redirect URI to https://localhost:5001/signin-google
-                    options.ClientId = "copy client ID from Google here";
-                    options.ClientSecret = "copy client secret from Google here";
-                });
         }
 
         public void Configure(IApplicationBuilder app)
