@@ -21,7 +21,7 @@ namespace Microsoft.Tye.ConfigModel
                 return Path.GetFileNameWithoutExtension(fileInfo.Name).ToLowerInvariant();
             }
 
-            return fileInfo.Directory.Parent.Name.ToLowerInvariant();
+            return fileInfo.Directory?.Parent?.Name.ToLowerInvariant();
         }
     }
 }

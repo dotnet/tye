@@ -1,16 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <TestRunnerName>XUnit</TestRunnerName>
     <Nullable>disable</Nullable>
+    <IsTestProject>false</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Tye.Hosting\Microsoft.Tye.Hosting.csproj" />
     <ProjectReference Include="..\..\src\Microsoft.Tye.Core\Microsoft.Tye.Core.csproj" />
     <ProjectReference Include="..\..\src\tye\tye.csproj" />
+
+    <PackageReference Include="xunit" Version="2.4.1" />
   </ItemGroup>
 
   <ItemGroup>
