@@ -13,5 +13,6 @@ namespace Microsoft.Tye.ConfigModel
 
         [Required]
         public string? Service { get; set; }
+        public bool PreservePath { get; set; }
     }
 }

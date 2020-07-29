@@ -10,10 +10,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    @if(!env.IsDevelopment())
-    {
-        <base href="/results/" >
-    }
+    <base href="@HttpContext.Request.PathBase/" >
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Results</title>

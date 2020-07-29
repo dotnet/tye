@@ -99,7 +99,7 @@ namespace Microsoft.Tye.Hosting
                             continue;
                         }
 
-                        _logger.LogInformation("Processing ingress rule: Path:{Path}, Host:{Host}, Service:{Service}", rule.Path, rule.Host, rule.Service);
+                        _logger.LogInformation("Processing ingress rule: Path:{Path}, Host:{Host}, Service:{Service}, PreservePath {PreservePath}", rule.Path, rule.Host, rule.Service, rule.PreservePath);
 
                         var targetServiceDescription = target.Description;
                         RegisterListener(target);
@@ -154,7 +154,7 @@ namespace Microsoft.Tye.Hosting
 
                             var uri = new UriBuilder(uris[next].Uri)
                             {
-                                Path = (string)context.Request.RouteValues["path"],
+                                Path = rule.PreservePath ? context.Request.Path.ToString() : (string)context.Request.RouteValues["path"],
                                 Query = context.Request.QueryString.Value
                             };
 

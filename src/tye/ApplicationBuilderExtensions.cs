@@ -194,7 +194,7 @@ namespace Microsoft.Tye
 
                 foreach (var rule in ingress.Rules)
                 {
-                    rules.Add(new IngressRule(rule.Host, rule.Path, rule.Service!));
+                    rules.Add(new IngressRule(rule.Host, rule.Path, rule.Service!, rule.PreservePath));
                 }
 
                 var runInfo = new IngressRunInfo(rules);

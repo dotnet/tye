@@ -38,6 +38,8 @@ namespace Vote
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UsePathBase("/vote");
+
             app.UseStaticFiles();
 
             app.UseRouting();

@@ -1,0 +1,33 @@
+﻿@using IdentityServer4.Extensions
+
+@{
+    string name = null;
+    if (!true.Equals(ViewData["signed-out"]))
+    {
+        name = Context.User?.GetDisplayName();
+    }
+}
+
+<div class="nav-page">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+
+        <a href="~/" class="navbar-brand">
+            <img src="~/icon.png" class="icon-banner">
+            IdentityServer4
+        </a>
+
+        @if (!string.IsNullOrWhiteSpace(name))
+        {
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">@name <b class="caret"></b></a>
+                    
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" asp-action="Logout" asp-controller="Account">Logout</a>
+                    </div>
+              </li>
+            </ul>
+        }
+    
+    </nav>
+</div>

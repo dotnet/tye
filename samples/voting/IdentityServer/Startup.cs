@@ -33,6 +33,7 @@ namespace IdentityServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+            var publicIp = Configuration["public-ip"];
 
             var builder = services.AddIdentityServer(options =>
             {
@@ -40,7 +41,7 @@ namespace IdentityServer
                 options.Events.RaiseInformationEvents = true;
                 options.Events.RaiseFailureEvents = true;
                 options.Events.RaiseSuccessEvents = true;
-
+                // options.IssuerUri = $"{publicIp}/identityserver";
                 // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
                 options.EmitStaticAudienceClaim = true;
             })
@@ -48,6 +49,7 @@ namespace IdentityServer
 
             // in-memory, code config
             builder.AddInMemoryIdentityResources(Config.IdentityResources);
+            
             // builder.AddInMemoryApiScopes(Config.ApiScopes);
             builder.AddInMemoryClients(new Client[]
             {
@@ -60,12 +62,13 @@ namespace IdentityServer
                     
                     AllowedGrantTypes = GrantTypes.Code,
 
-                    RedirectUris = { $"{Configuration.GetServiceUri("results:http")}signin-oidc" },
-                    FrontChannelLogoutUri = $"{Configuration.GetServiceUri("results:http")}signout-oidc",
-                    PostLogoutRedirectUris = { $"{Configuration.GetServiceUri("results:http")}signout-callback-oidc" },
+                    // These currently break when ingress is in place for redirect.
+
+                    RedirectUris = { $"{publicIp}/results/signin-oidc", $"{Configuration.GetServiceUri("results:http")}results/signin-oidc", $"{Configuration.GetServiceUri("results:http")}signin-oidc" },
+                    FrontChannelLogoutUri = $"{publicIp}/results/signout-oidc",
+                    PostLogoutRedirectUris = { $"{publicIp}/results/signout-callback-oidc", $"{Configuration.GetServiceUri("results:http")}results/signout-callback-oidc", $"{Configuration.GetServiceUri("results:http")}signout-callback-oidc" },
 
                     AllowOfflineAccess = true,
-                    // AllowedCorsOrigins = { $"{Configuration.GetServiceUri("results")}" },
                     AllowedScopes = new List<string>{IdentityServerConstants.StandardScopes.OpenId,IdentityServerConstants.StandardScopes.Profile, "scope"}
                 },
             });

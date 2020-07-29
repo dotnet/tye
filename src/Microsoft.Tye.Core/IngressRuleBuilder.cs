@@ -9,5 +9,6 @@ namespace Microsoft.Tye
         public string? Path { get; set; }
         public string? Host { get; set; }
         public string Service { get; set; } = default!;
+        public bool PreservePath { get; internal set; }
     }
 }

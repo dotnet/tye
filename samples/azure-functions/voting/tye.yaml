@@ -4,8 +4,8 @@ services:
   project: vote/vote.csproj
 - name: worker
   azureFunction: worker-function/
-- name: azure-storage
-  external: true
+- name: azurite
+  image: mcr.microsoft.com/azure-storage/azurite
   bindings:
   - connectionString: "UseDevelopmentStorage=true"
 - name: postgres
@@ -18,3 +18,11 @@ services:
     connectionString: Server=${host};Port=${port};User Id=postgres;Password=${env:POSTGRES_PASSWORD};
 - name: results
   project: results/results.csproj
+  bindings:
+  - name: http
+    protocol: http
+- name: identityserver
+  project: IdentityServer/IdentityServer.csproj
+  bindings:
+  - name: http
+    protocol: http

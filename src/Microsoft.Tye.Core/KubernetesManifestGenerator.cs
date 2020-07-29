@@ -96,9 +96,14 @@ namespace Microsoft.Tye
                         {
                             path.Add("path", "/()(.*)"); // () is an empty capture group.
                         }
-                        else
+                        else if (ingressRule.PreservePath)
                         {
                             var regex = $"{ingressRule.Path.TrimEnd('/')}(/|$)(.*)";
+                            path.Add("path", regex);
+                        }
+                        else
+                        {
+                            var regex = $"(/|$)({ingressRule.Path.TrimEnd('/')}.*)";
                             path.Add("path", regex);
                         }
                     }

@@ -22,15 +22,31 @@ services:
   bindings:
   - name: http
     protocol: http
+  env:
+  - name: public-ip
+    # value: http://52.159.20.103
+    value: http://localhost:8080
 - name: identityserver
   project: IdentityServer/IdentityServer.csproj
   bindings:
   - name: http
     protocol: http
-# ingress:
-#   - name: ingress
-#     rules:
-#       - path: /vote
-#         service: vote
-#       - path: /results
-#         service: results
+  env:
+  - name: public-ip
+    # value: http://52.159.20.103
+    value: http://localhost:8080
+ingress:
+  - name: ingress
+    bindings:
+    - protocol: http
+      port: 8080
+    rules:
+      - path: /vote
+        service: vote
+        preservePath: true
+      - path: /results
+        service: results
+        preservePath: true
+      - path: /identityserver
+        service: identityserver
+        preservePath: true
