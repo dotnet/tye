@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.IdentityModel.Tokens.Jwt;
+using System.Threading.Tasks;
 
 namespace Results
 {
@@ -24,6 +25,7 @@ namespace Results
             services.AddRazorPages(); 
             services.AddServerSideBlazor();
 
+
             JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
             
             services.AddAuthentication(options =>
@@ -34,12 +36,18 @@ namespace Results
                 .AddCookie("Cookies")
                 .AddOpenIdConnect("oidc", options =>
                 {
-                    options.Authority = $"{Configuration["public-ip"]}/identityserver";
+                    options.Authority = $"{Configuration["public-ip"]}/identityserver/";
                     options.ClientId = "interactive";
                     options.ClientSecret = "49C1A7E1-0C79-4A89-A3D6-A37998FB86B0";
                     options.ResponseType = "code";
                     options.SaveTokens = true;
                     options.RequireHttpsMetadata = false;
+                    options.ReturnUrlParameter = $"{Configuration["public-ip"]}/results";
+                    options.Events.OnRedirectToIdentityProvider = n =>
+                    {
+                        n.ProtocolMessage.RedirectUri = $"{Configuration["public-ip"]}/results/signin-oidc";
+                        return Task.CompletedTask;
+                    };
                 });
         }
 

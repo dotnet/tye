@@ -16,6 +16,10 @@ using IdentityServer4.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
+using IdentityServer4.Extensions;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace IdentityServer
 {
@@ -41,7 +45,7 @@ namespace IdentityServer
                 options.Events.RaiseInformationEvents = true;
                 options.Events.RaiseFailureEvents = true;
                 options.Events.RaiseSuccessEvents = true;
-                // options.IssuerUri = $"{publicIp}/identityserver";
+                options.IssuerUri = $"{publicIp}/identityserver";
                 // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
                 options.EmitStaticAudienceClaim = true;
             })
@@ -63,10 +67,9 @@ namespace IdentityServer
                     AllowedGrantTypes = GrantTypes.Code,
 
                     // These currently break when ingress is in place for redirect.
-
-                    RedirectUris = { $"{publicIp}/results/signin-oidc", $"{Configuration.GetServiceUri("results:http")}results/signin-oidc", $"{Configuration.GetServiceUri("results:http")}signin-oidc" },
+                    RedirectUris = { $"{publicIp}/results/signin-oidc"}, //  $"{Configuration.GetServiceUri("results:http")}results/signin-oidc", $"{Configuration.GetServiceUri("results:http")}signin-oidc"
                     FrontChannelLogoutUri = $"{publicIp}/results/signout-oidc",
-                    PostLogoutRedirectUris = { $"{publicIp}/results/signout-callback-oidc", $"{Configuration.GetServiceUri("results:http")}results/signout-callback-oidc", $"{Configuration.GetServiceUri("results:http")}signout-callback-oidc" },
+                    PostLogoutRedirectUris = { $"{publicIp}/results/signout-callback-oidc" }, // , $"{Configuration.GetServiceUri("results:http")}results/signout-callback-oidc", $"{Configuration.GetServiceUri("results:http")}signout-callback-oidc"
 
                     AllowOfflineAccess = true,
                     AllowedScopes = new List<string>{IdentityServerConstants.StandardScopes.OpenId,IdentityServerConstants.StandardScopes.Profile, "scope"}
@@ -83,8 +86,19 @@ namespace IdentityServer
             {
                 app.UseDeveloperExceptionPage();
             }
+            // app.UseForwardedHeaders();
+            app.UsePathBase("/identityserver");
 
             app.UseStaticFiles();
+
+            app.UseForwardedHeaders(new ForwardedHeadersOptions()
+            {
+                ForwardedHeaders = ForwardedHeaders.All
+            });
+            
+            var publicIp = Configuration["public-ip"];
+
+            app.UseMiddleware<PublicFacingUrlMiddleware>($"{publicIp}");
 
             app.UseRouting();
             app.UseIdentityServer();
@@ -93,6 +107,28 @@ namespace IdentityServer
             {
                 endpoints.MapDefaultControllerRoute();
             });
+        }
+
+        public class PublicFacingUrlMiddleware
+        {
+            private readonly RequestDelegate _next;
+            private readonly string _publicFacingUri;
+
+            public PublicFacingUrlMiddleware(RequestDelegate next, string publicFacingUri)
+            {
+                _publicFacingUri = publicFacingUri;
+                _next = next;
+            }
+
+            public async Task Invoke(HttpContext context)
+            {
+                var request = context.Request;
+
+                context.SetIdentityServerOrigin(_publicFacingUri);
+                // context.SetIdentityServerBasePath(request.PathBase.Value.TrimEnd('/'));
+
+                await _next(context);
+            }
         }
     }
 }
