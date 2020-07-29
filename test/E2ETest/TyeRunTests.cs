@@ -468,7 +468,7 @@ services:
 
                             Assert.NotNull(service);
 
-                            Assert.Equal(dockerNetwork, service.Replicas.FirstOrDefault().Value.DockerNetwork);
+                            Assert.Equal(dockerNetwork, service!.Replicas!.FirstOrDefault().Value.DockerNetwork);
                         }
                     });
             }
@@ -519,7 +519,7 @@ services:
 
                         Assert.NotNull(service);
 
-                        Assert.NotEqual(dockerNetwork, service.Replicas.FirstOrDefault().Value.DockerNetwork);
+                        Assert.NotEqual(dockerNetwork, service!.Replicas!.FirstOrDefault().Value.DockerNetwork);
                     }
                 });
         }
@@ -643,7 +643,7 @@ services:
                 var responseContent =
                     JsonSerializer.Deserialize<Dictionary<string, string>>(await response.Content.ReadAsStringAsync());
 
-                Assert.Equal("some content", responseContent["content"]);
+                Assert.Equal("some content", responseContent!["content"]);
                 Assert.Equal("?key1=value1&key2=value2", responseContent["query"]);
             });
         }
@@ -904,7 +904,7 @@ services:
         {
             var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceName}");
             var service = JsonSerializer.Deserialize<V1Service>(serviceResult, _options);
-            var binding = service.Description!.Bindings.Where(b => b.Protocol == "http").Single();
+            var binding = service!.Description!.Bindings!.Where(b => b.Protocol == "http").Single();
             return $"{binding.Protocol ?? "http"}://localhost:{binding.Port}";
         }
 

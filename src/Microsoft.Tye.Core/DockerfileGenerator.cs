@@ -101,7 +101,7 @@ namespace Microsoft.Tye
                 container.BaseImageName = "mcr.microsoft.com/dotnet/core/runtime";
             }
 
-            if (string.IsNullOrEmpty(container.BaseImageTag) && project.TargetFrameworkName == "netcoreapp")
+            if (string.IsNullOrEmpty(container.BaseImageTag) && (project.TargetFrameworkName == "netcoreapp" || project.TargetFrameworkName == "net"))
             {
                 container.BaseImageTag = project.TargetFrameworkVersion;
             }
@@ -112,7 +112,7 @@ namespace Microsoft.Tye
             }
 
             container.BuildImageName ??= "mcr.microsoft.com/dotnet/core/sdk";
-            container.BuildImageTag ??= "3.1";
+            container.BuildImageTag ??= project.TargetFrameworkVersion;
 
             if (container.ImageName == null && application.Registry?.Hostname == null)
             {

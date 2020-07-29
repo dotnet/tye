@@ -72,11 +72,11 @@ services:
                         service.Bindings = null!;
                         service.Configuration = null!;
                         service.Volumes = null!;
-                        service.Project = service.Project!.Substring(directory.FullName.Length).TrimStart('/');
+                        service.Project = service.Project!.Substring(directory!.FullName.Length).TrimStart('/');
                     }
 
                     // If the input file is a sln/project then place the config next to it
-                    outputFilePath = Path.Combine(directory.FullName, "tye.yaml");
+                    outputFilePath = Path.Combine(directory!.FullName, "tye.yaml");
                 }
                 else
                 {
@@ -99,7 +99,7 @@ services:
 
         private static void ThrowIfTyeFilePresent(FileInfo? path, string yml)
         {
-            var tyeYaml = Path.Combine(path!.DirectoryName, yml);
+            var tyeYaml = Path.Combine(path!.DirectoryName!, yml);
             if (File.Exists(tyeYaml))
             {
                 throw new CommandException($"File '{tyeYaml}' already exists. Use --force to override the {yml} file if desired.");

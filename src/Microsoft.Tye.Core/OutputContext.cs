@@ -158,7 +158,7 @@ namespace Microsoft.Tye
 
                 if (allowEmpty || !string.IsNullOrEmpty(line))
                 {
-                    return line.Trim();
+                    return line!.Trim();
                 }
             }
         }
