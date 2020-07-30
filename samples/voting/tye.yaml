@@ -26,7 +26,6 @@ services:
   env:
   - name: public-ip
     value: http://52.159.20.103
-    # value: http://localhost:8080
 - name: identityserver
   project: IdentityServer/IdentityServer.csproj
   bindings:
@@ -35,7 +34,6 @@ services:
   env:
   - name: public-ip
     value: http://52.159.20.103
-    # value: http://localhost:8080
 ingress:
   - name: ingress
     bindings:
