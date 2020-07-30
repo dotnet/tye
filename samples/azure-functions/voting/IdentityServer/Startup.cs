@@ -60,13 +60,11 @@ namespace IdentityServer
                     
                     AllowedGrantTypes = GrantTypes.Code,
 
-                    // These currently break when ingress is in place for redirect.
-                    RedirectUris = { $"http://40.91.74.200/results/signin-oidc" },
-                    FrontChannelLogoutUri = $"http://40.91.74.200/results/signout-oidc",
-                    PostLogoutRedirectUris = { $"http://40.91.74.200/results/signout-callback-oidc" },
+                    RedirectUris = { $"{Configuration.GetServiceUri("results:http")}signin-oidc" },
+                    FrontChannelLogoutUri = $"{Configuration.GetServiceUri("results:http")}signout-oidc",
+                    PostLogoutRedirectUris = { $"{Configuration.GetServiceUri("results:http")}signout-callback-oidc" },
 
                     AllowOfflineAccess = true,
-                    // AllowedCorsOrigins = { $"{Configuration.GetServiceUri("results")}" },
                     AllowedScopes = new List<string>{IdentityServerConstants.StandardScopes.OpenId,IdentityServerConstants.StandardScopes.Profile, "scope"}
                 },
             });
