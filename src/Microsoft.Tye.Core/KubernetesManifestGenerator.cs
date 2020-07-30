@@ -33,7 +33,7 @@ namespace Microsoft.Tye
             var annotations = new YamlMappingNode();
             metadata.Add("annotations", annotations);
             annotations.Add("kubernetes.io/ingress.class", new YamlScalarNode("nginx") { Style = ScalarStyle.SingleQuoted, });
-            annotations.Add("nginx.ingress.kubernetes.io/rewrite-target", new YamlScalarNode("/$2") { Style = ScalarStyle.SingleQuoted, });
+            annotations.Add("nginx.ingress.kubernetes.io/rewrite-target", new YamlScalarNode("/$1") { Style = ScalarStyle.SingleQuoted, });
 
             var labels = new YamlMappingNode();
             metadata.Add("labels", labels);
@@ -88,7 +88,7 @@ namespace Microsoft.Tye
                         backend.Add("servicePort", (binding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
 
                         // Tye implements path matching similar to this example:
-                        // https://kubernetes.github.io/ingress-nginx/examples/rewrite/
+                        // https://kubernetes.github.io/ingress-nginx/examples/rewrite/jko
                         //
                         // Therefore our rewrite-target is set to $2 - we want to make sure we have
                         // two capture groups.
@@ -98,12 +98,12 @@ namespace Microsoft.Tye
                         }
                         else if (ingressRule.PreservePath)
                         {
-                            var regex = $"{ingressRule.Path.TrimEnd('/')}(/|$)(.*)";
+                            var regex = $"/({ingressRule.Path.Trim('/')}.*)";
                             path.Add("path", regex);
                         }
                         else
                         {
-                            var regex = $"(/|$)({ingressRule.Path.TrimEnd('/')}.*)";
+                            var regex = $"{ingressRule.Path.TrimEnd('/')}(/|$)(.*)";
                             path.Add("path", regex);
                         }
                     }
