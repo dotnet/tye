@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -64,6 +65,15 @@ namespace Results
             }
 
             app.UsePathBase("/results");
+
+            var khOptions = new ForwardedHeadersOptions()
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            };
+            khOptions.KnownProxies.Clear();
+            khOptions.KnownNetworks.Clear();
+
+            app.UseForwardedHeaders(khOptions);
 
             app.UseStaticFiles();
 
