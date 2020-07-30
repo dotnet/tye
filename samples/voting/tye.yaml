@@ -1,4 +1,5 @@
 name: VotingSample
+registry: jkotalik
 services:
 - name: vote
   project: vote/vote.csproj
@@ -24,8 +25,8 @@ services:
     protocol: http
   env:
   - name: public-ip
-    #value: http://52.159.20.103
-    value: http://localhost:8080
+    value: http://52.159.20.103
+    # value: http://localhost:8080
 - name: identityserver
   project: IdentityServer/IdentityServer.csproj
   bindings:
@@ -33,8 +34,8 @@ services:
     protocol: http
   env:
   - name: public-ip
-    #value: http://52.159.20.103
-    value: http://localhost:8080
+    value: http://52.159.20.103
+    # value: http://localhost:8080
 ingress:
   - name: ingress
     bindings:
