@@ -34,6 +34,7 @@ namespace Microsoft.Tye
             metadata.Add("annotations", annotations);
             annotations.Add("kubernetes.io/ingress.class", new YamlScalarNode("nginx") { Style = ScalarStyle.SingleQuoted, });
             annotations.Add("nginx.ingress.kubernetes.io/rewrite-target", new YamlScalarNode("/$1") { Style = ScalarStyle.SingleQuoted, });
+            annotations.Add("nginx.ingress.kubernetes.io/proxy-buffer-size", new YamlScalarNode("128k") { Style = ScalarStyle.SingleQuoted, });
 
             var labels = new YamlMappingNode();
             metadata.Add("labels", labels);
