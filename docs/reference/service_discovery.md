@@ -128,7 +128,7 @@ This is a typical pattern for initializing a database for local development - in
 
 ## How it works: URIs in development
 
-For URIs, the Tye infrastructure will generate a set of environment variables using a well-known pattern. These environment variables will through through the configuration system and by used by `GetServiceUri()`.
+For URIs, the Tye infrastructure will generate a set of environment variables using a well-known pattern. These environment variables will be available through the configuration system and used by `GetServiceUri()`.
 
 These are normal environment variables and can be read directly or through the configuration system.
 
