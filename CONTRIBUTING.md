@@ -2,7 +2,7 @@
 
 One of the easiest ways to contribute is to participate in discussions on GitHub issues. At this point in the tye project we welcome anyone's feedback on where tye help you to succeed or caused you trouble. 
 
-You can also contribute by submitting pull requests with code changes to address an open issue, or improve documentation.
+You can also contribute by submitting pull requests with code changes to address an open issue or improve documentation.
 
 ## General feedback and discussions?
 
@@ -10,13 +10,13 @@ Create a [feedback issue](https://github.com/dotnet/tye/issues/new?template=feed
 
 We know that there's a lot of diversity in how people work, think, and organize projects. We'd love to know if tye is a good fit for the way that you do your best work.
 
-If we don't have follow up discussions or questions, we'll probably close your issue with a simple "Thanks!", and link it to some other issues that we're tracking. Getting feedback in the form of issues is helpful to the team, regardless of whether its negative or positive.
+If we don't have follow up discussions or questions, we'll probably close your issue with a simple "Thanks!" and link it to some other issues that we're tracking. Getting feedback in the form of issues is helpful to the team, regardless of whether its negative or positive.
 
 ---
 
 Or if there's a top if you want to discuss, create a [discussion issue](https://github.com/dotnet/tye/issues/new?template=discussion.md).
 
-Feel free to create discussion issues if there's something you want ask about. We may close your issue if there's an easy answer, or we may leave it open so that others are encouraged to comment and share their point of view.
+Feel free to create discussion issues if there's something you want to ask about. We may close your issue if there's an easy answer, or we may leave it open so that others are encouraged to comment and share their point of view.
 
 ## Bugs and feature requests?
 
