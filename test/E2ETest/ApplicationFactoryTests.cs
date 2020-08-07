@@ -109,7 +109,7 @@ services:
         }
 
         [Fact]
-        public async Task MissspelledProjectPathProducesUsefulErrormessage()
+        public async Task WrongProjectPathProducesCorrectErrorMessage()
         {
             using var projectDirectory = TestHelpers.CopyTestProjectDirectory("frontend-backend");
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-wrong-projectpath.yaml"));
@@ -119,7 +119,7 @@ services:
                 await ApplicationFactory.CreateAsync(outputContext, projectFile));
 
             var wrongProjectPath = Path.Combine(projectDirectory.DirectoryPath, "backend1");
-            Assert.StartsWith($"Failed to locate directory: '{wrongProjectPath}", exception.Message);
+            Assert.Equal($"Failed to locate directory: '{wrongProjectPath}'.", exception.Message);
         }
     }
 }
