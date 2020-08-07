@@ -107,5 +107,18 @@ services:
 
             Assert.Equal("redis2", ((ContainerServiceBuilder)redisService).Image);
         }
+
+        [Fact]
+        public async Task MissspelledProjectPathProducesUsefulErrormessage()
+        {
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory("frontend-backend");
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-wrong-projectpath.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+
+            var exception = await Assert.ThrowsAsync<CommandException>(async () =>
+                await ApplicationFactory.CreateAsync(outputContext, projectFile));
+
+            Assert.Equal($"Failed to locate directory: '{projectDirectory.DirectoryPath}\\backend1'.", exception.Message);
+        }
     }
 }
