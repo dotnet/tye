@@ -73,6 +73,11 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(project));
             }
 
+            if (!Directory.Exists(project.ProjectFile.DirectoryName))
+            {
+                throw new CommandException($"Failed to locate directory: '{project.ProjectFile.DirectoryName}'.");
+            }
+
             EnsureMSBuildRegistered(output, project.ProjectFile);
 
             EvaluateProject(output, project);
@@ -94,11 +99,6 @@ namespace Microsoft.Tye
                 lock (@lock)
                 {
                     output?.WriteDebugLine("Locating .NET SDK...");
-
-                    if (!Directory.Exists(projectFile.DirectoryName))
-                    {
-                        throw new CommandException($"Failed to locate directory: '{projectFile.DirectoryName}'.");
-                    }
 
                     // It says VisualStudio - but we'll just use .NET SDK
                     var instances = MSBuildLocator.QueryVisualStudioInstances(new VisualStudioInstanceQueryOptions()
