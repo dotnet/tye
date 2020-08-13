@@ -46,7 +46,7 @@ When the application runs, you should be able to see something like the followin
 
 When using `tye run` in this way, Dapr discover components like redis for state storage and pubsub from the `components` directory next to the solution.
 
-> :warning: You may encounter a port conflict for redis if you have already used `dapr --init` locally to start redis. This will likely be visible as a high never of restarts for the redis service in the dashboard. You can either use `dapr` to manage redis or `tye`, but not both. To work around this remove the `redis` service from `tye.yaml`.  
+> :warning: You may encounter a port conflict for redis if you have already used `dapr --init` locally to start redis. This will likely be visible as a high number of restarts for the redis service in the dashboard. You can either use `dapr` to manage redis or `tye`, but not both. To work around this remove the `redis` service from `tye.yaml`.  
 
 ---
 
