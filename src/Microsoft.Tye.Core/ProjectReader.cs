@@ -73,6 +73,11 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(project));
             }
 
+            if (!Directory.Exists(project.ProjectFile.DirectoryName))
+            {
+                throw new CommandException($"Failed to locate directory: '{project.ProjectFile.DirectoryName}'.");
+            }
+
             EnsureMSBuildRegistered(output, project.ProjectFile);
 
             EvaluateProject(output, project);
