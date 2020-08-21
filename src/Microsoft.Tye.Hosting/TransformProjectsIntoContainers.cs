@@ -111,7 +111,7 @@ namespace Microsoft.Tye.Hosting
                 // We export the developer certificate from this machine
                 var certPassword = Guid.NewGuid().ToString();
                 var certificateDirectory = _certificateDirectory.Value;
-                var certificateFilePath = Path.Combine(certificateDirectory.DirectoryPath, project.AssemblyName + ".pfx");
+                var certificateFilePath = Path.Combine("\"" + certificateDirectory.DirectoryPath, project.AssemblyName + ".pfx\"");
                 await ProcessUtil.RunAsync("dotnet", $"dev-certs https -ep {certificateFilePath} -p {certPassword}");
                 serviceDescription.Configuration.Add(new EnvironmentVariable("Kestrel__Certificates__Development__Password", certPassword));
 
