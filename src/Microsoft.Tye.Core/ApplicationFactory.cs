@@ -201,7 +201,7 @@ namespace Microsoft.Tye
                                 throw new CommandException($"Cannot clone repository {configService.Repository} because git is not installed. Please install git if you'd like to use \"repository\" in tye.yaml.");
                             }
 
-                            var result = await ProcessUtil.RunAsync("git", $"clone {configService.Repository} {clonePath}", workingDirectory: path, throwOnError: false);
+                            var result = await ProcessUtil.RunAsync("git", $"clone {configService.Repository} \"{clonePath}\"", workingDirectory: path, throwOnError: false);
 
                             if (result.ExitCode != 0)
                             {
