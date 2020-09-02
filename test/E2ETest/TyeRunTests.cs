@@ -873,7 +873,6 @@ services:
 - name: frontend
   project: frontend/frontend.csproj";
 
-
             var yamlFile = Path.Combine(projectDirectory.DirectoryPath, "tye.yaml");
             var projectFile = new FileInfo(yamlFile);
             await File.WriteAllTextAsync(yamlFile, content);
