@@ -39,7 +39,7 @@ namespace Microsoft.Tye
             return command;
         }
 
-        public class InitCommandArguments
+        private class InitCommandArguments
         {
             public IConsole Console { get; set; } = default!;
 

@@ -131,7 +131,7 @@ namespace Microsoft.Tye
             }
         }
 
-        public class DeployCommandArguments
+        private class DeployCommandArguments
         {
             public IConsole Console { get; set; } = default!;
 

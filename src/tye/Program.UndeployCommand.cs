@@ -51,7 +51,7 @@ namespace Microsoft.Tye
             return command;
         }
 
-        public class UndeployCommandArguments
+        private class UndeployCommandArguments
         {
             public IConsole Console { get; set; } = default!;
 
