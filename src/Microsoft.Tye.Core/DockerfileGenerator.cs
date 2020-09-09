@@ -101,7 +101,7 @@ namespace Microsoft.Tye
                 container.BaseImageName = "mcr.microsoft.com/dotnet/core/runtime";
             }
 
-            if (string.IsNullOrEmpty(container.BaseImageTag) && project.TargetFrameworkName == "netcoreapp")
+            if (string.IsNullOrEmpty(container.BaseImageTag) && (project.TargetFrameworkName == "netcoreapp" || project.TargetFrameworkName == "net"))
             {
                 container.BaseImageTag = project.TargetFrameworkVersion;
             }
@@ -112,7 +112,7 @@ namespace Microsoft.Tye
             }
 
             container.BuildImageName ??= "mcr.microsoft.com/dotnet/core/sdk";
-            container.BuildImageTag ??= "3.1";
+            container.BuildImageTag ??= project.TargetFrameworkVersion;
 
             if (container.ImageName == null && application.Registry?.Hostname == null)
             {
@@ -124,6 +124,9 @@ namespace Microsoft.Tye
             }
 
             container.ImageTag ??= project.Version?.Replace("+", "-") ?? "latest";
+
+            // Disable color in the logs
+            project.EnvironmentVariables.Add(new EnvironmentVariableBuilder("DOTNET_LOGGING__CONSOLE__DISABLECOLORS") { Value = "true" });
         }
 
         public static void ApplyContainerDefaults(ApplicationBuilder application, DockerFileServiceBuilder project, ContainerInfo container)

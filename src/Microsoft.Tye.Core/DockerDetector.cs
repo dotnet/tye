@@ -3,12 +3,15 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
     public class DockerDetector
     {
+        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
+
         public static DockerDetector Instance { get; } = new DockerDetector();
 
         private DockerDetector()
@@ -28,7 +31,7 @@ namespace Microsoft.Tye
         {
             try
             {
-                await ProcessUtil.RunAsync("docker", "version", throwOnError: false);
+                await ProcessUtil.RunAsync("docker", "version", throwOnError: false, cancellationToken: new CancellationTokenSource(Timeout).Token);
                 return true;
             }
             catch (Exception)
@@ -42,7 +45,7 @@ namespace Microsoft.Tye
         {
             try
             {
-                var result = await ProcessUtil.RunAsync("docker", "version", throwOnError: false);
+                var result = await ProcessUtil.RunAsync("docker", "version", throwOnError: false, cancellationToken: new CancellationTokenSource(Timeout).Token);
                 return result.ExitCode == 0;
             }
             catch (Exception)

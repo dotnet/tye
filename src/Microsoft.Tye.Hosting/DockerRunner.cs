@@ -303,11 +303,11 @@ namespace Microsoft.Tye.Hosting
                     if (volumeMapping.Source != null)
                     {
                         var sourcePath = Path.GetFullPath(Path.Combine(application.ContextDirectory, volumeMapping.Source));
-                        volumes += $"-v {sourcePath}:{volumeMapping.Target} ";
+                        volumes += $"-v \"{sourcePath}:{volumeMapping.Target}\" ";
                     }
                     else if (volumeMapping.Name != null)
                     {
-                        volumes += $"-v {volumeMapping.Name}:{volumeMapping.Target} ";
+                        volumes += $"-v \"{volumeMapping.Name}:{volumeMapping.Target}\" ";
                     }
                 }
 
@@ -327,7 +327,7 @@ namespace Microsoft.Tye.Hosting
                 // Fixed in podman v2.
                 bool isPodman = await DockerDetector.Instance.IsPodman.Value;
                 string restartArg = isPodman ? "always" : "unless-stopped";
-                var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} {hostNetworkArgs} --name {replica} --restart={restartArg} {dockerImage} {docker.Args ?? ""}";
+                var command = $"run -d \"{workingDirectory}\" {volumes} {environmentArguments} {portString} {hostNetworkArgs} --name {replica} --restart={restartArg} {dockerImage} {docker.Args ?? ""}";
 
                 _logger.LogInformation("Running image {Image} for {Replica}", docker.Image, replica);
 

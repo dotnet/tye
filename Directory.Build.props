@@ -19,4 +19,7 @@
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
+  <Import Project="$(RepoRoot)test\Test.Infrastructure\Microsoft.AspNetCore.Testing.props" Condition=" '$(IsTestProject)' == 'true' " />
+
+
 </Project>

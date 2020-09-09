@@ -17,7 +17,7 @@ ingress:
       - host: a.example.com
         service: appA
       - host: b.example.com
-        service: appB 
+        service: appB
 
 services:
 - name: appA

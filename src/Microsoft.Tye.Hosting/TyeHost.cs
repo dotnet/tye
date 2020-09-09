@@ -58,7 +58,11 @@ namespace Microsoft.Tye.Hosting
                 await StartAsync();
 
                 var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-                _lifetime?.ApplicationStopping.Register(obj => waitForStop.TrySetResult(null), null);
+                _lifetime?.ApplicationStopping.Register(obj =>
+                {
+                    _logger?.LogInformation("Tye Host is stopping...");
+                    waitForStop.TrySetResult(null);
+                }, null);
                 await waitForStop.Task;
             }
             finally
@@ -87,7 +91,15 @@ namespace Microsoft.Tye.Hosting
 
             _logger.LogInformation("Dashboard running on {Address}", app.Addresses.First());
 
-            await _processor.StartAsync(_application);
+            try
+            {
+                await _processor.StartAsync(_application);
+            }
+            catch (TyeBuildException ex)
+            {
+                _logger.LogError(ex.Message);
+                _lifetime.StopApplication();
+            }
 
             if (_options.Dashboard)
             {
@@ -283,6 +295,7 @@ namespace Microsoft.Tye.Hosting
                 new ProxyService(logger),
                 new HttpProxyService(logger),
                 new DockerImagePuller(logger),
+                new FuncFinder(logger),
                 new ReplicaMonitor(logger),
                 new DockerRunner(logger, replicaRegistry),
                 new ProcessRunner(logger, replicaRegistry, ProcessRunnerOptions.FromHostOptions(options))

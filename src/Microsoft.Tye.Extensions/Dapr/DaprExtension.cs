@@ -31,7 +31,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                     }
 
                     // See https://github.com/dotnet/tye/issues/260
-                    // 
+                    //
                     // Currently the pub-sub pattern does not work when you have multiple replicas. Each
                     // daprd instance expects that it has a single application to talk to. So if you're using
                     // pub-sub this means that you'll won't get some messages.
@@ -55,7 +55,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                     // we'll assume the filename and config name are the same.
                     if (config.Data.TryGetValue("config", out var obj) && obj?.ToString() is string daprConfig)
                     {
-                        var configFile = Path.Combine(context.Application.Source.DirectoryName, "components", $"{daprConfig}.yaml");
+                        var configFile = Path.Combine(context.Application.Source.DirectoryName!, "components", $"{daprConfig}.yaml");
                         if (File.Exists(configFile))
                         {
                             proxy.Args += $" -config \"{configFile}\"";
@@ -71,6 +71,10 @@ namespace Microsoft.Tye.Extensions.Dapr
                         proxy.Args += $" -log-level {logLevel}";
                     }
 
+                    if (config.Data.TryGetValue("components-path", out obj) && obj?.ToString() is string componentsPath)
+                    {
+                        proxy.Args += $" -components-path {componentsPath}";
+                    }
                     // Add dapr proxy as a service available to everyone.
                     proxy.Dependencies.UnionWith(context.Application.Services.Select(s => s.Name));
 

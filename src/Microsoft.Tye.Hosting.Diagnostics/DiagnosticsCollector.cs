@@ -31,7 +31,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics
 
         public TracingSink? TracingSink { get; set; }
 
-        public TimeSpan SelectProcessTimeout { get; set; } = TimeSpan.FromSeconds(5);
+        public TimeSpan SelectProcessTimeout { get; set; } = Debugger.IsAttached ? TimeSpan.FromMinutes(1) : TimeSpan.FromSeconds(5);
 
         public Task CollectAsync(ReplicaInfo replicaInfo, CancellationToken cancellationToken)
         {
@@ -73,13 +73,12 @@ namespace Microsoft.Tye.Hosting.Diagnostics
                     break;
                 }
 
-                _logger.LogInformation("No process was selected. Waiting.");
                 Thread.Sleep(500);
             }
 
             if (processId is null)
             {
-                _logger.LogInformation("Failed to select a process after {Timeout}.", SelectProcessTimeout);
+                _logger.LogInformation("Failed to collect diagnostics for {ServiceName} after {Timeout}.", replicaInfo.Replica, SelectProcessTimeout);
                 return;
             }
 

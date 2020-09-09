@@ -1,0 +1,20 @@
+name: VotingSample
+services:
+- name: vote
+  project: vote/vote.csproj
+- name: worker
+  azureFunction: worker-function/
+- name: azure-storage
+  external: true
+  bindings:
+  - connectionString: "UseDevelopmentStorage=true"
+- name: postgres
+  image:  postgres
+  env:
+  - name: POSTGRES_PASSWORD
+    value: "pass@word1"
+  bindings:
+  - port: 5432
+    connectionString: Server=${host};Port=${port};User Id=postgres;Password=${env:POSTGRES_PASSWORD};
+- name: results
+  project: results/results.csproj

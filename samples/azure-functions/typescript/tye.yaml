@@ -1,0 +1,3 @@
+services:
+- name: HttpExample
+  azureFunction: HttpExample/
