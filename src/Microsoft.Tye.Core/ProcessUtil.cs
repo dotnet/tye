@@ -14,8 +14,14 @@ namespace Microsoft.Tye
 {
     public static class ProcessUtil
     {
+        #region Native Methods
+
         [DllImport("libc", SetLastError = true, EntryPoint = "kill")]
         private static extern int sys_kill(int pid, int sig);
+
+        #endregion
+
+        private static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
         public static async Task<ProcessResult> RunAsync(
             string filename,
@@ -38,7 +44,8 @@ namespace Microsoft.Tye
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true,
+                    CreateNoWindow = !IsWindows,
+                    WindowStyle = ProcessWindowStyle.Hidden
                 },
                 EnableRaisingEvents = true
             };
@@ -115,20 +122,23 @@ namespace Microsoft.Tye
 
             if (result == cancelledTcs.Task)
             {
-                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                if (!IsWindows)
                 {
                     sys_kill(process.Id, sig: 2); // SIGINT
-
-                    var cancel = new CancellationTokenSource();
-
-                    await Task.WhenAny(processLifetimeTask.Task, Task.Delay(TimeSpan.FromSeconds(5), cancel.Token));
-
-                    cancel.Cancel();
+                }
+                else
+                {
+                    if (!process.CloseMainWindow())
+                    {
+                        process.Kill();
+                    }
                 }
 
                 if (!process.HasExited)
                 {
-                    process.CloseMainWindow();
+                    var cancel = new CancellationTokenSource();
+                    await Task.WhenAny(processLifetimeTask.Task, Task.Delay(TimeSpan.FromSeconds(5), cancel.Token));
+                    cancel.Cancel();
 
                     if (!process.HasExited)
                     {
