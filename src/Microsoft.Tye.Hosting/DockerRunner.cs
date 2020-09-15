@@ -201,7 +201,7 @@ namespace Microsoft.Tye.Hosting
             var serviceDescription = service.Description;
             var environmentArguments = "";
             var volumes = "";
-            var workingDirectory = docker.WorkingDirectory != null ? $"-w {docker.WorkingDirectory}" : "";
+            var workingDirectory = docker.WorkingDirectory != null ? $"-w \"{docker.WorkingDirectory}\"" : "";
             var hostname = "host.docker.internal";
             var dockerImage = docker.Image ?? service.Description.Name;
 
@@ -291,7 +291,7 @@ namespace Microsoft.Tye.Hosting
                     }
                 }
 
-                var command = $"run -d \"{workingDirectory}\" {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {dockerImage} {docker.Args ?? ""}";
+                var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {dockerImage} {docker.Args ?? ""}";
 
                 _logger.LogInformation("Running image {Image} for {Replica}", docker.Image, replica);
 
