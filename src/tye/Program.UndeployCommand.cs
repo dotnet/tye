@@ -24,7 +24,6 @@ namespace Microsoft.Tye
                 StandardOptions.Interactive,
                 StandardOptions.Verbosity,
                 StandardOptions.Tags,
-                StandardOptions.Framework,
 
                 new Option(new[]{ "--what-if", }, "print what would be deleted without making changes")
                 {
@@ -45,7 +44,7 @@ namespace Microsoft.Tye
 
                 var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(args.Tags);
 
-                return UndeployHost.UndeployAsync(output, args.Path, args.Namespace, args.Interactive, args.WhatIf, args.Framework, filter);
+                return UndeployHost.UndeployAsync(output, args.Path, args.Namespace, args.Interactive, args.WhatIf, filter);
             });
 
             return command;
@@ -62,8 +61,6 @@ namespace Microsoft.Tye
             public string Namespace { get; set; } = default!;
 
             public bool Interactive { get; set; } = false;
-
-            public string Framework { get; set; } = default!;
 
             public bool WhatIf { get; set; } = false;
 

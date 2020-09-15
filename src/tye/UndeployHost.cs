@@ -17,11 +17,11 @@ namespace Microsoft.Tye
 {
     public static class UndeployHost
     {
-        public static async Task UndeployAsync(OutputContext output, FileInfo path, string @namespace, bool interactive, bool whatIf, string? framework = null, ApplicationFactoryFilter? filter = null)
+        public static async Task UndeployAsync(OutputContext output, FileInfo path, string @namespace, bool interactive, bool whatIf, ApplicationFactoryFilter? filter = null)
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            var application = await ApplicationFactory.CreateAsync(output, path, framework, filter);
+            var application = await ApplicationFactory.CreateAsync(output, path, null, filter);
 
             if (!string.IsNullOrEmpty(@namespace))
             {
