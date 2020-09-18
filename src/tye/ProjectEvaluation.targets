@@ -1,0 +1,40 @@
+﻿<Project>
+    <Target Name="MicrosoftTye_GetProjectMetadata" DependsOnTargets="ResolveReferences;ResolvePackageDependenciesDesignTime;PrepareResources;GetAssemblyAttributes" >
+        <PropertyGroup>
+            <_MicrosoftTye_MetadataFile>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)MicrosoftTye.ProjectMetadata.txt'))</_MicrosoftTye_MetadataFile>
+            <_MicrosoftTye_ProjectFrameworkReference>@(FrameworkReference, '%3B')</_MicrosoftTye_ProjectFrameworkReference>
+        </PropertyGroup>
+
+        <ItemGroup>
+            <_MicrosoftTye_ProjectMetadata Include="AssemblyInformationalVersion: $(AssemblyInformationalVersion)" />
+            <_MicrosoftTye_ProjectMetadata Include="InformationalVersion: $(InformationalVersion)" />
+            <_MicrosoftTye_ProjectMetadata Include="Version: $(Version)" />
+            <_MicrosoftTye_ProjectMetadata Include="TargetFrameworks: $(TargetFrameworks)" />
+            <_MicrosoftTye_ProjectMetadata Include="RunCommand: $(RunCommand)" />
+            <_MicrosoftTye_ProjectMetadata Include="RunArguments: $(RunArguments)" />
+            <_MicrosoftTye_ProjectMetadata Include="TargetPath: $(TargetPath)" />
+            <_MicrosoftTye_ProjectMetadata Include="PublishDir: $(PublishDir)" />
+            <_MicrosoftTye_ProjectMetadata Include="AssemblyName: $(AssemblyName)" />
+            <_MicrosoftTye_ProjectMetadata Include="IntermediateOutputPath: $(IntermediateOutputPath)" />
+            <_MicrosoftTye_ProjectMetadata Include="TargetFramework: $(TargetFramework)" />
+            <_MicrosoftTye_ProjectMetadata Include="_ShortFrameworkIdentifier: $(_ShortFrameworkIdentifier)" />
+            <_MicrosoftTye_ProjectMetadata Include="_ShortFrameworkVersion: $(_ShortFrameworkVersion)" />
+            <_MicrosoftTye_ProjectMetadata Include="_TargetFrameworkVersionWithoutV: $(_TargetFrameworkVersionWithoutV)" />
+            <_MicrosoftTye_ProjectMetadata Include="FrameworkReference: $(_MicrosoftTye_ProjectFrameworkReference)" />
+            <_MicrosoftTye_ProjectMetadata Include="ContainerBaseImage: $(ContainerBaseImage)" />
+            <_MicrosoftTye_ProjectMetadata Include="ContainerBaseTag: $(ContainerBaseTag)" />
+            <_MicrosoftTye_ProjectMetadata Include="MicrosoftNETPlatformLibrary: $(MicrosoftNETPlatformLibrary)" />
+            <_MicrosoftTye_ProjectMetadata Include="_AspNetCoreAppSharedFxIsEnabled: $(_AspNetCoreAppSharedFxIsEnabled)" />
+            <_MicrosoftTye_ProjectMetadata Include="UsingMicrosoftNETSdkWeb: $(UsingMicrosoftNETSdkWeb)" />
+        </ItemGroup>
+
+        <WriteLinesToFile
+            File="$(_MicrosoftTye_MetadataFile)"
+            Lines="@(_MicrosoftTye_ProjectMetadata)"
+            Overwrite="true"
+            WriteOnlyWhenDifferent="true"/>
+
+        <Message Text="Microsoft.Tye metadata file: $(_MicrosoftTye_MetadataFile)" Importance="High"/>
+
+    </Target>
+</Project>

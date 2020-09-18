@@ -10,15 +10,9 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Loader;
 using System.Threading.Tasks;
 using Microsoft.Build.Construction;
-using Microsoft.Build.Definition;
-using Microsoft.Build.Evaluation;
-using Microsoft.Build.Execution;
-using Microsoft.Build.Framework;
 using Microsoft.Build.Locator;
-using Microsoft.Build.Logging;
 using Semver;
 
 namespace Microsoft.Tye
@@ -33,63 +27,6 @@ namespace Microsoft.Tye
         {
             EnsureMSBuildRegistered(null, solutionFile);
             return EnumerateProjectsCore(solutionFile);
-        }
-
-        // Do not load MSBuild types before using EnsureMSBuildRegistered.
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static IEnumerable<FileInfo> EnumerateProjectsCore(FileInfo solutionFile)
-        {
-            var solution = SolutionFile.Parse(solutionFile.FullName);
-            foreach (var project in solution.ProjectsInOrder)
-            {
-                if (project.ProjectType != SolutionProjectType.KnownToBeMSBuildFormat)
-                {
-                    continue;
-                }
-
-                var extension = Path.GetExtension(project.AbsolutePath).ToLower();
-                switch (extension)
-                {
-                    case ".csproj":
-                    case ".fsproj":
-                        break;
-                    default:
-                        continue;
-                }
-
-                yield return new FileInfo(project.AbsolutePath.Replace('\\', '/'));
-            }
-        }
-
-        public static Task ReadProjectDetailsAsync(OutputContext output, DotnetProjectServiceBuilder project)
-        {
-            if (output is null)
-            {
-                throw new ArgumentNullException(nameof(output));
-            }
-
-            if (project is null)
-            {
-                throw new ArgumentNullException(nameof(project));
-            }
-
-            if (!Directory.Exists(project.ProjectFile.DirectoryName))
-            {
-                throw new CommandException($"Failed to locate directory: '{project.ProjectFile.DirectoryName}'.");
-            }
-
-            EnsureMSBuildRegistered(output, project.ProjectFile);
-
-            EvaluateProject(output, project);
-
-            if (!SemVersion.TryParse(project.Version, out var version))
-            {
-                output.WriteInfoLine($"No version or invalid version '{project.Version}' found, using default.");
-                version = new SemVersion(0, 1, 0);
-                project.Version = version.ToString();
-            }
-
-            return Task.CompletedTask;
         }
 
         private static void EnsureMSBuildRegistered(OutputContext? output, FileInfo projectFile)
@@ -138,118 +75,144 @@ namespace Microsoft.Tye
             }
         }
 
+        // Do not load MSBuild types before using EnsureMSBuildRegistered.
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void LogIt(OutputContext output)
+        private static IEnumerable<FileInfo> EnumerateProjectsCore(FileInfo solutionFile)
         {
-            output.WriteDebugLine("Loaded: " + typeof(ProjectInstance).Assembly.FullName);
-            output.WriteDebugLine("Loaded From: " + typeof(ProjectInstance).Assembly.Location);
+            var solution = SolutionFile.Parse(solutionFile.FullName);
+            foreach (var project in solution.ProjectsInOrder)
+            {
+                if (project.ProjectType != SolutionProjectType.KnownToBeMSBuildFormat)
+                {
+                    continue;
+                }
+
+                var extension = Path.GetExtension(project.AbsolutePath).ToLower();
+                switch (extension)
+                {
+                    case ".csproj":
+                    case ".fsproj":
+                        break;
+                    default:
+                        continue;
+                }
+
+                yield return new FileInfo(project.AbsolutePath.Replace('\\', '/'));
+            }
+        }
+
+        public static async Task ReadProjectDetailsAsync(OutputContext output, DotnetProjectServiceBuilder project)
+        {
+            if (output is null)
+            {
+                throw new ArgumentNullException(nameof(output));
+            }
+
+            if (project is null)
+            {
+                throw new ArgumentNullException(nameof(project));
+            }
+
+            if (!Directory.Exists(project.ProjectFile.DirectoryName))
+            {
+                throw new CommandException($"Failed to locate directory: '{project.ProjectFile.DirectoryName}'.");
+            }
+
+            await EvaluateProjectAsync(output, project);
+
+            if (!SemVersion.TryParse(project.Version, out var version))
+            {
+                output.WriteInfoLine($"No version or invalid version '{project.Version}' found, using default.");
+                version = new SemVersion(0, 1, 0);
+                project.Version = version.ToString();
+            }
         }
 
         // Do not load MSBuild types before using EnsureMSBuildRegistered.
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void EvaluateProject(OutputContext output, DotnetProjectServiceBuilder project)
+        private static async Task EvaluateProjectAsync(OutputContext output, DotnetProjectServiceBuilder project)
         {
             var sw = Stopwatch.StartNew();
 
-            // Currently we only log at debug level.
-            var logger = new ConsoleLogger(
-                verbosity: LoggerVerbosity.Normal,
-                write: message => output.WriteDebug(message),
-                colorSet: null,
-                colorReset: null);
-
-            // We need to isolate projects from each other for testing. MSBuild does not support
-            // loading the same project twice in the same collection.
-            var projectCollection = new ProjectCollection();
-
-            ProjectInstance projectInstance;
-            Microsoft.Build.Evaluation.Project msbuildProject;
-
-            try
+            var metadata = new Dictionary<string, string>();
+            var restoreArgs = $"restore \"{project.ProjectFile.FullName}\" ";
+            if (project.BuildProperties.Any())
             {
-                output.WriteDebugLine($"Loading project '{project.ProjectFile.FullName}'.");
-                msbuildProject = Microsoft.Build.Evaluation.Project.FromFile(project.ProjectFile.FullName, new ProjectOptions()
-                {
-                    ProjectCollection = projectCollection,
-                    GlobalProperties = project.BuildProperties
-                });
-                projectInstance = msbuildProject.CreateProjectInstance();
-                output.WriteDebugLine($"Loaded project '{project.ProjectFile.FullName}'.");
+                restoreArgs += $"{project.BuildProperties.Select(kvp => $"/p:{kvp.Key}={kvp.Value}").Aggregate((a, b) => a + " " + b)} ";
             }
-            catch (Exception ex)
+            restoreArgs += "/nologo";
+            output.WriteDebugLine($"Running restore command: dotnet {restoreArgs}");
+
+            var restoreResult = await ProcessUtil.RunAsync("dotnet", restoreArgs, throwOnError: false);
+
+            // We don't really look at the result, because it's not clear we should halt totally
+            // if restore fails.
+            if (restoreResult.ExitCode != 0)
             {
-                throw new CommandException($"Failed to load project: '{project.ProjectFile.FullName}'.", ex);
+                output.WriteDebugLine($"Project restored failed with exit code {restoreResult.ExitCode}:" +
+                    $"{Environment.NewLine}{restoreResult.StandardError}");
             }
 
-            try
+            var msbuildArgs = "msbuild " +
+                "/t:MicrosoftTye_GetProjectMetadata " +
+                $"/p:CustomAfterMicrosoftCommonTargets=\"{Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")}\" " +
+                $"\"{project.ProjectFile.FullName}\" " +
+                "/nologo";
+
+            output.WriteDebugLine($"Running msbuild command: dotnet {msbuildArgs}");
+
+            var buildResult = await ProcessUtil.RunAsync("dotnet", msbuildArgs, throwOnError: false);
+
+            // If the build fails, we're not really blocked from doing our work.
+            // For now we just log the output to debug. There are errors that occur during
+            // running these targets we don't really care as long as we get the data.
+            if (buildResult.ExitCode != 0)
             {
-                AssemblyLoadContext.Default.Resolving += ResolveAssembly;
-
-                output.WriteDebugLine($"Restoring project '{project.ProjectFile.FullName}'.");
-
-                // Similar to what MSBuild does for restore:
-                // https://github.com/microsoft/msbuild/blob/3453beee039fb6f5ccc54ac783ebeced31fec472/src/MSBuild/XMake.cs#L1417
-                //
-                // We need to do restore as a separate operation
-                var restoreRequest = new BuildRequestData(
-                    projectInstance,
-                    targetsToBuild: new[] { "Restore" },
-                    hostServices: null,
-                    flags: BuildRequestDataFlags.ClearCachesAfterBuild | BuildRequestDataFlags.SkipNonexistentTargets | BuildRequestDataFlags.IgnoreMissingEmptyAndInvalidImports);
-
-                var parameters = new BuildParameters(projectCollection)
-                {
-                    Loggers = new[] { logger, },
-                };
-
-                // We don't really look at the result, because it's not clear we should halt totally
-                // if restore fails.
-                var restoreResult = BuildManager.DefaultBuildManager.Build(parameters, restoreRequest);
-                output.WriteDebugLine($"Restored project '{project.ProjectFile.FullName}'.");
-
-                msbuildProject.MarkDirty();
-                projectInstance = msbuildProject.CreateProjectInstance();
-
-                var targets = new List<string>()
-                {
-                    "ResolveReferences",
-                    "ResolvePackageDependenciesDesignTime",
-                    "PrepareResources",
-                    "GetAssemblyAttributes",
-                };
-
-                var result = projectInstance.Build(
-                    targets: targets.ToArray(),
-                    loggers: new[] { logger, });
-
-                // If the build fails, we're not really blocked from doing our work.
-                // For now we just log the output to debug. There are errors that occur during
-                // running these targets we don't really care as long as we get the data.
+                output.WriteDebugLine($"Evaluating project failed with exit code {buildResult.ExitCode}:" +
+                    $"{Environment.NewLine}{buildResult.StandardError}");
             }
-            finally
+
+            var metadataFileMessage = buildResult
+                .StandardOutput
+                .Split(Environment.NewLine)
+                .Select(s => s.Trim())
+                .SingleOrDefault(s => s.StartsWith("Microsoft.Tye metadata file:"));
+
+            // If project evaluation is successful this should not happen, therefore an exception will be thrown.
+            if (string.IsNullOrEmpty(metadataFileMessage))
             {
-                AssemblyLoadContext.Default.Resolving -= ResolveAssembly;
+                throw new CommandException($"Evaluated project metadata file could not be found:" +
+                    $"{Environment.NewLine}{buildResult.StandardError}");
+            }
+
+            var metadataFilePath = metadataFileMessage.Split(':', 2)[1].TrimStart();
+            var metadataKVPs = File.ReadLines(metadataFilePath).Select(l => l.Split(new[] { ':' }, 2));
+
+            foreach (var metadataKVP in metadataKVPs)
+            {
+                if (!string.IsNullOrEmpty(metadataKVP[1]))
+                {
+                    metadata.Add(metadataKVP[0], metadataKVP[1].Trim());
+                }
             }
 
             // Reading a few different version properties to be more resilient.
-            var version =
-                projectInstance.GetProperty("AssemblyInformationalVersion")?.EvaluatedValue ??
-                projectInstance.GetProperty("InformationalVersion")?.EvaluatedValue ??
-                projectInstance.GetProperty("Version").EvaluatedValue;
+            var version = GetMetadataValueOrNull("AssemblyInformationalVersion") ??
+                 GetMetadataValueOrNull("InformationalVersion") ??
+                 GetMetadataValueOrEmpty("Version");
             project.Version = version;
             output.WriteDebugLine($"Found application version: {version}");
 
-            var targetFrameworks = projectInstance.GetPropertyValue("TargetFrameworks");
-            project.TargetFrameworks = targetFrameworks.Split(';', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+            project.TargetFrameworks = GetMetadataValueOrNull("TargetFrameworks")?.Split(';', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
 
             // Figure out if functions app.
             // If so, run app with function host.
-            project.RunCommand = projectInstance.GetPropertyValue("RunCommand");
-            project.RunArguments = projectInstance.GetPropertyValue("RunArguments");
-            project.TargetPath = projectInstance.GetPropertyValue("TargetPath");
-            project.PublishDir = projectInstance.GetPropertyValue("PublishDir");
-            project.AssemblyName = projectInstance.GetPropertyValue("AssemblyName");
-            project.IntermediateOutputPath = projectInstance.GetPropertyValue("IntermediateOutputPath");
+            project.RunCommand = GetMetadataValueOrEmpty("RunCommand");
+            project.RunArguments = GetMetadataValueOrEmpty("RunArguments");
+            project.TargetPath = GetMetadataValueOrEmpty("TargetPath");
+            project.PublishDir = GetMetadataValueOrEmpty("PublishDir");
+            project.AssemblyName = GetMetadataValueOrEmpty("AssemblyName");
+            project.IntermediateOutputPath = GetMetadataValueOrEmpty("IntermediateOutputPath");
 
             output.WriteDebugLine($"RunCommand={project.RunCommand}");
             output.WriteDebugLine($"RunArguments={project.RunArguments}");
@@ -263,63 +226,37 @@ namespace Microsoft.Tye
             project.TargetPath = Path.Combine(project.ProjectFile.DirectoryName!, NormalizePath(project.TargetPath));
             project.PublishDir = Path.Combine(project.ProjectFile.DirectoryName!, NormalizePath(project.PublishDir));
 
-            var targetFramework = projectInstance.GetPropertyValue("TargetFramework");
+            var targetFramework = GetMetadataValueOrEmpty("TargetFramework");
             project.TargetFramework = targetFramework;
             output.WriteDebugLine($"Found target framework: {targetFramework}");
 
             // TODO: Parse the name and version manually out of the TargetFramework field if it's non-null
-            project.TargetFrameworkName = projectInstance.GetPropertyValue("_ShortFrameworkIdentifier");
-            project.TargetFrameworkVersion = projectInstance.GetPropertyValue("_ShortFrameworkVersion") ?? projectInstance.GetPropertyValue("_TargetFrameworkVersionWithoutV");
+            project.TargetFrameworkName = GetMetadataValueOrEmpty("_ShortFrameworkIdentifier");
+            project.TargetFrameworkVersion = GetMetadataValueOrNull("_ShortFrameworkVersion") ?? GetMetadataValueOrEmpty("_TargetFrameworkVersionWithoutV");
 
-            var sharedFrameworks = projectInstance.GetItems("FrameworkReference").Select(i => i.EvaluatedInclude).ToList();
+            var sharedFrameworks = GetMetadataValueOrNull("FrameworkReference")?.Split(';') ?? Enumerable.Empty<string>();
             project.Frameworks.AddRange(sharedFrameworks.Select(s => new Framework(s)));
             output.WriteDebugLine($"Found shared frameworks: {string.Join(", ", sharedFrameworks)}");
 
             // determine container base image
             if (project.ContainerInfo != null)
             {
-                project.ContainerInfo.BaseImageName = projectInstance.GetPropertyValue("ContainerBaseImage");
-                project.ContainerInfo.BaseImageTag = projectInstance.GetPropertyValue("ContainerBaseTag");
-            }
-
-            bool PropertyIsTrue(string property)
-            {
-                return projectInstance.GetPropertyValue(property) is string s && !string.IsNullOrEmpty(s) && bool.Parse(s);
+                project.ContainerInfo.BaseImageName = GetMetadataValueOrEmpty("ContainerBaseImage");
+                project.ContainerInfo.BaseImageTag = GetMetadataValueOrEmpty("ContainerBaseTag");
             }
 
             project.IsAspNet = project.Frameworks.Any(f => f.Name == "Microsoft.AspNetCore.App") ||
-                               projectInstance.GetPropertyValue("MicrosoftNETPlatformLibrary") == "Microsoft.AspNetCore.App" ||
-                               PropertyIsTrue("_AspNetCoreAppSharedFxIsEnabled") ||
-                               PropertyIsTrue("UsingMicrosoftNETSdkWeb");
+                               GetMetadataValueOrEmpty("MicrosoftNETPlatformLibrary") == "Microsoft.AspNetCore.App" ||
+                               MetadataIsTrue("_AspNetCoreAppSharedFxIsEnabled") ||
+                               MetadataIsTrue("UsingMicrosoftNETSdkWeb");
 
             output.WriteDebugLine($"IsAspNet={project.IsAspNet}");
 
             output.WriteDebugLine($"Evaluation Took: {sw.Elapsed.TotalMilliseconds}ms");
 
-            // The Microsoft.Build.Locator doesn't handle the loading of other assemblies
-            // that are shipped with MSBuild (ex NuGet).
-            //
-            // This means that the set of assemblies that need special handling depends on the targets
-            // that we run :(
-            //
-            // This is workaround for this limitation based on the targets we need to run
-            // to resolve references and versions.
-            //
-            // See: https://github.com/microsoft/MSBuildLocator/issues/86
-            Assembly? ResolveAssembly(AssemblyLoadContext context, AssemblyName assemblyName)
-            {
-                if (assemblyName.Name is object)
-                {
-                    var msbuildDirectory = Environment.GetEnvironmentVariable("MSBuildExtensionsPath")!;
-                    var assemblyFilePath = Path.Combine(msbuildDirectory, assemblyName.Name + ".dll");
-                    if (File.Exists(assemblyFilePath))
-                    {
-                        return context.LoadFromAssemblyPath(assemblyFilePath);
-                    }
-                }
-
-                return default;
-            }
+            string? GetMetadataValueOrNull(string key) => metadata!.TryGetValue(key, out var value) ? value : null;
+            string GetMetadataValueOrEmpty(string key) => metadata!.TryGetValue(key, out var value) ? value : string.Empty;
+            bool MetadataIsTrue(string key) => metadata!.TryGetValue(key, out var value) && bool.Parse(value);
         }
 
         private static string NormalizePath(string path)

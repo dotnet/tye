@@ -11,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="ProjectEvaluation.targets" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\shared\KubectlDetector.cs" Link="KubectlDetector.cs" />
     <Compile Include="..\shared\TempFile.cs" Link="TempFile.cs" />
   </ItemGroup>
