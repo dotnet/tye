@@ -155,9 +155,12 @@ namespace Microsoft.Tye
 
             var msbuildArgs = "msbuild " +
                 "/t:MicrosoftTye_GetProjectMetadata " +
-                $"/p:CustomAfterMicrosoftCommonTargets=\"{Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")}\" " +
-                $"\"{project.ProjectFile.FullName}\" " +
-                "/nologo";
+                $"/p:CustomAfterMicrosoftCommonTargets=\"{Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")}\" ";
+            if (project.BuildProperties.Any())
+            {
+                msbuildArgs += $"{project.BuildProperties.Select(kvp => $"/p:{kvp.Key}={kvp.Value}").Aggregate((a, b) => a + " " + b)} ";
+            }
+            msbuildArgs += $"\"{project.ProjectFile.FullName}\" /nologo";
 
             output.WriteDebugLine($"Running msbuild command: dotnet {msbuildArgs}");
 
