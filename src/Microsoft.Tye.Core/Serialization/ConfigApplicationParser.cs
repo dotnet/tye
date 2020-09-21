@@ -35,7 +35,7 @@ namespace Tye.Serialization
                         break;
                     case "services":
                         YamlParser.ThrowIfNotYamlSequence(key, child.Value);
-                        ConfigServiceParser.HandleServiceMapping((child.Value as YamlSequenceNode)!, app.Services);
+                        ConfigServiceParser.HandleServiceMapping((child.Value as YamlSequenceNode)!, app.Services, app);
                         break;
                     case "extensions":
                         YamlParser.ThrowIfNotYamlSequence(key, child.Value);

@@ -24,4 +24,13 @@
     <ProjectReference Include="..\..\src\tye\tye.csproj" />
     <ProjectReference Include="..\Test.Infrastructure\Test.Infrastructure.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="testassets\envfile_a.env">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="testassets\envfile_b.env">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

@@ -17,21 +17,21 @@ namespace Tye.Serialization
         private FileInfo? _fileInfo;
         private TextReader _reader;
 
-        public YamlParser(string yamlContent)
-            : this(new StringReader(yamlContent))
+        public YamlParser(string yamlContent, FileInfo? fileInfo = null)
+            : this(new StringReader(yamlContent), fileInfo)
         {
         }
 
         public YamlParser(FileInfo fileInfo)
-            : this(fileInfo.OpenText())
+            : this(fileInfo.OpenText(), fileInfo)
         {
-            _fileInfo = fileInfo;
         }
 
-        internal YamlParser(TextReader reader)
+        internal YamlParser(TextReader reader, FileInfo? fileInfo = null)
         {
             _reader = reader;
             _yamlStream = new YamlStream();
+            _fileInfo = fileInfo;
         }
 
         public ConfigApplication ParseConfigApplication()
@@ -51,9 +51,11 @@ namespace Tye.Serialization
             var document = _yamlStream.Documents[0];
             var node = document.RootNode;
             ThrowIfNotYamlMapping(node);
-            ConfigApplicationParser.HandleConfigApplication((YamlMappingNode)node, app);
 
             app.Source = _fileInfo!;
+
+            ConfigApplicationParser.HandleConfigApplication((YamlMappingNode)node, app);
+
             app.Name ??= NameInferer.InferApplicationName(_fileInfo!);
 
             // TODO confirm if these are ever null.
