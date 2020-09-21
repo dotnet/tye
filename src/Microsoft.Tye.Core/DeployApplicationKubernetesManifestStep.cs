@@ -60,44 +60,44 @@ namespace Microsoft.Tye
             }
 
             output.WriteInfoLine($"Deployed application '{application.Name}'.");
-            if(application.Ingress.Count > 0)
+            if (application.Ingress.Count > 0)
             {
-                    foreach(var ingress in application.Ingress)
-                    {
-                        using var ingressStep = output.BeginStep($"Retrieving details for {ingress.Name}...");
+                foreach(var ingress in application.Ingress)
+                {
+                    using var ingressStep = output.BeginStep($"Retrieving details for {ingress.Name}...");
 
-                        var done = false;
+                    var done = false;
 
-                        Action<string> complete = line => {
-                            done = line != "''";
-                            if(done) 
-                            {
-                                output.WriteInfoLine($"IngressIP: {line}");
-                            }
-                        };
-
-                        var retries = 0;
-                        while(!done && retries < 60)
+                    Action<string> complete = line => {
+                        done = line != "''";
+                        if(done) 
                         {
-                            var ingressExitCode = await Process.ExecuteAsync(
-                                "kubectl", 
-                                $"get ingress {ingress.Name} -o jsonpath='{{..ip}}'", 
-                                System.Environment.CurrentDirectory,
-                                complete,
-                                capture.StdErr);
+                            output.WriteInfoLine($"IngressIP: {line}");
+                        }
+                    };
 
-                            if(ingressExitCode != 0)
-                            {
-                                throw new CommandException("'kubectl get ingress' failed");
-                            }
-                            
-                            if(!done)
-                            {
-                                await Task.Delay(1000);
-                                retries++;
-                            }
-                        } 
-                    }
+                    var retries = 0;
+                    while(!done && retries < 60)
+                    {
+                        var ingressExitCode = await Process.ExecuteAsync(
+                            "kubectl", 
+                            $"get ingress {ingress.Name} -o jsonpath='{{..ip}}'", 
+                            System.Environment.CurrentDirectory,
+                            complete,
+                            capture.StdErr);
+
+                        if(ingressExitCode != 0)
+                        {
+                            throw new CommandException("'kubectl get ingress' failed");
+                        }
+                        
+                        if(!done)
+                        {
+                            await Task.Delay(1000);
+                            retries++;
+                        }
+                    } 
+                }
             }
         }
     }
