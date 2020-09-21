@@ -525,7 +525,7 @@ namespace Tye.Serialization
             foreach (var line in envLines)
             {
                 var lineTrim = line?.Trim();
-                if (string.IsNullOrEmpty(lineTrim))
+                if (string.IsNullOrEmpty(lineTrim) || lineTrim[0] == '#')
                 {
                     continue;
                 }
