@@ -135,25 +135,9 @@ namespace Microsoft.Tye
             var sw = Stopwatch.StartNew();
 
             var metadata = new Dictionary<string, string>();
-            var restoreArgs = $"restore \"{project.ProjectFile.FullName}\" ";
-            if (project.BuildProperties.Any())
-            {
-                restoreArgs += $"{project.BuildProperties.Select(kvp => $"/p:{kvp.Key}={kvp.Value}").Aggregate((a, b) => a + " " + b)} ";
-            }
-            restoreArgs += "/nologo";
-            output.WriteDebugLine($"Running restore command: dotnet {restoreArgs}");
-
-            var restoreResult = await ProcessUtil.RunAsync("dotnet", restoreArgs, throwOnError: false);
-
-            // We don't really look at the result, because it's not clear we should halt totally
-            // if restore fails.
-            if (restoreResult.ExitCode != 0)
-            {
-                output.WriteDebugLine($"Project restored failed with exit code {restoreResult.ExitCode}:" +
-                    $"{Environment.NewLine}{restoreResult.StandardError}");
-            }
 
             var msbuildArgs = "msbuild " +
+                "/t:Restore " +
                 "/t:MicrosoftTye_GetProjectMetadata " +
                 $"/p:CustomAfterMicrosoftCommonTargets=\"{Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")}\" ";
             if (project.BuildProperties.Any())
