@@ -81,7 +81,7 @@ namespace Microsoft.Tye
                     while (!done && retries < 60)
                     {
                         var ingressExitCode = await Process.ExecuteAsync(
-                            "kubectl", 
+                            "kubectl",
                             $"get ingress {ingress.Name} -o jsonpath='{{..ip}}'",
                             System.Environment.CurrentDirectory,
                             complete,
@@ -91,13 +91,13 @@ namespace Microsoft.Tye
                         {
                             throw new CommandException("'kubectl get ingress' failed");
                         }
-                        
+
                         if (!done)
                         {
                             await Task.Delay(1000);
                             retries++;
                         }
-                    } 
+                    }
                 }
             }
         }
