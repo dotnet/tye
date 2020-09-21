@@ -184,9 +184,13 @@ Including `external: true` marks the service as *external*:
 
 External services are useful to provide bindings without any run or deployment behavior.
 
-#### `env` (`EnvironmentVariable[]`)
+#### `env` (`EnvironmentVariable[] | string[]`)
 
 A list of environment variable mappings for the service. Does not apply when the service is external.
+
+#### `env_file` (`string[]`)
+
+A list of files from which environment variables are taken. Does not apply when the service is external.
 
 #### `args` (string)
 
@@ -255,6 +259,55 @@ The name of the environment variable.
 #### `value` (string) *required*
 
 The value of the environment variable.
+
+Environment variables can also be provided using a compact syntax (similar to that of [docker-compose](https://docs.docker.com/compose/environment-variables/)).
+
+### Environment Variable Compact Syntax Example
+
+```yaml
+name: myapplication
+services:
+- name: backend
+  project: backend/backend.csproj
+
+  # environment variables appear here
+  env:
+  - SOME_KEY=SOME_VALUE
+  - SOME_KEY2="SOME VALUE"
+  - SOME_KEY3
+```
+
+Using the compact syntax, you provide environment variable name and value via a single string, separated by a `=` sign.  
+
+In the absence of an `=` sign, the value of the environment variable will be taken from the operating system/shell.
+
+## Environment Variables Files
+
+`string` elements appear in a list inside the `env_file` property of a `Service`.  
+
+These strings reference [`.env` files](https://docs.docker.com/compose/env-file/) from which the environment variables will be injected.  
+
+### Environment Variables File Example
+
+```yaml
+name: myapplication
+services:
+- name: backend
+  project: backend/backend.csproj
+
+  # environment variables files appear here
+  env_file:
+    - ./envfile_a.env
+    - ./envfile_b.env
+```
+
+### .env File Example
+
+```
+SOME_KEY=SOME_VALUE
+# This line is ignored because it start with '#'
+SOME_KEY2="SOME VALUE"
+```
 
 ## Build Properties
 
