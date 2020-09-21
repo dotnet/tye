@@ -62,36 +62,37 @@ namespace Microsoft.Tye
             output.WriteInfoLine($"Deployed application '{application.Name}'.");
             if (application.Ingress.Count > 0)
             {
-                foreach(var ingress in application.Ingress)
+                foreach (var ingress in application.Ingress)
                 {
                     using var ingressStep = output.BeginStep($"Retrieving details for {ingress.Name}...");
 
                     var done = false;
 
-                    Action<string> complete = line => {
+                    Action<string> complete = line =>
+                    {
                         done = line != "''";
-                        if(done) 
+                        if (done)
                         {
                             output.WriteInfoLine($"IngressIP: {line}");
                         }
                     };
 
                     var retries = 0;
-                    while(!done && retries < 60)
+                    while (!done && retries < 60)
                     {
                         var ingressExitCode = await Process.ExecuteAsync(
                             "kubectl", 
-                            $"get ingress {ingress.Name} -o jsonpath='{{..ip}}'", 
+                            $"get ingress {ingress.Name} -o jsonpath='{{..ip}}'",
                             System.Environment.CurrentDirectory,
                             complete,
                             capture.StdErr);
 
-                        if(ingressExitCode != 0)
+                        if (ingressExitCode != 0)
                         {
                             throw new CommandException("'kubectl get ingress' failed");
                         }
                         
-                        if(!done)
+                        if (!done)
                         {
                             await Task.Delay(1000);
                             retries++;
