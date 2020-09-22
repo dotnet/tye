@@ -137,7 +137,6 @@ namespace Microsoft.Tye
             var metadata = new Dictionary<string, string>();
 
             var msbuildArgs = "msbuild " +
-                "/t:Restore " +
                 "/t:MicrosoftTye_GetProjectMetadata " +
                 $"/p:CustomAfterMicrosoftCommonTargets=\"{Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")}\" ";
             if (project.BuildProperties.Any())

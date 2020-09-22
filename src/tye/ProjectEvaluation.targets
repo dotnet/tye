@@ -1,5 +1,5 @@
 ﻿<Project>
-    <Target Name="MicrosoftTye_GetProjectMetadata" DependsOnTargets="ResolveReferences;ResolvePackageDependenciesDesignTime;PrepareResources;GetAssemblyAttributes" >
+    <Target Name="MicrosoftTye_GetProjectMetadata" DependsOnTargets="Restore;ResolveReferences;ResolvePackageDependenciesDesignTime;PrepareResources;GetAssemblyAttributes" >
         <PropertyGroup>
             <_MicrosoftTye_MetadataFile>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)MicrosoftTye.ProjectMetadata.txt'))</_MicrosoftTye_MetadataFile>
             <_MicrosoftTye_ProjectFrameworkReference>@(FrameworkReference, '%3B')</_MicrosoftTye_ProjectFrameworkReference>
