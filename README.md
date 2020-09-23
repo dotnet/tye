@@ -46,6 +46,8 @@ Some of the best ways to contribute are to try things out, file issues, join in 
 
 Check out the [contributing](/CONTRIBUTING.md) page to see the best places to log issues and start discussions.
 
+Thank you for trying out Project Tye! We highly encourage you to provide feedback to help us continue to improve the tool, so we would love to learn more about your experience. Please let us know what you think by filling out our [survey](https://aka.ms/tyesurvey).
+
 ## Reporting security issues and bugs
 
 Tye is an experimental project, and as such we expect all users to take responsibility for evaluating the security of their own applications.
