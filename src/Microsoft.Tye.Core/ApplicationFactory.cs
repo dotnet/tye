@@ -121,12 +121,12 @@ namespace Microsoft.Tye
                     output.WriteDebugLine("Restoring and evaluating projects");
 
                     var msbuildEvaluationResult = await ProcessUtil.RunAsync(
-                        "dotnet", 
+                        "dotnet",
                         $"build " +
                             $"\"{projectPath}\" " +
                             $"/p:CustomAfterMicrosoftCommonTargets={Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")} " +
-                            $"/nologo", 
-                        throwOnError: false, 
+                            $"/nologo",
+                        throwOnError: false,
                         workingDirectory: directory.DirectoryPath);
 
                     // If the build fails, we're not really blocked from doing our work.
