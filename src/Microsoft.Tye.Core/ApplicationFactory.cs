@@ -104,7 +104,7 @@ namespace Microsoft.Tye
                         sb.AppendLine($"        <MicrosoftTye_ProjectServices " +
                             $"Include=\"{project.ProjectFullPath}\" " +
                             $"Name=\"{project.Name}\" " +
-                            $"BuildProperties=\"{(project.BuildProperties.Any() ? project.BuildProperties.Select(kvp => $"{kvp.Name}={kvp.Value}").Aggregate((a, b) => a + ";" + b) : string.Empty )}\" />");
+                            $"BuildProperties=\"{(project.BuildProperties.Any() ? project.BuildProperties.Select(kvp => $"{kvp.Name}={kvp.Value}").Aggregate((a, b) => a + ";" + b) : string.Empty)}\" />");
                     }
                     sb.AppendLine(@"    </ItemGroup>");
 
