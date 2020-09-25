@@ -55,7 +55,7 @@ namespace Microsoft.Tye
             }
         }
 
-        public static async Task ReadProjectDetailsAsync(OutputContext output, DotnetProjectServiceBuilder project)
+        public static void ReadProjectDetails(OutputContext output, DotnetProjectServiceBuilder project, string metadataFile)
         {
             if (output is null)
             {
@@ -67,12 +67,12 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(project));
             }
 
-            if (!Directory.Exists(project.ProjectFile.DirectoryName))
+            if (project is null)
             {
-                throw new CommandException($"Failed to locate directory: '{project.ProjectFile.DirectoryName}'.");
+                throw new ArgumentNullException(nameof(metadataFile));
             }
 
-            await EvaluateProjectAsync(output, project);
+            EvaluateProject(output, project, metadataFile);
 
             if (!SemVersion.TryParse(project.Version, out var version))
             {
@@ -130,49 +130,12 @@ namespace Microsoft.Tye
 
         // Do not load MSBuild types before using EnsureMSBuildRegistered.
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static async Task EvaluateProjectAsync(OutputContext output, DotnetProjectServiceBuilder project)
+        private static void EvaluateProject(OutputContext output, DotnetProjectServiceBuilder project, string metadataFile)
         {
             var sw = Stopwatch.StartNew();
 
             var metadata = new Dictionary<string, string>();
-
-            var msbuildArgs = "msbuild " +
-                "/t:MicrosoftTye_GetProjectMetadata " +
-                $"/p:CustomAfterMicrosoftCommonTargets=\"{Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")}\" ";
-            if (project.BuildProperties.Any())
-            {
-                msbuildArgs += $"{project.BuildProperties.Select(kvp => $"/p:{kvp.Key}={kvp.Value}").Aggregate((a, b) => a + " " + b)} ";
-            }
-            msbuildArgs += $"\"{project.ProjectFile.FullName}\" /nologo";
-
-            output.WriteDebugLine($"Running msbuild command: dotnet {msbuildArgs}");
-
-            var buildResult = await ProcessUtil.RunAsync("dotnet", msbuildArgs, throwOnError: false);
-
-            // If the build fails, we're not really blocked from doing our work.
-            // For now we just log the output to debug. There are errors that occur during
-            // running these targets we don't really care as long as we get the data.
-            if (buildResult.ExitCode != 0)
-            {
-                output.WriteDebugLine($"Evaluating project failed with exit code {buildResult.ExitCode}:" +
-                    $"{Environment.NewLine}{buildResult.StandardError}");
-            }
-
-            var metadataFileMessage = buildResult
-                .StandardOutput
-                .Split(Environment.NewLine)
-                .Select(s => s.Trim())
-                .SingleOrDefault(s => s.StartsWith("Microsoft.Tye metadata file:"));
-
-            // If project evaluation is successful this should not happen, therefore an exception will be thrown.
-            if (string.IsNullOrEmpty(metadataFileMessage))
-            {
-                throw new CommandException($"Evaluated project metadata file could not be found:" +
-                    $"{Environment.NewLine}{buildResult.StandardError}");
-            }
-
-            var metadataFilePath = metadataFileMessage.Split(':', 2)[1].TrimStart();
-            var metadataKVPs = File.ReadLines(metadataFilePath).Select(l => l.Split(new[] { ':' }, 2));
+            var metadataKVPs = File.ReadLines(metadataFile).Select(l => l.Split(new[] { ':' }, 2));
 
             foreach (var metadataKVP in metadataKVPs)
             {

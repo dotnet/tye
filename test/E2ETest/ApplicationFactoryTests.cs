@@ -118,8 +118,8 @@ services:
             var exception = await Assert.ThrowsAsync<CommandException>(async () =>
                 await ApplicationFactory.CreateAsync(outputContext, projectFile));
 
-            var wrongProjectPath = Path.Combine(projectDirectory.DirectoryPath, "backend1");
-            Assert.Equal($"Failed to locate directory: '{wrongProjectPath}'.", exception.Message);
+            var wrongProjectPath = Path.Combine(projectDirectory.DirectoryPath, "backend1/backend.csproj");
+            Assert.Equal($"Failed to locate project: '{wrongProjectPath}'.", exception.Message);
         }
     }
 }

@@ -34,7 +34,7 @@
             Overwrite="true"
             WriteOnlyWhenDifferent="true"/>
 
-        <Message Text="Microsoft.Tye metadata file: $(_MicrosoftTye_MetadataFile)" Importance="High"/>
+        <Message Text="Microsoft.Tye metadata: $(MicrosoftTye_ProjectName): $(_MicrosoftTye_MetadataFile)" Importance="High"/>
 
     </Target>
 </Project>
