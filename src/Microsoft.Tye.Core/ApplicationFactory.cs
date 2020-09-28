@@ -135,7 +135,8 @@ namespace Microsoft.Tye
                     if (msbuildEvaluationResult.ExitCode != 0)
                     {
                         output.WriteDebugLine($"Evaluating project failed with exit code {msbuildEvaluationResult.ExitCode}:" +
-                            $"{Environment.NewLine}{msbuildEvaluationResult.StandardError}");
+                            $"{Environment.NewLine}Ouptut: {msbuildEvaluationResult.StandardOutput}" +
+                            $"{Environment.NewLine}Error: {msbuildEvaluationResult.StandardError}");
                     }
 
                     var msbuildEvaluationOutput = msbuildEvaluationResult
