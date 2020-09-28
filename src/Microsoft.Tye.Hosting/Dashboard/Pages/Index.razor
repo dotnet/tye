@@ -101,7 +101,9 @@
     {
         // Ingress services have no liveness or readiness checks
         if (service.ServiceType == ServiceType.Ingress)
+        {
             return String.Empty;
+        }
 
         foreach (var replica in service.Replicas)
         {
