@@ -270,6 +270,8 @@ namespace Microsoft.Tye
             // TODO: Parse the name and version manually out of the TargetFramework field if it's non-null
             project.TargetFrameworkName = projectInstance.GetPropertyValue("_ShortFrameworkIdentifier");
             project.TargetFrameworkVersion = projectInstance.GetPropertyValue("_ShortFrameworkVersion") ?? projectInstance.GetPropertyValue("_TargetFrameworkVersionWithoutV");
+            output.WriteDebugLine($"Parsed target framework name: {project.TargetFrameworkName}");
+            output.WriteDebugLine($"Parsed target framework version: {project.TargetFrameworkVersion}");
 
             var sharedFrameworks = projectInstance.GetItems("FrameworkReference").Select(i => i.EvaluatedInclude).ToList();
             project.Frameworks.AddRange(sharedFrameworks.Select(s => new Framework(s)));
