@@ -43,30 +43,52 @@ namespace Microsoft.Tye.Hosting
             {
                 func.FuncExecutablePath ??= FindFuncForVersion(func);
             }
-
+                              
             return Task.CompletedTask;
         }
 
         private string? FindFuncForVersion(AzureFunctionRunInfo func)
         {
-            var npmFuncDllPath = GetFuncNpmPath();
-            if (!File.Exists(npmFuncDllPath))
+            var funcDllPath = FuncDllPath();
+            if (!File.Exists(funcDllPath))
             {
-                throw new FileNotFoundException("Could not find func installation. Please install the azure function core tools via: `npm install -g azure-functions-core-tools@3`");
+                throw new FileNotFoundException("Could not find func installation. Please install the azure function core tools with the installer: " +
+                    "https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local or `npm install -g azure-functions-core-tools@3`");
             }
 
-            _logger.LogDebug("Using func for running azure functions located at {Func}.", npmFuncDllPath);
-            return npmFuncDllPath;
+            _logger.LogDebug("Using func for running azure functions located at {Func}.", funcDllPath);
+            return funcDllPath;
         }
 
-        private string GetFuncNpmPath()
+        private string FuncDllPath()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
+                var funcPathStandalone = Environment.ExpandEnvironmentVariables("%PROGRAMFILES%/Microsoft/Azure Functions Core Tools/");
+                if (File.Exists(funcPathStandalone))
+                {
+                    return funcPathStandalone;
+                }
                 return Environment.ExpandEnvironmentVariables("%APPDATA%/npm/node_modules/azure-functions-core-tools/bin/func.dll");
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                var funcPathStandalone = Environment.ExpandEnvironmentVariables("/usr/lib/azure-functions-core-tools-3/func.dll");
+                if (File.Exists(funcPathStandalone))
+                {
+                    return funcPathStandalone;
+                }
+
+                return Environment.ExpandEnvironmentVariables("/usr/local/lib/node_modules/azure-functions-core-tools/bin/func.dll");
             }
             else
             {
+                var funcPathStandalone = Environment.ExpandEnvironmentVariables("");
+                if (File.Exists(funcPathStandalone))
+                {
+                    return funcPathStandalone;
+                }
+
                 return Environment.ExpandEnvironmentVariables("/usr/local/lib/node_modules/azure-functions-core-tools/bin/func.dll");
             }
         }
