@@ -139,7 +139,7 @@ namespace Microsoft.Tye.ConfigModel
                 var probes = new[] { (Name: "liveness", Probe: service.Liveness), (Name: "readiness", Probe: service.Readiness) }.Where(p => p.Probe != null).ToArray();
                 foreach (var probe in probes)
                 {
-                    context = new ValidationContext(probe.Probe);
+                    context = new ValidationContext(probe.Probe!);
                     if (!Validator.TryValidateObject(probe.Probe, context, results, validateAllProperties: true))
                     {
                         throw new TyeYamlException(
