@@ -20,7 +20,8 @@
         {
             var logsPath = $"logs/{service.Description.Name}";
             var servicePath = $"services/{service.Description.Name}";
-            <tr @key="service.Description.Name">
+            var status = GetServiceStatusColor(service);
+            <tr @key="service.Description.Name" class="@status">
                 <td>
                     @if(service.ServiceType == ServiceType.External)
                     {
@@ -94,6 +95,33 @@
     string GetUrl(ServiceBinding b)
     {
         return $"{(b.Protocol ?? "tcp")}://{b.Host ?? "localhost"}:{b.Port}";
+    }
+
+    string GetServiceStatusColor(Service service)
+    {
+        foreach (var replica in service.Replicas)
+        {
+            switch (replica.Value.State)
+            {
+                // Replica was recently restarted
+                case ReplicaState.Removed:
+                case ReplicaState.Added:
+                case ReplicaState.Started:
+                case ReplicaState.Stopped:
+                    return "table-danger";
+
+                // Replica has passed liveness, but not readiness
+                case ReplicaState.Healthy:
+                    return "table-warning";
+
+                // Replica passed both liveness and readiness
+                case ReplicaState.Ready:
+                    continue;
+            }
+        }
+
+        // All replicas have passed liveness and readiness
+        return "table-success";
     }
 
     protected override void OnInitialized()
