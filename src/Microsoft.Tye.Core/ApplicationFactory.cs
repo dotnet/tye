@@ -4,9 +4,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Tye.ConfigModel;
 
@@ -74,6 +77,88 @@ namespace Microsoft.Tye
                     config.Services.Where(filter.ServicesFilter).ToList() :
                     config.Services;
 
+                var sw = Stopwatch.StartNew();
+                // Project services will be restored and evaluated before resolving all other services.
+                // This batching will mitigate the performance cost of running MSBuild out of process.
+                var projectServices = services.Where(s => !string.IsNullOrEmpty(s.Project));
+                var projectMetadata = new Dictionary<string, string>();
+
+                using (var directory = TempDirectory.Create())
+                {
+                    var projectPath = Path.Combine(directory.DirectoryPath, Path.GetRandomFileName() + ".proj");
+
+                    var sb = new StringBuilder();
+                    sb.AppendLine("<Project>");
+                    sb.AppendLine("    <ItemGroup>");
+
+                    foreach (var project in projectServices)
+                    {
+                        var expandedProject = Environment.ExpandEnvironmentVariables(project.Project!);
+                        project.ProjectFullPath = Path.Combine(config.Source.DirectoryName!, expandedProject);
+
+                        if (!File.Exists(project.ProjectFullPath))
+                        {
+                            throw new CommandException($"Failed to locate project: '{project.ProjectFullPath}'.");
+                        }
+
+                        sb.AppendLine($"        <MicrosoftTye_ProjectServices " +
+                            $"Include=\"{project.ProjectFullPath}\" " +
+                            $"Name=\"{project.Name}\" " +
+                            $"BuildProperties=\"{(project.BuildProperties.Any() ? project.BuildProperties.Select(kvp => $"{kvp.Name}={kvp.Value}").Aggregate((a, b) => a + ";" + b) : string.Empty)}\" />");
+                    }
+                    sb.AppendLine(@"    </ItemGroup>");
+
+                    sb.AppendLine($@"    <Target Name=""MicrosoftTye_EvaluateProjects"">");
+                    sb.AppendLine($@"        <MsBuild Projects=""@(MicrosoftTye_ProjectServices)"" "
+                        + $@"Properties=""%(BuildProperties);"
+                        + $@"MicrosoftTye_ProjectName=%(Name)"" "
+                        + $@"Targets=""MicrosoftTye_GetProjectMetadata"" BuildInParallel=""true"" />");
+
+                    sb.AppendLine("    </Target>");
+                    sb.AppendLine("</Project>");
+                    File.WriteAllText(projectPath, sb.ToString());
+
+                    output.WriteDebugLine("Restoring and evaluating projects");
+
+                    var msbuildEvaluationResult = await ProcessUtil.RunAsync(
+                        "dotnet",
+                        $"build " +
+                            $"\"{projectPath}\" " +
+                            $"/p:CustomAfterMicrosoftCommonTargets={Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")} " +
+                            $"/nologo",
+                        throwOnError: false,
+                        workingDirectory: directory.DirectoryPath);
+
+                    // If the build fails, we're not really blocked from doing our work.
+                    // For now we just log the output to debug. There are errors that occur during
+                    // running these targets we don't really care as long as we get the data.
+                    if (msbuildEvaluationResult.ExitCode != 0)
+                    {
+                        output.WriteDebugLine($"Evaluating project failed with exit code {msbuildEvaluationResult.ExitCode}:" +
+                            $"{Environment.NewLine}Ouptut: {msbuildEvaluationResult.StandardOutput}" +
+                            $"{Environment.NewLine}Error: {msbuildEvaluationResult.StandardError}");
+                    }
+
+                    var msbuildEvaluationOutput = msbuildEvaluationResult
+                        .StandardOutput
+                        .Split(Environment.NewLine);
+
+                    foreach (var line in msbuildEvaluationOutput)
+                    {
+                        if (line.Trim().StartsWith("Microsoft.Tye metadata: "))
+                        {
+                            var values = line.Split(':', 3);
+                            var projectName = values[1].Trim();
+                            var metadataPath = values[2].Trim();
+                            projectMetadata.Add(projectName, metadataPath);
+
+                            output.WriteDebugLine($"Resolved metadata for service {projectName} at {metadataPath}");
+                        }
+                    }
+
+                    output.WriteDebugLine($"Restore and project evaluation took: {sw.Elapsed.TotalMilliseconds}ms");
+                }
+
                 foreach (var configService in services)
                 {
                     ServiceBuilder service;
@@ -87,9 +172,7 @@ namespace Microsoft.Tye
 
                     if (!string.IsNullOrEmpty(configService.Project))
                     {
-                        var expandedProject = Environment.ExpandEnvironmentVariables(configService.Project);
-                        var projectFile = new FileInfo(Path.Combine(config.Source.DirectoryName!, expandedProject));
-                        var project = new DotnetProjectServiceBuilder(configService.Name!, projectFile);
+                        var project = new DotnetProjectServiceBuilder(configService.Name!, new FileInfo(configService.ProjectFullPath));
                         service = project;
 
                         project.Build = configService.Build ?? true;
@@ -107,7 +190,13 @@ namespace Microsoft.Tye
                         // to prompt for the registry name.
                         project.ContainerInfo = new ContainerInfo() { UseMultiphaseDockerfile = false, };
 
-                        await ProjectReader.ReadProjectDetailsAsync(output, project);
+                        // If project evaluation is successful this should not happen, therefore an exception will be thrown.
+                        if (!projectMetadata.ContainsKey(configService.Name))
+                        {
+                            throw new CommandException($"Evaluated project metadata file could not be found for service {configService.Name}");
+                        }
+
+                        ProjectReader.ReadProjectDetails(output, project, projectMetadata[configService.Name]);
 
                         // Do k8s by default.
                         project.ManifestInfo = new KubernetesManifestInfo();
