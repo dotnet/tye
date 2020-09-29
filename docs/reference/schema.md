@@ -226,7 +226,7 @@ A path to a folder which contains an azure function project.
 
 #### `pathToFunc` (string)
 
-An optional path to the Azure Functions host to be used instead of the default one installed by npm.
+An optional path to the Azure Functions host to be used.
 
 ## Environment Variables
 
