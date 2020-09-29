@@ -75,25 +75,25 @@ namespace Microsoft.Tye.Hosting
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                var funcPathStandalone = Environment.ExpandEnvironmentVariables("/usr/lib/azure-functions-core-tools-3/func.dll");
+                var funcPathStandalone = "/usr/lib/azure-functions-core-tools-3/func.dll";
                 if (File.Exists(funcPathStandalone))
                 {
                     return funcPathStandalone;
                 }
 
-                return Environment.ExpandEnvironmentVariables("/usr/local/lib/node_modules/azure-functions-core-tools/bin/func.dll");
+                return "/usr/local/lib/node_modules/azure-functions-core-tools/bin/func.dll";
             }
             else
             {
                 // For brew path, just find a folder that supports functions v3.
-                var funcDirectories = Directory.GetDirectories(Environment.ExpandEnvironmentVariables("/usr/local/Cellar/azure-functions-core-tools@3/"));
+                var funcDirectories = Directory.GetDirectories("/usr/local/Cellar/azure-functions-core-tools@3/");
                 var funcPathStandalone = Path.Combine(funcDirectories.LastOrDefault() ?? "", "func.dll");
                 if (File.Exists(funcPathStandalone))
                 {
                     return funcPathStandalone;
                 }
 
-                return Environment.ExpandEnvironmentVariables("/usr/local/lib/node_modules/azure-functions-core-tools/bin/func.dll");
+                return "/usr/local/lib/node_modules/azure-functions-core-tools/bin/func.dll";
             }
         }
 
