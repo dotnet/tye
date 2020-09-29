@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -84,6 +85,14 @@ namespace Microsoft.Tye.Hosting
             }
             else
             {
+                // For brew path, just find a folder that supports functions v3.
+                var funcDirectories = Directory.GetDirectories(Environment.ExpandEnvironmentVariables("/usr/local/Cellar/azure-functions-core-tools@3/"));
+                var funcPathStandalone = Path.Combine(funcDirectories.LastOrDefault() ?? "", "func.dll");
+                if (File.Exists(funcPathStandalone))
+                {
+                    return funcPathStandalone;
+                }
+
                 return Environment.ExpandEnvironmentVariables("/usr/local/lib/node_modules/azure-functions-core-tools/bin/func.dll");
             }
         }
