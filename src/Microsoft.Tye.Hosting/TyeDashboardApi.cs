@@ -77,10 +77,10 @@ namespace Microsoft.Tye.Hosting
         {
             var app = context.RequestServices.GetRequiredService<Application>();
 
-            var name = (string)context.Request.RouteValues["name"];
+            var name = (string?)context.Request.RouteValues["name"];
             context.Response.ContentType = "application/json";
 
-            if (!app.Services.TryGetValue(name, out var service))
+            if (string.IsNullOrEmpty(name) || !app.Services.TryGetValue(name, out var service))
             {
                 context.Response.StatusCode = 404;
                 return JsonSerializer.SerializeAsync(context.Response.Body, new
@@ -215,10 +215,10 @@ namespace Microsoft.Tye.Hosting
         {
             var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
 
-            var name = (string)context.Request.RouteValues["name"];
+            var name = (string?)context.Request.RouteValues["name"];
             context.Response.ContentType = "application/json";
 
-            if (!app.Services.TryGetValue(name, out var service))
+            if (string.IsNullOrEmpty(name) || !app.Services.TryGetValue(name, out var service))
             {
                 context.Response.StatusCode = 404;
                 return JsonSerializer.SerializeAsync(context.Response.Body, new
@@ -265,10 +265,10 @@ namespace Microsoft.Tye.Hosting
 
             var sb = new StringBuilder();
 
-            var name = (string)context.Request.RouteValues["name"];
+            var name = (string?)context.Request.RouteValues["name"];
             context.Response.ContentType = "application/json";
 
-            if (!app.Services.TryGetValue(name, out var service))
+            if (string.IsNullOrEmpty(name) || !app.Services.TryGetValue(name, out var service))
             {
                 context.Response.StatusCode = 404;
                 return JsonSerializer.SerializeAsync(context.Response.Body, new
