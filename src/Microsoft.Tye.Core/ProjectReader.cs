@@ -180,7 +180,7 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"Found target framework: {targetFramework}");
 
             // TODO: Parse the name and version manually out of the TargetFramework field if it's non-null
-            project.TargetFrameworkName = GetMetadataValueOrEmpty("_ShortFrameworkIdentifier");
+            project.TargetFrameworkName = GetMetadataValueOrNull("_ShortFrameworkIdentifier") ?? project.TargetFramework.TrimEnd(".0123456789".ToCharArray());
             project.TargetFrameworkVersion = GetMetadataValueOrNull("_ShortFrameworkVersion") ?? GetMetadataValueOrEmpty("_TargetFrameworkVersionWithoutV");
             output.WriteDebugLine($"Parsed target framework name: {project.TargetFrameworkName}");
             output.WriteDebugLine($"Parsed target framework version: {project.TargetFrameworkVersion}");
