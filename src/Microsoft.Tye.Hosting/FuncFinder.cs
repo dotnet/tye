@@ -43,7 +43,7 @@ namespace Microsoft.Tye.Hosting
             {
                 func.FuncExecutablePath ??= FindFuncForVersion(func);
             }
-                              
+
             return Task.CompletedTask;
         }
 
@@ -64,11 +64,12 @@ namespace Microsoft.Tye.Hosting
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var funcPathStandalone = Environment.ExpandEnvironmentVariables("%PROGRAMFILES%/Microsoft/Azure Functions Core Tools/");
+                var funcPathStandalone = Environment.ExpandEnvironmentVariables("%PROGRAMFILES%/Microsoft/Azure Functions Core Tools/func.dll");
                 if (File.Exists(funcPathStandalone))
                 {
                     return funcPathStandalone;
                 }
+
                 return Environment.ExpandEnvironmentVariables("%APPDATA%/npm/node_modules/azure-functions-core-tools/bin/func.dll");
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -83,12 +84,6 @@ namespace Microsoft.Tye.Hosting
             }
             else
             {
-                var funcPathStandalone = Environment.ExpandEnvironmentVariables("");
-                if (File.Exists(funcPathStandalone))
-                {
-                    return funcPathStandalone;
-                }
-
                 return Environment.ExpandEnvironmentVariables("/usr/local/lib/node_modules/azure-functions-core-tools/bin/func.dll");
             }
         }
