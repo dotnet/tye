@@ -141,12 +141,12 @@
   <data name="MultipleBindingWithSamePort" xml:space="preserve">
     <value>Cannot have multiple {0} bindings with the same port.</value>
   </data>
-    <data name="ProberRequired" xml:space="preserve">
-        <value>A prober must be configured for the {0} probe.</value>
-    </data>
-    <data name="SuccessThresholdMustBeOne" xml:space="preserve">
-        <value>"successThreshold" for {0} probe must be set to "1".</value>
-    </data>
+  <data name="ProberRequired" xml:space="preserve">
+    <value>A prober must be configured for the {0} probe.</value>
+  </data>
+  <data name="SuccessThresholdMustBeOne" xml:space="preserve">
+    <value>"successThreshold" for {0} probe must be set to "1".</value>
+  </data>
   <data name="MustBeABoolean" xml:space="preserve">
     <value>"{value}" must be a boolean value (true/false).</value>
   </data>
@@ -156,9 +156,9 @@
   <data name="MustBePositive" xml:space="preserve">
     <value>"{value}" value cannot be negative.</value>
   </data>
-    <data name="MustBeGreaterThanZero" xml:space="preserve">
-        <value>"{value}" value must be greater than zero.</value>
-    </data>
+  <data name="MustBeGreaterThanZero" xml:space="preserve">
+    <value>"{value}" value must be greater than zero.</value>
+  </data>
   <data name="ProjectImageExecutableExclusive" xml:space="preserve">
     <value>Cannot have both "{0}" and "{1}" set for a service. Only one of project, image, and executable can be set for a given service.</value>
   </data>
@@ -170,5 +170,14 @@
   </data>
   <data name="UnrecognizedKey" xml:space="preserve">
     <value>Unexpected key "{key}" in tye.yaml.</value>
+  </data>
+  <data name="UnexpectedTypes" xml:space="preserve">
+    <value>Unexpected node type in tye.yaml. Expected one of ({expected}) but got "{actual}".</value>
+  </data>
+  <data name="PathNotFound" xml:space="preserve">
+    <value>Path "{path}" was not found.</value>
+  </data>
+  <data name="ExpectedEnvironmentVariableValue" xml:space="preserve">
+    <value>Expected a value for environment variable "{key}".</value>
   </data>
 </root>
