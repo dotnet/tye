@@ -6,6 +6,7 @@
 <table class="table service-table">
     <thead>
         <tr>
+            <th>Status</th>
             <th>Name</th>
             <th>Type</th>
             <th>Source</th>
@@ -21,7 +22,15 @@
             var logsPath = $"logs/{service.Description.Name}";
             var servicePath = $"services/{service.Description.Name}";
             var status = GetServiceStatusColor(service);
-            <tr @key="service.Description.Name" class="@status">
+            <tr @key="service.Description.Name">
+                <td>
+                    @if (status != null)
+                    {
+                        <svg class="bi @status.Value.color" width="32" height="32" fill="currentColor">
+                            <use href="/img/bootstrap-icons.svg#@status.Value.image" />
+                        </svg>
+                    }
+                </td>
                 <td>
                     @if(service.ServiceType == ServiceType.External)
                     {
@@ -97,12 +106,12 @@
         return $"{(b.Protocol ?? "tcp")}://{b.Host ?? "localhost"}:{b.Port}";
     }
 
-    string GetServiceStatusColor(Service service)
+    (string color, string image)? GetServiceStatusColor(Service service)
     {
         // Ingress services have no liveness or readiness checks
         if (service.ServiceType == ServiceType.Ingress)
         {
-            return String.Empty;
+            return null;
         }
 
         foreach (var replica in service.Replicas)
@@ -114,11 +123,11 @@
                 case ReplicaState.Added:
                 case ReplicaState.Started:
                 case ReplicaState.Stopped:
-                    return "table-danger";
+                    return ("text-danger", "x-circle-fill");
 
                 // Replica has passed liveness, but not readiness
                 case ReplicaState.Healthy:
-                    return "table-warning";
+                    return ("text-warning", "exclamation-circle-fill");
 
                 // Replica passed both liveness and readiness
                 case ReplicaState.Ready:
@@ -127,7 +136,7 @@
         }
 
         // All replicas have passed liveness and readiness
-        return "table-success";
+        return ("text-success", "check-circle-fill");
     }
 
     protected override void OnInitialized()
