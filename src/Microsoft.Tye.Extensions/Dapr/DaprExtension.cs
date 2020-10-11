@@ -139,7 +139,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                     };
                     project.EnvironmentVariables.Add(daprGrpcPort);
 
-                    // Set DAPR_Http_PORT based on this service's assigned port
+                    // Set DAPR_HTTP_PORT based on this service's assigned port
                     var daprHttpPort = new EnvironmentVariableBuilder("DAPR_HTTP_PORT")
                     {
                         Source = new EnvironmentVariableSourceBuilder(proxy.Name, binding: "http")
@@ -148,6 +148,16 @@ namespace Microsoft.Tye.Extensions.Dapr
                         },
                     };
                     proxy.EnvironmentVariables.Add(daprHttpPort);
+
+                    // Add another copy of this envvar to the project.
+                    daprHttpPort = new EnvironmentVariableBuilder("DAPR_HTTP_PORT")
+                    {
+                        Source = new EnvironmentVariableSourceBuilder(proxy.Name, binding: "http")
+                        {
+                            Kind = EnvironmentVariableSourceBuilder.SourceKind.Port,
+                        },
+                    };
+                    project.EnvironmentVariables.Add(daprHttpPort);
 
                     // Set METRICS_PORT to a random port
                     var metricsPort = new EnvironmentVariableBuilder("METRICS_PORT")
