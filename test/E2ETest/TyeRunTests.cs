@@ -148,7 +148,7 @@ services:
 
                 // Ensure correct image used
                 var dockerRunInfo = app.Services.Single().Value.Description.RunInfo as DockerRunInfo;
-                Assert.Equal(baseImage, dockerRunInfo.Image);
+                Assert.Equal(baseImage, dockerRunInfo?.Image);
 
                 // Ensure app runs
                 var testProjectUri = await GetServiceUrl(client, uri, "test-project");
