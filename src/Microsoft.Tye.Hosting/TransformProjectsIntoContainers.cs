@@ -123,8 +123,10 @@ namespace Microsoft.Tye.Hosting
             serviceDescription.RunInfo = dockerRunInfo;
         }
 
-        private static string DetermineContainerImage(ProjectRunInfo project)
+        private string DetermineContainerImage(ProjectRunInfo project)
         {
+            var baseImageTag = !string.IsNullOrEmpty(project.ContainerBaseTag) ? project.ContainerBaseTag : project.TargetFrameworkVersion;
+
             string baseImage;
             if (!string.IsNullOrEmpty(project.ContainerBaseImage))
             {
@@ -132,10 +134,27 @@ namespace Microsoft.Tye.Hosting
             }
             else
             {
-                baseImage = project.IsAspNet ? "mcr.microsoft.com/dotnet/core/aspnet" : "mcr.microsoft.com/dotnet/core/runtime";
-            }
+                Version? baseImageVersion = null;
+                try
+                {
+                    baseImageVersion = new Version(baseImageTag);
+                }
+                catch
+                {
+                    _logger.LogInformation($"Could not determine version of docker base image for tag: {baseImageTag}");
+                }
 
-            var baseImageTag = !string.IsNullOrEmpty(project.ContainerBaseTag) ? project.ContainerBaseTag : project.TargetFrameworkVersion;
+                if (baseImageVersion?.Major >= 5)
+                {
+                    // .NET 5.0+ does not have the /core in its image name
+                    baseImage = project.IsAspNet ? "mcr.microsoft.com/dotnet/aspnet" : "mcr.microsoft.com/dotnet/runtime";
+                }
+                else
+                {
+                    // .NET Core 2.1/3.1 has the /core in its image name
+                    baseImage = project.IsAspNet ? "mcr.microsoft.com/dotnet/core/aspnet" : "mcr.microsoft.com/dotnet/core/runtime";
+                }
+            }
 
             return $"{baseImage}:{baseImageTag}";
         }

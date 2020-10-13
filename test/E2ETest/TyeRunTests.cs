@@ -121,6 +121,43 @@ services:
             });
         }
 
+        [ConditionalTheory]
+        [SkipIfDockerNotRunning]
+        [InlineData("single-project", "mcr.microsoft.com/dotnet/core/aspnet:3.1")]
+        [InlineData("single-project-5.0", "mcr.microsoft.com/dotnet/aspnet:5.0")]
+        public async Task SingleProjectWithDocker_UsesCorrectBaseImage(string projectName, string baseImage)
+        {
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions() { Docker = true, }, async (app, uri) =>
+            {
+                // Make sure we're running containers
+                Assert.True(app.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
+
+                // Ensure correct image used
+                var dockerRunInfo = app.Services.Single().Value.Description.RunInfo as DockerRunInfo;
+                Assert.Equal(baseImage, dockerRunInfo.Image);
+
+                // Ensure app runs
+                var testProjectUri = await GetServiceUrl(client, uri, "test-project");
+                var response = await client.GetAsync(testProjectUri);
+
+                Assert.True(response.IsSuccessStatusCode);
+            });
+        }
+
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task FrontendBackendRunTestWithDocker()
