@@ -123,7 +123,7 @@ namespace Microsoft.Tye.Hosting
             serviceDescription.RunInfo = dockerRunInfo;
         }
 
-        private string DetermineContainerImage(ProjectRunInfo project)
+        private static string DetermineContainerImage(ProjectRunInfo project)
         {
             var baseImageTag = !string.IsNullOrEmpty(project.ContainerBaseTag) ? project.ContainerBaseTag : project.TargetFrameworkVersion;
 
@@ -134,17 +134,7 @@ namespace Microsoft.Tye.Hosting
             }
             else
             {
-                Version? baseImageVersion = null;
-                try
-                {
-                    baseImageVersion = new Version(baseImageTag);
-                }
-                catch
-                {
-                    _logger.LogInformation($"Could not determine version of docker base image for tag: {baseImageTag}");
-                }
-
-                if (baseImageVersion?.Major >= 5)
+                if (DockerfileGenerator.TagIs50OrNewer(baseImageTag))
                 {
                     // .NET 5.0+ does not have the /core in its image name
                     baseImage = project.IsAspNet ? "mcr.microsoft.com/dotnet/aspnet" : "mcr.microsoft.com/dotnet/runtime";
