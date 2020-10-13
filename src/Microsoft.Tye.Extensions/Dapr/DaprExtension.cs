@@ -42,9 +42,10 @@ namespace Microsoft.Tye.Extensions.Dapr
                     {
                         throw new CommandException("Dapr support does not support multiple replicas yet for development.");
                     }
+
                     var daprExecutablePath = GetDaprExecutablePath();
 
-                    var proxy = new ExecutableServiceBuilder($"{project.Name}-dapr", )
+                    var proxy = new ExecutableServiceBuilder($"{project.Name}-dapr", daprExecutablePath)
                     {
                         WorkingDirectory = context.Application.Source.DirectoryName,
 
