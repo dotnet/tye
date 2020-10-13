@@ -110,7 +110,7 @@ namespace Microsoft.Tye
                 }
                 else
                 {
-                    container.BaseImageName = project.IsAspNet ? "mcr.microsoft.com/dotnet/core/aspnet": "mcr.microsoft.com/dotnet/core/runtime";
+                    container.BaseImageName = project.IsAspNet ? "mcr.microsoft.com/dotnet/core/aspnet" : "mcr.microsoft.com/dotnet/core/runtime";
                 }
             }
 
