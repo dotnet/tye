@@ -6,6 +6,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye.Extensions.Dapr
@@ -41,8 +42,9 @@ namespace Microsoft.Tye.Extensions.Dapr
                     {
                         throw new CommandException("Dapr support does not support multiple replicas yet for development.");
                     }
+                    var daprExecutablePath = GetDaprExecutablePath();
 
-                    var proxy = new ExecutableServiceBuilder($"{project.Name}-dapr", "daprd")
+                    var proxy = new ExecutableServiceBuilder($"{project.Name}-dapr", )
                     {
                         WorkingDirectory = context.Application.Source.DirectoryName,
 
@@ -193,6 +195,30 @@ namespace Microsoft.Tye.Extensions.Dapr
             }
 
             return Task.CompletedTask;
+        }
+
+        private string GetDaprExecutablePath()
+        {
+            // Starting with dapr version 11, dapr is installed in user profile/home.
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var windowsPath = Environment.ExpandEnvironmentVariables("%USERPROFILE%/.dapr/bin/daprd.exe");
+                if (File.Exists(windowsPath))
+                {
+                    return windowsPath;
+                }
+            }
+            else
+            {
+                var nixpath = Environment.ExpandEnvironmentVariables("$HOME/.dapr/bin/daprd");
+                if (File.Exists(nixpath))
+                {
+                    return nixpath;
+                }
+            }
+
+            // Older version of dapr don't have dapr in the bin directory, but it is usually on the path.
+            return "daprd";
         }
     }
 }
