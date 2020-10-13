@@ -118,7 +118,7 @@ namespace Microsoft.Tye
                     try
                     {
                         MSBuildLocator.RegisterInstance(instance);
-                        output?.WriteDebug("Registered .NET SDK.");
+                        output?.WriteDebugLine("Registered .NET SDK.");
                     }
                     finally
                     {
