@@ -92,15 +92,6 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(container));
             }
 
-            if (string.IsNullOrEmpty(container.BaseImageName) && project.IsAspNet)
-            {
-                container.BaseImageName = "mcr.microsoft.com/dotnet/core/aspnet";
-            }
-            else if (string.IsNullOrEmpty(container.BaseImageName))
-            {
-                container.BaseImageName = "mcr.microsoft.com/dotnet/core/runtime";
-            }
-
             if (string.IsNullOrEmpty(container.BaseImageTag) && (project.TargetFrameworkName == "netcoreapp" || project.TargetFrameworkName == "net"))
             {
                 container.BaseImageTag = project.TargetFrameworkVersion;
@@ -111,8 +102,24 @@ namespace Microsoft.Tye
                 throw new CommandException($"Unsupported TFM {project.TargetFramework}.");
             }
 
-            container.BuildImageName ??= "mcr.microsoft.com/dotnet/core/sdk";
+            if (string.IsNullOrEmpty(container.BaseImageName))
+            {
+                if (TagIs50OrNewer(container.BaseImageTag))
+                {
+                    container.BaseImageName = project.IsAspNet ? "mcr.microsoft.com/dotnet/aspnet" : "mcr.microsoft.com/dotnet/runtime";
+                }
+                else
+                {
+                    container.BaseImageName = project.IsAspNet ? "mcr.microsoft.com/dotnet/core/aspnet" : "mcr.microsoft.com/dotnet/core/runtime";
+                }
+            }
+
             container.BuildImageTag ??= project.TargetFrameworkVersion;
+
+            if (string.IsNullOrEmpty(container.BuildImageName))
+            {
+                container.BuildImageName = TagIs50OrNewer(container.BuildImageTag) ? "mcr.microsoft.com/dotnet/sdk" : "mcr.microsoft.com/dotnet/core/sdk";
+            }
 
             if (container.ImageName == null && application.Registry?.Hostname == null)
             {
@@ -141,6 +148,21 @@ namespace Microsoft.Tye
             }
 
             container.ImageTag ??= "latest";
+        }
+
+        public static bool TagIs50OrNewer(string tag)
+        {
+            if (string.Equals("latest", tag))
+            {
+                return true;
+            }
+
+            if (!Version.TryParse(tag, out var version))
+            {
+                throw new CommandException($"Could not determine version of docker image for tag: {tag}.");
+            }
+
+            return version.Major >= 5;
         }
     }
 }
