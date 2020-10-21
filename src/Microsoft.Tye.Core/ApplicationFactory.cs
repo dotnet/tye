@@ -93,12 +93,6 @@ namespace Microsoft.Tye
 
                     foreach (var project in projectServices)
                     {
-                        if (framework != null)
-                        {
-                            // Only use the TargetFramework for the "--framework" if it's not defined already from the YAML
-                            project.BuildProperties.Add(new BuildProperty { Name = "TargetFramework", Value = framework });
-                        }
-
                         var expandedProject = Environment.ExpandEnvironmentVariables(project.Project!);
                         project.ProjectFullPath = Path.Combine(config.Source.DirectoryName!, expandedProject);
 
@@ -110,7 +104,10 @@ namespace Microsoft.Tye
                         sb.AppendLine($"        <MicrosoftTye_ProjectServices " +
                             $"Include=\"{project.ProjectFullPath}\" " +
                             $"Name=\"{project.Name}\" " +
-                            $"BuildProperties=\"{(project.BuildProperties.Any() ? project.BuildProperties.Select(kvp => $"{kvp.Name}={kvp.Value}").Aggregate((a, b) => a + ";" + b) : string.Empty)}\" />");
+                            $"BuildProperties=\"" +
+                                $"{(project.BuildProperties.Any() ? project.BuildProperties.Select(kvp => $"{kvp.Name}={kvp.Value}").Aggregate((a, b) => a + ";" + b) : string.Empty)}" +
+                                $"{(string.IsNullOrEmpty(framework) ? string.Empty : $";TargetFramework={framework}")}" +
+                            $"\" />");
                     }
                     sb.AppendLine(@"    </ItemGroup>");
 
@@ -131,6 +128,7 @@ namespace Microsoft.Tye
                         $"build " +
                             $"\"{projectPath}\" " +
                             $"/p:CustomAfterMicrosoftCommonTargets={Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")} " +
+                            $"/p:CustomAfterMicrosoftCommonCrossTargetingTargets={Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")} " +
                             $"/nologo",
                         throwOnError: false,
                         workingDirectory: directory.DirectoryPath);
@@ -186,6 +184,12 @@ namespace Microsoft.Tye
                         foreach (var buildProperty in configService.BuildProperties)
                         {
                             project.BuildProperties.Add(buildProperty.Name, buildProperty.Value);
+                        }
+
+                        if (framework != null)
+                        {
+                            // Only use the TargetFramework for the "--framework" if it's not defined already from the YAML
+                            project.BuildProperties["TargetFramework"] = framework;
                         }
 
                         project.Replicas = configService.Replicas ?? 1;

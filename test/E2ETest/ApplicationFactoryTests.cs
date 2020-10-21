@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Diagnostics.Tracing.Parsers.FrameworkEventSource;
 using Microsoft.Tye;
 using Test.Infrastructure;
 using Xunit;
@@ -194,12 +193,8 @@ services:
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
             var projectFile = new FileInfo(yamlFile);
-            var applicationBuilder = await ApplicationFactory.CreateAsync(outputContext, projectFile, "foobar");
 
-            Assert.Single(applicationBuilder.Services);
-            var service = applicationBuilder.Services.Single(s => s.Name == "multi-targetframeworks");
-
-            Assert.Throws<InvalidOperationException>(() => applicationBuilder.ToHostingApplication());
+            await Assert.ThrowsAsync<CommandException>(async () => await ApplicationFactory.CreateAsync(outputContext, projectFile, "foobar"));
         }
     }
 }

@@ -1,5 +1,10 @@
 ﻿<Project>
-    <Target Name="MicrosoftTye_GetProjectMetadata" DependsOnTargets="Restore;ResolveReferences;ResolvePackageDependenciesDesignTime;PrepareResources;GetAssemblyAttributes" >
+    <PropertyGroup>
+        <MicrosoftTye_GetProjectMetadata_DependsOn>Restore;ResolveReferences;ResolvePackageDependenciesDesignTime;PrepareResources;PrepareResources;GetAssemblyAttributes</MicrosoftTye_GetProjectMetadata_DependsOn>
+        <MicrosoftTye_GetProjectMetadata_DependsOn Condition="'$(IsCrossTargetingBuild)' == 'true'">Restore</MicrosoftTye_GetProjectMetadata_DependsOn>
+    </PropertyGroup>
+
+    <Target Name="MicrosoftTye_GetProjectMetadata" DependsOnTargets="$(MicrosoftTye_GetProjectMetadata_DependsOn)" >
         <PropertyGroup>
             <_MicrosoftTye_MetadataFile>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)MicrosoftTye.ProjectMetadata.txt'))</_MicrosoftTye_MetadataFile>
           <_MicrosoftTye_ProjectFrameworkReference>@(FrameworkReference, '%3B')</_MicrosoftTye_ProjectFrameworkReference>
