@@ -108,6 +108,7 @@ namespace Microsoft.Tye
                     Docker = args.Docker,
                     NoBuild = args.NoBuild,
                     Port = args.Port,
+                    Host = args.Host,
                     // parsed later by the diagnostics code
                     DistributedTraceProvider = args.Dtrace,
                     LoggingProvider = args.Logs,

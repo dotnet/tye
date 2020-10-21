@@ -118,6 +118,12 @@ namespace Microsoft.Tye.Hosting
                 args.Add(options.Port.Value.ToString(CultureInfo.InvariantCulture));
             }
 
+            if (!string.IsNullOrEmpty(options.Host))
+            {
+                args.Add("--host");
+                args.Add(options.Host);
+            }
+
             var builder = WebApplication.CreateBuilder(args.ToArray());
 
             // Logging for this application
