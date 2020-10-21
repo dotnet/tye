@@ -2,14 +2,15 @@
     <Target Name="MicrosoftTye_GetProjectMetadata" DependsOnTargets="Restore;ResolveReferences;ResolvePackageDependenciesDesignTime;PrepareResources;GetAssemblyAttributes" >
         <PropertyGroup>
             <_MicrosoftTye_MetadataFile>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)MicrosoftTye.ProjectMetadata.txt'))</_MicrosoftTye_MetadataFile>
-            <_MicrosoftTye_ProjectFrameworkReference>@(FrameworkReference, '%3B')</_MicrosoftTye_ProjectFrameworkReference>
+          <_MicrosoftTye_ProjectFrameworkReference>@(FrameworkReference, '%3B')</_MicrosoftTye_ProjectFrameworkReference>
+          <_MicrosoftTye_ProjectFrameworks>$(TargetFrameworks.Replace(';', '%3B'))</_MicrosoftTye_ProjectFrameworks>
         </PropertyGroup>
 
         <ItemGroup>
             <_MicrosoftTye_ProjectMetadata Include="AssemblyInformationalVersion: $(AssemblyInformationalVersion)" />
             <_MicrosoftTye_ProjectMetadata Include="InformationalVersion: $(InformationalVersion)" />
             <_MicrosoftTye_ProjectMetadata Include="Version: $(Version)" />
-            <_MicrosoftTye_ProjectMetadata Include="TargetFrameworks: $(TargetFrameworks)" />
+            <_MicrosoftTye_ProjectMetadata Include="TargetFrameworks: $(_MicrosoftTye_ProjectFrameworks)" />
             <_MicrosoftTye_ProjectMetadata Include="RunCommand: $(RunCommand)" />
             <_MicrosoftTye_ProjectMetadata Include="RunArguments: $(RunArguments)" />
             <_MicrosoftTye_ProjectMetadata Include="TargetPath: $(TargetPath)" />
