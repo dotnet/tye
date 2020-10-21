@@ -93,6 +93,12 @@ namespace Microsoft.Tye
 
                     foreach (var project in projectServices)
                     {
+                        if (framework != null)
+                        {
+                            // Only use the TargetFramework for the "--framework" if it's not defined already from the YAML
+                            project.BuildProperties.Add(new BuildProperty { Name = "TargetFramework", Value = framework });
+                        }
+
                         var expandedProject = Environment.ExpandEnvironmentVariables(project.Project!);
                         project.ProjectFullPath = Path.Combine(config.Source.DirectoryName!, expandedProject);
 
@@ -180,12 +186,6 @@ namespace Microsoft.Tye
                         foreach (var buildProperty in configService.BuildProperties)
                         {
                             project.BuildProperties.Add(buildProperty.Name, buildProperty.Value);
-                        }
-
-                        if (framework != null)
-                        {
-                            // Only use the TargetFramework for the "--framework" if it's not defined already from the YAML
-                            project.BuildProperties["TargetFramework"] = framework;
                         }
 
                         project.Replicas = configService.Replicas ?? 1;
