@@ -201,7 +201,7 @@ namespace Microsoft.Tye.Hosting
             var serviceDescription = service.Description;
             var environmentArguments = "";
             var volumes = "";
-            var workingDirectory = docker.WorkingDirectory != null ? $"-w {docker.WorkingDirectory}" : "";
+            var workingDirectory = docker.WorkingDirectory != null ? $"-w \"{docker.WorkingDirectory}\"" : "";
             var hostname = "host.docker.internal";
             var dockerImage = docker.Image ?? service.Description.Name;
 

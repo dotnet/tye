@@ -64,7 +64,7 @@ namespace Microsoft.Tye
                         }
                         else
                         {
-                            dockerRunInfo.DockerFileContext = new FileInfo(dockerRunInfo.DockerFile.DirectoryName);
+                            dockerRunInfo.DockerFileContext = new FileInfo(dockerRunInfo.DockerFile.DirectoryName!);
                         }
                     }
 

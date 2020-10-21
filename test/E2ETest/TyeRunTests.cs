@@ -121,6 +121,43 @@ services:
             });
         }
 
+        [ConditionalTheory]
+        [SkipIfDockerNotRunning]
+        [InlineData("single-project", "mcr.microsoft.com/dotnet/core/aspnet:3.1")]
+        [InlineData("single-project-5.0", "mcr.microsoft.com/dotnet/aspnet:5.0")]
+        public async Task SingleProjectWithDocker_UsesCorrectBaseImage(string projectName, string baseImage)
+        {
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions() { Docker = true, }, async (app, uri) =>
+            {
+                // Make sure we're running containers
+                Assert.True(app.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
+
+                // Ensure correct image used
+                var dockerRunInfo = app.Services.Single().Value.Description.RunInfo as DockerRunInfo;
+                Assert.Equal(baseImage, dockerRunInfo?.Image);
+
+                // Ensure app runs
+                var testProjectUri = await GetServiceUrl(client, uri, "test-project");
+                var response = await client.GetAsync(testProjectUri);
+
+                Assert.True(response.IsSuccessStatusCode);
+            });
+        }
+
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task FrontendBackendRunTestWithDocker()
@@ -468,7 +505,7 @@ services:
 
                             Assert.NotNull(service);
 
-                            Assert.Equal(dockerNetwork, service.Replicas.FirstOrDefault().Value.DockerNetwork);
+                            Assert.Equal(dockerNetwork, service!.Replicas!.FirstOrDefault().Value.DockerNetwork);
                         }
                     });
             }
@@ -519,7 +556,7 @@ services:
 
                         Assert.NotNull(service);
 
-                        Assert.NotEqual(dockerNetwork, service.Replicas.FirstOrDefault().Value.DockerNetwork);
+                        Assert.NotEqual(dockerNetwork, service!.Replicas!.FirstOrDefault().Value.DockerNetwork);
                     }
                 });
         }
@@ -643,7 +680,7 @@ services:
                 var responseContent =
                     JsonSerializer.Deserialize<Dictionary<string, string>>(await response.Content.ReadAsStringAsync());
 
-                Assert.Equal("some content", responseContent["content"]);
+                Assert.Equal("some content", responseContent!["content"]);
                 Assert.Equal("?key1=value1&key2=value2", responseContent["query"]);
             });
         }
@@ -904,7 +941,7 @@ services:
         {
             var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceName}");
             var service = JsonSerializer.Deserialize<V1Service>(serviceResult, _options);
-            var binding = service.Description!.Bindings.Where(b => b.Protocol == "http").Single();
+            var binding = service!.Description!.Bindings!.Where(b => b.Protocol == "http").Single();
             return $"{binding.Protocol ?? "http"}://localhost:{binding.Port}";
         }
 

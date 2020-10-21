@@ -254,7 +254,7 @@ namespace E2ETest
 
             // we assume that proxy will continue sending http request to the same replica
             var randomReplicaPortRes1 = await _client.GetAsync($"http://localhost:{host.Application.Services["health-proxy"].Description.Bindings.First().Port}/ports");
-            var randomReplicaPort1 = JsonSerializer.Deserialize<int[]>(await randomReplicaPortRes1.Content.ReadAsStringAsync())[0];
+            var randomReplicaPort1 = JsonSerializer.Deserialize<int[]>(await randomReplicaPortRes1.Content.ReadAsStringAsync())![0];
             var randomReplica1 = replicasToBecomeReady.First(r => r.Bindings.Any(b => b.Port == randomReplicaPort1));
 
             await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Healthy, 1, new[] { randomReplica1.Name }.ToHashSet(), null, TimeSpan.Zero, async _ =>
@@ -263,7 +263,7 @@ namespace E2ETest
               });
 
             var randomReplicaPortRes2 = await _client.GetAsync($"http://localhost:{host.Application.Services["health-proxy"].Description.Bindings.First().Port}/ports");
-            var randomReplicaPort2 = JsonSerializer.Deserialize<int[]>(await randomReplicaPortRes2.Content.ReadAsStringAsync())[0];
+            var randomReplicaPort2 = JsonSerializer.Deserialize<int[]>(await randomReplicaPortRes2.Content.ReadAsStringAsync())![0];
             var randomReplica2 = replicasToBecomeReady.First(r => r.Bindings.Any(b => b.Port == randomReplicaPort2));
 
             Assert.NotEqual(randomReplicaPort1, randomReplicaPort2);
@@ -288,7 +288,7 @@ namespace E2ETest
               });
 
             var randomReplicaPortRes3 = await _client.GetAsync($"http://localhost:{host.Application.Services["health-proxy"].Description.Bindings.First().Port}/ports");
-            var randomReplicaPort3 = JsonSerializer.Deserialize<int[]>(await randomReplicaPortRes3.Content.ReadAsStringAsync())[0];
+            var randomReplicaPort3 = JsonSerializer.Deserialize<int[]>(await randomReplicaPortRes3.Content.ReadAsStringAsync())![0];
 
             Assert.Equal(randomReplicaPort3, randomReplicaPort2);
         }
@@ -369,14 +369,14 @@ namespace E2ETest
             Assert.True(res.IsSuccessStatusCode);
 
             var headers = JsonSerializer.Deserialize<Dictionary<string, string>>(await res.Content.ReadAsStringAsync());
-            Assert.Equal("value1", headers["name1"]);
+            Assert.Equal("value1", headers!["name1"]);
             Assert.Equal("value2", headers["name2"]);
 
             res = await _client.GetAsync($"http://localhost:{host.Application.Services["health-all"].Description.Bindings.First().Port}/readinessHeaders");
             Assert.True(res.IsSuccessStatusCode);
 
             headers = JsonSerializer.Deserialize<Dictionary<string, string>>(await res.Content.ReadAsStringAsync());
-            Assert.Equal("value3", headers["name3"]);
+            Assert.Equal("value3", headers!["name3"]);
             Assert.Equal("value4", headers["name4"]);
         }
 
@@ -404,7 +404,7 @@ namespace E2ETest
                 query.Add("readyDelay=" + readyDelay.Value);
             }
 
-            await _client.GetAsync($"http://localhost:{replica.Ports.First()}/set?" + string.Join("&", query));
+            await _client.GetAsync($"http://localhost:{replica.Ports!.First()}/set?" + string.Join("&", query));
         }
 
         private async Task<int> ProbeNumberOfUniqueReplicas(string url)

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.IO;
 
 namespace Microsoft.Tye
@@ -16,13 +17,21 @@ namespace Microsoft.Tye
             {
                 DeleteDirectory(sub);
             }
-            foreach (var f in Directory.EnumerateFiles(d))
+
+            try
             {
-                var fi = new FileInfo(f);
-                fi.Attributes = FileAttributes.Normal;
-                fi.Delete();
+                foreach (var f in Directory.EnumerateFiles(d))
+                {
+                    var fi = new FileInfo(f);
+                    fi.Attributes = FileAttributes.Normal;
+                    fi.Delete();
+                }
+                Directory.Delete(d);
             }
-            Directory.Delete(d);
+            catch (Exception e)
+            {
+                Console.WriteLine($"Failed to delete directory {d}: {e.Message}");
+            }
         }
     }
 }

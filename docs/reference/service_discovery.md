@@ -128,7 +128,7 @@ This is a typical pattern for initializing a database for local development - in
 
 ## How it works: URIs in development
 
-For URIs, the Tye infrastructure will generate a set of environment variables using a well-known pattern. These environment variables will through through the configuration system and by used by `GetServiceUri()`.
+For URIs, the Tye infrastructure will generate a set of environment variables using a well-known pattern. These environment variables will be available through the configuration system and used by `GetServiceUri()`.
 
 These are normal environment variables and can be read directly or through the configuration system.
 
@@ -226,7 +226,7 @@ We'll follow the example of the connection string for `postgres` is generated an
 
 1. The `postgres` service has a single binding with a hardcoded port. If the port was unspecified then Tye will assign each binding an available port (avoiding conflicts).
    
-2. Tye will substitute the values of `${host}` and `${port}` from the binding. Tye will substitue the value of `POSTGRES_PASSWORD` for `${env:POSTGRES_PASSWORD}`. The result is generate as the `CONNECTIONSTRINGS__POSTGRES` environment variable.
+2. Tye will substitute the values of `${host}` and `${port}` from the binding. Tye will substitue the value of `POSTGRES_PASSWORD` for `${env:POSTGRES_PASSWORD}`. The result is generated as the `CONNECTIONSTRINGS__POSTGRES` environment variable.
    
 3. Each service is given access to the environment variables that contain the bindings of the *other* services in the application. So `frontend` and `backend` both have access to each-other's bindings as well as the environment variable `CONNECTIONSTRINGS__POSTGRES`. The Tye host will provide these environment variables when launching application processes.
    
@@ -240,7 +240,7 @@ When deploying an application, Tye will deploy all of the containers built from 
 
 ---
 
-When deploying your .NET projects, Tye will use the environment variable format described above to to set environment variables on your pods and containers.
+When deploying your .NET projects, Tye will use the environment variable format described above to set environment variables on your pods and containers.
 
 To avoid hardcoding ephemeral details like pod names, Tye relies on Kubernetes Services. Each project gets its own Service, and the environment variables can refer to the hostname mapped to the service. 
 
@@ -250,7 +250,7 @@ This allows service discovery for URIs to work very simply in a deployed applica
 
 When an application contains a dependency (like Redis, or a Database), Tye will use Kubernetes Secret objects to store the connection string or URI.
 
-Tye will look for an existing secret based on the service and binding names. If the secret already exists then deployment will proceed.
+Tye will look for an existing secret based on the service and binding names. If the secret already exists, then deployment will proceed.
 
 If the secret does not exist, then Tye will prompt (in interactive mode) for the connection string or URI value. Based on whether it's a connection string or URI, Tye will create a secret like one of the following.
 
@@ -280,6 +280,6 @@ stringData:
   connectionstring: <redacted>
 ```
 
-Creating the secret is a one-time operation, and Tye will only prompt for it if it does not already exist. If desired you can use standard `kubectl` commands to update values or delete the secret and force it to be recreated.
+Creating the secret is a one-time operation, and Tye will only prompt for it if it does not already exist. If desired, you can use standard `kubectl` commands to update values or delete the secret and force it to be recreated.
 
 To get these values into the application, Tye will use environment variables that reference the Kubernetes secrets described above and will use the environment-variable naming scheme described above.

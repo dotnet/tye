@@ -6,6 +6,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye.Extensions.Dapr
@@ -42,7 +43,9 @@ namespace Microsoft.Tye.Extensions.Dapr
                         throw new CommandException("Dapr support does not support multiple replicas yet for development.");
                     }
 
-                    var proxy = new ExecutableServiceBuilder($"{project.Name}-dapr", "daprd")
+                    var daprExecutablePath = GetDaprExecutablePath();
+
+                    var proxy = new ExecutableServiceBuilder($"{project.Name}-dapr", daprExecutablePath)
                     {
                         WorkingDirectory = context.Application.Source.DirectoryName,
 
@@ -55,7 +58,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                     // we'll assume the filename and config name are the same.
                     if (config.Data.TryGetValue("config", out var obj) && obj?.ToString() is string daprConfig)
                     {
-                        var configFile = Path.Combine(context.Application.Source.DirectoryName, "components", $"{daprConfig}.yaml");
+                        var configFile = Path.Combine(context.Application.Source.DirectoryName!, "components", $"{daprConfig}.yaml");
                         if (File.Exists(configFile))
                         {
                             proxy.Args += $" -config \"{configFile}\"";
@@ -139,7 +142,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                     };
                     project.EnvironmentVariables.Add(daprGrpcPort);
 
-                    // Set DAPR_Http_PORT based on this service's assigned port
+                    // Set DAPR_HTTP_PORT based on this service's assigned port
                     var daprHttpPort = new EnvironmentVariableBuilder("DAPR_HTTP_PORT")
                     {
                         Source = new EnvironmentVariableSourceBuilder(proxy.Name, binding: "http")
@@ -148,6 +151,16 @@ namespace Microsoft.Tye.Extensions.Dapr
                         },
                     };
                     proxy.EnvironmentVariables.Add(daprHttpPort);
+
+                    // Add another copy of this envvar to the project.
+                    daprHttpPort = new EnvironmentVariableBuilder("DAPR_HTTP_PORT")
+                    {
+                        Source = new EnvironmentVariableSourceBuilder(proxy.Name, binding: "http")
+                        {
+                            Kind = EnvironmentVariableSourceBuilder.SourceKind.Port,
+                        },
+                    };
+                    project.EnvironmentVariables.Add(daprHttpPort);
 
                     // Set METRICS_PORT to a random port
                     var metricsPort = new EnvironmentVariableBuilder("METRICS_PORT")
@@ -193,6 +206,30 @@ namespace Microsoft.Tye.Extensions.Dapr
             }
 
             return Task.CompletedTask;
+        }
+
+        private string GetDaprExecutablePath()
+        {
+            // Starting with dapr version 11, dapr is installed in user profile/home.
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var windowsPath = Environment.ExpandEnvironmentVariables("%USERPROFILE%/.dapr/bin/daprd.exe");
+                if (File.Exists(windowsPath))
+                {
+                    return windowsPath;
+                }
+            }
+            else
+            {
+                var nixpath = Environment.ExpandEnvironmentVariables("$HOME/.dapr/bin/daprd");
+                if (File.Exists(nixpath))
+                {
+                    return nixpath;
+                }
+            }
+
+            // Older version of dapr don't have dapr in the bin directory, but it is usually on the path.
+            return "daprd";
         }
     }
 }

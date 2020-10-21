@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using Microsoft.Tye.ConfigModel;
 using Test.Infrastructure;
@@ -228,6 +229,121 @@ services:
             var app = parser.ParseConfigApplication();
         }
 
+        [Theory]
+        [InlineData("env")]
+        [InlineData("configuration")]
+        public void EnvSimpleSyntaxTest(string rootKeyName)
+        {
+            using var parser = new YamlParser(
+@$"
+services:
+    - {rootKeyName}:
+        - name: env1
+          value: value1
+        - name: env2
+          value: value2
+        - name: env3
+          value: ""long string""
+        - name: env4
+          value:
+");
+
+            var app = parser.ParseConfigApplication();
+            var serviceConfig = app.Services.First().Configuration;
+
+            Assert.Equal(4, serviceConfig.Count);
+            Assert.Equal("value1", serviceConfig.Where(env => env.Name == "env1").First().Value);
+            Assert.Equal("value2", serviceConfig.Where(env => env.Name == "env2").First().Value);
+            Assert.Equal("long string", serviceConfig.Where(env => env.Name == "env3").First().Value);
+            Assert.Equal(string.Empty, serviceConfig.Where(env => env.Name == "env4").First().Value);
+        }
+
+        [Fact]
+        public void EnvCompactSyntaxTest()
+        {
+            using var parser = new YamlParser(
+@"
+services:
+    - env:
+        - env1=value1
+        - env2=value2
+        - env3 = value3
+        - env4 = ""long string""
+        - name: env5
+          value: value5
+        - env6 =
+");
+
+            var app = parser.ParseConfigApplication();
+            var serviceConfig = app.Services.First().Configuration;
+
+            Assert.Equal(6, serviceConfig.Count);
+            Assert.Equal("value1", serviceConfig.Where(env => env.Name == "env1").First().Value);
+            Assert.Equal("value2", serviceConfig.Where(env => env.Name == "env2").First().Value);
+            Assert.Equal("value3", serviceConfig.Where(env => env.Name == "env3").First().Value);
+            Assert.Equal("long string", serviceConfig.Where(env => env.Name == "env4").First().Value);
+            Assert.Equal("value5", serviceConfig.Where(env => env.Name == "env5").First().Value);
+            Assert.Equal(string.Empty, serviceConfig.Where(env => env.Name == "env6").First().Value);
+        }
+
+        [Fact]
+        public void EnvTakeValueFromEnvironmentTest()
+        {
+            using var parser = new YamlParser(
+@"
+services:
+    - env:
+        - env1
+        - name: env2
+        - env3
+");
+
+            Environment.SetEnvironmentVariable("env1", "value1");
+            Environment.SetEnvironmentVariable("env2", "value2");
+
+            var app = parser.ParseConfigApplication();
+            var serviceConfig = app.Services.First().Configuration;
+
+            Assert.Equal(3, serviceConfig.Count);
+            Assert.Equal("value1", serviceConfig.Where(env => env.Name == "env1").First().Value);
+            Assert.Equal("value2", serviceConfig.Where(env => env.Name == "env2").First().Value);
+            Assert.Equal(string.Empty, serviceConfig.Where(env => env.Name == "env3").First().Value);
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public void EnvFromFile(bool setWorkingDirectory)
+        {
+            var subDirectory = setWorkingDirectory ? string.Empty : "testassets/";
+            using var parser = new YamlParser(
+@$"
+services:
+    - env_file:
+        - ./{subDirectory}envfile_a.env
+        - ./{subDirectory}envfile_b.env
+", setWorkingDirectory ? new FileInfo(Path.Join(Directory.GetCurrentDirectory(), "testassets", "tye.yaml")) : null);
+
+
+            var app = parser.ParseConfigApplication();
+            var serviceConfig = app.Services.First().Configuration;
+
+            Assert.Equal(3, serviceConfig.Count);
+        }
+
+        [Fact]
+        public void PathNotFound_ThrowException()
+        {
+            using var parser = new YamlParser(
+@"
+services:
+    - env_file:
+        - ./envfile_c.env
+", new FileInfo(Path.Join(Directory.GetCurrentDirectory(), "testassets", "tye.yaml")));
+
+            var exception = Assert.Throws<TyeYamlException>(() => parser.ParseConfigApplication());
+            Assert.Contains(CoreStrings.FormatPathNotFound(Path.Join(Directory.GetCurrentDirectory(), "testassets", "envfile_c.env")), exception.Message);
+        }
 
         [Fact]
         public void UnrecognizedConfigApplicationField_ThrowException()

@@ -2,7 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Tye.ConfigModel;
 using YamlDotNet.RepresentationModel;
@@ -11,18 +13,18 @@ namespace Tye.Serialization
 {
     public static class ConfigServiceParser
     {
-        public static void HandleServiceMapping(YamlSequenceNode yamlSequenceNode, List<ConfigService> services)
+        public static void HandleServiceMapping(YamlSequenceNode yamlSequenceNode, List<ConfigService> services, ConfigApplication application)
         {
             foreach (var child in yamlSequenceNode.Children)
             {
                 YamlParser.ThrowIfNotYamlMapping(child);
                 var service = new ConfigService();
-                HandleServiceNameMapping((YamlMappingNode)child, service);
+                HandleServiceNameMapping((YamlMappingNode)child, service, application);
                 services.Add(service);
             }
         }
 
-        private static void HandleServiceNameMapping(YamlMappingNode yamlMappingNode, ConfigService service)
+        private static void HandleServiceNameMapping(YamlMappingNode yamlMappingNode, ConfigService service, ConfigApplication application)
         {
             foreach (var child in yamlMappingNode!.Children)
             {
@@ -129,6 +131,14 @@ namespace Tye.Serialization
                         }
 
                         HandleServiceConfiguration((child.Value as YamlSequenceNode)!, service.Configuration);
+                        break;
+                    case "env_file":
+                        if (child.Value.NodeType != YamlNodeType.Sequence)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
+                        }
+
+                        HandleServiceEnvFiles((child.Value as YamlSequenceNode)!, service.Configuration, application);
                         break;
                     case "liveness":
                         service.Liveness = new ConfigProbe();
@@ -430,9 +440,25 @@ namespace Tye.Serialization
         {
             foreach (var child in yamlSequenceNode.Children)
             {
-                YamlParser.ThrowIfNotYamlMapping(child);
                 var config = new ConfigConfigurationSource();
-                HandleServiceConfigurationNameMapping((YamlMappingNode)child, config);
+                switch (child)
+                {
+                    case YamlMappingNode childMappingNode:
+                        HandleServiceConfigurationNameMapping(childMappingNode, config);
+                        break;
+                    case YamlScalarNode childScalarNode:
+                        HandleServiceConfigurationCompact(childScalarNode, config);
+                        break;
+                    default:
+                        throw new TyeYamlException(child.Start, CoreStrings.FormatUnexpectedTypes($"\"{YamlNodeType.Mapping.ToString()}\", \"{YamlNodeType.Scalar.ToString()}\"", child.NodeType.ToString()));
+                }
+
+                // if no value is given, we take the value from the system/shell environment variables
+                if (config.Value == null)
+                {
+                    config.Value = Environment.GetEnvironmentVariable(config.Name) ?? string.Empty;
+                }
+
                 configuration.Add(config);
             }
         }
@@ -454,6 +480,66 @@ namespace Tye.Serialization
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
+            }
+        }
+
+        private static void HandleServiceConfigurationCompact(YamlScalarNode yamlScalarNode, ConfigConfigurationSource config)
+        {
+            var nodeValue = YamlParser.GetScalarValue(yamlScalarNode);
+            var keyValueSeparator = nodeValue.IndexOf('=');
+
+            if (keyValueSeparator != -1)
+            {
+                var key = nodeValue.Substring(0, keyValueSeparator).Trim();
+                var value = nodeValue.Substring(keyValueSeparator + 1)?.Trim();
+
+                config.Name = key;
+                config.Value = value?.Trim(new[] { ' ', '"' }) ?? string.Empty;
+            }
+            else
+            {
+                config.Name = nodeValue.Trim();
+            }
+        }
+
+        private static void HandleServiceEnvFiles(YamlSequenceNode yamlSequenceNode, List<ConfigConfigurationSource> configuration, ConfigApplication application)
+        {
+            foreach (var child in yamlSequenceNode.Children)
+            {
+                switch (child)
+                {
+                    case YamlScalarNode childScalarNode:
+                        var envFile = new FileInfo(Path.Combine(application.Source?.DirectoryName ?? Directory.GetCurrentDirectory(), YamlParser.GetScalarValue(childScalarNode)));
+                        if (!envFile.Exists)
+                            throw new TyeYamlException(child.Start, CoreStrings.FormatPathNotFound(envFile.FullName));
+                        HandleServiceEnvFile(childScalarNode, File.ReadAllLines(envFile.FullName), configuration);
+                        break;
+                    default:
+                        throw new TyeYamlException(child.Start, CoreStrings.FormatUnexpectedType(YamlNodeType.Scalar.ToString(), child.NodeType.ToString()));
+                }
+            }
+        }
+
+        private static void HandleServiceEnvFile(YamlScalarNode yamlScalarNode, string[] envLines, List<ConfigConfigurationSource> configuration)
+        {
+            foreach (var line in envLines)
+            {
+                var lineTrim = line?.Trim();
+                if (string.IsNullOrEmpty(lineTrim) || lineTrim[0] == '#')
+                {
+                    continue;
+                }
+
+                var keyValueSeparator = lineTrim.IndexOf('=');
+
+                if (keyValueSeparator == -1)
+                    throw new TyeYamlException(yamlScalarNode.Start, CoreStrings.FormatExpectedEnvironmentVariableValue(lineTrim));
+
+                configuration.Add(new ConfigConfigurationSource
+                {
+                    Name = lineTrim.Substring(0, keyValueSeparator).Trim(),
+                    Value = lineTrim.Substring(keyValueSeparator + 1)?.Trim(new[] { ' ', '"' }) ?? string.Empty
+                });
             }
         }
 

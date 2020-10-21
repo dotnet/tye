@@ -17,7 +17,7 @@
   <ItemGroup>
     <None Include="Watch\assets\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Bedrock.Framework" Version="0.1.38-alpha.gd25d5b37ad" />
     <PackageReference Include="FeatherHttp" Version="0.1.42-alpha.gf06a8747e7" />

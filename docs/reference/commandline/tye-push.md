@@ -1,4 +1,4 @@
-# tye deploy
+# tye push
 
 ## Name
 

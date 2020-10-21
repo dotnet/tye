@@ -111,7 +111,7 @@ namespace Microsoft.Tye.Hosting
                 // We export the developer certificate from this machine
                 var certPassword = Guid.NewGuid().ToString();
                 var certificateDirectory = _certificateDirectory.Value;
-                var certificateFilePath = Path.Combine(certificateDirectory.DirectoryPath, project.AssemblyName + ".pfx");
+                var certificateFilePath = Path.Combine($"\"{certificateDirectory.DirectoryPath}", $"{project.AssemblyName}.pfx\"");
                 await ProcessUtil.RunAsync("dotnet", $"dev-certs https -ep {certificateFilePath} -p {certPassword}");
                 serviceDescription.Configuration.Add(new EnvironmentVariable("Kestrel__Certificates__Development__Password", certPassword));
 
@@ -125,6 +125,8 @@ namespace Microsoft.Tye.Hosting
 
         private static string DetermineContainerImage(ProjectRunInfo project)
         {
+            var baseImageTag = !string.IsNullOrEmpty(project.ContainerBaseTag) ? project.ContainerBaseTag : project.TargetFrameworkVersion;
+
             string baseImage;
             if (!string.IsNullOrEmpty(project.ContainerBaseImage))
             {
@@ -132,10 +134,17 @@ namespace Microsoft.Tye.Hosting
             }
             else
             {
-                baseImage = project.IsAspNet ? "mcr.microsoft.com/dotnet/core/aspnet" : "mcr.microsoft.com/dotnet/core/runtime";
+                if (DockerfileGenerator.TagIs50OrNewer(baseImageTag))
+                {
+                    // .NET 5.0+ does not have the /core in its image name
+                    baseImage = project.IsAspNet ? "mcr.microsoft.com/dotnet/aspnet" : "mcr.microsoft.com/dotnet/runtime";
+                }
+                else
+                {
+                    // .NET Core 2.1/3.1 has the /core in its image name
+                    baseImage = project.IsAspNet ? "mcr.microsoft.com/dotnet/core/aspnet" : "mcr.microsoft.com/dotnet/core/runtime";
+                }
             }
-
-            var baseImageTag = !string.IsNullOrEmpty(project.ContainerBaseTag) ? project.ContainerBaseTag : project.TargetFrameworkVersion;
 
             return $"{baseImage}:{baseImageTag}";
         }
