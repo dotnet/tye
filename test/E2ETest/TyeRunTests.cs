@@ -997,37 +997,6 @@ services:
             });
         }
 
-        [ConditionalFact]
-        [SkipIfDockerNotRunning]
-        public async Task RunIgnorePluralTargetFrameworksWhenSingularFormExistsTest()
-        {
-            using var projectDirectory = CopyTestProjectDirectory("multi-targetframeworks-and-targetframework-too");
-
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-no-buildproperties.yaml"));
-            var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
-
-            var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
-                AllowAutoRedirect = false
-            };
-
-            var client = new HttpClient(new RetryHandler(handler));
-
-            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
-            {
-                // make sure it is running
-                var backendUri = await GetServiceUrl(client, uri, "multi-targetframeworks-and-targetframework-too");
-
-                var backendResponse = await client.GetAsync(backendUri);
-                Assert.True(backendResponse.IsSuccessStatusCode);
-
-                var responseContent = await backendResponse.Content.ReadAsStringAsync();
-                Assert.Contains(".NET Core 3.1", responseContent);
-            });
-        }
-
         private async Task<string> GetServiceUrl(HttpClient client, Uri uri, string serviceName)
         {
             var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceName}");

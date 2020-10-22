@@ -1,6 +1,8 @@
 ﻿<Project>
     <PropertyGroup>
-        <MicrosoftTye_GetProjectMetadata_DependsOn>Restore;ResolveReferences;ResolvePackageDependenciesDesignTime;PrepareResources;PrepareResources;GetAssemblyAttributes</MicrosoftTye_GetProjectMetadata_DependsOn>
+       <!-- Single TFM projects -->
+      <MicrosoftTye_GetProjectMetadata_DependsOn>Restore;ResolveReferences;ResolvePackageDependenciesDesignTime;PrepareResources;PrepareResources;GetAssemblyAttributes</MicrosoftTye_GetProjectMetadata_DependsOn>
+      <!-- Multi TFM projects -->
         <MicrosoftTye_GetProjectMetadata_DependsOn Condition="'$(IsCrossTargetingBuild)' == 'true'">Restore</MicrosoftTye_GetProjectMetadata_DependsOn>
     </PropertyGroup>
 
