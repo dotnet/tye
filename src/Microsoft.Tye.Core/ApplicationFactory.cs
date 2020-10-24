@@ -190,12 +190,6 @@ namespace Microsoft.Tye
                             project.BuildProperties.Add(buildProperty.Name, buildProperty.Value);
                         }
 
-                        if (framework != null)
-                        {
-                            // Only use the TargetFramework for the "--framework" if it's not defined already from the YAML
-                            project.BuildProperties["TargetFramework"] = framework;
-                        }
-
                         project.Replicas = configService.Replicas ?? 1;
 
                         project.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
@@ -212,6 +206,12 @@ namespace Microsoft.Tye
                         }
 
                         ProjectReader.ReadProjectDetails(output, project, projectMetadata[configService.Name]);
+
+                        if (framework != null && project.TargetFrameworks.Any())
+                        {
+                            // Only use the TargetFramework for the "--framework" if it's a multi-targeted project and an override is provided
+                            project.BuildProperties["TargetFramework"] = framework;
+                        }
 
                         // Do k8s by default.
                         project.ManifestInfo = new KubernetesManifestInfo();
