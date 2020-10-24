@@ -74,6 +74,7 @@ namespace Microsoft.Tye
                     Description = "Watches for code changes for all dotnet projects.",
                     Required = false
                 },
+                StandardOptions.Framework,
                 StandardOptions.Tags,
                 StandardOptions.Verbosity,
             };
@@ -92,7 +93,7 @@ namespace Microsoft.Tye
 
                 var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(args.Tags);
 
-                var application = await ApplicationFactory.CreateAsync(output, args.Path, filter);
+                var application = await ApplicationFactory.CreateAsync(output, args.Path, args.Framework, filter);
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
@@ -170,6 +171,8 @@ namespace Microsoft.Tye
             public Verbosity Verbosity { get; set; }
 
             public bool Watch { get; set; }
+
+            public string Framework { get; set; } = default!;
 
             public string[] Tags { get; set; } = Array.Empty<string>();
         }

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
@@ -20,22 +21,43 @@ namespace Microsoft.Tye
             {
                 CommonArguments.Path_Required,
                 StandardOptions.Interactive,
+                StandardOptions.Tags,
                 StandardOptions.Verbosity,
-                StandardOptions.Tags
+                StandardOptions.Framework,
             };
 
-            command.Handler = CommandHandler.Create<IConsole, FileInfo, Verbosity, bool, string[]>((console, path, verbosity, interactive, tags) =>
+            command.Handler = CommandHandler.Create<BuildCommandArguments>(args =>
             {
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
-                if (path is null)
+                if (args.Path is null)
                 {
                     throw new CommandException("No project or solution file was found.");
                 }
 
-                return BuildHost.BuildAsync(console, path, verbosity, interactive, tags);
+                var output = new OutputContext(args.Console, args.Verbosity);
+                output.WriteInfoLine("Loading Application Details...");
+
+                var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(args.Tags);
+
+                return BuildHost.BuildAsync(output, args.Path, args.Interactive, args.Framework, filter);
             });
 
             return command;
+        }
+
+        private class BuildCommandArguments
+        {
+            public IConsole Console { get; set; } = default!;
+
+            public FileInfo Path { get; set; } = default!;
+
+            public Verbosity Verbosity { get; set; }
+
+            public string Framework { get; set; } = default!;
+
+            public bool Interactive { get; set; } = false;
+
+            public string[] Tags { get; set; } = Array.Empty<string>();
         }
     }
 }

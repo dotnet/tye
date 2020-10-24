@@ -46,16 +46,18 @@ namespace Microsoft.Tye
             }
         }
 
-        public static Option Force
-        {
-            get
-            {
-                return new Option("--force", "Force overwrite of existing files")
-                {
-                    Argument = new Argument<bool>(),
-                };
-            }
-        }
+        public static Option Framework =>
+                    new Option(new string[] { "-f", "--framework" })
+                    {
+                        Description = "The target framework override to use for all cross-targeting projects with multiple TFMs. " +
+                            "This value must be a valid target framework for each individual cross-targeting project. " +
+                            "Non-crosstargeting projects will ignore this value. ",
+                        Argument = new Argument<string>("framework")
+                        {
+                            Arity = ArgumentArity.ExactlyOne
+                        },
+                        Required = false
+                    };
 
         public static Option Interactive
         {
@@ -224,5 +226,13 @@ namespace Microsoft.Tye
                 };
             }
         }
+
+        public static Option CreateForce(string descriptions) =>
+            new Option(new[] { "--force" })
+            {
+                Argument = new Argument<bool>(),
+                Description = descriptions,
+                Required = false
+            };
     }
 }

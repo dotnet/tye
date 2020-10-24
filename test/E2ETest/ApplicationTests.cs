@@ -25,7 +25,8 @@ namespace E2ETest
 
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile));
+            var projectFile = new FileInfo(yamlFile);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             var app = application.ToHostingApplication();
             var dictionary = new Dictionary<string, string>();

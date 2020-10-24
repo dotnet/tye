@@ -210,5 +210,74 @@ namespace E2ETest
                 await DockerAssert.DeleteDockerImagesAsync(output, imageName);
             }
         }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task TyeBuild_MultipleTargetFrameworks_CliArgs()
+        {
+            var projectName = "multi-targetframeworks";
+            var environment = "production";
+            var imageName = "test/multi-targetframeworks";
+
+            await DockerAssert.DeleteDockerImagesAsync(output, imageName);
+
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-no-buildproperties.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
+
+            application.Registry = new ContainerRegistry("test");
+
+            try
+            {
+                await BuildHost.ExecuteBuildAsync(outputContext, application, environment, interactive: false);
+
+                var publishOutput = Assert.Single(application.Services.Single().Outputs.OfType<ProjectPublishOutput>());
+                Assert.False(Directory.Exists(publishOutput.Directory.FullName), $"Directory {publishOutput.Directory.FullName} should be deleted.");
+
+                await DockerAssert.AssertImageExistsAsync(output, imageName);
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, imageName);
+            }
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task TyeBuild_MultipleTargetFrameworks_YamlBuildProperties()
+        {
+            var projectName = "multi-targetframeworks";
+            var environment = "production";
+            var imageName = "test/multi-targetframeworks";
+
+            await DockerAssert.DeleteDockerImagesAsync(output, imageName);
+
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-with-netcoreapp31.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
+
+            application.Registry = new ContainerRegistry("test");
+
+            try
+            {
+                await BuildHost.ExecuteBuildAsync(outputContext, application, environment, interactive: false);
+
+                var publishOutput = Assert.Single(application.Services.Single().Outputs.OfType<ProjectPublishOutput>());
+                Assert.False(Directory.Exists(publishOutput.Directory.FullName), $"Directory {publishOutput.Directory.FullName} should be deleted.");
+
+                await DockerAssert.AssertImageExistsAsync(output, imageName);
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, imageName);
+            }
+        }
+
     }
 }

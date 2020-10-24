@@ -17,7 +17,7 @@ namespace Microsoft.Tye
 {
     public static class ApplicationFactory
     {
-        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, ApplicationFactoryFilter? filter = null)
+        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, string? framework = null, ApplicationFactoryFilter? filter = null)
         {
             if (source is null)
             {
@@ -104,7 +104,10 @@ namespace Microsoft.Tye
                         sb.AppendLine($"        <MicrosoftTye_ProjectServices " +
                             $"Include=\"{project.ProjectFullPath}\" " +
                             $"Name=\"{project.Name}\" " +
-                            $"BuildProperties=\"{(project.BuildProperties.Any() ? project.BuildProperties.Select(kvp => $"{kvp.Name}={kvp.Value}").Aggregate((a, b) => a + ";" + b) : string.Empty)}\" />");
+                            $"BuildProperties=\"" +
+                                $"{(project.BuildProperties.Any() ? project.BuildProperties.Select(kvp => $"{kvp.Name}={kvp.Value}").Aggregate((a, b) => a + ";" + b) : string.Empty)}" +
+                                $"{(string.IsNullOrEmpty(framework) ? string.Empty : $";TargetFramework={framework}")}" +
+                            $"\" />");
                     }
                     sb.AppendLine(@"    </ItemGroup>");
 
@@ -124,7 +127,12 @@ namespace Microsoft.Tye
                         "dotnet",
                         $"build " +
                             $"\"{projectPath}\" " +
+                            // CustomAfterMicrosoftCommonTargets is imported by non-crosstargeting (single TFM) projects
                             $"/p:CustomAfterMicrosoftCommonTargets={Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")} " +
+                            // CustomAfterMicrosoftCommonCrossTargetingTargets is imported by crosstargeting (multi-TFM) projects
+                            // This ensures projects properties are evaluated correctly. However, multi-TFM projects must specify
+                            // a specific TFM to build/run/publish and will otherwise throw an exception.
+                            $"/p:CustomAfterMicrosoftCommonCrossTargetingTargets={Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")} " +
                             $"/nologo",
                         throwOnError: false,
                         workingDirectory: directory.DirectoryPath);
@@ -181,6 +189,7 @@ namespace Microsoft.Tye
                         {
                             project.BuildProperties.Add(buildProperty.Name, buildProperty.Value);
                         }
+
                         project.Replicas = configService.Replicas ?? 1;
 
                         project.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
@@ -197,6 +206,12 @@ namespace Microsoft.Tye
                         }
 
                         ProjectReader.ReadProjectDetails(output, project, projectMetadata[configService.Name]);
+
+                        if (framework != null && project.TargetFrameworks.Any())
+                        {
+                            // Only use the TargetFramework for the "--framework" if it's a multi-targeted project and an override is provided
+                            project.BuildProperties["TargetFramework"] = framework;
+                        }
 
                         // Do k8s by default.
                         project.ManifestInfo = new KubernetesManifestInfo();

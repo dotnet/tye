@@ -823,12 +823,14 @@ services:
   repository: https://github.com/jkotalik/TyeMultiRepoVoting
 - name: results
   repository: https://github.com/jkotalik/TyeMultiRepoResults";
+
             var yamlFile = Path.Combine(projectDirectory.DirectoryPath, "tye.yaml");
+            var projectFile = new FileInfo(yamlFile);
             await File.WriteAllTextAsync(yamlFile, content);
 
             // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(yamlFile));
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             var handler = new HttpClientHandler
             {
@@ -908,10 +910,12 @@ services:
 - name: frontend
   project: frontend/frontend.csproj";
 
-            var projectFile = Path.Combine(projectDirectory.DirectoryPath, "tye.yaml");
-            await File.WriteAllTextAsync(projectFile, content);
+            var yamlFile = Path.Combine(projectDirectory.DirectoryPath, "tye.yaml");
+            var projectFile = new FileInfo(yamlFile);
+            await File.WriteAllTextAsync(yamlFile, content);
+
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, new FileInfo(projectFile));
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             var handler = new HttpClientHandler
             {
@@ -934,6 +938,99 @@ services:
                 Assert.True(backendResponse.IsSuccessStatusCode);
                 Assert.True(backend2Response.IsSuccessStatusCode);
                 Assert.True(frontendResponse.IsSuccessStatusCode);
+            });
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task RunExplicitYamlMultipleTargetFrameworksTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("multi-targetframeworks");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-with-netcoreapp31.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                // make sure it is running
+                var backendUri = await GetServiceUrl(client, uri, "multi-targetframeworks");
+
+                var backendResponse = await client.GetAsync(backendUri);
+                Assert.True(backendResponse.IsSuccessStatusCode);
+
+                var responseContent = await backendResponse.Content.ReadAsStringAsync();
+                Assert.Contains(".NET Core 3.1", responseContent);
+            });
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task RunWithArgsMultipleTargetFrameworksTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("multi-targetframeworks");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-no-buildproperties.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                // make sure it is running
+                var backendUri = await GetServiceUrl(client, uri, "multi-targetframeworks");
+
+                var backendResponse = await client.GetAsync(backendUri);
+                Assert.True(backendResponse.IsSuccessStatusCode);
+
+                var responseContent = await backendResponse.Content.ReadAsStringAsync();
+                Assert.Contains(".NET Core 3.1", responseContent);
+            });
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task RunCliArgOverrideYamlMultipleTargetFrameworksTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("multi-targetframeworks");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-with-netcoreapp21.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                // make sure it is running
+                var backendUri = await GetServiceUrl(client, uri, "multi-targetframeworks");
+
+                var backendResponse = await client.GetAsync(backendUri);
+                Assert.True(backendResponse.IsSuccessStatusCode);
+
+                var responseContent = await backendResponse.Content.ReadAsStringAsync();
+                Assert.Contains(".NET Core 3.1", responseContent);
             });
         }
 
