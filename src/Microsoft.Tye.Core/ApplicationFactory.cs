@@ -84,8 +84,8 @@ namespace Microsoft.Tye
                 var projectMetadata = new Dictionary<string, string>();
 
                 var msbuildEvaluationResult = await EvaluateProjectsAsync(
-                    projects: projectServices, 
-                    configRoot: config.Source.DirectoryName!, 
+                    projects: projectServices,
+                    configRoot: config.Source.DirectoryName!,
                     output: output);
                 var msbuildEvaluationOutput = msbuildEvaluationResult
                     .StandardOutput
