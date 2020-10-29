@@ -49,9 +49,9 @@ namespace Microsoft.Tye
         public static Option Framework =>
                     new Option(new string[] { "-f", "--framework" })
                     {
-                        Description = "The target framework override to use for all cross-targeting projects with multiple TFMs. " +
+                        Description = "The target framework hint to use for all cross-targeting projects with multiple TFMs. " +
                             "This value must be a valid target framework for each individual cross-targeting project. " +
-                            "Non-crosstargeting projects will ignore this value. ",
+                            "Non-crosstargeting projects will ignore this hint and the value TFM configured in tye.yaml will override this hint. ",
                         Argument = new Argument<string>("framework")
                         {
                             Arity = ArgumentArity.ExactlyOne

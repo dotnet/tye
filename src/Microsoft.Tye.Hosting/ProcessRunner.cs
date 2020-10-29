@@ -121,11 +121,11 @@ namespace Microsoft.Tye.Hosting
                 var projectPath = Path.Combine(directory.DirectoryPath, Path.GetRandomFileName() + ".proj");
 
                 var sb = new StringBuilder();
-                sb.AppendLine(@"<Project DefaultTargets=""Build"">
-    <ItemGroup>");
+                sb.AppendLine(@"<Project DefaultTargets=""Build"">");
 
                 foreach (var group in projectGroups)
                 {
+                    sb.AppendLine(@"    <ItemGroup>");
                     foreach (var p in group.Value.Services)
                     {
                         sb.AppendLine($"        <{group.Value.GroupName} Include=\"{p.Status.ProjectFilePath}\" />");
