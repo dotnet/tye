@@ -1005,13 +1005,13 @@ services:
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        public async Task RunCliArgOverrideYamlMultipleTargetFrameworksTest()
+        public async Task RunCliArgDoesNotOverrideYamlMultipleTargetFrameworksTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("multi-targetframeworks");
 
-            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-with-netcoreapp21.yaml"));
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-with-netcoreapp31.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp2.1");
 
             var handler = new HttpClientHandler
             {

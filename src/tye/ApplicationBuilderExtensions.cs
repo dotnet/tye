@@ -121,21 +121,6 @@ namespace Microsoft.Tye
                 }
                 else if (service is DotnetProjectServiceBuilder project)
                 {
-                    if (project.TargetFrameworks.Length > 1)
-                    {
-                        if (project.BuildProperties.TryGetValue("TargetFramework", out var targetFramework))
-                        {
-                            if (!project.TargetFrameworks.Contains(targetFramework))
-                            {
-                                throw new InvalidOperationException($"Unable to run {project.Name}. The specified TargetFramework is not one of the existing TargetFrameworks in the project.");
-                            }
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException($"Unable to run {project.Name}. Your project targets multiple frameworks. Specify which framework to run using '--framework'.");
-                        }
-                    }
-
                     if (project.RunCommand == null)
                     {
                         throw new InvalidOperationException($"Unable to run {project.Name}. The project does not have a run command");

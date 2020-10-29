@@ -83,77 +83,55 @@ namespace Microsoft.Tye
                 var projectServices = services.Where(s => !string.IsNullOrEmpty(s.Project));
                 var projectMetadata = new Dictionary<string, string>();
 
-                using (var directory = TempDirectory.Create())
+                var msbuildEvaluationResult = await EvaluateProjectsAsync(
+                    projects: projectServices, 
+                    configRoot: config.Source.DirectoryName!, 
+                    output: output);
+                var msbuildEvaluationOutput = msbuildEvaluationResult
+                    .StandardOutput
+                    .Split(Environment.NewLine);
+
+                var multiTFMProjects = new List<ConfigService>();
+
+                foreach (var line in msbuildEvaluationOutput)
                 {
-                    var projectPath = Path.Combine(directory.DirectoryPath, Path.GetRandomFileName() + ".proj");
-
-                    var sb = new StringBuilder();
-                    sb.AppendLine("<Project>");
-                    sb.AppendLine("    <ItemGroup>");
-
-                    foreach (var project in projectServices)
+                    var trimmed = line.Trim();
+                    if (trimmed.StartsWith("Microsoft.Tye metadata: "))
                     {
-                        var expandedProject = Environment.ExpandEnvironmentVariables(project.Project!);
-                        project.ProjectFullPath = Path.Combine(config.Source.DirectoryName!, expandedProject);
+                        var values = line.Split(':', 3);
+                        var projectName = values[1].Trim();
+                        var metadataPath = values[2].Trim();
+                        projectMetadata.Add(projectName, metadataPath);
 
-                        if (!File.Exists(project.ProjectFullPath))
-                        {
-                            throw new CommandException($"Failed to locate project: '{project.ProjectFullPath}'.");
-                        }
-
-                        sb.AppendLine($"        <MicrosoftTye_ProjectServices " +
-                            $"Include=\"{project.ProjectFullPath}\" " +
-                            $"Name=\"{project.Name}\" " +
-                            $"BuildProperties=\"" +
-                                $"{(project.BuildProperties.Any() ? project.BuildProperties.Select(kvp => $"{kvp.Name}={kvp.Value}").Aggregate((a, b) => a + ";" + b) : string.Empty)}" +
-                                $"{(string.IsNullOrEmpty(framework) ? string.Empty : $";TargetFramework={framework}")}" +
-                            $"\" />");
+                        output.WriteDebugLine($"Resolved metadata for service {projectName} at {metadataPath}");
                     }
-                    sb.AppendLine(@"    </ItemGroup>");
-
-                    sb.AppendLine($@"    <Target Name=""MicrosoftTye_EvaluateProjects"">");
-                    sb.AppendLine($@"        <MsBuild Projects=""@(MicrosoftTye_ProjectServices)"" "
-                        + $@"Properties=""%(BuildProperties);"
-                        + $@"MicrosoftTye_ProjectName=%(Name)"" "
-                        + $@"Targets=""MicrosoftTye_GetProjectMetadata"" BuildInParallel=""true"" />");
-
-                    sb.AppendLine("    </Target>");
-                    sb.AppendLine("</Project>");
-                    File.WriteAllText(projectPath, sb.ToString());
-
-                    output.WriteDebugLine("Restoring and evaluating projects");
-
-                    var msbuildEvaluationResult = await ProcessUtil.RunAsync(
-                        "dotnet",
-                        $"build " +
-                            $"\"{projectPath}\" " +
-                            // CustomAfterMicrosoftCommonTargets is imported by non-crosstargeting (single TFM) projects
-                            $"/p:CustomAfterMicrosoftCommonTargets={Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")} " +
-                            // CustomAfterMicrosoftCommonCrossTargetingTargets is imported by crosstargeting (multi-TFM) projects
-                            // This ensures projects properties are evaluated correctly. However, multi-TFM projects must specify
-                            // a specific TFM to build/run/publish and will otherwise throw an exception.
-                            $"/p:CustomAfterMicrosoftCommonCrossTargetingTargets={Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")} " +
-                            $"/nologo",
-                        throwOnError: false,
-                        workingDirectory: directory.DirectoryPath);
-
-                    // If the build fails, we're not really blocked from doing our work.
-                    // For now we just log the output to debug. There are errors that occur during
-                    // running these targets we don't really care as long as we get the data.
-                    if (msbuildEvaluationResult.ExitCode != 0)
+                    else if (trimmed.StartsWith("Microsoft.Tye cross-targeting project: "))
                     {
-                        output.WriteDebugLine($"Evaluating project failed with exit code {msbuildEvaluationResult.ExitCode}:" +
-                            $"{Environment.NewLine}Ouptut: {msbuildEvaluationResult.StandardOutput}" +
-                            $"{Environment.NewLine}Error: {msbuildEvaluationResult.StandardError}");
-                    }
+                        var values = line.Split(':', 2);
+                        var projectName = values[1].Trim();
 
-                    var msbuildEvaluationOutput = msbuildEvaluationResult
+                        var multiTFMConfigService = projectServices.First(p => string.Equals(p.Name, projectName, StringComparison.OrdinalIgnoreCase));
+                        multiTFMConfigService.BuildProperties.Add(new BuildProperty { Name = "TargetFramework", Value = framework ?? string.Empty });
+                        multiTFMProjects.Add(multiTFMConfigService);
+                    }
+                }
+
+                if (multiTFMProjects.Any())
+                {
+                    output.WriteDebugLine("Re-evaluating multi-targeted projects");
+
+                    var multiTFMEvaluationResult = await EvaluateProjectsAsync(
+                        projects: multiTFMProjects,
+                        configRoot: config.Source.DirectoryName!,
+                        output: output);
+                    var multiTFMEvaluationOutput = multiTFMEvaluationResult
                         .StandardOutput
                         .Split(Environment.NewLine);
 
-                    foreach (var line in msbuildEvaluationOutput)
+                    foreach (var line in multiTFMEvaluationOutput)
                     {
-                        if (line.Trim().StartsWith("Microsoft.Tye metadata: "))
+                        var trimmed = line.Trim();
+                        if (trimmed.StartsWith("Microsoft.Tye metadata: "))
                         {
                             var values = line.Split(':', 3);
                             var projectName = values[1].Trim();
@@ -162,10 +140,16 @@ namespace Microsoft.Tye
 
                             output.WriteDebugLine($"Resolved metadata for service {projectName} at {metadataPath}");
                         }
+                        else if (trimmed.StartsWith("Microsoft.Tye cross-targeting project: "))
+                        {
+                            var values = line.Split(':', 2);
+                            var projectName = values[1].Trim();
+                            throw new CommandException($"Unable to run {projectName}. Your project targets multiple frameworks. Specify which framework to run using '--framework' or a build property in tye.yaml.");
+                        }
                     }
-
-                    output.WriteDebugLine($"Restore and project evaluation took: {sw.Elapsed.TotalMilliseconds}ms");
                 }
+
+                output.WriteDebugLine($"Restore and project evaluation took: {sw.Elapsed.TotalMilliseconds}ms");
 
                 foreach (var configService in services)
                 {
@@ -191,7 +175,6 @@ namespace Microsoft.Tye
                         }
 
                         project.Replicas = configService.Replicas ?? 1;
-
                         project.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
                         project.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;
 
@@ -206,12 +189,6 @@ namespace Microsoft.Tye
                         }
 
                         ProjectReader.ReadProjectDetails(output, project, projectMetadata[configService.Name]);
-
-                        if (framework != null && project.TargetFrameworks.Any())
-                        {
-                            // Only use the TargetFramework for the "--framework" if it's a multi-targeted project and an override is provided
-                            project.BuildProperties["TargetFramework"] = framework;
-                        }
 
                         // Do k8s by default.
                         project.ManifestInfo = new KubernetesManifestInfo();
@@ -496,6 +473,73 @@ namespace Microsoft.Tye
             }
 
             return root;
+        }
+
+        private static async Task<ProcessResult> EvaluateProjectsAsync(IEnumerable<ConfigService> projects, string configRoot, OutputContext output)
+        {
+            using var directory = TempDirectory.Create();
+            var projectPath = Path.Combine(directory.DirectoryPath, Path.GetRandomFileName() + ".proj");
+
+            var sb = new StringBuilder();
+            sb.AppendLine("<Project>");
+            sb.AppendLine("    <ItemGroup>");
+
+            foreach (var project in projects)
+            {
+                var expandedProject = Environment.ExpandEnvironmentVariables(project.Project!);
+                project.ProjectFullPath = Path.Combine(configRoot, expandedProject);
+
+                if (!File.Exists(project.ProjectFullPath))
+                {
+                    throw new CommandException($"Failed to locate project: '{project.ProjectFullPath}'.");
+                }
+
+                sb.AppendLine($"        <MicrosoftTye_ProjectServices " +
+                    $"Include=\"{project.ProjectFullPath}\" " +
+                    $"Name=\"{project.Name}\" " +
+                    $"BuildProperties=\"" +
+                        $"{(project.BuildProperties.Any() ? project.BuildProperties.Select(kvp => $"{kvp.Name}={kvp.Value}").Aggregate((a, b) => a + ";" + b) : string.Empty)}" +
+                    $"\" />");
+            }
+            sb.AppendLine(@"    </ItemGroup>");
+
+            sb.AppendLine($@"    <Target Name=""MicrosoftTye_EvaluateProjects"">");
+            sb.AppendLine($@"        <MsBuild Projects=""@(MicrosoftTye_ProjectServices)"" "
+                + $@"Properties=""%(BuildProperties);"
+                + $@"MicrosoftTye_ProjectName=%(Name)"" "
+                + $@"Targets=""MicrosoftTye_GetProjectMetadata"" BuildInParallel=""true"" />");
+
+            sb.AppendLine("    </Target>");
+            sb.AppendLine("</Project>");
+            File.WriteAllText(projectPath, sb.ToString());
+
+            output.WriteDebugLine("Restoring and evaluating projects");
+
+            var msbuildEvaluationResult = await ProcessUtil.RunAsync(
+                "dotnet",
+                $"build " +
+                    $"\"{projectPath}\" " +
+                    // CustomAfterMicrosoftCommonTargets is imported by non-crosstargeting (single TFM) projects
+                    $"/p:CustomAfterMicrosoftCommonTargets={Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")} " +
+                    // CustomAfterMicrosoftCommonCrossTargetingTargets is imported by crosstargeting (multi-TFM) projects
+                    // This ensures projects properties are evaluated correctly. However, multi-TFM projects must specify
+                    // a specific TFM to build/run/publish and will otherwise throw an exception.
+                    $"/p:CustomAfterMicrosoftCommonCrossTargetingTargets={Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")} " +
+                    $"/nologo",
+                throwOnError: false,
+                workingDirectory: directory.DirectoryPath);
+
+            // If the build fails, we're not really blocked from doing our work.
+            // For now we just log the output to debug. There are errors that occur during
+            // running these targets we don't really care as long as we get the data.
+            if (msbuildEvaluationResult.ExitCode != 0)
+            {
+                output.WriteDebugLine($"Evaluating project failed with exit code {msbuildEvaluationResult.ExitCode}:" +
+                    $"{Environment.NewLine}Ouptut: {msbuildEvaluationResult.StandardOutput}" +
+                    $"{Environment.NewLine}Error: {msbuildEvaluationResult.StandardError}");
+            }
+
+            return msbuildEvaluationResult;
         }
 
         private static string? GetDockerFileContext(FileInfo source, ConfigService configService)
