@@ -227,6 +227,19 @@ namespace Microsoft.Tye
             }
         }
 
+        public static Option NoDefaultOptions
+        {
+            get
+            {
+                return new Option(new[] { "--no-default" })
+                {
+                    Description = "Disable default options from environment variables",
+                    Required = false,
+                    Argument = new Argument<bool>(),
+                };
+            }
+        }
+
         public static Option CreateForce(string descriptions) =>
             new Option(new[] { "--force" })
             {
