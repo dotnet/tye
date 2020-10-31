@@ -162,7 +162,7 @@ namespace Microsoft.Tye
                 // after creating the controller will fail if the webhook isn't ready.
                 //
                 // Internal error occurred: failed calling webhook "validate.nginx.ingress.kubernetes.io": 
-                // Post https://ingress-nginx-controller-admission.ingress-nginx.svc:443/extensions/v1beta1/ingresses?timeout=30s:
+                // Post https://ingress-nginx-controller-admission.ingress-nginx.svc:443/networking.k8s.io/v1/ingresses?timeout=30s:
                 // dial tcp 10.0.31.130:443: connect: connection refused
                 //
                 // Unfortunately this is the likely case for us.

@@ -20,7 +20,7 @@ namespace Microsoft.Tye
             var root = new YamlMappingNode();
 
             root.Add("kind", "Ingress");
-            root.Add("apiVersion", "extensions/v1beta1");
+            root.Add("apiVersion", "networking.k8s.io/v1");
 
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
