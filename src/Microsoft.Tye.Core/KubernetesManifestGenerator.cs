@@ -376,7 +376,6 @@ namespace Microsoft.Tye
                             ports.Add(containerPort);
                             containerPort.Add("containerPort", (binding.ContainerPort ?? binding.Port.Value).ToString());
                         }
-
                     }
                 }
 
