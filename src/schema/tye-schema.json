@@ -447,6 +447,10 @@
                 "protocol": {
                     "description": "The protocol used by the binding",
                     "type": "string"
+                },
+                "preservePath": {
+                    "description": "Whether to keep the path that was originally present or not.",
+                    "type": "boolean"
                 }
             }
         },

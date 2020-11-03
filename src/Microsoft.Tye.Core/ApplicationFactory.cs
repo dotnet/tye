@@ -465,6 +465,7 @@ namespace Microsoft.Tye
                         {
                             Host = configRule.Host,
                             Path = configRule.Path,
+                            PreservePath = configRule.PreservePath,
                             Service = configRule.Service!, // validated elsewhere
                         };
                         ingress.Rules.Add(rule);

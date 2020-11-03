@@ -151,10 +151,9 @@ namespace Microsoft.Tye.Hosting
                                 await context.Response.WriteAsync("Bad gateway");
                                 return;
                             }
-
                             var uri = new UriBuilder(uris[next].Uri)
                             {
-                                Path = (string)context.Request.RouteValues["path"]!,
+                                Path = rule.PreservePath ? $"{context.Request.Path}{context.Request.RouteValues["path"]}" : (string)context.Request.RouteValues["path"] ?? "/",
                                 Query = context.Request.QueryString.Value
                             };
 
