@@ -183,7 +183,7 @@ namespace Microsoft.Tye
                     port.Add("name", binding.Name ?? binding.Protocol ?? "http");
                     port.Add("protocol", "TCP"); // we use assume TCP. YOLO
                     port.Add("port", binding.Port.Value.ToString());
-                    port.Add("targetPort", binding.Port.Value.ToString());
+                    port.Add("targetPort", (binding.ContainerPort ?? binding.Port.Value).ToString());
                 }
             }
 
@@ -374,7 +374,7 @@ namespace Microsoft.Tye
                         {
                             var containerPort = new YamlMappingNode();
                             ports.Add(containerPort);
-                            containerPort.Add("containerPort", binding.Port.Value.ToString());
+                            containerPort.Add("containerPort", (binding.ContainerPort ?? binding.Port.Value).ToString());
                         }
                     }
                 }
