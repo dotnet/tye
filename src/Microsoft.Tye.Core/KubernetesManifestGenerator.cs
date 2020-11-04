@@ -92,14 +92,21 @@ namespace Microsoft.Tye
                         //
                         // Therefore our rewrite-target is set to $2 - we want to make sure we have
                         // two capture groups.
-                        if (string.IsNullOrEmpty(ingressRule.Path) || ingressRule.Path == "/" || ingressRule.PreservePath)
+                        if (string.IsNullOrEmpty(ingressRule.Path) || ingressRule.Path == "/")
                         {
                             path.Add("path", "/()(.*)"); // () is an empty capture group.
                         }
                         else
                         {
-                            var regex = $"{ingressRule.Path.TrimEnd('/')}(/|$)(.*)";
-                            path.Add("path", regex);
+                            if (ingressRule.PreservePath)
+                            {
+                                path.Add("path", $"/()({ingressRule.Path.Trim('/')}.*)");
+                            }
+                            else
+                            {
+                                var regex = $"{ingressRule.Path.TrimEnd('/')}(/|$)(.*)";
+                                path.Add("path", regex);
+                            }
                         }
                     }
                 }
