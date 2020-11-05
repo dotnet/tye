@@ -10,7 +10,7 @@ namespace orders.Controllers
     [ApiController]
     public class OrdersController : ControllerBase
     {
-        [Topic("orderplaced")]
+        [Topic("messagebus", "orderplaced")]
         [HttpPost("orderplaced")]
         public async Task PlaceOrder(Order order, [FromServices] DaprClient dapr, [FromServices] ILogger<OrdersController> logger)
         {
@@ -49,7 +49,7 @@ namespace orders.Controllers
                 };
             }
 
-            await dapr.PublishEventAsync("orderprocessed", confirmation);
+            await dapr.PublishEventAsync("messagebus", "orderprocessed", confirmation);
 
             logger.LogInformation("Sent confirmation for order {OrderId}", order.OrderId);
 

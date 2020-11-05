@@ -46,7 +46,7 @@
 
             var task = Broker.GetOrderConfirmationAsync(orderId, cts.Token);
 
-            await Dapr.PublishEventAsync("orderplaced", new Order()
+            await Dapr.PublishEventAsync("messagebus", "orderplaced", new Order()
             {
                 ProductId = Product.Id,
                 OrderId = orderId,

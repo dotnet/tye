@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -63,9 +64,12 @@ namespace store
                 var broker = endpoints.ServiceProvider.GetRequiredService<OrdersEventBroker>();
                 endpoints.MapPost("/orderprocessed", async context =>
                 {
-                    var confirmation = await JsonSerializer.DeserializeAsync<OrderConfirmation>(context.Request.Body);
+                    var confirmation = await JsonSerializer.DeserializeAsync<OrderConfirmation>(context.Request.Body, new JsonSerializerOptions()
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
                     broker.Complete(confirmation);
-                }).WithTopic("orderprocessed");
+                }).WithTopic("messagebus", "orderprocessed");
             });
         }
     }
