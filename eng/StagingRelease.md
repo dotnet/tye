@@ -11,3 +11,8 @@
 - Update [getting started](/docs/getting_started.md) and other places in tutorial to just released version.
 - Update [Working with CI builds](docs/getting_started.md) with next version.
 - Update [Version.props](eng/Versions.props) to next version.
+
+## Tag release
+
+- `git tag release/<version>`
+- `git push --tags`
