@@ -13,12 +13,12 @@ A few things need to be configured before deploying to Kubernetes.
 
 - `Redis` can be deployed using the below command :
 
-    ```powershell
+    ```
     kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/master/docs/tutorials/hello-tye/redis.yaml
     ```
 - `Postgresql` can be installed by the following command :
 
-    ```powershell
+    ```
     kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/master/docs/tutorials/hello-tye/postgres.yaml
     ```
 
@@ -33,8 +33,8 @@ A few things need to be configured before deploying to Kubernetes.
   You can also use a package manger like `helm` to [create an ingress controller](https://docs.microsoft.com/en-us/azure/aks/ingress-basic#create-an-ingress-controller) to expose your application outside of your Kubernetes cluster. 
   
   And then you need to expose those services by using ingress yaml. 
-
-    ```powershell
+    
+    ```
     kubectl apply -f ingress.yml
     ```
 
