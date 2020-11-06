@@ -4,10 +4,10 @@
 
 `tye run` - Runs the application.
 
-## Synopsis 
+## Synopsis
 
 ```text
-tye run [-?|-h|--help] [--no-build] [--port <port>] [--dtrace] [--debug] [-f|--force] [-v|--verbosity <verbosity>] [<PATH>]
+tye run [-?|-h|--help] [--no-build] [--port <port>] [--dtrace] [--debug] [-f|--framework <framework>] [-v|--verbosity <Debug|Info|Quiet>] [<PATH>]
 ```
 
 ## Description
@@ -43,7 +43,7 @@ If a directory path is specified, `tye run` will default to using these files, i
 
     Write structured application logs to the specified log providers. Supported providers are console, elastic (Elasticsearch), ai (ApplicationInsights), seq.
 
-- `--dtrace <logs>`  
+- `--dtrace <logs>`
 
     Write distributed traces to the specified providers. Supported providers are zipkin.
 
@@ -51,20 +51,17 @@ If a directory path is specified, `tye run` will default to using these files, i
 
     Waits for debugger attach to service. Specify `*` to wait to attach to all services.
 
-- `--verbosity <verbosity>`
+- `-f|--framework <framework>`
 
-    Sets the output verbosity of the process.  
-    Possible values are 
-    
-    * `debug` - display all logs that the process outputs
-    * `info` - display only informational logs
-    * `quiet` - display only warnings and errors
+    The target framework hint to use for all cross-targeting projects with multiple TFMs. This value must be a valid target framework for each individual cross-targeting project. Non-crosstargeting projects will ignore this hint and the value TFM configured in tye.yaml will override this hint.
 
-    The default value is `info`
+- `-v|--verbosity <Debug|Info|Quiet>`
+
+    The verbosity of logs emitted by `tye run`. Defaults to Info.
 
 - `--watch`
 
-    Watches for file changes in all projects that are built by tye. Uses [`dotnet watch`](https://docs.microsoft.com/en-us/aspnet/core/tutorials/dotnet-watch?view=aspnetcore-3.1) to monitor for file changes. 
+    Watches for file changes in all projects that are built by tye. Uses [`dotnet watch`](https://docs.microsoft.com/en-us/aspnet/core/tutorials/dotnet-watch?view=aspnetcore-3.1) to monitor for file changes.
 
 ## Examples
 

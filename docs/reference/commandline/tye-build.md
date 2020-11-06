@@ -4,7 +4,7 @@
 
 `tye build` - Builds the application's containers.
 
-## Synopsis 
+## Synopsis
 
 ```text
 tye build [-?|-h|--help] [-v|--verbosity <Debug|Info|Quiet>] [<PATH>]
@@ -12,7 +12,7 @@ tye build [-?|-h|--help] [-v|--verbosity <Debug|Info|Quiet>] [<PATH>]
 
 ## Description
 
-The `tye build` command will build all of an application's project services into containers without deploying or pushing the containers remotely. 
+The `tye build` command will build all of an application's project services into containers without deploying or pushing the containers remotely.
 
 This command is useful for testing that all projects successfully build.
 
@@ -33,7 +33,6 @@ If a directory path is specified, `tye build` will default to using these files,
 - `-v|--verbosity <Debug|Info|Quiet>`
 
     The verbosity of logs emitted by `tye build`. Defaults to Info.
-
 
 ## Examples
 

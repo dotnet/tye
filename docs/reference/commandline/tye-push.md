@@ -4,10 +4,10 @@
 
 `tye push` - Builds the application's containers and pushes them to the container registry.
 
-## Synopsis 
+## Synopsis
 
 ```text
-tye push [-?|-h|--help] [-i|--interactive] [-v|--verbosity <Debug|Info|Quiet>] [<PATH>]
+tye push [-?|-h|--help] [-i|--interactive] [-v|--verbosity <Debug|Info|Quiet>] [--force] [<PATH>]
 ```
 
 ## Description
@@ -16,7 +16,7 @@ The `tye push` command will build all of an application's project services into 
 
 This command is useful if you want to use Tye to containerize .NET projects and manage deployment separately.
 
-> :warning: The `tye push` command requires access to a remote container registry. Images will be tagged using the registry configured in `tye.yaml` (if present), or using a registry supplied interactively at the command line. 
+> :warning: The `tye push` command requires access to a remote container registry. Images will be tagged using the registry configured in `tye.yaml` (if present), or using a registry supplied interactively at the command line.
 
 > :bulb: The `tye push` command uses Docker's credentials for pushing to the remote container registry. Make sure Docker is configured to push to your registry before running `tye push`.
 
@@ -41,6 +41,10 @@ If a directory path is specified, `tye push` will default to using these files, 
 - `-v|--verbosity <Debug|Info|Quiet>`
 
     The verbosity of logs emitted by `tye deploy`. Defaults to Info.
+
+- `--force`
+
+    Override validation and force push.
 
 ## Examples
 

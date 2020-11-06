@@ -4,10 +4,10 @@
 
 `tye deploy` - Deploys the application to Kubernetes.
 
-## Synopsis 
+## Synopsis
 
 ```text
-tye deploy [-?|-h|--help] [-i|--interactive] [-n|--namespace <n>] [-v|--verbosity <Debug|Info|Quiet>] [-f|--force] [<PATH>]
+tye deploy [-?|-h|--help] [-i|--interactive] [-n|--namespace <n>] [-v|--verbosity <Debug|Info|Quiet>] [--force] [-f|--framework <framework>] [<PATH>]
 ```
 
 ## Description
@@ -27,7 +27,7 @@ The `tye deploy` command will deploy an application to Kubernetes. `tye deploy` 
 
 > :bulb: Use `kubectl config view --minify --output 'jsonpath={..namespace}'` to view the current namespace.
 
-> :warning: The `tye deploy` command requires access to a remote container registry. Images will be tagged using the registry configured in `tye.yaml` (if present), or using a registry supplied interactively at the command line. 
+> :warning: The `tye deploy` command requires access to a remote container registry. Images will be tagged using the registry configured in `tye.yaml` (if present), or using a registry supplied interactively at the command line.
 
 > :bulb: The `tye deploy` command uses Docker's credentials for pushing to the remote container registry. Make sure Docker is configured to push to your registry before running `tye deploy`.
 
@@ -52,16 +52,20 @@ If a directory path is specified, `tye deploy` will default to using these files
     Does an interactive deployment that will accept input for values that are required by default.
 
 - `-n|--namespace`
-  
+
     Specifies the Kubernetes namespace for deployment. Overrides a namespace value set in `tye.yaml`.
 
 - `-v|--verbosity <Debug|Info|Quiet>`
 
     The verbosity of logs emitted by `tye deploy`. Defaults to Info.
 
-- `-f|--force`
+- `--force`
 
     Override validation and forces deployment.
+
+- `-f|--framework <framework>`
+
+    The target framework hint to use for all cross-targeting projects with multiple TFMs. This value must be a valid target framework for each individual cross-targeting project. Non-crosstargeting projects will ignore this hint and the value TFM configured in tye.yaml will override this hint.
 
 ## Examples
 
