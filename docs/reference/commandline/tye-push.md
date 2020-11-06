@@ -7,7 +7,7 @@
 ## Synopsis
 
 ```text
-tye push [-?|-h|--help] [-i|--interactive] [-v|--verbosity <Debug|Info|Quiet>] [--force] [<PATH>]
+tye push [-?|-h|--help] [-i|--interactive] [-v|--verbosity <Debug|Info|Quiet>] [--tags <tags>] [-f|--framework <framework>] [--force]  [<PATH>]
 ```
 
 ## Description
@@ -41,6 +41,14 @@ If a directory path is specified, `tye push` will default to using these files, 
 - `-v|--verbosity <Debug|Info|Quiet>`
 
     The verbosity of logs emitted by `tye deploy`. Defaults to Info.
+
+- `--tags <tags>`
+
+    Filter the group of running services by tag.
+
+- `-f|--framework <framework>`
+
+    The target framework hint to use for all cross-targeting projects with multiple TFMs. This value must be a valid target framework for each individual cross-targeting project. Non-crosstargeting projects will ignore this hint and the value TFM configured in tye.yaml will override this hint.
 
 - `--force`
 

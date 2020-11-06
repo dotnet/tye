@@ -7,7 +7,7 @@
 ## Synopsis
 
 ```text
-tye deploy [-?|-h|--help] [-i|--interactive] [-n|--namespace <n>] [-v|--verbosity <Debug|Info|Quiet>] [--force] [-f|--framework <framework>] [<PATH>]
+tye deploy [-?|-h|--help] [-i|--interactive] [-v|--verbosity <Debug|Info|Quiet>] [-n|--namespace <n>] [-f|--framework <framework>] [--tags <tags>] [--force] [<PATH>]
 ```
 
 ## Description
@@ -51,21 +51,25 @@ If a directory path is specified, `tye deploy` will default to using these files
 
     Does an interactive deployment that will accept input for values that are required by default.
 
-- `-n|--namespace`
-
-    Specifies the Kubernetes namespace for deployment. Overrides a namespace value set in `tye.yaml`.
-
 - `-v|--verbosity <Debug|Info|Quiet>`
 
     The verbosity of logs emitted by `tye deploy`. Defaults to Info.
 
-- `--force`
+- `-n|--namespace`
 
-    Override validation and forces deployment.
+    Specifies the Kubernetes namespace for deployment. Overrides a namespace value set in `tye.yaml`.
 
 - `-f|--framework <framework>`
 
     The target framework hint to use for all cross-targeting projects with multiple TFMs. This value must be a valid target framework for each individual cross-targeting project. Non-crosstargeting projects will ignore this hint and the value TFM configured in tye.yaml will override this hint.
+
+- `--tags <tags>`
+
+    Filter the group of running services by tag.
+
+- `--force`
+
+    Override validation and forces deployment.
 
 ## Examples
 
