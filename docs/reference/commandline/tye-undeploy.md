@@ -4,10 +4,10 @@
 
 `tye undeploy` - Removes a deployed application from Kubernetes.
 
-## Synopsis 
+## Synopsis
 
 ```text
-tye undeploy [-?|-h|--help] [-i|--interactive] [-n|--namespace <n>] [-v|--verbosity <Debug|Info|Quiet>] [--what-if] [<PATH>]
+tye undeploy [-?|-h|--help] [-n|--namespace <n>] [-i|--interactive] [-v|--verbosity <Debug|Info|Quiet>] [--tags <tags>] [--what-if] [<PATH>]
 ```
 
 ## Description
@@ -45,17 +45,21 @@ If a directory path is specified, `tye undeploy` will default to using these fil
 
 ## Options
 
+- `-n|--namespace`
+
+    Specifies the Kubernetes namespace for deployment. Overrides a namespace value set in `tye.yaml`.
+
 - `-i|--interactive`
 
     Does an interactive undeploy that will prompt for deletion of each resource.
 
-- `-n|--namespace`
-  
-    Specifies the Kubernetes namespace for deployment. Overrides a namespace value set in `tye.yaml`.
-
 - `-v|--verbosity <Debug|Info|Quiet>`
 
     The verbosity of logs emitted by `tye undeploy`. Defaults to Info.
+
+- `--tags <tags>`
+
+    Filter the group of running services by tag.
 
 - `--what-if`
 

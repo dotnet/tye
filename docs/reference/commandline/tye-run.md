@@ -4,10 +4,10 @@
 
 `tye run` - Runs the application.
 
-## Synopsis 
+## Synopsis
 
 ```text
-tye run [-?|-h|--help] [--no-build] [--port <port>] [--dtrace] [--debug] [-f|--force] [-v|--verbosity <verbosity>] [<PATH>]
+tye run [-?|-h|--help] [--no-build] [--port <port>] [--logs <logs>] [--dtrace <trace>] [--metrics <metrics>] [--debug <service>] [--docker] [--dashboard] [--watch] [-f|--framework <framework>] [--tags <tags>] [-v|--verbosity <Debug|Info|Quiet>] [<PATH>]
 ```
 
 ## Description
@@ -39,11 +39,11 @@ If a directory path is specified, `tye run` will default to using these files, i
 
     The port to run the dashboard on. Defaults to port 8000 if not specified.
 
-- `--logs`
+- `--logs <logs>`
 
     Write structured application logs to the specified log providers. Supported providers are console, elastic (Elasticsearch), ai (ApplicationInsights), seq.
 
-- `--dtrace <logs>`  
+- `--dtrace <trace>`
 
     Write distributed traces to the specified providers. Supported providers are zipkin.
 
@@ -51,20 +51,36 @@ If a directory path is specified, `tye run` will default to using these files, i
 
     Waits for debugger attach to service. Specify `*` to wait to attach to all services.
 
+- `--docker`
+
+    Run projects as docker containers.
+
+- `--dashboard`
+
+    Launch dashboard on run.
+
+- `--watch`
+
+    Watches for file changes in all projects that are built by tye. Uses [`dotnet watch`](https://docs.microsoft.com/en-us/aspnet/core/tutorials/dotnet-watch?view=aspnetcore-3.1) to monitor for file changes.
+
+- `-f|--framework <framework>`
+
+    The target framework hint to use for all cross-targeting projects with multiple TFMs. This value must be a valid target framework for each individual cross-targeting project. Non-crosstargeting projects will ignore this hint and the value TFM configured in tye.yaml will override this hint.
+
+- `--tags <tags>`
+
+    Filter the group of running services by tag.
+
 - `--verbosity <verbosity>`
 
-    Sets the output verbosity of the process.  
-    Possible values are 
-    
+    Sets the output verbosity of the process.
+    Possible values are
+
     * `debug` - display all logs that the process outputs
     * `info` - display only informational logs
     * `quiet` - display only warnings and errors
 
     The default value is `info`
-
-- `--watch`
-
-    Watches for file changes in all projects that are built by tye. Uses [`dotnet watch`](https://docs.microsoft.com/en-us/aspnet/core/tutorials/dotnet-watch?view=aspnetcore-3.1) to monitor for file changes. 
 
 ## Examples
 

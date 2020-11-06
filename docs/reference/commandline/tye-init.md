@@ -7,7 +7,7 @@
 ## Synopsis
 
 ```text
-tye init [-?|-h|--help] [-f|--force] [<PATH>]
+tye init [-?|-h|--help] [--force] [<PATH>]
 ```
 
 ## Description
@@ -35,7 +35,7 @@ The path to either a file or directory to run `tye init` on. Can either be a yam
 
 ## Options
 
-- `-f|--force`
+- `--force`
 
     If a `tye.yaml` file is already present, overwrites it with a newly scaffolded `tye.yaml`.
 
