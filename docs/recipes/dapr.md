@@ -93,6 +93,17 @@ extensions:
 - name: dapr
 ```
 
+:warning: If you're running Dapr in Windows you will need to make sure the Dapr placement container is exposed via port 50005.
+```yaml
+# To ensure that your are running a dapr placement container with the right binding port.
+# (50005 as HostPort)
+- name: placement
+  image: daprio/dapr
+  args: ./placement
+  bindings:
+    - port: 50005
+```
+
 ## Deploying the sample to Kubernetes
 
 **:warning: The current Dapr dotnet-sdk release has an issue where its default settings don't work when deployed with mTLS enabled. This will be resolved as part of the upcoming 0.6.0 release. For now you can work around this by disabling mTLS as part of Dapr installation.**
