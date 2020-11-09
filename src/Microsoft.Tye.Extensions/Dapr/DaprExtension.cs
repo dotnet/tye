@@ -45,18 +45,35 @@ namespace Microsoft.Tye.Extensions.Dapr
 
                     var daprExecutablePath = GetDaprExecutablePath();
 
+
                     var proxy = new ExecutableServiceBuilder($"{project.Name}-dapr", daprExecutablePath)
                     {
                         WorkingDirectory = context.Application.Source.DirectoryName,
 
                         // These environment variables are replaced with environment variables
                         // defined for this service.
-                        Args = $"-app-id {project.Name} -app-port %APP_PORT% -dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT% --placement-address localhost:50005",
+                        Args = $"-app-id {project.Name} -app-port %APP_PORT% -dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT%",
                     };
+
+                    if (config.Data.TryGetValue("placement-address", out var obj) && obj?.ToString() is string customPlacementAddressValue)
+                    {
+                        proxy.Args += $" --placement-address {customPlacementAddressValue}";
+                    }
+                    else
+                    {
+                        var placementAddress = "localhost:50005";
+                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                        {
+                            // Dapr running on WSL2 backend has placement container like 0.0.0.0:6050->50005/tcp 
+                            placementAddress = "localhost:6050";
+                        }
+
+                        proxy.Args += $" --placement-address {placementAddress}";
+                    }
 
                     // When running locally `-config` specifies a filename, not a configuration name. By convention
                     // we'll assume the filename and config name are the same.
-                    if (config.Data.TryGetValue("config", out var obj) && obj?.ToString() is string daprConfig)
+                    if (config.Data.TryGetValue("config", out obj) && obj?.ToString() is string daprConfig)
                     {
                         var configFile = Path.Combine(context.Application.Source.DirectoryName!, "components", $"{daprConfig}.yaml");
                         if (File.Exists(configFile))
