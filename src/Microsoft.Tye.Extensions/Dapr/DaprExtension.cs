@@ -62,11 +62,14 @@ namespace Microsoft.Tye.Extensions.Dapr
                     else
                     {
                         var placementAddress = "localhost:50005";
-                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                        {
-                            // Dapr running on WSL2 backend has placement container like 0.0.0.0:6050->50005/tcp 
-                            placementAddress = "localhost:6050";
-                        }
+
+                        // Note: This port inferring logic was causing the tests to fail. Keeping it here for now but will remove based on PR feedback.
+
+                        //if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                        //{
+                        //    // Dapr running on WSL2 backend has placement container like 0.0.0.0:6050->50005/tcp 
+                        //    placementAddress = "localhost:6050";
+                        //}
 
                         proxy.Args += $" --placement-address {placementAddress}";
                     }
