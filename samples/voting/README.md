@@ -11,6 +11,13 @@ A few things need to be configured before deploying to Kubernetes.
 
 - [Create an Azure container registry using the Azure portal](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-get-started-portal) or you can use your public [docker hub account](https://hub.docker.com/)
 
+- You can use managed service instances for both `redis` and `postgres` datastore. For e.g :
+
+    - `redis` : *Azure Cache for Redis*
+    - `postgres`: *Azure Database for PostgreSQL*
+
+    Or you can use the following steps to deploy the respective datastores in the Kubernetes cluster itself.
+
 - `Redis` can be deployed using the below command :
 
     ```
@@ -27,26 +34,26 @@ A few things need to be configured before deploying to Kubernetes.
     -  `redis:6379`
     -  `Server=postgres;Port=5432;User Id=postgres;Password=pass@word1;`
 
->! NOTE: If you want, you can modify the password in `postgres` yaml.
+    >! NOTE: You can modify the password in `postgres` yaml.
 
-- You need to install [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/) in your Kubernetes cluster. 
-  You can also use a package manger like `helm` to [create an ingress controller](https://docs.microsoft.com/en-us/azure/aks/ingress-basic#create-an-ingress-controller) to expose your application outside of your Kubernetes cluster. 
-  
-  And then you need to expose those services by using ingress yaml. 
-    
+- After that, run `tye deploy --interactive --namespace default` to do the deployment.
+
+    >! NOTE: Fill in the value of container registry and connection strings for both `redis` and `postgres` when it's prompted.
+
+- Once the deployment is complete you should be able to find the public IP address of the deployed application by using :
+
     ```
-    kubectl apply -f ingress.yml
+    kubectl get all -n ingress-nginx
     ```
 
-- After that, run `tye deploy --interactive --namespace default` to do all the deployment.
+    ![nginx ingress example](../../docs/recipes/images/nginx_ingress_action.png)
 
->! NOTE: Fill in the connection string for both `redis` and `postgres` when it's prompted.
+    Look for the `service/ingress-nginx-controller` with a type of `LoadBalancer`. The `EXTERNAL-IP` is the entry point for your application.
+    For e.g :
 
-Once the deployment is complete you should be able to browse the apps by the below Urls:
+    - vote : http://\<EXTERNAL-IP\>/vote
+    - result: http://\<EXTERNAL-IP\>/results
 
-- vote : http://\<Cluster Public IP Or DNS\>/vote
-- result: http://\<Cluster Public IP Or DNS\>/results
-
-
+    >! NOTE: Ingress controller may take a while to update the listed public IP address.
 
 
