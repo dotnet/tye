@@ -1,4 +1,5 @@
 # VotingSample
+
 Voting sample app inspired by https://github.com/dockersamples/example-voting-app with a few different implementation choices.
 
 ## For running
