@@ -35,9 +35,8 @@ namespace Microsoft.Tye
 
             queue.Enqueue((rootConfig, new HashSet<string>()));
 
-            while (queue.Count > 0)
+            while (queue.TryDequeue(out var item))
             {
-                var item = queue.Dequeue();
                 var config = item.Item1;
 
                 // dependencies represents a set of all dependencies
