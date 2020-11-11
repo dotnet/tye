@@ -119,7 +119,7 @@ namespace Microsoft.Tye.UnitTests
         [Fact]
         public void Should_apply_default_option_if_it_is_already_implicitly_applied()
         {
-            Environment.SetEnvironmentVariable("TYE_XXX_ARGS", "--default --implicit", EnvironmentVariableTarget.Process);
+            Environment.SetEnvironmentVariable("TYE_XXX_ARGS", "--default --implicit true", EnvironmentVariableTarget.Process);
 
             _parser.Invoke("xxx --original", _console);
 
