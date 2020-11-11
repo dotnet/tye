@@ -31,12 +31,12 @@ namespace Microsoft.Tye
                     binding.Protocol = "http";
                 }
 
-                if (binding.Port == null && binding.Protocol == "http")
+                if (binding.Port == null && binding.Protocol.Equals("http"))
                 {
                     binding.Port = 80;
                 }
 
-                if (binding.Protocol == "http")
+                if (binding.Protocol.Equals("http"))
                 {
                     var port = binding.ContainerPort ?? binding.Port ?? 80;
                     var urls = $"http://*{(port == 80 ? "" : (":" + port.ToString()))}";
@@ -88,7 +88,7 @@ namespace Microsoft.Tye
                             continue;
                         }
 
-                        if (binding.Protocol == "https")
+                        if (binding.Protocol.Equals("https"))
                         {
                             // We skip https for now in deployment, because the E2E requires certificates
                             // and we haven't done those features yet.
@@ -100,7 +100,7 @@ namespace Microsoft.Tye
                             binding.Protocol = "http";
                         }
 
-                        if (binding.Port == null && binding.Protocol == "http")
+                        if (binding.Port == null && binding.Protocol.Equals("http"))
                         {
                             binding.Port = 80;
                         }
