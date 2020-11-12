@@ -111,7 +111,6 @@ namespace Microsoft.Tye
         {
             get
             {
-
                 var argument = new Argument<FileInfo>(TryParse, isDefault: true)
                 {
                     Arity = ArgumentArity.ZeroOrOne,
