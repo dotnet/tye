@@ -30,7 +30,10 @@ namespace Microsoft.Tye
             var rootConfig = ConfigFactory.FromFile(source);
             rootConfig.Validate();
 
-            var root = new ApplicationBuilder(source, rootConfig.Name!) {Namespace = rootConfig.Namespace};
+            var root = new ApplicationBuilder(source, rootConfig.Name!)
+            {
+                Namespace = rootConfig.Namespace
+            };
 
             queue.Enqueue((rootConfig, new HashSet<string>()));
 
