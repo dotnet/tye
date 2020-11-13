@@ -95,10 +95,7 @@ namespace Microsoft.Tye
                             continue;
                         }
 
-                        if (binding.Protocol == null)
-                        {
-                            binding.Protocol = "http";
-                        }
+                        binding.Protocol ??= "http";
 
                         if (binding.Port == null && binding.Protocol == "http")
                         {
