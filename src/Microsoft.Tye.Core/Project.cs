@@ -10,12 +10,7 @@ namespace Microsoft.Tye
     {
         public Project(string relativeFilePath)
         {
-            if (relativeFilePath is null)
-            {
-                throw new ArgumentNullException(nameof(relativeFilePath));
-            }
-
-            RelativeFilePath = relativeFilePath;
+            RelativeFilePath = relativeFilePath ?? throw new ArgumentNullException(nameof(relativeFilePath));
         }
 
         public string RelativeFilePath { get; }
