@@ -39,7 +39,7 @@ namespace Microsoft.Tye
                 if (binding.Protocol == "http")
                 {
                     var port = binding.ContainerPort ?? binding.Port ?? 80;
-                    var urls = $"http://*{(port == 80 ? "" : (":" + port.ToString()))}";
+                    var urls = $"http://*{(port == 80 ? "" : (":" + port))}";
                     project.EnvironmentVariables.Add(new EnvironmentVariableBuilder("ASPNETCORE_URLS") { Value = urls, });
                     project.EnvironmentVariables.Add(new EnvironmentVariableBuilder("PORT") { Value = port.ToString(CultureInfo.InvariantCulture), });
                     break;
