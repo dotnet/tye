@@ -37,10 +37,9 @@ namespace Microsoft.Tye
 
             while (queue.TryDequeue(out var item))
             {
-                var config = item.Item1;
-
                 // dependencies represents a set of all dependencies
-                var dependencies = item.Item2;
+                var (config, dependencies) = item;
+                
                 if (!visited.Add(config.Source.FullName))
                 {
                     continue;
