@@ -62,15 +62,15 @@ namespace Microsoft.Tye.Hosting
 
                 // Inject a proxy per non-container service. This allows the container to use normal host names within the
                 // container network to talk to services on the host
-                var proxyContanier = new DockerRunInfo($"mcr.microsoft.com/dotnet/core/sdk:3.1", "dotnet Microsoft.Tye.Proxy.dll")
+                var proxyContainer = new DockerRunInfo($"mcr.microsoft.com/dotnet/core/sdk:3.1", "dotnet Microsoft.Tye.Proxy.dll")
                 {
                     WorkingDirectory = "/app",
                     NetworkAlias = service.Description.Name,
                     Private = true
                 };
                 var proxyLocation = Path.GetDirectoryName(typeof(Microsoft.Tye.Proxy.Program).Assembly.Location);
-                proxyContanier.VolumeMappings.Add(new DockerVolume(proxyLocation, name: null, target: "/app"));
-                var proxyDescription = new ServiceDescription($"{service.Description.Name}-proxy", proxyContanier);
+                proxyContainer.VolumeMappings.Add(new DockerVolume(proxyLocation, name: null, target: "/app"));
+                var proxyDescription = new ServiceDescription($"{service.Description.Name}-proxy", proxyContainer);
                 foreach (var binding in service.Description.Bindings)
                 {
                     if (binding.Port == null)
