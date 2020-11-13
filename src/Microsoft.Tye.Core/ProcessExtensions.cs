@@ -51,24 +51,24 @@ namespace Microsoft.Tye
                     timeout,
                     out var stdout);
 
-                if (!string.IsNullOrEmpty(stdout))
+                if (string.IsNullOrEmpty(stdout))
+                    return;
+
+                using var reader = new StringReader(stdout);
+                while (true)
                 {
-                    using var reader = new StringReader(stdout);
-                    while (true)
+                    var text = reader.ReadLine();
+                    if (text == null)
                     {
-                        var text = reader.ReadLine();
-                        if (text == null)
-                        {
-                            return;
-                        }
-
-                        if (!int.TryParse(text, out var id))
-                            continue;
-
-                        children.Add(id);
-                        // Recursively get the children
-                        GetAllChildIdsUnix(id, children, timeout);
+                        return;
                     }
+
+                    if (!int.TryParse(text, out var id))
+                        continue;
+
+                    children.Add(id);
+                    // Recursively get the children
+                    GetAllChildIdsUnix(id, children, timeout);
                 }
             }
             catch (Win32Exception ex) when (ex.Message.Contains("No such file or directory"))
