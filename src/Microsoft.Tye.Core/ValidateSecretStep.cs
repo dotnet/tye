@@ -41,9 +41,9 @@ namespace Microsoft.Tye
 
             foreach (var binding in bindings.Bindings)
             {
-                if (!(binding is SecretInputBinding secretInputBinding)) 
+                if (!(binding is SecretInputBinding secretInputBinding))
                     continue;
-                
+
                 if (!Secrets.Add(secretInputBinding.Name))
                 {
                     output.WriteDebugLine($"Already validated secret '{secretInputBinding.Name}'.");
