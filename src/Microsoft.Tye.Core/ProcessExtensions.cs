@@ -53,22 +53,20 @@ namespace Microsoft.Tye
 
                 if (!string.IsNullOrEmpty(stdout))
                 {
-                    using (var reader = new StringReader(stdout))
+                    using var reader = new StringReader(stdout);
+                    while (true)
                     {
-                        while (true)
+                        var text = reader.ReadLine();
+                        if (text == null)
                         {
-                            var text = reader.ReadLine();
-                            if (text == null)
-                            {
-                                return;
-                            }
+                            return;
+                        }
 
-                            if (int.TryParse(text, out var id))
-                            {
-                                children.Add(id);
-                                // Recursively get the children
-                                GetAllChildIdsUnix(id, children, timeout);
-                            }
+                        if (int.TryParse(text, out var id))
+                        {
+                            children.Add(id);
+                            // Recursively get the children
+                            GetAllChildIdsUnix(id, children, timeout);
                         }
                     }
                 }
