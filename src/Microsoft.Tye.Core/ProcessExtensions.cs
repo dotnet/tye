@@ -109,7 +109,7 @@ namespace Microsoft.Tye
             stdout = null;
             if (process?.WaitForExit((int)timeout.TotalMilliseconds) == true)
             {
-                stdout = process?.StandardOutput.ReadToEnd();
+                stdout = process.StandardOutput.ReadToEnd();
             }
             else
             {
