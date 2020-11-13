@@ -16,9 +16,9 @@ namespace Microsoft.Tye
         private static readonly bool _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         private static readonly TimeSpan _defaultTimeout = TimeSpan.FromSeconds(30);
 
-        public static void KillTree(this Process process) => process.KillTree(_defaultTimeout);
+        public static void KillTree(this System.Diagnostics.Process process) => process.KillTree(_defaultTimeout);
 
-        public static void KillTree(this Process process, TimeSpan timeout)
+        public static void KillTree(this System.Diagnostics.Process process, TimeSpan timeout)
         {
             var pid = process.Id;
             if (_isWindows)
