@@ -27,7 +27,7 @@ namespace Microsoft.Tye
                     "taskkill",
                     $"/T /F /PID {pid}",
                     timeout,
-                    out var _);
+                    out _);
             }
             else
             {
