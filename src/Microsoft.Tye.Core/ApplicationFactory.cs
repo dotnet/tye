@@ -41,7 +41,7 @@ namespace Microsoft.Tye
             {
                 // dependencies represents a set of all dependencies
                 var (config, dependencies) = item;
-                
+
                 if (!visited.Add(config.Source.FullName))
                 {
                     continue;
