@@ -62,12 +62,12 @@ namespace Microsoft.Tye
                             return;
                         }
 
-                        if (int.TryParse(text, out var id))
-                        {
-                            children.Add(id);
-                            // Recursively get the children
-                            GetAllChildIdsUnix(id, children, timeout);
-                        }
+                        if (!int.TryParse(text, out var id))
+                            continue;
+
+                        children.Add(id);
+                        // Recursively get the children
+                        GetAllChildIdsUnix(id, children, timeout);
                     }
                 }
             }
