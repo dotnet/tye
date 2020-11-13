@@ -23,12 +23,12 @@ namespace Microsoft.Tye
                     return true;
                 }
 
-                if (files.Length > 1)
-                {
-                    errorMessage = $"More than one matching file was found in directory '{directoryPath}'.";
-                    filePath = default;
-                    return false;
-                }
+                if (files.Length <= 1)
+                    continue;
+
+                errorMessage = $"More than one matching file was found in directory '{directoryPath}'.";
+                filePath = default;
+                return false;
             }
 
             errorMessage = $"No project project file or solution was found in directory '{directoryPath}'.";
