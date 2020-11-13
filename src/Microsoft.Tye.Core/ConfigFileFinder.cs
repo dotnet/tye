@@ -8,7 +8,7 @@ namespace Microsoft.Tye
 {
     public class ConfigFileFinder
     {
-        private static readonly string[] FileFormats = new[] { "tye.yaml", "tye.yml", "*.csproj", "*.fsproj", "*.sln" };
+        private static readonly string[] FileFormats = { "tye.yaml", "tye.yml", "*.csproj", "*.fsproj", "*.sln" };
 
         public static bool TryFindSupportedFile(string directoryPath, out string? filePath, out string? errorMessage)
         {
