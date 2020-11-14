@@ -20,6 +20,61 @@ namespace Microsoft.Tye.Extensions.Dapr
 
             if (context.Operation == ExtensionContext.OperationKind.LocalRun)
             {
+                // default placement port number
+                var placementPort = 50005;
+                var isCustomPlacementPort = false;
+
+                var existingDaprPlacementDefinition = context.Application.Services.FirstOrDefault(s =>
+                    s is ContainerServiceBuilder serviceBuilder && serviceBuilder.Image == "daprio/dapr");
+
+                // see if a placement port number has been defined at the extension level
+                if (config.Data.TryGetValue("placement-port", out var obj) && obj?.ToString() is string && int.TryParse(obj.ToString(), out var customPlacementPort))
+                {
+                    context.Output.WriteDebugLine($"Using Dapr placement service port {customPlacementPort} from 'placement-port'");
+                    placementPort = customPlacementPort;
+                    isCustomPlacementPort = true;
+                }
+
+                // check to see if a custom service definition for the placement container exists.
+                if (existingDaprPlacementDefinition == null)
+                {
+                    context.Output.WriteDebugLine("Dapr placement service not defined in Tye.yaml. Trying to create one...");
+
+                    if (!(config.Data.TryGetValue("exclude-placement-container", out obj) &&
+                          obj?.ToString() is string excludePlacementContainer && excludePlacementContainer == "true"))
+                    {
+                        context.Output.WriteDebugLine("Injecting Dapr placement service...");
+                        var daprPlacement = new ContainerServiceBuilder("placement", "daprio/dapr")
+                        {
+                            Args = "./placement",
+                            Bindings = {
+                                new BindingBuilder() {
+                                    Port = placementPort,
+                                    ContainerPort = 50005,
+                                    Protocol = "http"
+                                }
+                            }
+                        };
+                        context.Application.Services.Add(daprPlacement);
+                    }
+                    else
+                    {
+                        context.Output.WriteDebugLine("Skipping injecting Dapr placement service because 'exclude-placement-container=true'...");
+                    }
+                }
+                else
+                {
+                    // use the port defined in the custom service definition is possible
+                    var definedPlacementPort = existingDaprPlacementDefinition.Bindings.FirstOrDefault(b => b.Port.HasValue);
+                    if (definedPlacementPort?.Port != null && !isCustomPlacementPort)
+                    {
+                        context.Output.WriteDebugLine($"Using Dapr placement service port {definedPlacementPort.Port.Value} from service definition...");
+                        placementPort = definedPlacementPort.Port.Value;
+                    }
+
+                    context.Output.WriteDebugLine("Skipping injecting Dapr placement service because it's already defined in Tye.yaml...");
+                }
+
                 // For local run, enumerate all projects, and add services for each dapr proxy.
                 var projects = context.Application.Services.OfType<ProjectServiceBuilder>().ToList();
                 foreach (var project in projects)
@@ -45,34 +100,14 @@ namespace Microsoft.Tye.Extensions.Dapr
 
                     var daprExecutablePath = GetDaprExecutablePath();
 
-
                     var proxy = new ExecutableServiceBuilder($"{project.Name}-dapr", daprExecutablePath)
                     {
                         WorkingDirectory = context.Application.Source.DirectoryName,
 
                         // These environment variables are replaced with environment variables
                         // defined for this service.
-                        Args = $"-app-id {project.Name} -app-port %APP_PORT% -dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT%",
+                        Args = $"-app-id {project.Name} -app-port %APP_PORT% -dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT% --placement-address=localhost:{placementPort}",
                     };
-
-                    if (config.Data.TryGetValue("placement-address", out var obj) && obj?.ToString() is string customPlacementAddressValue)
-                    {
-                        proxy.Args += $" --placement-address {customPlacementAddressValue}";
-                    }
-                    else
-                    {
-                        var placementAddress = "localhost:50005";
-
-                        // Note: This port inferring logic was causing the tests to fail. Keeping it here for now but will remove based on PR feedback.
-
-                        //if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                        //{
-                        //    // Dapr running on WSL2 backend has placement container like 0.0.0.0:6050->50005/tcp 
-                        //    placementAddress = "localhost:6050";
-                        //}
-
-                        proxy.Args += $" --placement-address {placementAddress}";
-                    }
 
                     // When running locally `-config` specifies a filename, not a configuration name. By convention
                     // we'll assume the filename and config name are the same.
