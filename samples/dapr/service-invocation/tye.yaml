@@ -1,0 +1,50 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
+#
+name: distributedtyedemo
+extensions:
+- name: dapr
+
+  # log-level configures the log level of the dapr sidecar
+  log-level: debug
+
+  # config allows you to pass additional configuration into the dapr sidecar
+  # config will be interpreted as a named k8s resource when deployed, and will be interpreted as
+  # a file on disk when running locally at `./components/myconfig.yaml`
+  #
+  # config: myconfig
+
+  # components-path configures the components path of the dapr sidecard
+  # components-path: "./components/"
+
+  # if you don't want Tye to create the placement container on your behalf. This is required if you have Dapr running and want to use that container.
+  # Doing a `docker ps` can show if its already running. If that's not the case then comment out out when running locally. 
+  exclude-placement-container: true
+
+  # if you want to define the Dapr placement container port.
+  # You can use this in combinations with 'exclude-placement-container' to use an existing container instance managed by Dapr (i.e. In Windows, Dapr uses 6050 as the host port)
+  # or if the default port 50005 port is being used by something else
+  placement-port: 6050
+services:
+- name: uppercaseservice
+  project: UppercaseService/UppercaseService.csproj
+  # bindings:
+  # - protocol: https
+- name: lowercaseservice
+  project: LowercaseService/LowercaseService.csproj
+- name: titlecaseservice
+  project: TitlecaseService/TitlecaseService.csproj
+- name: sentenceapp
+  project: SentenceApp/SentenceApp.csproj
+
+# This may conflict with the redis instance that dapr manages.
+#
+# Doing a `docker ps` can show if its already running. If that's the case
+# then comment out out when running locally. 
+# - name: redis
+#   image: redis
+#   bindings: 
+#   - port: 6379
