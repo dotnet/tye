@@ -134,6 +134,7 @@ namespace Tye.DockerCompose
                     case "volumes":
                         break;
                     case "services":
+                        ParseServiceList((child.Value as YamlMappingNode)!, app);
                         break;
                     case "networks":
                         break;
@@ -147,7 +148,18 @@ namespace Tye.DockerCompose
             }
         }
 
-        private static void ParseService(YamlMappingNode node, ConfigApplication app)
+        private static void ParseServiceList(YamlMappingNode node, ConfigApplication app)
+        {
+            foreach (var child in node.Children)
+            {
+                var service = new ConfigService();
+                service.Name = YamlParser.GetScalarValue(child.Key);
+                ParseService((child.Value as YamlMappingNode)!, service);
+                app.Services.Add(service);
+            }
+        }
+
+        private static void ParseService(YamlMappingNode node, ConfigService service)
         {
             foreach (var child in node.Children)
             {
@@ -156,6 +168,7 @@ namespace Tye.DockerCompose
                 switch (key)
                 {
                     case "build":
+                        ParseBuild((child.Value as YamlMappingNode)!, service);
                         break;
                     case "cap_add":
                         break;
@@ -186,6 +199,7 @@ namespace Tye.DockerCompose
                     case "env_file":
                         break;
                     case "environment":
+                        ParseEnvironment(child.Value, service);
                         break;
                     case "expose":
                         break;
@@ -196,6 +210,7 @@ namespace Tye.DockerCompose
                     case "healthcheck":
                         break;
                     case "image":
+                        service.Image = YamlParser.GetScalarValue(child.Value);
                         break;
                     case "init":
                         break;
@@ -214,6 +229,7 @@ namespace Tye.DockerCompose
                     case "pid":
                         break;
                     case "ports":
+                        ParsePortSequence((child.Value as YamlSequenceNode)!, service);
                         break;
                     case "restart":
                         break;
@@ -260,6 +276,66 @@ namespace Tye.DockerCompose
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
+            }
+        }
+
+        private static void ParseEnvironment(YamlNode node, ConfigService service)
+        {
+            if (node is YamlSequenceNode sequenceNode)
+            {
+                foreach (var arg in sequenceNode)
+                {
+                    var configItem = new ConfigConfigurationSource();
+                    var argString = YamlParser.GetScalarValue(arg);
+                    if (argString.Contains('='))
+                    {
+                        var parts = argString.Split('=');
+                        configItem.Name = parts[0];
+                        configItem.Value = parts[1];
+                    }
+                    else
+                    {
+                        configItem.Name = argString;
+                    }
+                    service.Configuration.Add(configItem);
+                }
+            }
+            else
+            {
+                var mappingNode = (node as YamlMappingNode)!;
+                foreach (var arg in mappingNode)
+                {
+                    var configItem = new ConfigConfigurationSource();
+                    configItem.Name = YamlParser.GetScalarValue(arg.Key);
+                    configItem.Value = YamlParser.GetScalarValue(arg.Value);
+
+                    service.Configuration.Add(configItem);
+                }
+            }
+            
+        }
+
+        private static void ParsePortSequence(YamlSequenceNode portSequence, ConfigService service)
+        {
+            foreach (var port in portSequence)
+            {
+                var portString = YamlParser.GetScalarValue(port);
+                var binding = new ConfigServiceBinding();
+                if (portString.Contains(':'))
+                {
+                    var ports = portString.Split(':');
+                    binding.Port = int.Parse(ports[0]);
+                    binding.ContainerPort = int.Parse(ports[1]);
+                }
+                else
+                {
+                    binding.Port = int.Parse(portString);
+                    binding.ContainerPort = int.Parse(portString);
+                }
+
+                // TODO how to specify protocol with docker compose. Using http for now.
+                binding.Protocol = "http";
+                service.Bindings.Add(binding);
             }
         }
 
@@ -319,7 +395,7 @@ namespace Tye.DockerCompose
             }
         }
         // Build seems like it would just work, context would just point to the csproj if no dockerfile is present.
-        private static void ParseBuild(YamlMappingNode node, ConfigApplication app)
+        private static void ParseBuild(YamlMappingNode node, ConfigService service)
         {
             foreach (var child in node.Children)
             {
@@ -328,10 +404,15 @@ namespace Tye.DockerCompose
                 switch (key)
                 {
                     case "context":
+                        // Potentially find project or context based on that.
+                        var folder = YamlParser.GetScalarValue(child.Value);
+                        // check if folder has proj file, and use that.
                         break;
                     case "dockerfile":
+                        service.DockerFile = YamlParser.GetScalarValue(child.Value);
                         break;
                     case "args":
+                        //service.Configuration = ParseDockerBuildArgs((child.Value as YamlSequenceNode)!, service);
                         break;
                     case "cache_from":
                         break;
@@ -348,5 +429,10 @@ namespace Tye.DockerCompose
                 }
             }
         }
+
+        //private static List<ConfigConfigurationSource> ParseDockerBuildArgs(YamlSequenceNode node, ConfigService service)
+        //{
+
+        //}
     }
 }

@@ -22,7 +22,7 @@ namespace Microsoft.Tye.ConfigModel
             {
                 case ".yaml":
                 case ".yml":
-                    if (fileName.Equals("tye", StringComparison.OrdinalIgnoreCase))
+                    if (fileName.StartsWith("tye", StringComparison.OrdinalIgnoreCase))
                     {
                         return FromTyeYaml(file);
                     }
