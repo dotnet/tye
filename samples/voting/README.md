@@ -37,9 +37,11 @@ A few things need to be configured before deploying to Kubernetes.
 
     >! NOTE: You can modify the password in `postgres` yaml.
 
-- After that, run `tye deploy --interactive --namespace default` to do the deployment.
+- After that, run `tye deploy --interactive` to do the deployment.
 
-    >! NOTE: Fill in the value of container registry and connection strings for both `redis` and `postgres` when it's prompted.
+    >! NOTE: You may need to pass the `--namespace` parameter if your Kubernetes namespace is not set by default. You can check that by using the command `kubectl config get-contexts`
+    
+- Fill in the value of container registry and connection strings for both `redis` and `postgres` when it's prompted.
 
 - Once the deployment is complete you should be able to find the public IP address of the deployed application by using :
 
@@ -56,5 +58,3 @@ A few things need to be configured before deploying to Kubernetes.
     - result: http://\<EXTERNAL-IP\>/results
 
     >! NOTE: Ingress controller may take a while to update the listed public IP address.
-
-
