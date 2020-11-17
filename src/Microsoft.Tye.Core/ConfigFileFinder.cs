@@ -24,7 +24,9 @@ namespace Microsoft.Tye
                 }
 
                 if (files.Length <= 1)
+                {
                     continue;
+                }
 
                 errorMessage = $"More than one matching file was found in directory '{directoryPath}'.";
                 filePath = default;
