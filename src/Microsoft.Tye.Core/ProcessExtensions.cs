@@ -52,7 +52,9 @@ namespace Microsoft.Tye
                     out var stdout);
 
                 if (string.IsNullOrEmpty(stdout))
+                {
                     return;
+                }
 
                 using var reader = new StringReader(stdout);
                 while (true)
@@ -64,7 +66,9 @@ namespace Microsoft.Tye
                     }
 
                     if (!int.TryParse(text, out var id))
+                    {
                         continue;
+                    }
 
                     children.Add(id);
                     // Recursively get the children
