@@ -22,17 +22,19 @@ extensions:
 
   # if you don't want Tye to create the placement container on your behalf. This is required if you have Dapr running and want to use that container.
   # Doing a `docker ps` can show if its already running. If that's not the case then comment out out when running locally. 
-  exclude-placement-container: true
+  # exclude-placement-container: true
 
   # if you want to define the Dapr placement container port.
-  # You can use this in combinations with 'exclude-placement-container' to use an existing container instance managed by Dapr (i.e. In Windows, Dapr uses 6050 as the host port)
+  # You can use this in combinations with 'exclude-placement-container' to use an existing container instance managed by Dapr (i.e. In Windows + WSL2, Dapr uses 6050 as the host port)
   # or if the default port 50005 port is being used by something else
-  placement-port: 6050
+  # placement-port: 6050
 services:
+# uppercase service is a node app and is run via a dockerfile
 - name: uppercaseservice
-  project: UppercaseService/UppercaseService.csproj
-  # bindings:
-  # - protocol: https
+  dockerFile: UppercaseService/Dockerfile
+  bindings:
+  - protocol: http
+    containerPort: 80
 - name: lowercaseservice
   project: LowercaseService/LowercaseService.csproj
 - name: titlecaseservice

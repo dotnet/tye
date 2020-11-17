@@ -31,6 +31,14 @@ namespace SentenceApp
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
+            /*
+
+            Note: HttpClient setup is *only* required if you're using Tye to wire up your services.
+            It's not required when using Dapr extensions as they now follow the Dapr service invocation uri convention which the Dapr client uses.
+
+            services.AddHttpClient() is merely here because we have native Tye examples in each of the following service clients.
+            */
+
             services.AddHttpClient<UppercaseServiceClient>(client =>
                 {
                     client.BaseAddress = Configuration.GetServiceUri("UppercaseService");
