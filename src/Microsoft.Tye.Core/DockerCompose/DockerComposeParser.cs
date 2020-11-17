@@ -394,6 +394,9 @@ namespace Tye.DockerCompose
                 }
             }
         }
+
+        private static readonly string[] FileFormats = new[] { "*.csproj", "*.fsproj"};
+
         // Build seems like it would just work, context would just point to the csproj if no dockerfile is present.
         private static void ParseBuild(YamlMappingNode node, ConfigService service)
         {
@@ -405,7 +408,21 @@ namespace Tye.DockerCompose
                 {
                     case "context":
                         // Potentially find project or context based on that.
-                        var folder = YamlParser.GetScalarValue(child.Value);
+                        // could potentially specify a project here instead?
+                        var folder = new DirectoryInfo(YamlParser.GetScalarValue(child.Value));
+                        foreach (var format in FileFormats)
+                        {
+                            var projs = Directory.GetFiles(folder.FullName, format);
+                            if (projs.Length == 1)
+                            {
+                                service.Project = projs[0];
+                                break;
+                            }
+                            if (projs.Length > 1)
+                            {
+                                throw new TyeYamlException("Multiple proj files found in directory, have only a single proj file in the context directory.");
+                            }
+                        }
                         // check if folder has proj file, and use that.
                         break;
                     case "dockerfile":
