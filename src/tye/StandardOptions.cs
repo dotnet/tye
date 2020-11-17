@@ -111,7 +111,6 @@ namespace Microsoft.Tye
         {
             get
             {
-
                 var argument = new Argument<FileInfo>(TryParse, isDefault: true)
                 {
                     Arity = ArgumentArity.ZeroOrOne,
@@ -223,6 +222,19 @@ namespace Microsoft.Tye
                     Description = "Specify the namespace for the deployment",
                     Required = false,
                     Argument = new Argument<string>(),
+                };
+            }
+        }
+
+        public static Option NoDefaultOptions
+        {
+            get
+            {
+                return new Option(new[] { "--no-default" })
+                {
+                    Description = "Disable default options from environment variables",
+                    Required = false,
+                    Argument = new Argument<bool>(),
                 };
             }
         }

@@ -23,6 +23,7 @@ namespace Microsoft.Tye
             {
                 Description = "Developer tools and publishing for microservices.",
             };
+            command.AddGlobalOption(StandardOptions.NoDefaultOptions);
 
             command.AddCommand(CreateInitCommand());
             command.AddCommand(CreateGenerateCommand());
@@ -48,6 +49,8 @@ namespace Microsoft.Tye
 
             builder.CancelOnProcessTermination();
             builder.UseExceptionHandler(HandleException);
+
+            builder.UseMiddleware(DefaultOptionsMiddleware);
 
             var parser = builder.Build();
             return parser.InvokeAsync(args);
