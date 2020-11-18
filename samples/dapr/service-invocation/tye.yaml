@@ -8,6 +8,10 @@ name: distributedtyedemo
 extensions:
 - name: dapr
 
+  # If you want to use a different tag or container port
+  # placement-image: daprio/dapr
+  # placement-container-port: 50005
+
   # log-level configures the log level of the dapr sidecar
   log-level: debug
 
@@ -20,13 +24,11 @@ extensions:
   # components-path configures the components path of the dapr sidecard
   # components-path: "./components/"
 
-  # if you don't want Tye to create the placement container on your behalf. This is required if you have Dapr running and want to use that container.
-  # Doing a `docker ps` can show if its already running. If that's not the case then comment out out when running locally. 
-  # exclude-placement-container: true
+  # You can instruct Tye to not create the Dapr placement container on your behalf. This is required if you have Dapr running and want to use that container.
+  # Doing a `docker ps` can show if its already running. If it's running then you can set 'exclude-placement-container: true' with `placement-port: xxxx` set to the host port of that container.
+  # (i.e. In Windows + WSL2, Dapr uses 6050 as the host port)
 
-  # if you want to define the Dapr placement container port.
-  # You can use this in combinations with 'exclude-placement-container' to use an existing container instance managed by Dapr (i.e. In Windows + WSL2, Dapr uses 6050 as the host port)
-  # or if the default port 50005 port is being used by something else
+  # exclude-placement-container: true
   # placement-port: 6050
 services:
 # uppercase service is a node app and is run via a dockerfile
