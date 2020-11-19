@@ -164,9 +164,7 @@ namespace Microsoft.Tye
 
             public bool NoBuild { get; set; }
 
-            public FileInfo Path { 
-                get; 
-                set; } = default!;
+            public FileInfo Path { get; set; } = default!;
 
             public int? Port { get; set; }
 

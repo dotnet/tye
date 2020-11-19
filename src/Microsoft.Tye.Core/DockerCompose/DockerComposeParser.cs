@@ -312,7 +312,6 @@ namespace Tye.DockerCompose
                     service.Configuration.Add(configItem);
                 }
             }
-            
         }
 
         private static void ParsePortSequence(YamlSequenceNode portSequence, ConfigService service)
@@ -395,7 +394,7 @@ namespace Tye.DockerCompose
             }
         }
 
-        private static readonly string[] FileFormats = new[] { "*.csproj", "*.fsproj"};
+        private static readonly string[] FileFormats = new[] { "*.csproj", "*.fsproj" };
 
         // Build seems like it would just work, context would just point to the csproj if no dockerfile is present.
         private static void ParseBuild(YamlMappingNode node, ConfigService service)
