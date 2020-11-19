@@ -6,7 +6,7 @@ A: Three main ways:
 
 - Tye is optimized for .NET Core - we have built-in knowledge of how .NET projects work, which we use to power most experiences.
 - Tye's development features are oriented towards *local development* (avoid running in a container unless necessary).
-- Tye aims so solve problems along the whole spectrum of development to CI/CD based deployment.
+- Tye aims to solve problems along the whole spectrum of development to CI/CD based deployment.
 
 The development features of Tye are the most mature right now. We plan to add more recipes and capabilities for deployment in the coming months.
 
