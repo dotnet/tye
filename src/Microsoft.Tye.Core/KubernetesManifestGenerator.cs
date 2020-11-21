@@ -444,19 +444,21 @@ namespace Microsoft.Tye
                     }
                 }
 
-                if (project.RelocateDiagnosticsDomainSockets)
+                if (!project.RelocateDiagnosticsDomainSockets)
                 {
-                    // volumeMounts:
-                    // - name: shared-data
-                    //   mountPath: /usr/share/nginx/html
-                    var volumeMounts = new YamlSequenceNode();
-                    container.Add("volumeMounts", volumeMounts);
-
-                    var volumeMount = new YamlMappingNode();
-                    volumeMounts.Add(volumeMount);
-                    volumeMount.Add("name", "tye-diagnostics");
-                    volumeMount.Add("mountPath", "/var/tye/diagnostics");
+                    continue;
                 }
+
+                // volumeMounts:
+                // - name: shared-data
+                //   mountPath: /usr/share/nginx/html
+                var volumeMounts = new YamlSequenceNode();
+                container.Add("volumeMounts", volumeMounts);
+
+                var volumeMount = new YamlMappingNode();
+                volumeMounts.Add(volumeMount);
+                volumeMount.Add("name", "tye-diagnostics");
+                volumeMount.Add("mountPath", "/var/tye/diagnostics");
             }
 
             if (project.RelocateDiagnosticsDomainSockets)
