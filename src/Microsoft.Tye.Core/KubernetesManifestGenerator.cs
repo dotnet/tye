@@ -461,19 +461,20 @@ namespace Microsoft.Tye
                 volumeMount.Add("mountPath", "/var/tye/diagnostics");
             }
 
-            if (project.RelocateDiagnosticsDomainSockets)
+            if (!project.RelocateDiagnosticsDomainSockets)
             {
-                // volumes:
-                // - name: shared-data
-                //   emptyDir: {}
-                var volumes = new YamlSequenceNode();
-                spec.Add("volumes", volumes);
-
-                var volume = new YamlMappingNode();
-                volumes.Add(volume);
-                volume.Add("name", "tye-diagnostics");
-                volume.Add("emptyDir", new YamlMappingNode());
+                return new KubernetesDeploymentOutput(project.Name, new YamlDocument(root));
             }
+            // volumes:
+            // - name: shared-data
+            //   emptyDir: {}
+            var volumes = new YamlSequenceNode();
+            spec.Add("volumes", volumes);
+
+            var volume = new YamlMappingNode();
+            volumes.Add(volume);
+            volume.Add("name", "tye-diagnostics");
+            volume.Add("emptyDir", new YamlMappingNode());
 
             return new KubernetesDeploymentOutput(project.Name, new YamlDocument(root));
         }
