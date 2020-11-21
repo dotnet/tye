@@ -543,7 +543,7 @@ namespace Microsoft.Tye
         {
             foreach (var binding in bindings.Bindings.OfType<EnvironmentVariableInputBinding>())
             {
-                env.Add(new YamlMappingNode()
+                env.Add(new YamlMappingNode
                 {
                     { "name", binding.Name },
                     { "value", new YamlScalarNode(binding.Value) { Style = ScalarStyle.SingleQuoted, } },
