@@ -186,21 +186,23 @@ namespace Microsoft.Tye.Extensions.Dapr
                         continue;
                     }
 
-                    if (project.ManifestInfo?.Deployment is DeploymentManifestInfo deployment)
+                    if (!(project.ManifestInfo?.Deployment is { } deployment))
                     {
-                        deployment.Annotations.Add("dapr.io/enabled", "true");
-                        deployment.Annotations.Add("dapr.io/id", project.Name);
-                        deployment.Annotations.Add("dapr.io/port", (httpBinding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
+                        continue;
+                    }
 
-                        if (config.Data.TryGetValue("config", out var obj) && obj?.ToString() is string daprConfig)
-                        {
-                            deployment.Annotations.TryAdd("dapr.io/config", daprConfig);
-                        }
+                    deployment.Annotations.Add("dapr.io/enabled", "true");
+                    deployment.Annotations.Add("dapr.io/id", project.Name);
+                    deployment.Annotations.Add("dapr.io/port", (httpBinding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
 
-                        if (config.Data.TryGetValue("log-level", out obj) && obj?.ToString() is string logLevel)
-                        {
-                            deployment.Annotations.TryAdd("dapr.io/log-level", logLevel);
-                        }
+                    if (config.Data.TryGetValue("config", out var obj) && obj?.ToString() is string daprConfig)
+                    {
+                        deployment.Annotations.TryAdd("dapr.io/config", daprConfig);
+                    }
+
+                    if (config.Data.TryGetValue("log-level", out obj) && obj?.ToString() is string logLevel)
+                    {
+                        deployment.Annotations.TryAdd("dapr.io/log-level", logLevel);
                     }
                 }
             }
