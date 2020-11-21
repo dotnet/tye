@@ -47,17 +47,17 @@ namespace Microsoft.Tye.Extensions.Seq
                     seq.Volumes.Add(new VolumeBuilder(logPath, "seq-data", "/data"));
                 }
 
-                foreach (var s in context.Application.Services)
+                foreach (var serviceBuilder in context.Application.Services)
                 {
-                    if (object.ReferenceEquals(s, seq))
+                    if (ReferenceEquals(serviceBuilder, seq))
                     {
                         continue;
                     }
 
                     // make seq available as a dependency of everything.
-                    if (!s.Dependencies.Contains(seq.Name))
+                    if (!serviceBuilder.Dependencies.Contains(seq.Name))
                     {
-                        s.Dependencies.Add(seq.Name);
+                        serviceBuilder.Dependencies.Add(seq.Name);
                     }
                 }
             }
