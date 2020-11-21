@@ -35,17 +35,17 @@ namespace Microsoft.Tye.Extensions.Zipkin
                 };
                 context.Application.Services.Add(service);
 
-                foreach (var s in context.Application.Services)
+                foreach (var serviceBuilder in context.Application.Services)
                 {
-                    if (object.ReferenceEquals(s, service))
+                    if (ReferenceEquals(serviceBuilder, service))
                     {
                         continue;
                     }
 
                     // make zipkin available as a dependency of everything.
-                    if (!s.Dependencies.Contains(service.Name))
+                    if (!serviceBuilder.Dependencies.Contains(service.Name))
                     {
-                        s.Dependencies.Add(service.Name);
+                        serviceBuilder.Dependencies.Add(service.Name);
                     }
                 }
             }
