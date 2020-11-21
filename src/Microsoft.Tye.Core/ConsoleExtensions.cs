@@ -14,18 +14,20 @@ namespace System.CommandLine
         {
             get
             {
-                if (_isConsoleRedirectionCheckSupported == null)
+                if (_isConsoleRedirectionCheckSupported != null)
                 {
-                    try
-                    {
-                        var check = Console.IsOutputRedirected;
-                        _isConsoleRedirectionCheckSupported = true;
-                    }
+                    return _isConsoleRedirectionCheckSupported.Value;
+                }
 
-                    catch (PlatformNotSupportedException)
-                    {
-                        _isConsoleRedirectionCheckSupported = false;
-                    }
+                try
+                {
+                    var check = Console.IsOutputRedirected;
+                    _isConsoleRedirectionCheckSupported = true;
+                }
+
+                catch (PlatformNotSupportedException)
+                {
+                    _isConsoleRedirectionCheckSupported = false;
                 }
 
                 return _isConsoleRedirectionCheckSupported.Value;
