@@ -160,29 +160,30 @@ namespace Microsoft.Tye.Hosting
             };
 
             var replicateDictionary = new Dictionary<string, V1ReplicaStatus>();
-            foreach (var replica in service.Replicas)
+            foreach (var (name, replica) in service.Replicas)
             {
                 var replicaStatus = new V1ReplicaStatus()
                 {
-                    Name = replica.Value.Name,
-                    Ports = replica.Value.Ports,
-                    Environment = replica.Value.Environment,
-                    State = replica.Value.State
+                    Name = replica.Name,
+                    Ports = replica.Ports,
+                    Environment = replica.Environment,
+                    State = replica.State
                 };
 
-                replicateDictionary[replica.Key] = replicaStatus;
+                replicateDictionary[name] = replicaStatus;
 
-                if (replica.Value is ProcessStatus processStatus)
+                switch (replica)
                 {
-                    replicaStatus.Pid = processStatus.Pid;
-                    replicaStatus.ExitCode = processStatus.ExitCode;
-                }
-                else if (replica.Value is DockerStatus dockerStatus)
-                {
-                    replicaStatus.DockerCommand = dockerStatus.DockerCommand;
-                    replicaStatus.ContainerId = dockerStatus.ContainerId;
-                    replicaStatus.DockerNetwork = dockerStatus.DockerNetwork;
-                    replicaStatus.DockerNetworkAlias = dockerStatus.DockerNetworkAlias;
+                    case ProcessStatus processStatus:
+                        replicaStatus.Pid = processStatus.Pid;
+                        replicaStatus.ExitCode = processStatus.ExitCode;
+                        break;
+                    case DockerStatus dockerStatus:
+                        replicaStatus.DockerCommand = dockerStatus.DockerCommand;
+                        replicaStatus.ContainerId = dockerStatus.ContainerId;
+                        replicaStatus.DockerNetwork = dockerStatus.DockerNetwork;
+                        replicaStatus.DockerNetworkAlias = dockerStatus.DockerNetworkAlias;
+                        break;
                 }
             }
 
