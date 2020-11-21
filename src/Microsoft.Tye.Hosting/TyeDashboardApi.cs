@@ -116,7 +116,7 @@ namespace Microsoft.Tye.Hosting
                 v1ConfigurationSourceList.Add(new V1ConfigurationSource()
                 {
                     Name = name,
-                    Value = value 
+                    Value = value
                 });
             }
 
