@@ -214,17 +214,16 @@ namespace Microsoft.Tye.Hosting
             var name = (string?)context.Request.RouteValues["name"];
             context.Response.ContentType = "application/json";
 
-            if (string.IsNullOrEmpty(name) || !app.Services.TryGetValue(name, out var service))
+            if (!string.IsNullOrEmpty(name) && app.Services.TryGetValue(name, out var service))
             {
-                context.Response.StatusCode = 404;
-                return JsonSerializer.SerializeAsync(context.Response.Body, new
-                {
-                    message = $"Unknown service {name}"
-                },
-                _options);
+                return JsonSerializer.SerializeAsync(context.Response.Body, service.CachedLogs, _options);
             }
 
-            return JsonSerializer.SerializeAsync(context.Response.Body, service.CachedLogs, _options);
+            context.Response.StatusCode = 404;
+            return JsonSerializer.SerializeAsync(context.Response.Body, new
+            {
+                message = $"Unknown service {name}"
+            }, _options);
         }
 
         private Task AllMetrics(HttpContext context)
