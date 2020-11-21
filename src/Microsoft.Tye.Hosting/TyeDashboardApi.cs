@@ -111,12 +111,12 @@ namespace Microsoft.Tye.Hosting
             }).ToList();
 
             var v1ConfigurationSourceList = new List<V1ConfigurationSource>();
-            foreach (var configSource in description.Configuration)
+            foreach (var (name, value) in description.Configuration)
             {
                 v1ConfigurationSourceList.Add(new V1ConfigurationSource()
                 {
-                    Name = configSource.Name,
-                    Value = configSource.Value
+                    Name = name,
+                    Value = value 
                 });
             }
 
