@@ -10,12 +10,7 @@ namespace Microsoft.Tye
     {
         public ContainerRegistry(string hostname)
         {
-            if (hostname is null)
-            {
-                throw new ArgumentNullException(nameof(hostname));
-            }
-
-            Hostname = hostname;
+            Hostname = hostname ?? throw new ArgumentNullException(nameof(hostname));
         }
 
         public string Hostname { get; }
