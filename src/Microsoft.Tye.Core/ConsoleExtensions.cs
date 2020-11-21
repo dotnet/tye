@@ -41,14 +41,12 @@ namespace System.CommandLine
                 ((dynamic)console).ForegroundColor = color;
             }
 
-            if (IsConsoleRedirectionCheckSupported &&
-                !Console.IsOutputRedirected)
+            switch (IsConsoleRedirectionCheckSupported)
             {
-                Console.ForegroundColor = color;
-            }
-            else if (IsConsoleRedirectionCheckSupported)
-            {
-                Console.ForegroundColor = color;
+                case true when !Console.IsOutputRedirected:
+                case true:
+                    Console.ForegroundColor = color;
+                    break;
             }
         }
 
@@ -59,14 +57,12 @@ namespace System.CommandLine
                 ((dynamic)console).ForegroundColor = ConsoleColor.Red;
             }
 
-            if (IsConsoleRedirectionCheckSupported &&
-                !Console.IsOutputRedirected)
+            switch (IsConsoleRedirectionCheckSupported)
             {
-                Console.ResetColor();
-            }
-            else if (IsConsoleRedirectionCheckSupported)
-            {
-                Console.ResetColor();
+                case true when !Console.IsOutputRedirected:
+                case true:
+                    Console.ResetColor();
+                    break;
             }
         }
     }
