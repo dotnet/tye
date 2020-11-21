@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -62,24 +63,33 @@ namespace Microsoft.Tye.Extensions.Seq
                 }
             }
 
-            if (context.Operation == ExtensionContext.OperationKind.LocalRun)
+            switch (context.Operation)
             {
-                if (context.Options!.LoggingProvider is null)
-                {
-                    // For local development we hardcode the port and hostname
-                    context.Options.LoggingProvider = "seq=http://localhost:5341";
-                }
-            }
-            else if (context.Operation == ExtensionContext.OperationKind.Deploy)
-            {
-                foreach (var project in context.Application.Services.OfType<DotnetProjectServiceBuilder>())
-                {
-                    var sidecar = DiagnosticAgent.GetOrAddSidecar(project);
+                case ExtensionContext.OperationKind.LocalRun:
+                    {
+                        if (context.Options!.LoggingProvider is null)
+                        {
+                            // For local development we hardcode the port and hostname
+                            context.Options.LoggingProvider = "seq=http://localhost:5341";
+                        }
 
-                    // Use service discovery to find seq
-                    sidecar.Args.Add("--provider:seq=service:seq");
-                    sidecar.Dependencies.Add("seq");
-                }
+                        break;
+                    }
+                case ExtensionContext.OperationKind.Deploy:
+                    {
+                        foreach (var project in context.Application.Services.OfType<DotnetProjectServiceBuilder>())
+                        {
+                            var sidecar = DiagnosticAgent.GetOrAddSidecar(project);
+
+                            // Use service discovery to find seq
+                            sidecar.Args.Add("--provider:seq=service:seq");
+                            sidecar.Dependencies.Add("seq");
+                        }
+
+                        break;
+                    }
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             return Task.CompletedTask;
