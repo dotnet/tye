@@ -250,14 +250,11 @@ namespace Microsoft.Tye.Hosting
 
         private static bool IsPortInUseByBinding(Application application, int port)
         {
-            foreach (var service in application.Services)
+            foreach (var (_, service) in application.Services)
             {
-                foreach (var binding in service.Value.Description.Bindings)
+                if (service.Description.Bindings.Any(binding => binding.Port == port))
                 {
-                    if (binding.Port == port)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
 
