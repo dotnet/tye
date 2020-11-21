@@ -523,9 +523,11 @@ namespace Microsoft.Tye
 
                     foreach (var builderHeader in builderHttp.Headers)
                     {
-                        var header = new YamlMappingNode();
-                        header.Add("name", builderHeader.Key);
-                        header.Add("value", builderHeader.Value.ToString()!);
+                        var header = new YamlMappingNode
+                        {
+                            {"name", builderHeader.Key},
+                            {"value", builderHeader.Value.ToString()!}
+                        };
                         headers.Add(header);
                     }
                 }
