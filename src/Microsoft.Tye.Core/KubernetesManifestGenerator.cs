@@ -209,10 +209,11 @@ namespace Microsoft.Tye
         {
             var bindings = project.Outputs.OfType<ComputedBindings>().FirstOrDefault();
 
-            var root = new YamlMappingNode();
-
-            root.Add("kind", "Deployment");
-            root.Add("apiVersion", "apps/v1");
+            var root = new YamlMappingNode
+            {
+                {"kind", "Deployment"},
+                {"apiVersion", "apps/v1"}
+            };
 
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
