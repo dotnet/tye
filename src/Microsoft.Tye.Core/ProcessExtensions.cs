@@ -27,7 +27,7 @@ namespace Microsoft.Tye
                     "taskkill",
                     $"/T /F /PID {pid}",
                     timeout,
-                    out var _);
+                    out _);
             }
             else
             {
@@ -51,26 +51,28 @@ namespace Microsoft.Tye
                     timeout,
                     out var stdout);
 
-                if (!string.IsNullOrEmpty(stdout))
+                if (string.IsNullOrEmpty(stdout))
                 {
-                    using (var reader = new StringReader(stdout))
-                    {
-                        while (true)
-                        {
-                            var text = reader.ReadLine();
-                            if (text == null)
-                            {
-                                return;
-                            }
+                    return;
+                }
 
-                            if (int.TryParse(text, out var id))
-                            {
-                                children.Add(id);
-                                // Recursively get the children
-                                GetAllChildIdsUnix(id, children, timeout);
-                            }
-                        }
+                using var reader = new StringReader(stdout);
+                while (true)
+                {
+                    var text = reader.ReadLine();
+                    if (text == null)
+                    {
+                        return;
                     }
+
+                    if (!int.TryParse(text, out var id))
+                    {
+                        continue;
+                    }
+
+                    children.Add(id);
+                    // Recursively get the children
+                    GetAllChildIdsUnix(id, children, timeout);
                 }
             }
             catch (Win32Exception ex) when (ex.Message.Contains("No such file or directory"))
@@ -106,12 +108,12 @@ namespace Microsoft.Tye
                 UseShellExecute = false,
             };
 
-            var process = System.Diagnostics.Process.Start(startInfo);
+            var process = Process.Start(startInfo);
 
             stdout = null;
             if (process?.WaitForExit((int)timeout.TotalMilliseconds) == true)
             {
-                stdout = process?.StandardOutput.ReadToEnd();
+                stdout = process.StandardOutput.ReadToEnd();
             }
             else
             {

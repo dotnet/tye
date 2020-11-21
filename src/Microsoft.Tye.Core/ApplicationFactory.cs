@@ -30,18 +30,18 @@ namespace Microsoft.Tye
             var rootConfig = ConfigFactory.FromFile(source);
             rootConfig.Validate();
 
-            var root = new ApplicationBuilder(source, rootConfig.Name!);
-            root.Namespace = rootConfig.Namespace;
+            var root = new ApplicationBuilder(source, rootConfig.Name!)
+            {
+                Namespace = rootConfig.Namespace
+            };
 
             queue.Enqueue((rootConfig, new HashSet<string>()));
 
-            while (queue.Count > 0)
+            while (queue.TryDequeue(out var item))
             {
-                var item = queue.Dequeue();
-                var config = item.Item1;
-
                 // dependencies represents a set of all dependencies
-                var dependencies = item.Item2;
+                var (config, dependencies) = item;
+
                 if (!visited.Add(config.Source.FullName))
                 {
                     continue;
