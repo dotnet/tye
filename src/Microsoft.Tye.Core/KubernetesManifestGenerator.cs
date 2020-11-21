@@ -438,7 +438,7 @@ namespace Microsoft.Tye
                         });
                     }
 
-                    if (sidecarBindings is object)
+                    if (sidecarBindings != null)
                     {
                         AddEnvironmentVariablesForComputedBindings(env, sidecarBindings);
                     }
