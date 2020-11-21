@@ -16,16 +16,14 @@ namespace Microsoft.Tye
             {
                 var files = Directory.GetFiles(directoryPath, format);
 
-                if (files.Length == 1)
+                switch (files.Length)
                 {
-                    errorMessage = null;
-                    filePath = files[0];
-                    return true;
-                }
-
-                if (files.Length <= 1)
-                {
-                    continue;
+                    case 1:
+                        errorMessage = null;
+                        filePath = files[0];
+                        return true;
+                    case 0:
+                        continue;
                 }
 
                 errorMessage = $"More than one matching file was found in directory '{directoryPath}'.";
