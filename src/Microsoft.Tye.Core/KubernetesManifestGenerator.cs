@@ -46,6 +46,7 @@ namespace Microsoft.Tye
             {
                 return new KubernetesIngressOutput(ingress.Name, new YamlDocument(root));
             }
+
             var rules = new YamlSequenceNode();
             spec.Add("rules", rules);
 
