@@ -184,16 +184,18 @@ namespace Microsoft.Tye
                     continue;
                 }
 
-                if (binding.Port != null)
+                if (binding.Port == null)
                 {
-                    var port = new YamlMappingNode();
-                    ports.Add(port);
-
-                    port.Add("name", binding.Name ?? binding.Protocol ?? "http");
-                    port.Add("protocol", "TCP"); // we use assume TCP. YOLO
-                    port.Add("port", binding.Port.Value.ToString());
-                    port.Add("targetPort", (binding.ContainerPort ?? binding.Port.Value).ToString());
+                    continue;
                 }
+
+                var port = new YamlMappingNode();
+                ports.Add(port);
+
+                port.Add("name", binding.Name ?? binding.Protocol ?? "http");
+                port.Add("protocol", "TCP"); // we use assume TCP. YOLO
+                port.Add("port", binding.Port.Value.ToString());
+                port.Add("targetPort", (binding.ContainerPort ?? binding.Port.Value).ToString());
             }
 
             return new KubernetesServiceOutput(project.Name, new YamlDocument(root));
