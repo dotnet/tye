@@ -228,7 +228,7 @@ namespace Microsoft.Tye.Hosting
 
         private Task AllMetrics(HttpContext context)
         {
-            var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
+            var app = context.RequestServices.GetRequiredService<Application>();
 
             var sb = new StringBuilder();
             foreach (var (serviceName, service) in app.Services.OrderBy(s => s.Key))
