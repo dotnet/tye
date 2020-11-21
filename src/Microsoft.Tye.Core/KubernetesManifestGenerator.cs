@@ -479,10 +479,10 @@ namespace Microsoft.Tye
             return new KubernetesDeploymentOutput(project.Name, new YamlDocument(root));
         }
 
-        private static void AddProbe(ServiceBuilder service, YamlMappingNode container, ProbeBuilder builder, string name)
+        private static void AddProbe(ServiceBuilder service, YamlMappingNode container, ProbeBuilder builder, string probeName)
         {
             var probe = new YamlMappingNode();
-            container.Add(name, probe);
+            container.Add(probeName, probe);
 
             if (builder.Http != null)
             {
@@ -521,12 +521,12 @@ namespace Microsoft.Tye
                     var headers = new YamlSequenceNode();
                     httpGet.Add("httpHeaders", headers);
 
-                    foreach (var builderHeader in builderHttp.Headers)
+                    foreach (var (name, value) in builderHttp.Headers)
                     {
                         var header = new YamlMappingNode
                         {
-                            {"name", builderHeader.Key},
-                            {"value", builderHeader.Value.ToString()!}
+                            {"name", name},
+                            {"value", value.ToString()!}
                         };
                         headers.Add(header);
                     }
