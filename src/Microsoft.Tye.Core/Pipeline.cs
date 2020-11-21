@@ -38,9 +38,9 @@ namespace Microsoft.Tye
             foreach (var (type, delegates) in callbacks)
             {
                 var method = pipeline.GetType().GetMethod("Register")!.MakeGenericMethod(type);
-                for (var i = 0; i < delegates.Count; i++)
+                foreach (var @delegate in delegates)
                 {
-                    method.Invoke(pipeline, new[] { delegates[i], });
+                    method.Invoke(pipeline, new object?[] { @delegate });
                 }
             }
 
