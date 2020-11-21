@@ -369,8 +369,7 @@ namespace Microsoft.Tye.Hosting
             var providerText = new List<string>();
             providerText.AddRange(
                 new[] { options.DistributedTraceProvider, options.LoggingProvider, options.MetricsProvider }
-                .Where(p => p is object)
-                .Cast<string>()!);
+                    .Where(p => p != null)!);
 
             foreach (var text in providerText)
             {
