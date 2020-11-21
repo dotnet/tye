@@ -100,20 +100,15 @@ namespace Microsoft.Tye.Hosting
             var description = service.Description;
             var bindings = description.Bindings;
 
-            var v1bindingList = new List<V1ServiceBinding>();
-
-            foreach (var binding in bindings)
+            var v1BindingList = bindings.Select(binding => new V1ServiceBinding()
             {
-                v1bindingList.Add(new V1ServiceBinding()
-                {
-                    Name = binding.Name,
-                    ConnectionString = binding.ConnectionString,
-                    Port = binding.Port,
-                    ContainerPort = binding.ContainerPort,
-                    Host = binding.Host,
-                    Protocol = binding.Protocol
-                });
-            }
+                Name = binding.Name,
+                ConnectionString = binding.ConnectionString,
+                Port = binding.Port,
+                ContainerPort = binding.ContainerPort,
+                Host = binding.Host,
+                Protocol = binding.Protocol
+            }).ToList();
 
             var v1ConfigurationSourceList = new List<V1ConfigurationSource>();
             foreach (var configSource in description.Configuration)
@@ -157,7 +152,7 @@ namespace Microsoft.Tye.Hosting
 
             var v1ServiceDescription = new V1ServiceDescription()
             {
-                Bindings = v1bindingList,
+                Bindings = v1BindingList,
                 Configuration = v1ConfigurationSourceList,
                 Name = description.Name,
                 Replicas = description.Replicas,
