@@ -269,13 +269,13 @@ namespace Microsoft.Tye.Hosting
                 MetricSink = new MetricSink(logger),
             };
 
-            if (options.LoggingProvider is string &&
+            if (options.LoggingProvider != null &&
                 DiagnosticsProvider.TryParse(options.LoggingProvider, out var logging))
             {
                 diagnosticsCollector.LoggingSink = new LoggingSink(logger, logging);
             }
 
-            if (options.DistributedTraceProvider is string &&
+            if (options.DistributedTraceProvider != null &&
                 DiagnosticsProvider.TryParse(options.DistributedTraceProvider, out var tracing))
             {
                 diagnosticsCollector.TracingSink = new TracingSink(logger, tracing);
