@@ -236,15 +236,15 @@ namespace Microsoft.Tye.Hosting
                 sb.AppendLine($"# {serviceName}");
                 foreach (var (instance, replica) in service.Replicas)
                 {
-                    foreach (var metric in replica.Metrics)
+                    foreach (var (key, value) in replica.Metrics)
                     {
-                        sb.Append(metric.Key);
+                        sb.Append(key);
                         sb.Append("{");
                         sb.Append($"service=\"{serviceName}\",");
                         sb.Append($"instance=\"{instance}\"");
                         sb.Append("}");
                         sb.Append(" ");
-                        sb.Append(metric.Value);
+                        sb.Append(value);
                         sb.AppendLine();
                     }
                 }
@@ -273,16 +273,16 @@ namespace Microsoft.Tye.Hosting
                 _options);
             }
 
-            foreach (var replica in service.Replicas)
+            foreach (var (instance, replica) in service.Replicas)
             {
-                foreach (var metric in replica.Value.Metrics)
+                foreach (var (key, value) in replica.Metrics)
                 {
-                    sb.Append(metric.Key);
+                    sb.Append(key);
                     sb.Append("{");
-                    sb.Append($"instance=\"{replica.Key}\"");
+                    sb.Append($"instance=\"{instance}\"");
                     sb.Append("}");
                     sb.Append(" ");
-                    sb.Append(metric.Value);
+                    sb.Append(value);
                     sb.AppendLine();
                 }
             }
