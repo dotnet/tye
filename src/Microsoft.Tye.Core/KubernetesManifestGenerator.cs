@@ -42,71 +42,72 @@ namespace Microsoft.Tye
             var spec = new YamlMappingNode();
             root.Add("spec", spec);
 
-            if (ingress.Rules.Count > 0)
+            if (ingress.Rules.Count <= 0)
             {
-                var rules = new YamlSequenceNode();
-                spec.Add("rules", rules);
+                return new KubernetesIngressOutput(ingress.Name, new YamlDocument(root));
+            }
+            var rules = new YamlSequenceNode();
+            spec.Add("rules", rules);
 
-                // k8s ingress is grouped by host first, then grouped by path
-                foreach (var hostgroup in ingress.Rules.GroupBy(r => r.Host))
+            // k8s ingress is grouped by host first, then grouped by path
+            foreach (var hostgroup in ingress.Rules.GroupBy(r => r.Host))
+            {
+                var rule = new YamlMappingNode();
+                rules.Add(rule);
+
+                if (!string.IsNullOrEmpty(hostgroup.Key))
                 {
-                    var rule = new YamlMappingNode();
-                    rules.Add(rule);
+                    rule.Add("host", hostgroup.Key);
+                }
 
-                    if (!string.IsNullOrEmpty(hostgroup.Key))
+                var http = new YamlMappingNode();
+                rule.Add("http", http);
+
+                var paths = new YamlSequenceNode();
+                http.Add("paths", paths);
+
+                foreach (var ingressRule in hostgroup)
+                {
+                    var path = new YamlMappingNode();
+                    paths.Add(path);
+
+                    var backend = new YamlMappingNode();
+                    path.Add("backend", backend);
+                    backend.Add("serviceName", ingressRule.Service);
+
+                    var service = application.Services.FirstOrDefault(s => s.Name == ingressRule.Service);
+                    if (service is null)
                     {
-                        rule.Add("host", hostgroup.Key);
+                        throw new InvalidOperationException($"Could not resolve service '{ingressRule.Service}'.");
                     }
 
-                    var http = new YamlMappingNode();
-                    rule.Add("http", http);
-
-                    var paths = new YamlSequenceNode();
-                    http.Add("paths", paths);
-
-                    foreach (var ingressRule in hostgroup)
+                    var binding = service.Bindings.FirstOrDefault(b => b.Name is null || b.Name == "http");
+                    if (binding is null)
                     {
-                        var path = new YamlMappingNode();
-                        paths.Add(path);
+                        throw new InvalidOperationException($"Could not resolve an http binding for service '{service.Name}'.");
+                    }
 
-                        var backend = new YamlMappingNode();
-                        path.Add("backend", backend);
-                        backend.Add("serviceName", ingressRule.Service);
+                    backend.Add("servicePort", (binding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
 
-                        var service = application.Services.FirstOrDefault(s => s.Name == ingressRule.Service);
-                        if (service is null)
+                    // Tye implements path matching similar to this example:
+                    // https://kubernetes.github.io/ingress-nginx/examples/rewrite/
+                    //
+                    // Therefore our rewrite-target is set to $2 - we want to make sure we have
+                    // two capture groups.
+                    if (string.IsNullOrEmpty(ingressRule.Path) || ingressRule.Path == "/")
+                    {
+                        path.Add("path", "/()(.*)"); // () is an empty capture group.
+                    }
+                    else
+                    {
+                        if (ingressRule.PreservePath)
                         {
-                            throw new InvalidOperationException($"Could not resolve service '{ingressRule.Service}'.");
-                        }
-
-                        var binding = service.Bindings.FirstOrDefault(b => b.Name is null || b.Name == "http");
-                        if (binding is null)
-                        {
-                            throw new InvalidOperationException($"Could not resolve an http binding for service '{service.Name}'.");
-                        }
-
-                        backend.Add("servicePort", (binding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
-
-                        // Tye implements path matching similar to this example:
-                        // https://kubernetes.github.io/ingress-nginx/examples/rewrite/
-                        //
-                        // Therefore our rewrite-target is set to $2 - we want to make sure we have
-                        // two capture groups.
-                        if (string.IsNullOrEmpty(ingressRule.Path) || ingressRule.Path == "/")
-                        {
-                            path.Add("path", "/()(.*)"); // () is an empty capture group.
+                            path.Add("path", $"/()({ingressRule.Path.Trim('/')}.*)");
                         }
                         else
                         {
-                            if (ingressRule.PreservePath)
-                            {
-                                path.Add("path", $"/()({ingressRule.Path.Trim('/')}.*)");
-                            }
-                            else
-                            {
-                                var regex = $"{ingressRule.Path.TrimEnd('/')}(/|$)(.*)";
-                                path.Add("path", regex);
-                            }
+                            var regex = $"{ingressRule.Path.TrimEnd('/')}(/|$)(.*)";
+                            path.Add("path", regex);
                         }
                     }
                 }
