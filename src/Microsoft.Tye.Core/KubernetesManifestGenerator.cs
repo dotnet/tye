@@ -42,7 +42,7 @@ namespace Microsoft.Tye
             var spec = new YamlMappingNode();
             root.Add("spec", spec);
 
-            if (ingress.Rules.Count <= 0)
+            if (ingress.Rules.Count == 0)
             {
                 return new KubernetesIngressOutput(ingress.Name, new YamlDocument(root));
             }
