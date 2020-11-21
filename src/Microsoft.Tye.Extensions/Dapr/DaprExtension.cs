@@ -180,7 +180,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                 foreach (var project in projects)
                 {
                     // Dapr requires http. If this project isn't listening to HTTP then it's not daprized.
-                    var httpBinding = project.Bindings.Where(b => b.Protocol == "http").FirstOrDefault();
+                    var httpBinding = project.Bindings.FirstOrDefault(b => b.Protocol == "http");
                     if (httpBinding == null)
                     {
                         continue;
