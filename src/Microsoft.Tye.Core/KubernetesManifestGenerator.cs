@@ -348,7 +348,7 @@ namespace Microsoft.Tye
                         });
                     }
 
-                    if (bindings is object)
+                    if (bindings != null)
                     {
                         AddEnvironmentVariablesForComputedBindings(env, bindings);
                     }
