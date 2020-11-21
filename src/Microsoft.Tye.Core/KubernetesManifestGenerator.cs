@@ -558,16 +558,16 @@ namespace Microsoft.Tye
                 //      name: mysecret
                 //      key: username
 
-                if (binding is SecretConnectionStringInputBinding connectionStringBinding)
+                switch (binding)
                 {
-                    AddSecret(env, connectionStringBinding.KeyName, binding.Name, "connectionstring");
-
-                }
-                else if (binding is SecretUrlInputBinding urlBinding)
-                {
-                    AddSecret(env, $"{urlBinding.KeyNameBase}__PROTOCOL", binding.Name, "protocol");
-                    AddSecret(env, $"{urlBinding.KeyNameBase}__HOST", binding.Name, "host");
-                    AddSecret(env, $"{urlBinding.KeyNameBase}__PORT", binding.Name, "port");
+                    case SecretConnectionStringInputBinding connectionStringBinding:
+                        AddSecret(env, connectionStringBinding.KeyName, binding.Name, "connectionstring");
+                        break;
+                    case SecretUrlInputBinding urlBinding:
+                        AddSecret(env, $"{urlBinding.KeyNameBase}__PROTOCOL", binding.Name, "protocol");
+                        AddSecret(env, $"{urlBinding.KeyNameBase}__HOST", binding.Name, "host");
+                        AddSecret(env, $"{urlBinding.KeyNameBase}__PORT", binding.Name, "port");
+                        break;
                 }
             }
 
