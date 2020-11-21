@@ -66,16 +66,18 @@ namespace Microsoft.Tye
             var outputBuilder = new StringBuilder();
             process.OutputDataReceived += (_, e) =>
             {
-                if (e.Data != null)
+                if (e.Data == null)
                 {
-                    if (outputDataReceived != null)
-                    {
-                        outputDataReceived.Invoke(e.Data);
-                    }
-                    else
-                    {
-                        outputBuilder.AppendLine(e.Data);
-                    }
+                    return;
+                }
+
+                if (outputDataReceived != null)
+                {
+                    outputDataReceived.Invoke(e.Data);
+                }
+                else
+                {
+                    outputBuilder.AppendLine(e.Data);
                 }
             };
 
