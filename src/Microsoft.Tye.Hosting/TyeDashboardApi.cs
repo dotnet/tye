@@ -160,7 +160,7 @@ namespace Microsoft.Tye.Hosting
             };
 
             var replicateDictionary = new Dictionary<string, V1ReplicaStatus>();
-            foreach (var (name, replica) in service.Replicas)
+            foreach (var (instance, replica) in service.Replicas)
             {
                 var replicaStatus = new V1ReplicaStatus()
                 {
@@ -170,7 +170,7 @@ namespace Microsoft.Tye.Hosting
                     State = replica.State
                 };
 
-                replicateDictionary[name] = replicaStatus;
+                replicateDictionary[instance] = replicaStatus;
 
                 switch (replica)
                 {
@@ -231,17 +231,17 @@ namespace Microsoft.Tye.Hosting
             var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
 
             var sb = new StringBuilder();
-            foreach (var s in app.Services.OrderBy(s => s.Key))
+            foreach (var (serviceName, service) in app.Services.OrderBy(s => s.Key))
             {
-                sb.AppendLine($"# {s.Key}");
-                foreach (var replica in s.Value.Replicas)
+                sb.AppendLine($"# {serviceName}");
+                foreach (var (instance, replica) in service.Replicas)
                 {
-                    foreach (var metric in replica.Value.Metrics)
+                    foreach (var metric in replica.Metrics)
                     {
                         sb.Append(metric.Key);
                         sb.Append("{");
-                        sb.Append($"service=\"{s.Key}\",");
-                        sb.Append($"instance=\"{replica.Key}\"");
+                        sb.Append($"service=\"{serviceName}\",");
+                        sb.Append($"instance=\"{instance}\"");
                         sb.Append("}");
                         sb.Append(" ");
                         sb.Append(metric.Value);
