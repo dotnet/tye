@@ -382,12 +382,14 @@ namespace Microsoft.Tye
                             continue;
                         }
 
-                        if (binding.Port != null)
+                        if (binding.Port == null)
                         {
-                            var containerPort = new YamlMappingNode();
-                            ports.Add(containerPort);
-                            containerPort.Add("containerPort", (binding.ContainerPort ?? binding.Port.Value).ToString());
+                            continue;
                         }
+
+                        var containerPort = new YamlMappingNode();
+                        ports.Add(containerPort);
+                        containerPort.Add("containerPort", (binding.ContainerPort ?? binding.Port.Value).ToString());
                     }
                 }
 
