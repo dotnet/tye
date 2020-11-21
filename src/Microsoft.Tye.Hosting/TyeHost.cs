@@ -216,22 +216,21 @@ namespace Microsoft.Tye.Hosting
                 // Port was passed in at the command-line, use it!
                 return int.Parse(port, NumberStyles.Number, CultureInfo.InvariantCulture);
             }
-            else if (IsPortInUseByBinding(_application, DefaultPort))
+
+            if (IsPortInUseByBinding(_application, DefaultPort))
             {
                 // Port has been reserved for the app.
                 app.Logger.LogInformation("Default dashboard port {DefaultPort} has been reserved by the application, choosing random port.", DefaultPort);
                 return AutodetectPort;
             }
-            else if (IsPortAlreadyInUse(DefaultPort))
-            {
-                // Port is in use by something already running.
-                app.Logger.LogInformation("Default dashboard port {DefaultPort} is in use, choosing random port.", DefaultPort);
-                return AutodetectPort;
-            }
-            else
+
+            if (!IsPortAlreadyInUse(DefaultPort))
             {
                 return DefaultPort;
             }
+            // Port is in use by something already running.
+            app.Logger.LogInformation("Default dashboard port {DefaultPort} is in use, choosing random port.", DefaultPort);
+            return AutodetectPort;
         }
 
         private static bool IsPortAlreadyInUse(int port)
