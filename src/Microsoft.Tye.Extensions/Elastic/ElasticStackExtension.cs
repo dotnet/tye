@@ -52,17 +52,17 @@ namespace Microsoft.Tye.Extensions.Elastic
                     elastic.Volumes.Add(new VolumeBuilder(logPath, "elk-data", "/var/lib/elasticsearch"));
                 }
 
-                foreach (var s in context.Application.Services)
+                foreach (var serviceBuilder in context.Application.Services)
                 {
-                    if (object.ReferenceEquals(s, elastic))
+                    if (ReferenceEquals(serviceBuilder, elastic))
                     {
                         continue;
                     }
 
                     // make elastic available as a dependency of everything.
-                    if (!s.Dependencies.Contains(elastic.Name))
+                    if (!serviceBuilder.Dependencies.Contains(elastic.Name))
                     {
-                        s.Dependencies.Add(elastic.Name);
+                        serviceBuilder.Dependencies.Add(elastic.Name);
                     }
                 }
             }
