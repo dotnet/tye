@@ -84,16 +84,18 @@ namespace Microsoft.Tye
             var errorBuilder = new StringBuilder();
             process.ErrorDataReceived += (_, e) =>
             {
-                if (e.Data != null)
+                if (e.Data == null)
                 {
-                    if (errorDataReceived != null)
-                    {
-                        errorDataReceived.Invoke(e.Data);
-                    }
-                    else
-                    {
-                        errorBuilder.AppendLine(e.Data);
-                    }
+                    return;
+                }
+
+                if (errorDataReceived != null)
+                {
+                    errorDataReceived.Invoke(e.Data);
+                }
+                else
+                {
+                    errorBuilder.AppendLine(e.Data);
                 }
             };
 
