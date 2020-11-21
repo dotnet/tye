@@ -121,33 +121,33 @@ namespace Microsoft.Tye.Hosting
             }
 
             var v1RunInfo = new V1RunInfo();
-            if (description.RunInfo is DockerRunInfo dockerRunInfo)
+            switch (description.RunInfo)
             {
-                v1RunInfo.Type = V1RunInfoType.Docker;
-                v1RunInfo.Image = dockerRunInfo.Image;
-                v1RunInfo.VolumeMappings = dockerRunInfo.VolumeMappings.Select(v => new V1DockerVolume
-                {
-                    Name = v.Name,
-                    Source = v.Source,
-                    Target = v.Target
-                }).ToList();
+                case DockerRunInfo dockerRunInfo:
+                    v1RunInfo.Type = V1RunInfoType.Docker;
+                    v1RunInfo.Image = dockerRunInfo.Image;
+                    v1RunInfo.VolumeMappings = dockerRunInfo.VolumeMappings.Select(v => new V1DockerVolume
+                    {
+                        Name = v.Name,
+                        Source = v.Source,
+                        Target = v.Target
+                    }).ToList();
 
-                v1RunInfo.WorkingDirectory = dockerRunInfo.WorkingDirectory;
-                v1RunInfo.Args = dockerRunInfo.Args;
-            }
-            else if (description.RunInfo is ExecutableRunInfo executableRunInfo)
-            {
-                v1RunInfo.Type = V1RunInfoType.Executable;
-                v1RunInfo.Args = executableRunInfo.Args;
-                v1RunInfo.Executable = executableRunInfo.Executable;
-                v1RunInfo.WorkingDirectory = executableRunInfo.WorkingDirectory;
-            }
-            else if (description.RunInfo is ProjectRunInfo projectRunInfo)
-            {
-                v1RunInfo.Type = V1RunInfoType.Project;
-                v1RunInfo.Args = projectRunInfo.Args;
-                v1RunInfo.Build = projectRunInfo.Build;
-                v1RunInfo.Project = projectRunInfo.ProjectFile.FullName;
+                    v1RunInfo.WorkingDirectory = dockerRunInfo.WorkingDirectory;
+                    v1RunInfo.Args = dockerRunInfo.Args;
+                    break;
+                case ExecutableRunInfo executableRunInfo:
+                    v1RunInfo.Type = V1RunInfoType.Executable;
+                    v1RunInfo.Args = executableRunInfo.Args;
+                    v1RunInfo.Executable = executableRunInfo.Executable;
+                    v1RunInfo.WorkingDirectory = executableRunInfo.WorkingDirectory;
+                    break;
+                case ProjectRunInfo projectRunInfo:
+                    v1RunInfo.Type = V1RunInfoType.Project;
+                    v1RunInfo.Args = projectRunInfo.Args;
+                    v1RunInfo.Build = projectRunInfo.Build;
+                    v1RunInfo.Project = projectRunInfo.ProjectFile.FullName;
+                    break;
             }
 
             var v1ServiceDescription = new V1ServiceDescription()
