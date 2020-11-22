@@ -37,9 +37,7 @@ A few things need to be configured before deploying to Kubernetes.
 
     >! NOTE: You can modify the password in `postgres` yaml.
 
-- After that, run `tye deploy --interactive` to do the deployment.
-
-    >! NOTE: You may need to pass the `--namespace` parameter if your Kubernetes namespace is not set by default. You can check that by using the command `kubectl config get-contexts`
+- After that, run `tye deploy --interactive` to do the deployment.   
     
 - Fill in the value of container registry and connection strings for both `redis` and `postgres` when it's prompted.
 
