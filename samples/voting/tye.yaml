@@ -4,9 +4,9 @@ ingress:
     bindings:
       - port: 8080
     rules:
-      - path: /vote(/|$)(.*)
+      - path: /vote
         service: vote
-      - path: /results(/|$)(.*)
+      - path: /results
         service: results      
 services:
 - name: vote
