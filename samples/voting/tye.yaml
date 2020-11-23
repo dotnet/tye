@@ -1,4 +1,13 @@
 name: VotingSample
+ingress:
+  - name: ingress
+    bindings:
+      - port: 8080
+    rules:
+      - path: /vote
+        service: vote
+      - path: /results
+        service: results      
 services:
 - name: vote
   project: vote/vote.csproj
