@@ -87,6 +87,10 @@ namespace Microsoft.Tye
                     projects: projectServices,
                     configRoot: config.Source.DirectoryName!,
                     output: output);
+                if (msbuildEvaluationResult.ExitCode != 0)
+                {
+                    throw new CommandException($"Unable to parse output.\r\n{msbuildEvaluationResult.StandardOutput}.\r\n Try buildMSBuild error.");
+                }
                 var msbuildEvaluationOutput = msbuildEvaluationResult
                     .StandardOutput
                     .Split(Environment.NewLine);
