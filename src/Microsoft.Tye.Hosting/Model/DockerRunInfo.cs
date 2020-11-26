@@ -15,7 +15,7 @@ namespace Microsoft.Tye.Hosting.Model
             Image = image;
             Args = args;
         }
-
+        public bool IsProxy { get; set; }
         public bool Private { get; set; }
         public bool IsAspNet { get; set; }
 
