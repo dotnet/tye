@@ -380,7 +380,7 @@ services:
                 throw new Exception("Failed to relaunch project with dotnet watch");
             });
         }
-        
+
         [Fact]
         public async Task WebAppWatchRunTest()
         {
