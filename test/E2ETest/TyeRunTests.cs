@@ -380,6 +380,54 @@ services:
                 throw new Exception("Failed to relaunch project with dotnet watch");
             });
         }
+        
+        [Fact]
+        public async Task WebAppWatchRunTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("web-app");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions() { Watch = true }, async (app, uri) =>
+            {
+                // make sure app is running
+                var appUri = await GetServiceUrl(client, uri, "web-app");
+
+                var response = await client.GetAsync(appUri);
+
+                Assert.True(response.IsSuccessStatusCode);
+
+                var startupPath = Path.Combine(projectDirectory.DirectoryPath, "Pages", "index.cshtml");
+                File.AppendAllText(startupPath, "\n");
+
+                const int retries = 10;
+                for (var i = 0; i < retries; i++)
+                {
+
+                    var logs = await client.GetStringAsync(new Uri(uri, $"/api/v1/logs/web-app"));
+
+                    // "Application Started" should be logged twice due to the file change
+                    if (logs.IndexOf("Application started") != logs.LastIndexOf("Application started"))
+                    {
+                        return;
+                    }
+
+                    await Task.Delay(5000);
+                }
+
+                throw new Exception("Failed to relaunch project with dotnet watch");
+            });
+        }
 
         [Fact]
         public async Task DockerBaseImageAndTagTest()
