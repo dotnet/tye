@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -52,45 +53,54 @@ namespace Microsoft.Tye.Extensions.Elastic
                     elastic.Volumes.Add(new VolumeBuilder(logPath, "elk-data", "/var/lib/elasticsearch"));
                 }
 
-                foreach (var s in context.Application.Services)
+                foreach (var serviceBuilder in context.Application.Services)
                 {
-                    if (object.ReferenceEquals(s, elastic))
+                    if (ReferenceEquals(serviceBuilder, elastic))
                     {
                         continue;
                     }
 
                     // make elastic available as a dependency of everything.
-                    if (!s.Dependencies.Contains(elastic.Name))
+                    if (!serviceBuilder.Dependencies.Contains(elastic.Name))
                     {
-                        s.Dependencies.Add(elastic.Name);
+                        serviceBuilder.Dependencies.Add(elastic.Name);
                     }
                 }
             }
 
-            if (context.Operation == ExtensionContext.OperationKind.LocalRun)
+            switch (context.Operation)
             {
-                if (context.Options!.LoggingProvider is null)
-                {
-                    // For local development we hardcode the port and hostname
-                    context.Options.LoggingProvider = "elastic=http://localhost:9200";
-                }
-            }
-            else if (context.Operation == ExtensionContext.OperationKind.Deploy)
-            {
-                // For deployments, remove the kibana binding. We don't need to talk to it,
-                // so don't make the user specify it.
-                var elastic = context.Application.Services.Single(s => s.Name == "elastic");
-                var kibana = elastic.Bindings.Single(b => b.Name == "kibana");
-                elastic.Bindings.Remove(kibana);
+                case ExtensionContext.OperationKind.LocalRun:
+                    {
+                        if (context.Options!.LoggingProvider is null)
+                        {
+                            // For local development we hardcode the port and hostname
+                            context.Options.LoggingProvider = "elastic=http://localhost:9200";
+                        }
 
-                foreach (var project in context.Application.Services.OfType<DotnetProjectServiceBuilder>())
-                {
-                    var sidecar = DiagnosticAgent.GetOrAddSidecar(project);
+                        break;
+                    }
+                case ExtensionContext.OperationKind.Deploy:
+                    {
+                        // For deployments, remove the kibana binding. We don't need to talk to it,
+                        // so don't make the user specify it.
+                        var elastic = context.Application.Services.Single(s => s.Name == "elastic");
+                        var kibana = elastic.Bindings.Single(b => b.Name == "kibana");
+                        elastic.Bindings.Remove(kibana);
 
-                    // Use service discovery to find elastic
-                    sidecar.Args.Add("--provider:elastic=service:elastic");
-                    sidecar.Dependencies.Add("elastic");
-                }
+                        foreach (var project in context.Application.Services.OfType<DotnetProjectServiceBuilder>())
+                        {
+                            var sidecar = DiagnosticAgent.GetOrAddSidecar(project);
+
+                            // Use service discovery to find elastic
+                            sidecar.Args.Add("--provider:elastic=service:elastic");
+                            sidecar.Dependencies.Add("elastic");
+                        }
+
+                        break;
+                    }
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             return Task.CompletedTask;
