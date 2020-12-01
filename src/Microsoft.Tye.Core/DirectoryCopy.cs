@@ -15,7 +15,11 @@ namespace Microsoft.Tye
 
         private static void CopyCore(DirectoryInfo source, DirectoryInfo destination)
         {
-            Directory.CreateDirectory(destination.FullName);
+            if (!source.Exists)
+            {
+                throw new DirectoryNotFoundException(source.FullName);
+            }
+            destination.Create();
 
             foreach (var file in source.GetFiles())
             {
