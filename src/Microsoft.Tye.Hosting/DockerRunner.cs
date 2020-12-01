@@ -295,7 +295,7 @@ namespace Microsoft.Tye.Hosting
                 }
 
                 var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {dockerImage} {docker.Args ?? ""}";
-                
+
                 if (!docker.IsProxy)
                 {
                     _logger.LogInformation("Running image {Image} for {Replica}", docker.Image, replica);
@@ -304,7 +304,7 @@ namespace Microsoft.Tye.Hosting
                 {
                     _logger.LogDebug("Running proxy image {Image} for {Replica}", docker.Image, replica);
                 }
-                
+
                 service.Logs.OnNext($"[{replica}]: docker {command}");
 
                 status.DockerCommand = command;
