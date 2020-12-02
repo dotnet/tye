@@ -134,19 +134,21 @@ namespace Microsoft.AspNetCore.Routing.Matching
                     return new EdgeKey(hostParts[0], null);
                 }
             }
-            if (hostParts.Length == 2)
+
+            if (hostParts.Length != 2) 
+                throw new InvalidOperationException($"Could not parse host: {host}");
+            
+            if (string.IsNullOrEmpty(hostParts[0]))
+                throw new InvalidOperationException($"Could not parse host: {host}");
+                
+            if (int.TryParse(hostParts[1], out var port))
             {
-                if (!string.IsNullOrEmpty(hostParts[0]))
-                {
-                    if (int.TryParse(hostParts[1], out var port))
-                    {
-                        return new EdgeKey(hostParts[0], port);
-                    }
-                    else if (string.Equals(hostParts[1], WildcardHost, StringComparison.Ordinal))
-                    {
-                        return new EdgeKey(hostParts[0], null);
-                    }
-                }
+                return new EdgeKey(hostParts[0], port);
+            }
+
+            if (string.Equals(hostParts[1], WildcardHost, StringComparison.Ordinal))
+            {
+                return new EdgeKey(hostParts[0], null);
             }
 
             throw new InvalidOperationException($"Could not parse host: {host}");
