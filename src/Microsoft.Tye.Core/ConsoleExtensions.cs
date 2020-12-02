@@ -41,12 +41,9 @@ namespace System.CommandLine
                 ((dynamic)console).ForegroundColor = color;
             }
 
-            switch (IsConsoleRedirectionCheckSupported)
+            if (IsConsoleRedirectionCheckSupported)
             {
-                case true when !Console.IsOutputRedirected:
-                case true:
-                    Console.ForegroundColor = color;
-                    break;
+                Console.ForegroundColor = color;
             }
         }
 
@@ -57,12 +54,9 @@ namespace System.CommandLine
                 ((dynamic)console).ForegroundColor = ConsoleColor.Red;
             }
 
-            switch (IsConsoleRedirectionCheckSupported)
+            if (IsConsoleRedirectionCheckSupported)
             {
-                case true when !Console.IsOutputRedirected:
-                case true:
-                    Console.ResetColor();
-                    break;
+                Console.ResetColor();
             }
         }
     }
