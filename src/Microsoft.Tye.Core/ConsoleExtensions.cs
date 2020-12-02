@@ -14,18 +14,20 @@ namespace System.CommandLine
         {
             get
             {
-                if (_isConsoleRedirectionCheckSupported == null)
+                if (_isConsoleRedirectionCheckSupported != null)
                 {
-                    try
-                    {
-                        var check = Console.IsOutputRedirected;
-                        _isConsoleRedirectionCheckSupported = true;
-                    }
+                    return _isConsoleRedirectionCheckSupported.Value;
+                }
 
-                    catch (PlatformNotSupportedException)
-                    {
-                        _isConsoleRedirectionCheckSupported = false;
-                    }
+                try
+                {
+                    var check = Console.IsOutputRedirected;
+                    _isConsoleRedirectionCheckSupported = true;
+                }
+
+                catch (PlatformNotSupportedException)
+                {
+                    _isConsoleRedirectionCheckSupported = false;
                 }
 
                 return _isConsoleRedirectionCheckSupported.Value;
@@ -39,12 +41,7 @@ namespace System.CommandLine
                 ((dynamic)console).ForegroundColor = color;
             }
 
-            if (IsConsoleRedirectionCheckSupported &&
-                !Console.IsOutputRedirected)
-            {
-                Console.ForegroundColor = color;
-            }
-            else if (IsConsoleRedirectionCheckSupported)
+            if (IsConsoleRedirectionCheckSupported)
             {
                 Console.ForegroundColor = color;
             }
@@ -57,12 +54,7 @@ namespace System.CommandLine
                 ((dynamic)console).ForegroundColor = ConsoleColor.Red;
             }
 
-            if (IsConsoleRedirectionCheckSupported &&
-                !Console.IsOutputRedirected)
-            {
-                Console.ResetColor();
-            }
-            else if (IsConsoleRedirectionCheckSupported)
+            if (IsConsoleRedirectionCheckSupported)
             {
                 Console.ResetColor();
             }
