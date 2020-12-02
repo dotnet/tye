@@ -8,7 +8,7 @@ This document will describe how to integrate a Dapr application with Tye. See Da
 
 ## Getting Started with Dapr
 
-Getting started documentation for Dapr can be found [here](https://github.com/dapr/docs/tree/master/getting-started)
+Getting started documentation for Dapr can be found [here](https://docs.dapr.io/getting-started/)
 
 ## Sample Code
 

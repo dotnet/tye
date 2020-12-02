@@ -35,39 +35,48 @@ namespace Microsoft.Tye.Extensions.Zipkin
                 };
                 context.Application.Services.Add(service);
 
-                foreach (var s in context.Application.Services)
+                foreach (var serviceBuilder in context.Application.Services)
                 {
-                    if (object.ReferenceEquals(s, service))
+                    if (ReferenceEquals(serviceBuilder, service))
                     {
                         continue;
                     }
 
                     // make zipkin available as a dependency of everything.
-                    if (!s.Dependencies.Contains(service.Name))
+                    if (!serviceBuilder.Dependencies.Contains(service.Name))
                     {
-                        s.Dependencies.Add(service.Name);
+                        serviceBuilder.Dependencies.Add(service.Name);
                     }
                 }
             }
 
-            if (context.Operation == ExtensionContext.OperationKind.LocalRun)
+            switch (context.Operation)
             {
-                if (context.Options!.DistributedTraceProvider is null)
-                {
-                    // For local development we hardcode the port and hostname
-                    context.Options.DistributedTraceProvider = "zipkin=http://localhost:9411";
-                }
-            }
-            else if (context.Operation == ExtensionContext.OperationKind.Deploy)
-            {
-                foreach (var project in context.Application.Services.OfType<DotnetProjectServiceBuilder>())
-                {
-                    var sidecar = DiagnosticAgent.GetOrAddSidecar(project);
+                case ExtensionContext.OperationKind.LocalRun:
+                    {
+                        if (context.Options!.DistributedTraceProvider is null)
+                        {
+                            // For local development we hardcode the port and hostname
+                            context.Options.DistributedTraceProvider = "zipkin=http://localhost:9411";
+                        }
 
-                    // Use service discovery to find zipkin
-                    sidecar.Args.Add("--provider:zipkin=service:zipkin");
-                    sidecar.Dependencies.Add("zipkin");
-                }
+                        break;
+                    }
+                case ExtensionContext.OperationKind.Deploy:
+                    {
+                        foreach (var project in context.Application.Services.OfType<DotnetProjectServiceBuilder>())
+                        {
+                            var sidecar = DiagnosticAgent.GetOrAddSidecar(project);
+
+                            // Use service discovery to find zipkin
+                            sidecar.Args.Add("--provider:zipkin=service:zipkin");
+                            sidecar.Dependencies.Add("zipkin");
+                        }
+
+                        break;
+                    }
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             return Task.CompletedTask;

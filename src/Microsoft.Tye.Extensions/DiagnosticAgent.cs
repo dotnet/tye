@@ -14,7 +14,7 @@ namespace Microsoft.Tye
             project.RelocateDiagnosticsDomainSockets = true;
 
             var sidecar = project.Sidecars.FirstOrDefault(s => s.Name == "tye-diag-agent");
-            if (sidecar is object)
+            if (sidecar != null)
             {
                 return sidecar;
             }

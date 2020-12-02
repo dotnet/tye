@@ -11,26 +11,28 @@ namespace Microsoft.Tye
     {
         // Calling Directory.Delete causes an exception for .git folders:
         //     System.UnauthorizedAccessException : Access to the path '17a475ecca365c678e907bd4c73e4c65b341c6' is denied.
-        public static void DeleteDirectory(string d)
+        public static void DeleteDirectory(string directoryPath)
         {
-            foreach (var sub in Directory.EnumerateDirectories(d))
+            foreach (var subDirectoryPath in Directory.EnumerateDirectories(directoryPath))
             {
-                DeleteDirectory(sub);
+                DeleteDirectory(subDirectoryPath);
             }
 
             try
             {
-                foreach (var f in Directory.EnumerateFiles(d))
+                foreach (var filePath in Directory.EnumerateFiles(directoryPath))
                 {
-                    var fi = new FileInfo(f);
-                    fi.Attributes = FileAttributes.Normal;
-                    fi.Delete();
+                    var fileInfo = new FileInfo(filePath)
+                    {
+                        Attributes = FileAttributes.Normal
+                    };
+                    fileInfo.Delete();
                 }
-                Directory.Delete(d);
+                Directory.Delete(directoryPath);
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Failed to delete directory {d}: {e.Message}");
+                Console.WriteLine($@"Failed to delete directory {directoryPath}: {e.Message}");
             }
         }
     }

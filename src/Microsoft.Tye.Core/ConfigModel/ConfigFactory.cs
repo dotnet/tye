@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using Microsoft.Tye.Serialization;
+using Tye.DockerCompose;
 using Tye.Serialization;
 
 namespace Microsoft.Tye.ConfigModel
@@ -16,11 +17,19 @@ namespace Microsoft.Tye.ConfigModel
         public static ConfigApplication FromFile(FileInfo file)
         {
             var extension = file.Extension.ToLowerInvariant();
+            var fileName = file.Name;
             switch (extension)
             {
                 case ".yaml":
                 case ".yml":
-                    return FromYaml(file);
+                    if (fileName.StartsWith("tye", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return FromTyeYaml(file);
+                    }
+                    else
+                    {
+                        return FromDockerComposeYaml(file);
+                    }
 
                 case ".csproj":
                 case ".fsproj":
@@ -95,9 +104,15 @@ namespace Microsoft.Tye.ConfigModel
             return content.Contains("<OutputType>exe</OutputType>", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static ConfigApplication FromYaml(FileInfo file)
+        private static ConfigApplication FromTyeYaml(FileInfo file)
         {
             using var parser = new YamlParser(file);
+            return parser.ParseConfigApplication();
+        }
+
+        private static ConfigApplication FromDockerComposeYaml(FileInfo file)
+        {
+            using var parser = new DockerComposeParser(file);
             return parser.ParseConfigApplication();
         }
 

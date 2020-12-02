@@ -100,64 +100,59 @@ namespace Microsoft.Tye.Hosting
             var description = service.Description;
             var bindings = description.Bindings;
 
-            var v1bindingList = new List<V1ServiceBinding>();
-
-            foreach (var binding in bindings)
+            var v1BindingList = bindings.Select(binding => new V1ServiceBinding()
             {
-                v1bindingList.Add(new V1ServiceBinding()
-                {
-                    Name = binding.Name,
-                    ConnectionString = binding.ConnectionString,
-                    Port = binding.Port,
-                    ContainerPort = binding.ContainerPort,
-                    Host = binding.Host,
-                    Protocol = binding.Protocol
-                });
-            }
+                Name = binding.Name,
+                ConnectionString = binding.ConnectionString,
+                Port = binding.Port,
+                ContainerPort = binding.ContainerPort,
+                Host = binding.Host,
+                Protocol = binding.Protocol
+            }).ToList();
 
             var v1ConfigurationSourceList = new List<V1ConfigurationSource>();
-            foreach (var configSource in description.Configuration)
+            foreach (var (name, value) in description.Configuration)
             {
                 v1ConfigurationSourceList.Add(new V1ConfigurationSource()
                 {
-                    Name = configSource.Name,
-                    Value = configSource.Value
+                    Name = name,
+                    Value = value
                 });
             }
 
             var v1RunInfo = new V1RunInfo();
-            if (description.RunInfo is DockerRunInfo dockerRunInfo)
+            switch (description.RunInfo)
             {
-                v1RunInfo.Type = V1RunInfoType.Docker;
-                v1RunInfo.Image = dockerRunInfo.Image;
-                v1RunInfo.VolumeMappings = dockerRunInfo.VolumeMappings.Select(v => new V1DockerVolume
-                {
-                    Name = v.Name,
-                    Source = v.Source,
-                    Target = v.Target
-                }).ToList();
+                case DockerRunInfo dockerRunInfo:
+                    v1RunInfo.Type = V1RunInfoType.Docker;
+                    v1RunInfo.Image = dockerRunInfo.Image;
+                    v1RunInfo.VolumeMappings = dockerRunInfo.VolumeMappings.Select(v => new V1DockerVolume
+                    {
+                        Name = v.Name,
+                        Source = v.Source,
+                        Target = v.Target
+                    }).ToList();
 
-                v1RunInfo.WorkingDirectory = dockerRunInfo.WorkingDirectory;
-                v1RunInfo.Args = dockerRunInfo.Args;
-            }
-            else if (description.RunInfo is ExecutableRunInfo executableRunInfo)
-            {
-                v1RunInfo.Type = V1RunInfoType.Executable;
-                v1RunInfo.Args = executableRunInfo.Args;
-                v1RunInfo.Executable = executableRunInfo.Executable;
-                v1RunInfo.WorkingDirectory = executableRunInfo.WorkingDirectory;
-            }
-            else if (description.RunInfo is ProjectRunInfo projectRunInfo)
-            {
-                v1RunInfo.Type = V1RunInfoType.Project;
-                v1RunInfo.Args = projectRunInfo.Args;
-                v1RunInfo.Build = projectRunInfo.Build;
-                v1RunInfo.Project = projectRunInfo.ProjectFile.FullName;
+                    v1RunInfo.WorkingDirectory = dockerRunInfo.WorkingDirectory;
+                    v1RunInfo.Args = dockerRunInfo.Args;
+                    break;
+                case ExecutableRunInfo executableRunInfo:
+                    v1RunInfo.Type = V1RunInfoType.Executable;
+                    v1RunInfo.Args = executableRunInfo.Args;
+                    v1RunInfo.Executable = executableRunInfo.Executable;
+                    v1RunInfo.WorkingDirectory = executableRunInfo.WorkingDirectory;
+                    break;
+                case ProjectRunInfo projectRunInfo:
+                    v1RunInfo.Type = V1RunInfoType.Project;
+                    v1RunInfo.Args = projectRunInfo.Args;
+                    v1RunInfo.Build = projectRunInfo.Build;
+                    v1RunInfo.Project = projectRunInfo.ProjectFile.FullName;
+                    break;
             }
 
             var v1ServiceDescription = new V1ServiceDescription()
             {
-                Bindings = v1bindingList,
+                Bindings = v1BindingList,
                 Configuration = v1ConfigurationSourceList,
                 Name = description.Name,
                 Replicas = description.Replicas,
@@ -165,29 +160,30 @@ namespace Microsoft.Tye.Hosting
             };
 
             var replicateDictionary = new Dictionary<string, V1ReplicaStatus>();
-            foreach (var replica in service.Replicas)
+            foreach (var (instance, replica) in service.Replicas)
             {
                 var replicaStatus = new V1ReplicaStatus()
                 {
-                    Name = replica.Value.Name,
-                    Ports = replica.Value.Ports,
-                    Environment = replica.Value.Environment,
-                    State = replica.Value.State
+                    Name = replica.Name,
+                    Ports = replica.Ports,
+                    Environment = replica.Environment,
+                    State = replica.State
                 };
 
-                replicateDictionary[replica.Key] = replicaStatus;
+                replicateDictionary[instance] = replicaStatus;
 
-                if (replica.Value is ProcessStatus processStatus)
+                switch (replica)
                 {
-                    replicaStatus.Pid = processStatus.Pid;
-                    replicaStatus.ExitCode = processStatus.ExitCode;
-                }
-                else if (replica.Value is DockerStatus dockerStatus)
-                {
-                    replicaStatus.DockerCommand = dockerStatus.DockerCommand;
-                    replicaStatus.ContainerId = dockerStatus.ContainerId;
-                    replicaStatus.DockerNetwork = dockerStatus.DockerNetwork;
-                    replicaStatus.DockerNetworkAlias = dockerStatus.DockerNetworkAlias;
+                    case ProcessStatus processStatus:
+                        replicaStatus.Pid = processStatus.Pid;
+                        replicaStatus.ExitCode = processStatus.ExitCode;
+                        break;
+                    case DockerStatus dockerStatus:
+                        replicaStatus.DockerCommand = dockerStatus.DockerCommand;
+                        replicaStatus.ContainerId = dockerStatus.ContainerId;
+                        replicaStatus.DockerNetwork = dockerStatus.DockerNetwork;
+                        replicaStatus.DockerNetworkAlias = dockerStatus.DockerNetworkAlias;
+                        break;
                 }
             }
 
@@ -218,38 +214,37 @@ namespace Microsoft.Tye.Hosting
             var name = (string?)context.Request.RouteValues["name"];
             context.Response.ContentType = "application/json";
 
-            if (string.IsNullOrEmpty(name) || !app.Services.TryGetValue(name, out var service))
+            if (!string.IsNullOrEmpty(name) && app.Services.TryGetValue(name, out var service))
             {
-                context.Response.StatusCode = 404;
-                return JsonSerializer.SerializeAsync(context.Response.Body, new
-                {
-                    message = $"Unknown service {name}"
-                },
-                _options);
+                return JsonSerializer.SerializeAsync(context.Response.Body, service.CachedLogs, _options);
             }
 
-            return JsonSerializer.SerializeAsync(context.Response.Body, service.CachedLogs, _options);
+            context.Response.StatusCode = 404;
+            return JsonSerializer.SerializeAsync(context.Response.Body, new
+            {
+                message = $"Unknown service {name}"
+            }, _options);
         }
 
         private Task AllMetrics(HttpContext context)
         {
-            var app = context.RequestServices.GetRequiredService<Tye.Hosting.Model.Application>();
+            var app = context.RequestServices.GetRequiredService<Application>();
 
             var sb = new StringBuilder();
-            foreach (var s in app.Services.OrderBy(s => s.Key))
+            foreach (var (serviceName, service) in app.Services.OrderBy(s => s.Key))
             {
-                sb.AppendLine($"# {s.Key}");
-                foreach (var replica in s.Value.Replicas)
+                sb.AppendLine($"# {serviceName}");
+                foreach (var (instance, replica) in service.Replicas)
                 {
-                    foreach (var metric in replica.Value.Metrics)
+                    foreach (var (key, value) in replica.Metrics)
                     {
-                        sb.Append(metric.Key);
+                        sb.Append(key);
                         sb.Append("{");
-                        sb.Append($"service=\"{s.Key}\",");
-                        sb.Append($"instance=\"{replica.Key}\"");
+                        sb.Append($"service=\"{serviceName}\",");
+                        sb.Append($"instance=\"{instance}\"");
                         sb.Append("}");
                         sb.Append(" ");
-                        sb.Append(metric.Value);
+                        sb.Append(value);
                         sb.AppendLine();
                     }
                 }
@@ -278,16 +273,16 @@ namespace Microsoft.Tye.Hosting
                 _options);
             }
 
-            foreach (var replica in service.Replicas)
+            foreach (var (instance, replica) in service.Replicas)
             {
-                foreach (var metric in replica.Value.Metrics)
+                foreach (var (key, value) in replica.Metrics)
                 {
-                    sb.Append(metric.Key);
+                    sb.Append(key);
                     sb.Append("{");
-                    sb.Append($"instance=\"{replica.Key}\"");
+                    sb.Append($"instance=\"{instance}\"");
                     sb.Append("}");
                     sb.Append(" ");
-                    sb.Append(metric.Value);
+                    sb.Append(value);
                     sb.AppendLine();
                 }
             }

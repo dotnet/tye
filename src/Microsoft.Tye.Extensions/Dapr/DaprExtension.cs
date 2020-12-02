@@ -25,7 +25,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                 foreach (var project in projects)
                 {
                     // Dapr requires http. If this project isn't listening to HTTP then it's not daprized.
-                    var httpBinding = project.Bindings.Where(b => b.Protocol == "http").FirstOrDefault();
+                    var httpBinding = project.Bindings.FirstOrDefault(b => b.Protocol == "http");
                     if (httpBinding == null)
                     {
                         continue;
@@ -180,27 +180,29 @@ namespace Microsoft.Tye.Extensions.Dapr
                 foreach (var project in projects)
                 {
                     // Dapr requires http. If this project isn't listening to HTTP then it's not daprized.
-                    var httpBinding = project.Bindings.Where(b => b.Protocol == "http").FirstOrDefault();
+                    var httpBinding = project.Bindings.FirstOrDefault(b => b.Protocol == "http");
                     if (httpBinding == null)
                     {
                         continue;
                     }
 
-                    if (project.ManifestInfo?.Deployment is DeploymentManifestInfo deployment)
+                    if (!(project.ManifestInfo?.Deployment is { } deployment))
                     {
-                        deployment.Annotations.Add("dapr.io/enabled", "true");
-                        deployment.Annotations.Add("dapr.io/id", project.Name);
-                        deployment.Annotations.Add("dapr.io/port", (httpBinding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
+                        continue;
+                    }
 
-                        if (config.Data.TryGetValue("config", out var obj) && obj?.ToString() is string daprConfig)
-                        {
-                            deployment.Annotations.TryAdd("dapr.io/config", daprConfig);
-                        }
+                    deployment.Annotations.Add("dapr.io/enabled", "true");
+                    deployment.Annotations.Add("dapr.io/id", project.Name);
+                    deployment.Annotations.Add("dapr.io/port", (httpBinding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
 
-                        if (config.Data.TryGetValue("log-level", out obj) && obj?.ToString() is string logLevel)
-                        {
-                            deployment.Annotations.TryAdd("dapr.io/log-level", logLevel);
-                        }
+                    if (config.Data.TryGetValue("config", out var obj) && obj?.ToString() is string daprConfig)
+                    {
+                        deployment.Annotations.TryAdd("dapr.io/config", daprConfig);
+                    }
+
+                    if (config.Data.TryGetValue("log-level", out obj) && obj?.ToString() is string logLevel)
+                    {
+                        deployment.Annotations.TryAdd("dapr.io/log-level", logLevel);
                     }
                 }
             }

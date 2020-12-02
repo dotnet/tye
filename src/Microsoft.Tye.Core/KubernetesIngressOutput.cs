@@ -11,18 +11,8 @@ namespace Microsoft.Tye
     {
         public KubernetesIngressOutput(string name, YamlDocument yaml)
         {
-            if (name is null)
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
-
-            if (yaml is null)
-            {
-                throw new ArgumentNullException(nameof(yaml));
-            }
-
-            Name = name;
-            Yaml = yaml;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Yaml = yaml ?? throw new ArgumentNullException(nameof(yaml));
         }
 
         public string Name { get; }

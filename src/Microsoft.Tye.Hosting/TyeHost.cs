@@ -216,22 +216,21 @@ namespace Microsoft.Tye.Hosting
                 // Port was passed in at the command-line, use it!
                 return int.Parse(port, NumberStyles.Number, CultureInfo.InvariantCulture);
             }
-            else if (IsPortInUseByBinding(_application, DefaultPort))
+
+            if (IsPortInUseByBinding(_application, DefaultPort))
             {
                 // Port has been reserved for the app.
                 app.Logger.LogInformation("Default dashboard port {DefaultPort} has been reserved by the application, choosing random port.", DefaultPort);
                 return AutodetectPort;
             }
-            else if (IsPortAlreadyInUse(DefaultPort))
-            {
-                // Port is in use by something already running.
-                app.Logger.LogInformation("Default dashboard port {DefaultPort} is in use, choosing random port.", DefaultPort);
-                return AutodetectPort;
-            }
-            else
+
+            if (!IsPortAlreadyInUse(DefaultPort))
             {
                 return DefaultPort;
             }
+            // Port is in use by something already running.
+            app.Logger.LogInformation("Default dashboard port {DefaultPort} is in use, choosing random port.", DefaultPort);
+            return AutodetectPort;
         }
 
         private static bool IsPortAlreadyInUse(int port)
@@ -251,14 +250,11 @@ namespace Microsoft.Tye.Hosting
 
         private static bool IsPortInUseByBinding(Application application, int port)
         {
-            foreach (var service in application.Services)
+            foreach (var (_, service) in application.Services)
             {
-                foreach (var binding in service.Value.Description.Bindings)
+                if (service.Description.Bindings.Any(binding => binding.Port == port))
                 {
-                    if (binding.Port == port)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
 
@@ -273,13 +269,13 @@ namespace Microsoft.Tye.Hosting
                 MetricSink = new MetricSink(logger),
             };
 
-            if (options.LoggingProvider is string &&
+            if (options.LoggingProvider != null &&
                 DiagnosticsProvider.TryParse(options.LoggingProvider, out var logging))
             {
                 diagnosticsCollector.LoggingSink = new LoggingSink(logger, logging);
             }
 
-            if (options.DistributedTraceProvider is string &&
+            if (options.DistributedTraceProvider != null &&
                 DiagnosticsProvider.TryParse(options.DistributedTraceProvider, out var tracing))
             {
                 diagnosticsCollector.TracingSink = new TracingSink(logger, tracing);
@@ -343,15 +339,15 @@ namespace Microsoft.Tye.Hosting
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
                     url = url.Replace("&", "^&");
-                    System.Diagnostics.Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
+                    Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    System.Diagnostics.Process.Start("xdg-open", url);
+                    Process.Start("xdg-open", url);
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    System.Diagnostics.Process.Start("open", url);
+                    Process.Start("open", url);
                 }
             }
             catch (Exception ex)
@@ -373,8 +369,7 @@ namespace Microsoft.Tye.Hosting
             var providerText = new List<string>();
             providerText.AddRange(
                 new[] { options.DistributedTraceProvider, options.LoggingProvider, options.MetricsProvider }
-                .Where(p => p is object)
-                .Cast<string>()!);
+                    .Where(p => p != null)!);
 
             foreach (var text in providerText)
             {
