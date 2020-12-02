@@ -28,17 +28,8 @@ namespace Microsoft.AspNetCore.Routing.Matching
                     return false;
                 }
 
-                foreach (var host in hosts)
-                {
-                    // Don't run policy on endpoints that match everything
-                    var key = CreateEdgeKey(host);
-                    if (!key.MatchesAll)
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
+                return hosts.Select(CreateEdgeKey)
+                    .Any(key => !key.MatchesAll);
             });
         }
 
