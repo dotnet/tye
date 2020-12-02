@@ -27,5 +27,11 @@ namespace Microsoft.Tye.Hosting.Model
             name = Name;
             value = Value;
         }
+
+        public void Deconstruct(out string name, out string? value, out EnvironmentVariableSource? source)
+        {
+            Deconstruct(out name, out value);
+            source = Source;
+        }
     }
 }

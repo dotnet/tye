@@ -33,19 +33,16 @@ namespace Microsoft.Tye.Hosting.Model
         {
             var bindings = ComputeBindings(service, defaultHost);
 
-            if (service.Description.Configuration != null)
+            // Inject normal configuration
+            foreach (var (name, value, source) in service.Description.Configuration)
             {
-                // Inject normal configuration
-                foreach (var pair in service.Description.Configuration)
+                if (value != null)
                 {
-                    if (pair.Value is object)
-                    {
-                        set(pair.Name, pair.Value);
-                    }
-                    else if (pair.Source is object)
-                    {
-                        set(pair.Name, GetValueFromBinding(bindings, pair.Source));
-                    }
+                    set(name, value);
+                }
+                else if (source != null)
+                {
+                    set(name, GetValueFromBinding(bindings, source));
                 }
             }
 
