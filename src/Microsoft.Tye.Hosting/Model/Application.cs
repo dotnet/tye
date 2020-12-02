@@ -54,7 +54,7 @@ namespace Microsoft.Tye.Hosting.Model
 
             static string GetValueFromBinding(List<EffectiveBinding> bindings, EnvironmentVariableSource source)
             {
-                var binding = bindings.Where(b => b.Service == source.Service && b.Name == source.Binding).FirstOrDefault();
+                var binding = bindings.FirstOrDefault(b => b.Service == source.Service && b.Name == source.Binding);
                 if (binding == null)
                 {
                     throw new InvalidOperationException($"Could not find binding '{source.Binding}' for service '{source.Service}'.");
