@@ -96,7 +96,7 @@ namespace Microsoft.AspNetCore.Routing.Matching
                         continue;
                     }
 
-                    if (MemoryExtensions.Equals(port, WildcardHost, StringComparison.OrdinalIgnoreCase))
+                    if (port.Equals(WildcardHost, StringComparison.OrdinalIgnoreCase))
                     {
                         // Port is a wildcard, we allow any port.
                     }
