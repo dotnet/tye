@@ -74,7 +74,7 @@ namespace Microsoft.AspNetCore.Routing.Matching
                         host = host.Slice(0, pivot);
                     }
 
-                    if (host == null || MemoryExtensions.Equals(host, WildcardHost, StringComparison.OrdinalIgnoreCase))
+                    if (host == null || host.Equals(WildcardHost, StringComparison.OrdinalIgnoreCase))
                     {
                         // Can match any host
                     }
