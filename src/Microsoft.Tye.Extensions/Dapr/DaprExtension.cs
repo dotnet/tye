@@ -23,7 +23,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                 // default placement port number
                 var daprPlacementImage = "daprio/dapr";
                 var daprPlacementContainerPort = 50005;
-                var daprPlacementPort = NextPortFinder.Instance.GetNextPort();
+                var daprPlacementPort = NextPortFinder.GetNextPort();
                 var isCustomPlacementPortDefined = false;
 
                 // see if a placement port number has been defined

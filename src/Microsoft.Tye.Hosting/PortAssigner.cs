@@ -35,7 +35,7 @@ namespace Microsoft.Tye.Hosting
                     // Auto assign a port
                     if (binding.Port == null)
                     {
-                        binding.Port = NextPortFinder.Instance.GetNextPort();
+                        binding.Port = NextPortFinder.GetNextPort();
                     }
 
                     if (service.Description.Readiness == null && service.Description.Replicas == 1)
@@ -48,7 +48,7 @@ namespace Microsoft.Tye.Hosting
                     for (var i = 0; i < service.Description.Replicas; i++)
                     {
                         // Reserve a port for each replica
-                        var port = NextPortFinder.Instance.GetNextPort();
+                        var port = NextPortFinder.GetNextPort();
                         binding.ReplicaPorts.Add(port);
                     }
 
