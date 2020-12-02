@@ -34,13 +34,10 @@ namespace Microsoft.AspNetCore.Proxy
             }
             else
             {
-                using (var requestMessage = context.CreateProxyHttpRequest(destinationUri))
-                {
-                    using (var responseMessage = await context.SendProxyHttpRequest(invoker, requestMessage))
-                    {
-                        await context.CopyProxyHttpResponse(responseMessage);
-                    }
-                }
+                using var requestMessage = context.CreateProxyHttpRequest(destinationUri);
+                using var responseMessage = await context.SendProxyHttpRequest(invoker, requestMessage);
+
+                await context.CopyProxyHttpResponse(responseMessage);
             }
         }
 
