@@ -161,18 +161,17 @@ namespace Microsoft.AspNetCore.Routing.Matching
             {
                 return (hostString.Host, hostString.Port);
             }
-            else if (string.Equals("https", httpContext.Request.Scheme, StringComparison.OrdinalIgnoreCase))
+
+            if (string.Equals("https", httpContext.Request.Scheme, StringComparison.OrdinalIgnoreCase))
             {
                 return (hostString.Host, 443);
             }
-            else if (string.Equals("http", httpContext.Request.Scheme, StringComparison.OrdinalIgnoreCase))
+
+            if (string.Equals("http", httpContext.Request.Scheme, StringComparison.OrdinalIgnoreCase))
             {
                 return (hostString.Host, 80);
             }
-            else
-            {
-                return (hostString.Host, null);
-            }
+            return (hostString.Host, null);
         }
 
         private readonly struct EdgeKey
