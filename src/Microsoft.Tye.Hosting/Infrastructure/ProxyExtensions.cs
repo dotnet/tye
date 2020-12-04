@@ -34,13 +34,10 @@ namespace Microsoft.AspNetCore.Proxy
             }
             else
             {
-                using (var requestMessage = context.CreateProxyHttpRequest(destinationUri))
-                {
-                    using (var responseMessage = await context.SendProxyHttpRequest(invoker, requestMessage))
-                    {
-                        await context.CopyProxyHttpResponse(responseMessage);
-                    }
-                }
+                using var requestMessage = context.CreateProxyHttpRequest(destinationUri);
+                using var responseMessage = await context.SendProxyHttpRequest(invoker, requestMessage);
+
+                await context.CopyProxyHttpResponse(responseMessage);
             }
         }
 
@@ -204,10 +201,8 @@ namespace Microsoft.AspNetCore.Proxy
             // SendAsync removes chunking from the response. This removes the header so it doesn't expect a chunked response.
             response.Headers.Remove("transfer-encoding");
 
-            await using (var responseStream = await responseMessage.Content.ReadAsStreamAsync())
-            {
-                await responseStream.CopyToAsync(response.Body, StreamCopyBufferSize, context.RequestAborted);
-            }
+            await using var responseStream = await responseMessage.Content.ReadAsStreamAsync();
+            await responseStream.CopyToAsync(response.Body, StreamCopyBufferSize, context.RequestAborted);
         }
     }
 }
