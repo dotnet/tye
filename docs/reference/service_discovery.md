@@ -232,7 +232,7 @@ We'll follow the example of the connection string for `postgres` is generated an
    
 4. On startup, the environment variable configuration source reads all environment variables and translates them to the config key format (see table above).
 
-5. When the application calls `GetConnectionString("postgres")`, the method will read the `connectionstrings:postgres` key and return the value and for the case of the named binding, if the application calls `GetConnectionString("postgres:mybinding")`, the method will read the `connectionstrings:postgres:mybinding` key and return the value.
+5. When the application calls `GetConnectionString("postgres")`, the method will read the `connectionstrings:postgres` key and return the value. For the case of the named binding, if the application calls `GetConnectionString("postgres:mybinding")`, the method will read the `connectionstrings:postgres:mybinding` key and return the value.
 
 ## How it works: Deployed applications
 
