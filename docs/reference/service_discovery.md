@@ -193,14 +193,14 @@ The pattern for a default binding on the `postgres` service:
 
 |                   | Environment Variable         | Configuration Key          |
 |-------------------|------------------------------|----------------------------|
-| Connection String | `CONNECTIONSTRING__POSTGRES` | `connectionstrings:postgres` |
+| Connection String | `CONNECTIONSTRINGS__POSTGRES` | `connectionstrings:postgres` |
 
 
 The pattern for a named binding called `myBinding` on the `postgres` service:
 
 |                   | Environment Variable         | Configuration Key          |
 |-------------------|------------------------------|----------------------------|
-| Connection String | `CONNECTIONSTRING__POSTGRES__MYBINDING` | `connectionstrings:postgres:mybinding` |
+| Connection String | `CONNECTIONSTRINGS__POSTGRES__MYBINDING` | `connectionstrings:postgres:mybinding` |
 
 > :bulb: That's a double-underscore (`__`) in the environment variables. The `Microsoft.Extensions.Configuration` system uses double-underscore as a separator because single underscores are already common in environment variables.
 
