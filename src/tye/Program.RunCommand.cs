@@ -21,6 +21,11 @@ namespace Microsoft.Tye
             {
                 CommonArguments.Path_Required,
 
+                new Option("--no-advertise")
+                {
+                    Description = "Do not allow other tools to find this Tye instance.",
+                    Required = false
+                },
                 new Option("--no-build")
                 {
                     Description = "Do not build project files before running.",
@@ -101,6 +106,7 @@ namespace Microsoft.Tye
 
                 var options = new HostOptions()
                 {
+                    Advertise = !args.NoAdvertise,
                     Dashboard = args.Dashboard,
                     Docker = args.Docker,
                     NoBuild = args.NoBuild,
@@ -161,6 +167,8 @@ namespace Microsoft.Tye
             public string Logs { get; set; } = default!;
 
             public string Metrics { get; set; } = default!;
+
+            public bool NoAdvertise { get; set; } = default;
 
             public bool NoBuild { get; set; }
 

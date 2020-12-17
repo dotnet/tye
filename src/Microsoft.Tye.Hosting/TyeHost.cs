@@ -60,7 +60,10 @@ namespace Microsoft.Tye.Hosting
             {
                 var app = await StartAsync();
 
-                ApplicationAdvertiser.Advertise(app);
+                if (_options.Advertise)
+                {
+                    ApplicationAdvertiser.Advertise(app);
+                }
 
                 var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
                 _lifetime?.ApplicationStopping.Register(obj =>
