@@ -11,6 +11,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Makaretu.Dns;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -55,15 +56,29 @@ namespace Microsoft.Tye.Hosting
         {
             try
             {
-                await StartAsync();
+                var app = await StartAsync();
 
-                var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-                _lifetime?.ApplicationStopping.Register(obj =>
+                using (var sd = new ServiceDiscovery())
                 {
-                    _logger?.LogInformation("Tye Host is stopping...");
-                    waitForStop.TrySetResult(null);
-                }, null);
-                await waitForStop.Task;
+                    var dashboardAddress = app.Addresses.First();
+                    var dashboardUri = new Uri(dashboardAddress, UriKind.Absolute);
+
+                    // TODO: Extract Tye application name for service instance name.
+                    var service = new ServiceProfile($"tye-{dashboardUri.Port}", "_microsoft-tye._tcp", (ushort)dashboardUri.Port);
+
+                    sd.Advertise(service);
+                    sd.Announce(service);
+
+                    var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    _lifetime?.ApplicationStopping.Register(obj =>
+                    {
+                        _logger?.LogInformation("Tye Host is stopping...");
+                        waitForStop.TrySetResult(null);
+                    }, null);
+                    await waitForStop.Task;
+
+                    sd.Unadvertise(service);
+                }
             }
             finally
             {
@@ -89,7 +104,9 @@ namespace Microsoft.Tye.Hosting
 
             await app.StartAsync();
 
-            _logger.LogInformation("Dashboard running on {Address}", app.Addresses.First());
+            var dashboardAddress = app.Addresses.First();
+
+            _logger.LogInformation("Dashboard running on {Address}", dashboardAddress);
 
             try
             {
@@ -103,7 +120,7 @@ namespace Microsoft.Tye.Hosting
 
             if (_options.Dashboard)
             {
-                OpenDashboard(app.Addresses.First());
+                OpenDashboard(dashboardAddress);
             }
 
             return app;
