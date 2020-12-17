@@ -47,6 +47,8 @@ namespace Microsoft.Tye.Hosting
 
         public Application Application => _application;
 
+        public IApplicationAdvertiser ApplicationAdvertiser { get; set; } = new MdnsApplicationAdvertiser();
+
         public WebApplication? DashboardWebApplication { get; set; }
 
         // An additional sink that output will be piped to. Useful for testing.
@@ -58,27 +60,23 @@ namespace Microsoft.Tye.Hosting
             {
                 var app = await StartAsync();
 
-                using (var sd = new ServiceDiscovery())
-                {
-                    var dashboardAddress = app.Addresses.First();
-                    var dashboardUri = new Uri(dashboardAddress, UriKind.Absolute);
+                var dashboardAddress = app.Addresses.First();
+                var dashboardUri = new Uri(dashboardAddress, UriKind.Absolute);
 
+                await ApplicationAdvertiser.AdvertiseWhileAsync(
                     // TODO: Extract Tye application name for service instance name.
-                    var service = new ServiceProfile($"tye-{dashboardUri.Port}", "_microsoft-tye._tcp", (ushort)dashboardUri.Port);
-
-                    sd.Advertise(service);
-                    sd.Announce(service);
-
-                    var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-                    _lifetime?.ApplicationStopping.Register(obj =>
+                    $"tye-{dashboardUri.Port}",
+                    dashboardUri,
+                    async () =>
                     {
-                        _logger?.LogInformation("Tye Host is stopping...");
-                        waitForStop.TrySetResult(null);
-                    }, null);
-                    await waitForStop.Task;
-
-                    sd.Unadvertise(service);
-                }
+                        var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        _lifetime?.ApplicationStopping.Register(obj =>
+                        {
+                            _logger?.LogInformation("Tye Host is stopping...");
+                            waitForStop.TrySetResult(null);
+                        }, null);
+                        await waitForStop.Task;
+                    });
             }
             finally
             {
