@@ -3,30 +3,45 @@
 // See the LICENSE file in the project root for more information.
 
 using Makaretu.Dns;
+using Microsoft.AspNetCore.Builder;
 using System;
-using System.Threading.Tasks;
+using System.Linq;
 
 namespace Microsoft.Tye.Hosting
 {
     public sealed class MdnsApplicationAdvertiser : IApplicationAdvertiser
     {
-        public async Task AdvertiseWhileAsync(string name, Uri dashboard, Func<Task> task)
+        public void Advertise(WebApplication app)
         {
-                using (var discovery = new ServiceDiscovery())
-                {
-                    var profile = new ServiceProfile(name, "_microsoft-tye._tcp", (ushort)dashboard.Port);
+                var dashboardAddress = app.Addresses.First();
+                var dashboardUri = new Uri(dashboardAddress, UriKind.Absolute);
+
+                var discovery = new ServiceDiscovery();
+
+                try {
+                    var profile = new ServiceProfile($"tye-{dashboardUri.Port}", "_microsoft-tye._tcp", (ushort)dashboardUri.Port);
 
                     discovery.Advertise(profile);
                     discovery.Announce(profile);
 
-                    try
-                    {
-                        await task();
-                    }
-                    finally
-                    {
-                        discovery.Unadvertise(profile);
-                    }
+                    app.ApplicationLifetime.ApplicationStopping.Register(
+                        () =>
+                        {
+                            try
+                            {
+                                discovery.Unadvertise(profile);
+                            }
+                            finally
+                            {
+                                discovery.Dispose();
+                            }
+                        });
+                }
+                catch
+                {
+                    discovery.Dispose();
+
+                    throw;
                 }
         }
     }

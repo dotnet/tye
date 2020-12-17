@@ -2,13 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
 
 namespace Microsoft.Tye.Hosting
 {
     public interface IApplicationAdvertiser
     {
-        Task AdvertiseWhileAsync(string name, Uri dashboard, Func<Task> task);
+        void Advertise(WebApplication app);
     }
 }

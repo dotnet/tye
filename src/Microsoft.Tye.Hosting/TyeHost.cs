@@ -60,23 +60,15 @@ namespace Microsoft.Tye.Hosting
             {
                 var app = await StartAsync();
 
-                var dashboardAddress = app.Addresses.First();
-                var dashboardUri = new Uri(dashboardAddress, UriKind.Absolute);
+                ApplicationAdvertiser.Advertise(app);
 
-                await ApplicationAdvertiser.AdvertiseWhileAsync(
-                    // TODO: Extract Tye application name for service instance name.
-                    $"tye-{dashboardUri.Port}",
-                    dashboardUri,
-                    async () =>
-                    {
-                        var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-                        _lifetime?.ApplicationStopping.Register(obj =>
-                        {
-                            _logger?.LogInformation("Tye Host is stopping...");
-                            waitForStop.TrySetResult(null);
-                        }, null);
-                        await waitForStop.Task;
-                    });
+                var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+                _lifetime?.ApplicationStopping.Register(obj =>
+                {
+                    _logger?.LogInformation("Tye Host is stopping...");
+                    waitForStop.TrySetResult(null);
+                }, null);
+                await waitForStop.Task;
             }
             finally
             {
