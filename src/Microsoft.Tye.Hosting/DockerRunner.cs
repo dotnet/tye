@@ -66,7 +66,8 @@ namespace Microsoft.Tye.Hosting
                 {
                     WorkingDirectory = "/app",
                     NetworkAlias = service.Description.Name,
-                    Private = true
+                    Private = true,
+                    IsProxy = true
                 };
                 var proxyLocation = Path.GetDirectoryName(typeof(Microsoft.Tye.Proxy.Program).Assembly.Location);
                 proxyContainer.VolumeMappings.Add(new DockerVolume(proxyLocation, name: null, target: "/app"));
@@ -295,7 +296,14 @@ namespace Microsoft.Tye.Hosting
 
                 var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {dockerImage} {docker.Args ?? ""}";
 
-                _logger.LogInformation("Running image {Image} for {Replica}", docker.Image, replica);
+                if (!docker.IsProxy)
+                {
+                    _logger.LogInformation("Running image {Image} for {Replica}", docker.Image, replica);
+                }
+                else
+                {
+                    _logger.LogDebug("Running proxy image {Image} for {Replica}", docker.Image, replica);
+                }
 
                 service.Logs.OnNext($"[{replica}]: docker {command}");
 

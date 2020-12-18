@@ -9,6 +9,7 @@ services:
       value: example
   bindings:
     - port: 27017
+      connectionString: "mongodb://${host}:${port}"
 - name: mongo-express
   image: mongo-express
   bindings:
