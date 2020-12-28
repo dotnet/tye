@@ -566,7 +566,11 @@ The path `/mypath` or `/mypath/` will match:
 
 #### `host` (`string`)
 
-The host to match. 
+The host to match.
+
+#### `preservePath` (`boolean`)
+
+Whether to preserve the matched path prefix when routing to a specific service. By default, path-prefixes are trimmed (`preservePath` is false). For example, if a path consisted of `/serviceA/foo` and an ingress rule including a match on `/serviceA`, the `/serviceA` portion would be trimmed when routing to the backend service, resulting in the path `/foo`. By setting `preservePath` to true, the `/serviceA` portion would be kept when routing to the backend service.
 
 ## Liveness and Readiness
 
