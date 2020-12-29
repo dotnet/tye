@@ -28,17 +28,8 @@ namespace Microsoft.AspNetCore.Routing.Matching
                     return false;
                 }
 
-                foreach (var host in hosts)
-                {
-                    // Don't run policy on endpoints that match everything
-                    var key = CreateEdgeKey(host);
-                    if (!key.MatchesAll)
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
+                return hosts.Select(CreateEdgeKey)
+                    .Any(key => !key.MatchesAll);
             });
         }
 
@@ -83,7 +74,7 @@ namespace Microsoft.AspNetCore.Routing.Matching
                         host = host.Slice(0, pivot);
                     }
 
-                    if (host == null || MemoryExtensions.Equals(host, WildcardHost, StringComparison.OrdinalIgnoreCase))
+                    if (host == null || host.Equals(WildcardHost, StringComparison.OrdinalIgnoreCase))
                     {
                         // Can match any host
                     }
@@ -105,7 +96,7 @@ namespace Microsoft.AspNetCore.Routing.Matching
                         continue;
                     }
 
-                    if (MemoryExtensions.Equals(port, WildcardHost, StringComparison.OrdinalIgnoreCase))
+                    if (port.Equals(WildcardHost, StringComparison.OrdinalIgnoreCase))
                     {
                         // Port is a wildcard, we allow any port.
                     }
@@ -143,19 +134,23 @@ namespace Microsoft.AspNetCore.Routing.Matching
                     return new EdgeKey(hostParts[0], null);
                 }
             }
-            if (hostParts.Length == 2)
+
+            if (hostParts.Length != 2)
             {
-                if (!string.IsNullOrEmpty(hostParts[0]))
-                {
-                    if (int.TryParse(hostParts[1], out var port))
-                    {
-                        return new EdgeKey(hostParts[0], port);
-                    }
-                    else if (string.Equals(hostParts[1], WildcardHost, StringComparison.Ordinal))
-                    {
-                        return new EdgeKey(hostParts[0], null);
-                    }
-                }
+                throw new InvalidOperationException($"Could not parse host: {host}");
+            }
+            if (string.IsNullOrEmpty(hostParts[0]))
+            {
+                throw new InvalidOperationException($"Could not parse host: {host}");
+            }
+            if (int.TryParse(hostParts[1], out var port))
+            {
+                return new EdgeKey(hostParts[0], port);
+            }
+
+            if (string.Equals(hostParts[1], WildcardHost, StringComparison.Ordinal))
+            {
+                return new EdgeKey(hostParts[0], null);
             }
 
             throw new InvalidOperationException($"Could not parse host: {host}");
@@ -168,18 +163,17 @@ namespace Microsoft.AspNetCore.Routing.Matching
             {
                 return (hostString.Host, hostString.Port);
             }
-            else if (string.Equals("https", httpContext.Request.Scheme, StringComparison.OrdinalIgnoreCase))
+
+            if (string.Equals("https", httpContext.Request.Scheme, StringComparison.OrdinalIgnoreCase))
             {
                 return (hostString.Host, 443);
             }
-            else if (string.Equals("http", httpContext.Request.Scheme, StringComparison.OrdinalIgnoreCase))
+
+            if (string.Equals("http", httpContext.Request.Scheme, StringComparison.OrdinalIgnoreCase))
             {
                 return (hostString.Host, 80);
             }
-            else
-            {
-                return (hostString.Host, null);
-            }
+            return (hostString.Host, null);
         }
 
         private readonly struct EdgeKey
