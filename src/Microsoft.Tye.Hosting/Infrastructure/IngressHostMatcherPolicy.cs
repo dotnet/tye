@@ -136,11 +136,13 @@ namespace Microsoft.AspNetCore.Routing.Matching
             }
 
             if (hostParts.Length != 2)
+            {
                 throw new InvalidOperationException($"Could not parse host: {host}");
-
+            }
             if (string.IsNullOrEmpty(hostParts[0]))
+            {
                 throw new InvalidOperationException($"Could not parse host: {host}");
-
+            }
             if (int.TryParse(hostParts[1], out var port))
             {
                 return new EdgeKey(hostParts[0], port);
