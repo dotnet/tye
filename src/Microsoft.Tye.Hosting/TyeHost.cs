@@ -109,7 +109,7 @@ namespace Microsoft.Tye.Hosting
             return app;
         }
 
-        private static WebApplication BuildWebApplication(Application application, HostOptions options, ILogEventSink? sink)
+        private WebApplication BuildWebApplication(Application application, HostOptions options, ILogEventSink? sink)
         {
             var args = new List<string>();
             if (options.Port.HasValue)
@@ -175,6 +175,10 @@ namespace Microsoft.Tye.Hosting
                 });
 
             builder.Services.AddSingleton(application);
+            
+            // TODO: This feels hacky
+            builder.Services.AddSingleton<IApplicationProcessor>(p => _processor!);
+            
             var app = builder.Build();
             return app;
         }

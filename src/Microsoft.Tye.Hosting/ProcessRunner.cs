@@ -45,6 +45,18 @@ namespace Microsoft.Tye.Hosting
             return KillRunningProcesses(application.Services);
         }
 
+        public async Task StartAsync(Application application, Service service)
+        {
+            await PurgeFromPreviousRun(service);
+
+            await BuildAndRunProject(application, service);
+        }
+        
+        public Task StopAsync(Service service)
+        {
+            return KillRunningProcessAsync(service);
+        }
+
         private async Task BuildAndRunProjects(Application application)
         {
             var projectGroups = new Dictionary<string, ProjectGroup>();
@@ -168,6 +180,84 @@ namespace Microsoft.Tye.Hosting
                         break;
                 };
             }
+        }
+
+        private async Task BuildAndRunProject(Application application, Service service)
+        {
+            var serviceDescription = service.Description;
+
+            string path;
+            string args;
+            var buildProperties = string.Empty;
+            string workingDirectory;
+            if (serviceDescription.RunInfo is ProjectRunInfo project)
+            {
+                path = project.RunCommand;
+                workingDirectory = project.ProjectFile.Directory!.FullName;
+                args = project.Args == null ? project.RunArguments : project.RunArguments + " " + project.Args;
+                buildProperties = project.BuildProperties.Aggregate(string.Empty, (current, property) => current + $";{property.Key}={property.Value}").TrimStart(';');
+
+                service.Status.ProjectFilePath = project.ProjectFile.FullName;
+            }
+            else if (serviceDescription.RunInfo is ExecutableRunInfo executable)
+            {
+                path = executable.Executable;
+                workingDirectory = executable.WorkingDirectory!;
+                args = executable.Args ?? "";
+            }
+            else if (serviceDescription.RunInfo is AzureFunctionRunInfo function)
+            {
+                path = function.FuncExecutablePath!;
+                workingDirectory = new DirectoryInfo(function.FunctionPath).FullName;
+                // todo make sure to exclude functions app from implied tye running.
+
+                args = function.Args ?? $"start --build";
+            }
+            else
+            {
+                // TODO: Is this right?
+                return;
+            }
+            
+            // If this is a dll then use dotnet to run it
+            if (Path.GetExtension(path) == ".dll")
+            {
+                args = $"\"{path}\" {args}".Trim();
+                path = "dotnet";
+            }
+
+            service.Status.ExecutablePath = path;
+            service.Status.WorkingDirectory = workingDirectory;
+            service.Status.Args = args;
+
+            // TODO instead of always building with projects, try building with sln if available.
+            if (service.Status.ProjectFilePath != null &&
+                service.Description.RunInfo is ProjectRunInfo project2 &&
+                project2.Build &&
+                _options.BuildProjects)
+            {
+                _logger.LogInformation("Building project");
+
+                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
+
+                if (buildResult.ExitCode != 0)
+                {
+                    throw new TyeBuildException($"Building projects failed with exit code {buildResult.ExitCode}: \r\n{buildResult.StandardOutput}");
+                }
+            }
+            
+            switch (service.ServiceType)
+            {
+                case ServiceType.Executable:
+                    LaunchService(application, service);
+                    break;
+                case ServiceType.Project:
+                    LaunchService(application, service);
+                    break;
+                case ServiceType.Function:
+                    LaunchService(application, service);
+                    break;
+            };
         }
 
         private void LaunchService(Application application, Service service)
@@ -320,7 +410,7 @@ namespace Microsoft.Tye.Hosting
 
                                 status.Pid = pid;
 
-                                WriteReplicaToStore(pid.ToString());
+                                WriteReplicaToStore(pid.ToString(), serviceName);
 
                                 if (_options.Watch)
                                 {
@@ -460,27 +550,27 @@ namespace Microsoft.Tye.Hosting
 
         private Task KillRunningProcesses(IDictionary<string, Service> services)
         {
-            static Task KillProcessAsync(Service service)
-            {
-                if (service.Items.TryGetValue(typeof(ProcessInfo), out var stateObj) && stateObj is ProcessInfo state)
-                {
-                    // Cancel the token before stopping the process
-                    state.StoppedTokenSource.Cancel();
-
-                    return Task.WhenAll(state.Tasks);
-                }
-                return Task.CompletedTask;
-            }
-
             var index = 0;
             var tasks = new Task[services.Count];
             foreach (var s in services.Values)
             {
                 var state = s;
-                tasks[index++] = KillProcessAsync(state);
+                tasks[index++] = KillRunningProcessAsync(state);
             }
 
             return Task.WhenAll(tasks);
+        }
+        
+        private static Task KillRunningProcessAsync(Service service)
+        {
+            if (service.Items.TryGetValue(typeof(ProcessInfo), out var stateObj) && stateObj is ProcessInfo state)
+            {
+                // Cancel the token before stopping the process
+                state.StoppedTokenSource.Cancel();
+
+                return Task.WhenAll(state.Tasks);
+            }
+            return Task.CompletedTask;
         }
 
         private async Task PurgeFromPreviousRun()
@@ -498,11 +588,28 @@ namespace Microsoft.Tye.Hosting
             _replicaRegistry.DeleteStore(ProcessReplicaStore);
         }
 
-        private void WriteReplicaToStore(string pid)
+        private async Task PurgeFromPreviousRun(Service service)
+        {
+            var processReplicas = await _replicaRegistry.GetEvents(ProcessReplicaStore);
+            foreach (var replica in processReplicas)
+            {
+                if (int.TryParse(replica["pid"], out var pid) &&
+                    replica["name"].Equals(service.Description.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    ProcessUtil.KillProcess(pid);
+                    _logger.LogInformation("removed process {pid} for service {name} from previous run", pid, service.Description.Name);
+                    
+                    _replicaRegistry.DeleteEvent(ProcessReplicaStore, replica);
+                }
+            }
+        }
+
+        private void WriteReplicaToStore(string pid, string serviceName)
         {
             _replicaRegistry.WriteReplicaEvent(ProcessReplicaStore, new Dictionary<string, string>()
             {
-                ["pid"] = pid
+                ["pid"] = pid,
+                ["name"] = serviceName
             });
         }
 

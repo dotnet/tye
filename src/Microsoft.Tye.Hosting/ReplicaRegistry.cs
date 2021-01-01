@@ -90,6 +90,56 @@ namespace Microsoft.Tye.Hosting
                 .ToList()!;
         }
 
+
+        public bool DeleteEvent(string storeName, IDictionary<string, string> replicaRecord)
+        {
+            var filePath = Path.Join(_tyeFolderPath, GetStoreFile(storeName));
+            var tempFilePath = Path.Join(_tyeFolderPath, Path.GetRandomFileName());
+
+            if (!File.Exists(filePath))
+            {
+                return false;
+            }
+
+            var lockObj = GetLockForStore(storeName);
+
+            lock (lockObj)
+            {
+                try
+                {
+                    // Write to the new temporary file, ignore the line to remove
+                    string? line = null;
+                    string lineToDelete = JsonSerializer.Serialize(replicaRecord, new JsonSerializerOptions {WriteIndented = false});
+
+                    using StreamReader reader = new StreamReader(filePath);
+                    using StreamWriter writer = new StreamWriter(tempFilePath);
+
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (line.Equals(lineToDelete))
+                        {
+                            continue;
+                        }
+
+                        writer.WriteLine(line);
+                    }
+                    
+                    // Delete the old file
+                    File.Delete(filePath);
+                    
+                    // Rename the temporary file
+                    File.Move(tempFilePath, filePath);
+
+                    return true;
+                }
+                catch (DirectoryNotFoundException ex)
+                {
+                    _logger.LogWarning(ex, "tye folder is not found. file: {file}", filePath);
+                    return false;
+                }
+            }
+        }
+
         private object GetLockForStore(string storeName)
         {
             return _fileWriteLocks.GetOrAdd(storeName, _ => new object());

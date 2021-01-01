@@ -53,5 +53,40 @@ namespace Microsoft.Tye.Hosting
                 throw new AggregateException(exceptions);
             }
         }
+        
+        public async Task StartAsync(Application application, Service service)
+        {
+            foreach (var processor in _applicationProcessors)
+            {
+                await processor.StartAsync(application, service);
+            }
+        }
+
+        public async Task StopAsync(Service service)
+        {
+            var exceptions = new List<Exception>();
+
+            // Shutdown in the opposite order
+            foreach (var processor in _applicationProcessors.Reverse())
+            {
+                try
+                {
+                    await processor.StopAsync(service);
+                }
+                catch (Exception ex)
+                {
+                    exceptions.Add(ex);
+                }
+            }
+
+            if (exceptions.Count == 1)
+            {
+                ExceptionDispatchInfo.Throw(exceptions[0]);
+            }
+            else if (exceptions.Count > 0)
+            {
+                throw new AggregateException(exceptions);
+            }
+        }
     }
 }
