@@ -1,0 +1,50 @@
+﻿@page "/"
+@using Microsoft.Extensions.Logging
+@using Dapr.Client
+@using SentenceApp.Services
+@inject ILogger<CaseConverter> logger
+@inject UppercaseServiceClient uppercaseClient
+@inject LowercaseServiceClient lowercaseClient
+@inject TitlecaseServiceClient titlecaseClient
+
+<h1>Case Converter</h1>
+
+<p>Character count: @currentCount</p>
+
+<div>
+    <label for="sentenceText">Enter text here</label>
+    <textarea class="form-control" id="sentenceText" rows="3" @bind="sentence"></textarea>
+</div>
+
+<div>
+    <button class="btn btn-primary" @onclick="UpperCase">To Upper</button>
+    <button class="btn btn-primary" @onclick="LowerCase">To Lower</button>
+    <button class="btn btn-primary" @onclick="TitleCase">To Title</button>
+</div>
+
+@code {
+
+    private int currentCount = 0;
+    private string sentence = "";
+
+    private async Task UpperCase()
+    {
+        logger.LogInformation($"UpperCase UI triggered with sentence={sentence}");
+        sentence = (await uppercaseClient.Convert(sentence)).Sentence;
+        currentCount = sentence.Length;
+    }
+
+    private async Task LowerCase()
+    {
+        logger.LogInformation($"LowerCase UI triggered with sentence={sentence}");
+        sentence = (await lowercaseClient.Convert(sentence)).Sentence;
+        currentCount = sentence.Length;
+    }
+
+    private async Task TitleCase()
+    {
+        logger.LogInformation($"TitleCase UI triggered with sentence={sentence}");
+        sentence = (await titlecaseClient.Convert(sentence)).Sentence;
+        currentCount = sentence.Length;
+    }
+}

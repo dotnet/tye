@@ -141,5 +141,5 @@ On macOS/Linux:
 2. Install the package
 
 ```sh
-dotnet tool install microsoft.tye -g --version "0.4.0-dev" --add-source ./artifacts/packages/Debug/Shipping
+dotnet tool install microsoft.tye -g --version "0.6.0-dev" --add-source ./artifacts/packages/Debug/Shipping
 ```
