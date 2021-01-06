@@ -12,9 +12,14 @@ Getting started documentation for Dapr can be found [here](https://docs.dapr.io/
 
 ## Sample Code
 
-The sample code for document can be found [here](https://github.com/dotnet/tye/tree/master/samples/dapr).
+There are two sample projects for the Dapr recipe [here](https://github.com/dotnet/tye/tree/master/samples/dapr).
 
-This application has three services:
+They demonstrate
+
+- Pub/Sub (The sample code associated with the instructions below.)
+- Service Invocation
+
+The pub-sub sample application has three services:
 
 - A frontend application (`store`)
 - A products backend service (`products`)
@@ -22,15 +27,15 @@ This application has three services:
 
 These services use a variety of Dapr's features:
 
-- State Storate (`store`)
+- State Storage (`store`)
 - Invoke (`store`, `products`)
 - Pub/Sub (`store`, `orders`)
 
-You can find the Dapr component files [here](https://github.com/dotnet/tye/tree/master/samples/dapr/components).
+You can find the Dapr component files for the sample project [here](https://github.com/dotnet/tye/tree/master/samples/dapr/pub-sub/components).
 
 ## Running the sample locally
 
-To run this sample, simply go to the `samples/dapr` directory and run the following command:
+To run this sample, simply go to the `samples/dapr/pub-sub` directory and run the following command:
 
 ```sh
 tye run
@@ -65,7 +70,7 @@ Each application would need to be given a unique port to listen on, and launched
 Tye has built-in support that can make this more productive by:
 
 - Launching everything at once
-- Automatically manging ports
+- Automatically managing ports
 
 Tye's Dapr integration is activated in `tye.yaml` (seen below for this sample):
 
