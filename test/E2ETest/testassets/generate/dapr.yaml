@@ -4,8 +4,8 @@ metadata:
   name: dapr-test-project
   annotations:
     dapr.io/enabled: 'true'
-    dapr.io/id: 'dapr-test-project'
-    dapr.io/port: '80'
+    dapr.io/app-id: 'dapr-test-project'
+    dapr.io/app-port: '80'
     dapr.io/config: 'tracing'
     dapr.io/log-level: 'debug'
   labels:
@@ -20,8 +20,8 @@ spec:
     metadata:
       annotations:
         dapr.io/enabled: 'true'
-        dapr.io/id: 'dapr-test-project'
-        dapr.io/port: '80'
+        dapr.io/app-id: 'dapr-test-project'
+        dapr.io/app-port: '80'
         dapr.io/config: 'tracing'
         dapr.io/log-level: 'debug'
       labels:
