@@ -61,7 +61,7 @@ namespace Microsoft.Tye
             await writer.WriteLineAsync($"WORKDIR /src");
             await writer.WriteLineAsync($"COPY . .");
             await writer.WriteLineAsync($"RUN dotnet publish -c Release -o /out");
-            await writer.WriteLineAsync($"FROM {container.BaseImage.Name}:{container.BaseImageTag} as RUNTIME");
+            await writer.WriteLineAsync($"FROM {container.BaseImage.Name}:{container.BaseImage.Tag} as RUNTIME");
             await writer.WriteLineAsync($"WORKDIR /app");
             await writer.WriteLineAsync($"COPY --from=SDK /out .");
             await writer.WriteLineAsync($"ENTRYPOINT [\"dotnet\", \"{applicationEntryPoint}.dll\"]");
@@ -69,7 +69,7 @@ namespace Microsoft.Tye
 
         private static async Task WriteLocalPublishDockerfileAsync(StreamWriter writer, string applicationEntryPoint, ContainerInfo container)
         {
-            await writer.WriteLineAsync($"FROM {container.BaseImage.Name}:{container.BaseImageTag}");
+            await writer.WriteLineAsync($"FROM {container.BaseImage.Name}:{container.BaseImage.Tag}");
             await writer.WriteLineAsync($"WORKDIR /app");
             await writer.WriteLineAsync($"COPY . /app");
             await writer.WriteLineAsync($"ENTRYPOINT [\"dotnet\", \"{applicationEntryPoint}.dll\"]");
@@ -92,19 +92,19 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(container));
             }
 
-            if (string.IsNullOrEmpty(container.BaseImageTag) && (project.TargetFrameworkName == "netcoreapp" || project.TargetFrameworkName == "net"))
+            if (string.IsNullOrEmpty(container.BaseImage.Tag) && (project.TargetFrameworkName == "netcoreapp" || project.TargetFrameworkName == "net"))
             {
-                container.BaseImageTag = project.TargetFrameworkVersion;
+                container.BaseImage.Tag = project.TargetFrameworkVersion;
             }
 
-            if (string.IsNullOrEmpty(container.BaseImageTag))
+            if (string.IsNullOrEmpty(container.BaseImage.Tag))
             {
                 throw new CommandException($"Unsupported TFM {project.TargetFramework}.");
             }
 
             if (string.IsNullOrEmpty(container.BaseImage.Name))
             {
-                if (TagIs50OrNewer(container.BaseImageTag))
+                if (TagIs50OrNewer(container.BaseImage.Tag))
                 {
                     container.BaseImage.Name = project.IsAspNet ? "mcr.microsoft.com/dotnet/aspnet" : "mcr.microsoft.com/dotnet/runtime";
                 }

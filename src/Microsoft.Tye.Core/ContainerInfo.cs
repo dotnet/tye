@@ -13,12 +13,6 @@ namespace Microsoft.Tye
         public ImageInfo Image { get; set; } = new ImageInfo();
 
         /// <summary>
-        /// Gets or sets the name of the base image tag. If null, the base image tag will be chosen
-        /// based on the project configuration.
-        /// </summary>
-        public string? BaseImageTag { get; set; }
-
-        /// <summary>
         /// Gets or sets the name of the build image. If null, the build image will be chosen
         /// based on the project configuration.
         /// </summary>

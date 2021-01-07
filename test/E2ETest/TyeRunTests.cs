@@ -444,13 +444,13 @@ services:
 
             // check ContainerInfo values
             Assert.True(string.Equals(project.ContainerInfo!.BaseImage.Name, "mcr.microsoft.com/dotnet/core/sdk"));
-            Assert.True(string.Equals(project.ContainerInfo!.BaseImageTag, "3.1-buster"));
+            Assert.True(string.Equals(project.ContainerInfo!.BaseImage.Tag, "3.1-buster"));
 
             // check projectInfo values
             var projectRunInfo = new ProjectRunInfo(project);
 
             Assert.True(string.Equals(projectRunInfo!.ContainerBaseImage, project.ContainerInfo.BaseImage.Name));
-            Assert.True(string.Equals(projectRunInfo!.ContainerBaseTag, project.ContainerInfo.BaseImageTag));
+            Assert.True(string.Equals(projectRunInfo!.ContainerBaseTag, project.ContainerInfo.BaseImage.Tag));
         }
 
         [ConditionalFact]

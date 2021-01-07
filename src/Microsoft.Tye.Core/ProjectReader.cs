@@ -193,7 +193,7 @@ namespace Microsoft.Tye
             if (project.ContainerInfo != null)
             {
                 project.ContainerInfo.BaseImage.Name = GetMetadataValueOrEmpty("ContainerBaseImage");
-                project.ContainerInfo.BaseImageTag = GetMetadataValueOrEmpty("ContainerBaseTag");
+                project.ContainerInfo.BaseImage.Tag = GetMetadataValueOrEmpty("ContainerBaseTag");
             }
 
             project.IsAspNet = project.Frameworks.Any(f => f.Name == "Microsoft.AspNetCore.App") ||
