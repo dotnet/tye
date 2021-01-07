@@ -38,7 +38,7 @@ namespace Microsoft.Tye.Hosting
             var containers = application.Services.Cast<Service?>()
                 .Where(service => service?.Description.RunInfo is DockerRunInfo).ToList();
 
-            if (containers.Count == 0)
+            if (!containers.Any())
             {
                 return;
             }
