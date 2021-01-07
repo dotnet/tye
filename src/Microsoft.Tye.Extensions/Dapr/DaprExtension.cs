@@ -248,8 +248,8 @@ namespace Microsoft.Tye.Extensions.Dapr
                     }
 
                     deployment.Annotations.Add("dapr.io/enabled", "true");
-                    deployment.Annotations.Add("dapr.io/id", project.Name);
-                    deployment.Annotations.Add("dapr.io/port", (httpBinding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
+                    deployment.Annotations.Add("dapr.io/app-id", project.Name);
+                    deployment.Annotations.Add("dapr.io/app-port", (httpBinding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
 
                     if (config.Data.TryGetValue("config", out var obj) && obj?.ToString() is string daprConfig)
                     {
