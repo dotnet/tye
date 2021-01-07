@@ -78,7 +78,7 @@ namespace Microsoft.Tye
             await File.WriteAllLinesAsync(Path.Combine(chartDirectoryPath, "values.yaml"), new[]
             {
                 $"image:",
-                $"  repository: {container.ImageName}",
+                $"  repository: {container.Image.Name}",
             });
         }
 

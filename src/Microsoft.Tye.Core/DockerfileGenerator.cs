@@ -121,13 +121,13 @@ namespace Microsoft.Tye
                 container.BuildImage.Name = TagIs50OrNewer(container.BuildImage.Tag) ? "mcr.microsoft.com/dotnet/sdk" : "mcr.microsoft.com/dotnet/core/sdk";
             }
 
-            if (container.ImageName == null && application.Registry?.Hostname == null)
+            if (container.Image.Name == null && application.Registry?.Hostname == null)
             {
-                container.ImageName ??= project.Name.ToLowerInvariant();
+                container.Image.Name ??= project.Name.ToLowerInvariant();
             }
-            else if (container.ImageName == null && application.Registry?.Hostname != null)
+            else if (container.Image.Name == null && application.Registry?.Hostname != null)
             {
-                container.ImageName ??= $"{application.Registry?.Hostname}/{project.Name.ToLowerInvariant()}";
+                container.Image.Name ??= $"{application.Registry?.Hostname}/{project.Name.ToLowerInvariant()}";
             }
 
             container.ImageTag ??= project.Version?.Replace("+", "-") ?? "latest";
@@ -138,13 +138,13 @@ namespace Microsoft.Tye
 
         public static void ApplyContainerDefaults(ApplicationBuilder application, DockerFileServiceBuilder project, ContainerInfo container)
         {
-            if (container.ImageName == null && application.Registry?.Hostname == null)
+            if (container.Image.Name == null && application.Registry?.Hostname == null)
             {
-                container.ImageName ??= project.Name.ToLowerInvariant();
+                container.Image.Name ??= project.Name.ToLowerInvariant();
             }
-            else if (container.ImageName == null && application.Registry?.Hostname != null)
+            else if (container.Image.Name == null && application.Registry?.Hostname != null)
             {
-                container.ImageName ??= $"{application.Registry?.Hostname}/{project.Name.ToLowerInvariant()}";
+                container.Image.Name ??= $"{application.Registry?.Hostname}/{project.Name.ToLowerInvariant()}";
             }
 
             container.ImageTag ??= "latest";
