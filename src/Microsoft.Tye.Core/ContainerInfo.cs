@@ -8,10 +8,24 @@ namespace Microsoft.Tye
 {
     public sealed class ContainerInfo
     {
-        public ImageInfo BaseImage { get; set; } = new ImageInfo();
-        public ImageInfo BuildImage { get; set; } = new ImageInfo();
-        public ImageInfo Image { get; set; } = new ImageInfo();
+        /// <summary>
+        /// Gets or sets the base image. If null, the base image will be chosen
+        /// based on the project configuration.
+        /// </summary>
+        public ImageInfo? BaseImage { get; set; } = new ImageInfo();
 
+        /// <summary>
+        /// Gets or sets the build image. If null, the base image will be chosen
+        /// based on the project configuration.
+        /// </summary>
+        public ImageInfo? BuildImage { get; set; } = new ImageInfo();
+
+        /// <summary>
+        /// Gets or sets the image. If null, the base image will be chosen
+        /// based on the project configuration.
+        /// </summary>
+        public ImageInfo? Image { get; set; } = new ImageInfo();
+        
         /// <summary>
         /// Gets or a sets value which determines whether a multi-phase Dockerfile is used.
         /// </summary>
