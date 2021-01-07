@@ -130,7 +130,7 @@ namespace Microsoft.Tye
                 container.Image.Name ??= $"{application.Registry?.Hostname}/{project.Name.ToLowerInvariant()}";
             }
 
-            container.ImageTag ??= project.Version?.Replace("+", "-") ?? "latest";
+            container.Image.Tag ??= project.Version?.Replace("+", "-") ?? "latest";
 
             // Disable color in the logs
             project.EnvironmentVariables.Add(new EnvironmentVariableBuilder("DOTNET_LOGGING__CONSOLE__DISABLECOLORS") { Value = "true" });
@@ -147,7 +147,7 @@ namespace Microsoft.Tye
                 container.Image.Name ??= $"{application.Registry?.Hostname}/{project.Name.ToLowerInvariant()}";
             }
 
-            container.ImageTag ??= "latest";
+            container.Image.Tag ??= "latest";
         }
 
         public static bool TagIs50OrNewer(string? tag)
