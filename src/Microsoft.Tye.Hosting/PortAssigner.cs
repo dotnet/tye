@@ -23,20 +23,12 @@ namespace Microsoft.Tye.Hosting
 
         public Task StartAsync(Application application)
         {
-            foreach (var service in application.Services.Values)
+            foreach (var service in application.Services.Values.Where(service => service.Description.RunInfo != null))
             {
-                if (service.Description.RunInfo == null)
-                {
-                    continue;
-                }
-
                 foreach (var binding in service.Description.Bindings)
                 {
                     // Auto assign a port
-                    if (binding.Port == null)
-                    {
-                        binding.Port = NextPortFinder.GetNextPort();
-                    }
+                    binding.Port ??= NextPortFinder.GetNextPort();
 
                     if (service.Description.Readiness == null && service.Description.Replicas == 1)
                     {
