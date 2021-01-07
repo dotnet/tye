@@ -57,7 +57,7 @@ namespace Microsoft.Tye
 
         private static async Task WriteMultiphaseDockerfileAsync(StreamWriter writer, string applicationEntryPoint, ContainerInfo container)
         {
-            await writer.WriteLineAsync($"FROM {container.BuildImageName}:{container.BuildImageTag} as SDK");
+            await writer.WriteLineAsync($"FROM {container.BaseImage.Name}:{container.BuildImageTag} as SDK");
             await writer.WriteLineAsync($"WORKDIR /src");
             await writer.WriteLineAsync($"COPY . .");
             await writer.WriteLineAsync($"RUN dotnet publish -c Release -o /out");
@@ -116,9 +116,9 @@ namespace Microsoft.Tye
 
             container.BuildImageTag ??= project.TargetFrameworkVersion;
 
-            if (string.IsNullOrEmpty(container.BuildImageName))
+            if (string.IsNullOrEmpty(container.BaseImage.Name))
             {
-                container.BuildImageName = TagIs50OrNewer(container.BuildImageTag) ? "mcr.microsoft.com/dotnet/sdk" : "mcr.microsoft.com/dotnet/core/sdk";
+                container.BaseImage.Name = TagIs50OrNewer(container.BuildImageTag) ? "mcr.microsoft.com/dotnet/sdk" : "mcr.microsoft.com/dotnet/core/sdk";
             }
 
             if (container.ImageName == null && application.Registry?.Hostname == null)
