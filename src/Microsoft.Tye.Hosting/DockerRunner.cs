@@ -35,15 +35,8 @@ namespace Microsoft.Tye.Hosting
         {
             await PurgeFromPreviousRun();
 
-            var containers = new List<Service>();
-
-            foreach (var s in application.Services)
-            {
-                if (s.Value.Description.RunInfo is DockerRunInfo)
-                {
-                    containers.Add(s.Value);
-                }
-            }
+            var containers = application.Services.Cast<Service?>()
+                .Where(service => service?.Description.RunInfo is DockerRunInfo).ToList();
 
             if (containers.Count == 0)
             {
