@@ -26,13 +26,8 @@ namespace Microsoft.Tye.Hosting
 
         public Task StartAsync(Application application)
         {
-            foreach (var service in application.Services.Values)
+            foreach (var service in application.Services.Values.Where(service => service.Description.RunInfo is { }))
             {
-                if (service.Description.RunInfo is null)
-                {
-                    continue;
-                }
-
                 service.Items[typeof(Subscription)] = service.ReplicaEvents.Subscribe(OnReplicaChanged);
             }
 
