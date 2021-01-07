@@ -192,7 +192,7 @@ namespace Microsoft.Tye
             // determine container base image
             if (project.ContainerInfo != null)
             {
-                project.ContainerInfo.BaseImageName = GetMetadataValueOrEmpty("ContainerBaseImage");
+                project.ContainerInfo.BaseImage.Name = GetMetadataValueOrEmpty("ContainerBaseImage");
                 project.ContainerInfo.BaseImageTag = GetMetadataValueOrEmpty("ContainerBaseTag");
             }
 
