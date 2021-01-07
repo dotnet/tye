@@ -325,7 +325,7 @@ namespace Microsoft.Tye
                 var container = new YamlMappingNode();
                 containers.Add(container);
                 container.Add("name", project.Name); // NOTE: to really support multiple images we'd need to generate unique names.
-                container.Add("image", $"{image.ImageName}:{image.ImageTag}");
+                container.Add("image", $"{image.Info.Name}:{image.Info.Tag}");
                 container.Add("imagePullPolicy", "Always"); // helps avoid problems with development + weak versioning
 
                 if (project.EnvironmentVariables.Count > 0 ||

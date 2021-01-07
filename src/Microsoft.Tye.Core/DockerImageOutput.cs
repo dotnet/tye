@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using Tye;
 
 namespace Microsoft.Tye
 {
@@ -10,22 +11,10 @@ namespace Microsoft.Tye
     {
         public DockerImageOutput(string imageName, string imageTag)
         {
-            if (imageName is null)
-            {
-                throw new ArgumentNullException(nameof(imageName));
-            }
-
-            if (imageTag is null)
-            {
-                throw new ArgumentNullException(nameof(imageTag));
-            }
-
-            ImageName = imageName;
-            ImageTag = imageTag;
+            Info.Name = imageName ?? throw new ArgumentNullException(nameof(imageName));
+            Info.Tag = imageTag ?? throw new ArgumentNullException(nameof(imageTag));
         }
 
-        public string ImageName { get; }
-
-        public string ImageTag { get; }
+        public ImageInfo Info { get; set; } = new ImageInfo();
     }
 }

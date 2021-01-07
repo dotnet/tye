@@ -10,7 +10,7 @@ namespace Microsoft.Tye
 {
     internal static class DockerPush
     {
-        public static async Task ExecuteAsync(OutputContext output, string imageName, string imageTag)
+        public static async Task ExecuteAsync(OutputContext output, string? imageName, string? imageTag)
         {
             if (output is null)
             {
