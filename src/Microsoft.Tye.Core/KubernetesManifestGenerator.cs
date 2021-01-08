@@ -461,7 +461,7 @@ namespace Microsoft.Tye
                 volumeMount.Add("mountPath", "/var/tye/diagnostics");
             }
 
-            if (!string.IsNullOrWhiteSpace(application.Registry?.PullSecret)) 
+            if (!string.IsNullOrWhiteSpace(application.Registry?.PullSecret))
             {
                 var imagePullSecrets = new YamlSequenceNode();
                 spec.Add("imagePullSecrets", imagePullSecrets);
