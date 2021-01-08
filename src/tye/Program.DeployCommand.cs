@@ -118,7 +118,9 @@ namespace Microsoft.Tye
                 var registry = output.Prompt("Enter the Container Registry (ex: 'example.azurecr.io' for Azure or 'example' for dockerhub)", allowEmpty: !requireRegistry);
                 if (!string.IsNullOrWhiteSpace(registry))
                 {
-                    application.Registry = new ContainerRegistry(registry.Trim());
+                    var registryPullSecrets = output.Prompt("Enter the kubernetes credential secret to authorize pulling an image from the registry or leave empty", allowEmpty: true);
+
+                    application.Registry = new ContainerRegistry(registry.Trim(), registryPullSecrets);
                 }
             }
             else if (application.Registry is null && requireRegistry)
