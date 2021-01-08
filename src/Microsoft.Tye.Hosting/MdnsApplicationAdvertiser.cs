@@ -13,36 +13,36 @@ namespace Microsoft.Tye.Hosting
     {
         public void Advertise(WebApplication app)
         {
-                var dashboardAddress = app.Addresses.First();
-                var dashboardUri = new Uri(dashboardAddress, UriKind.Absolute);
+            var dashboardAddress = app.Addresses.First();
+            var dashboardUri = new Uri(dashboardAddress, UriKind.Absolute);
 
-                var discovery = new ServiceDiscovery();
+            var discovery = new ServiceDiscovery();
 
-                try {
-                    var profile = new ServiceProfile($"tye-{dashboardUri.Port}", "_microsoft-tye._tcp", (ushort)dashboardUri.Port);
+            try {
+                var profile = new ServiceProfile($"tye-{dashboardUri.Port}", "_microsoft-tye._tcp", (ushort)dashboardUri.Port);
 
-                    discovery.Advertise(profile);
-                    discovery.Announce(profile);
+                discovery.Advertise(profile);
+                discovery.Announce(profile);
 
-                    app.ApplicationLifetime.ApplicationStopping.Register(
-                        () =>
+                app.ApplicationLifetime.ApplicationStopping.Register(
+                    () =>
+                    {
+                        try
                         {
-                            try
-                            {
-                                discovery.Unadvertise(profile);
-                            }
-                            finally
-                            {
-                                discovery.Dispose();
-                            }
-                        });
-                }
-                catch
-                {
-                    discovery.Dispose();
+                            discovery.Unadvertise(profile);
+                        }
+                        finally
+                        {
+                            discovery.Dispose();
+                        }
+                    });
+            }
+            catch
+            {
+                discovery.Dispose();
 
-                    throw;
-                }
+                throw;
+            }
         }
     }
 }
