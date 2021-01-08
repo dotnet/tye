@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Dapr.Client;
-using Dapr.Client.Http;
 using Shared;
 
 namespace SentenceApp.Services
@@ -28,15 +26,11 @@ namespace SentenceApp.Services
         public async Task<ConvertedResult> Convert(string sentence)
         {
             // Using Dapr sidecar and service invocation building block
-            return await _daprClient.InvokeMethodAsync<object, ConvertedResult>("lowercaseservice", "lowercase", new object(), new HTTPExtension()
-            {
-                QueryString = new Dictionary<string, string>()
-                {
-                    {"sentence", sentence}
-                },
-                Verb = HTTPVerb.Get
-            });
+            return await _daprClient.InvokeMethodAsync<object, ConvertedResult>("lowercaseservice", "lowercase", new object(), 
+                HttpInvocationOptions.UsingGet()
+                    .WithQueryParam("sentence", sentence));
 
+            // If you're using Tye alone (without dapr)
             //var responseMessage = await _client.GetAsync($"/lowercase?sentence={sentence}");
             //var stream = await responseMessage.Content.ReadAsStreamAsync();
             //return await JsonSerializer.DeserializeAsync<ConvertedResult>(stream, _options);
