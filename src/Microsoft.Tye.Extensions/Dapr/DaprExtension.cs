@@ -284,6 +284,11 @@ namespace Microsoft.Tye.Extensions.Dapr
                 {
                     return nixpath;
                 }
+                var backupNixPath = Environment.ExpandEnvironmentVariables("/root/.dapr/bin/daprd");
+                if (File.Exists(backupNixPath))
+                {
+                    return backupNixPath;
+                }
             }
 
             // Older version of dapr don't have dapr in the bin directory, but it is usually on the path.
