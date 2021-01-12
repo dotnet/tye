@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapr.AspNetCore" Version="1.0.0-rc03" />
-    <PackageReference Include="Dapr.Client" Version="1.0.0-rc03" />
+    <PackageReference Include="Dapr.AspNetCore" Version="1.0.0-rc02" />
+    <PackageReference Include="Dapr.Client" Version="1.0.0-rc02" />
     <PackageReference Include="Microsoft.Tye.Extensions.Configuration" Version="0.5.0-alpha.20555.1" />
   </ItemGroup>
 
