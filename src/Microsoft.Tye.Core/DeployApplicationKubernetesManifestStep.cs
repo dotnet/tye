@@ -84,7 +84,7 @@ namespace Microsoft.Tye
                         var ingressExitCode = await Process.ExecuteAsync(
                             "kubectl",
                             $"get ingress {ingress.Name} -o jsonpath='{{..ip}}'",
-                            System.Environment.CurrentDirectory,
+                            Environment.CurrentDirectory,
                             complete,
                             capture.StdErr);
 

@@ -20,7 +20,7 @@ namespace Microsoft.Tye
             var root = new YamlMappingNode();
 
             root.Add("kind", "Ingress");
-            root.Add("apiVersion", "extensions/v1beta1");
+            root.Add("apiVersion", "networking.k8s.io/v1");
 
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
@@ -74,7 +74,10 @@ namespace Microsoft.Tye
 
                     var backend = new YamlMappingNode();
                     path.Add("backend", backend);
-                    backend.Add("serviceName", ingressRule.Service);
+                    var backendService = new YamlMappingNode();
+                    backend.Add("service", backendService);
+
+                    backendService.Add("name", ingressRule.Service);
 
                     var service = application.Services.FirstOrDefault(s => s.Name == ingressRule.Service);
                     if (service is null)
@@ -88,7 +91,11 @@ namespace Microsoft.Tye
                         throw new InvalidOperationException($"Could not resolve an http binding for service '{service.Name}'.");
                     }
 
-                    backend.Add("servicePort", (binding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
+                    var backendPort = new YamlMappingNode();
+
+                    backendService.Add("port", backendPort);
+
+                    backendPort.Add("number", (binding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
 
                     // Tye implements path matching similar to this example:
                     // https://kubernetes.github.io/ingress-nginx/examples/rewrite/
@@ -111,6 +118,9 @@ namespace Microsoft.Tye
                             path.Add("path", regex);
                         }
                     }
+
+                    // Only support prefix matching for now
+                    path.Add("pathType", "Prefix");
                 }
             }
 
