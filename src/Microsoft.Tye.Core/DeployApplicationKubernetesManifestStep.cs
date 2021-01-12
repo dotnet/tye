@@ -62,6 +62,7 @@ namespace Microsoft.Tye
             output.WriteInfoLine($"Deployed application '{application.Name}'.");
             if (application.Ingress.Count > 0)
             {
+                output.WriteInfoLine($"Waiting for ingress to be deployed. This may take a long time.");
                 foreach (var ingress in application.Ingress)
                 {
                     using var ingressStep = output.BeginStep($"Retrieving details for {ingress.Name}...");
@@ -94,7 +95,7 @@ namespace Microsoft.Tye
 
                         if (!done)
                         {
-                            await Task.Delay(1000);
+                            await Task.Delay(2000);
                             retries++;
                         }
                     }
