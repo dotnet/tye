@@ -140,21 +140,20 @@ namespace Microsoft.Tye
             else
             {
                 // If we get here then we should deploy the ingress controller.
+
+                // For some reason, the first time we apply the ingress controller, an exception is thrown
+                // saying "ingress-nginx-admission-create" is invalid. Therefore, we are going to blindly assume the
+                // controller successfully ran.
+
                 output.WriteDebugLine($"Running 'kubectl apply'");
                 output.WriteCommandLine("kubectl", $"apply -f \"https://aka.ms/tye/ingress/deploy\"");
                 var capture = output.Capture();
                 var exitCode = await Process.ExecuteAsync(
                     $"kubectl",
                     $"apply -f \"https://aka.ms/tye/ingress/deploy\"",
-                    System.Environment.CurrentDirectory,
-                    stdOut: capture.StdOut,
-                    stdErr: capture.StdErr);
+                    System.Environment.CurrentDirectory);
 
                 output.WriteDebugLine($"Done running 'kubectl apply' exit code: {exitCode}");
-                if (exitCode != 0)
-                {
-                    throw new CommandException("'kubectl apply' failed.");
-                }
 
                 output.WriteInfoLine($"Waiting for ingress-nginx controller to start.");
 
@@ -162,7 +161,7 @@ namespace Microsoft.Tye
                 // after creating the controller will fail if the webhook isn't ready.
                 //
                 // Internal error occurred: failed calling webhook "validate.nginx.ingress.kubernetes.io": 
-                // Post https://ingress-nginx-controller-admission.ingress-nginx.svc:443/extensions/v1beta1/ingresses?timeout=30s:
+                // Post https://ingress-nginx-controller-admission.ingress-nginx.svc:443/networking.k8s.io/v1/ingresses?timeout=30s:
                 // dial tcp 10.0.31.130:443: connect: connection refused
                 //
                 // Unfortunately this is the likely case for us.

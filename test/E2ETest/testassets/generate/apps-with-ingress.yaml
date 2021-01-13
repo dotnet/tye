@@ -125,7 +125,7 @@ spec:
 ...
 ---
 kind: Ingress
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 metadata:
   name: ingress
   annotations:
@@ -138,25 +138,37 @@ spec:
   - http:
       paths:
       - backend:
-          serviceName: appa
-          servicePort: 80
+          service:
+            name: appa
+            port:
+              number: 80
         path: /A(/|$)(.*)
+        pathType: Prefix
       - backend:
-          serviceName: appb
-          servicePort: 80
+          service:
+            name: appb
+            port:
+              number: 80
         path: /B(/|$)(.*)
+        pathType: Prefix
   - host: a.example.com
     http:
       paths:
       - backend:
-          serviceName: appa
-          servicePort: 80
+          service:
+            name: appa
+            port:
+              number: 80
         path: /()(.*)
+        pathType: Prefix
   - host: b.example.com
     http:
       paths:
       - backend:
-          serviceName: appb
-          servicePort: 80
+          service:
+            name: appb
+            port:
+              number: 80
         path: /()(.*)
+        pathType: Prefix
 ...

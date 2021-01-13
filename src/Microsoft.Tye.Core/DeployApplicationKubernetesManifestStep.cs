@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Text;
@@ -15,7 +16,7 @@ namespace Microsoft.Tye
 
         public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application)
         {
-            using var step = output.BeginStep("");
+            using var step = output.BeginStep("Applying Kubernetes Manifests...");
 
             if (!await KubectlDetector.IsKubectlInstalledAsync(output))
             {
@@ -59,6 +60,47 @@ namespace Microsoft.Tye
             }
 
             output.WriteInfoLine($"Deployed application '{application.Name}'.");
+            if (application.Ingress.Count > 0)
+            {
+                output.WriteInfoLine($"Waiting for ingress to be deployed. This may take a long time.");
+                foreach (var ingress in application.Ingress)
+                {
+                    using var ingressStep = output.BeginStep($"Retrieving details for {ingress.Name}...");
+
+                    var done = false;
+
+                    Action<string> complete = line =>
+                    {
+                        done = line != "''";
+                        if (done)
+                        {
+                            output.WriteInfoLine($"IngressIP: {line}");
+                        }
+                    };
+
+                    var retries = 0;
+                    while (!done && retries < 60)
+                    {
+                        var ingressExitCode = await Process.ExecuteAsync(
+                            "kubectl",
+                            $"get ingress {ingress.Name} -o jsonpath='{{..ip}}'",
+                            Environment.CurrentDirectory,
+                            complete,
+                            capture.StdErr);
+
+                        if (ingressExitCode != 0)
+                        {
+                            throw new CommandException("'kubectl get ingress' failed");
+                        }
+
+                        if (!done)
+                        {
+                            await Task.Delay(2000);
+                            retries++;
+                        }
+                    }
+                }
+            }
         }
     }
 }
