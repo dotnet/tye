@@ -93,7 +93,7 @@ namespace Microsoft.Tye
                     // It says VisualStudio - but on .NET Core, it defaults to just DotNetSdk.
                     // https://github.com/microsoft/MSBuildLocator/blob/v1.2.6/src/MSBuildLocator/VisualStudioInstanceQueryOptions.cs#L23
                     // 
-                    // Resolve the SDK from the project directory and falll back to the global SDK.
+                    // Resolve the SDK from the project directory and fall back to the global SDK.
                     // We're making the assumption that all of the projects want to use the same
                     // SDK version. This library is going load a single version of the SDK's
                     // assemblies into our process, so we can't use support SDKs at once without
