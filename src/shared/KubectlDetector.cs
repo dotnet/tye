@@ -9,10 +9,10 @@ namespace Microsoft.Tye
 {
     internal static class KubectlDetector
     {
-        private static Lazy<Task<bool>> _kubectlInstalled = new Lazy<Task<bool>>(DetectKubectlInstalled);
+        private static Lazy<Task<Version?>> _kubectlInstalled = new Lazy<Task<Version?>>(GetKubectlVersion);
         private static Lazy<Task<bool>> _kubectlConnectedToCluster = new Lazy<Task<bool>>(DetectKubectlConnectedToCluster);
 
-        public static Task<bool> IsKubectlInstalledAsync(OutputContext output)
+        public static Task<Version?> GetKubernetesServerVersion(OutputContext output)
         {
             if (!_kubectlInstalled.IsValueCreated)
             {
@@ -30,20 +30,34 @@ namespace Microsoft.Tye
             return _kubectlConnectedToCluster.Value;
         }
 
-        private static async Task<bool> DetectKubectlInstalled()
+        private static async Task<Version?> GetKubectlVersion()
         {
             try
             {
                 // Ignoring the exit code and relying on Process to throw if kubectl is not found
                 // kubectl version will return non-zero if you're not connected to a cluster.
-                await ProcessUtil.RunAsync("kubectl", "version", throwOnError: false);
-                return true;
+                var result = await ProcessUtil.RunAsync("kubectl", "version", throwOnError: false);
+
+                var output = result.StandardOutput;
+                var serverStringIndex = output.IndexOf("Server Version: ");
+
+                var serverMajor = GetVersion(serverStringIndex, "Major:\"", "\"", output);
+                var serverMinor = GetVersion(serverStringIndex, "Minor:\"", "\"", output);
+                var version = new Version(serverMajor, serverMinor);
+                return version;
             }
             catch (Exception)
             {
                 // Unfortunately, process throws
-                return false;
+                return null;
             }
+        }
+
+        private static int GetVersion(int startIndex, string start, string end, string input)
+        {
+            var first = input.IndexOf(start, startIndex) + start.Length;
+            var second = input.IndexOf(end, first);
+            return int.Parse(input.Substring(first, second - first));
         }
 
         private static async Task<bool> DetectKubectlConnectedToCluster()

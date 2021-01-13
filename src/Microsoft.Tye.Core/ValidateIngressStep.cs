@@ -43,7 +43,7 @@ namespace Microsoft.Tye
                 return;
             }
 
-            if (!await KubectlDetector.IsKubectlInstalledAsync(output))
+            if (await KubectlDetector.GetKubernetesServerVersion(output) == null)
             {
                 throw new CommandException($"Cannot validate ingress because kubectl is not installed.");
             }
@@ -141,9 +141,10 @@ namespace Microsoft.Tye
             {
                 // If we get here then we should deploy the ingress controller.
 
-                // For some reason, the first time we apply the ingress controller, an exception is thrown
-                // saying "ingress-nginx-admission-create" is invalid. Therefore, we are going to blindly assume the
-                // controller successfully ran.
+                // The first time we apply the ingress controller, the validating webhook will not have started.
+                // This causes an error to be returned from the process. As this always happens, we are going to
+                // not check the error returned and assume the kubectl command worked. This is double checked in
+                // the future as well when we try to create the ingress resource.
 
                 output.WriteDebugLine($"Running 'kubectl apply'");
                 output.WriteCommandLine("kubectl", $"apply -f \"https://aka.ms/tye/ingress/deploy\"");
