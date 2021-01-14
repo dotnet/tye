@@ -27,7 +27,7 @@ namespace Microsoft.Tye
             {
                 // Don't use existing tye.yaml if we are force creating it again.
                 // path prior is pointing to the tye.yaml file still, so refind another file that isn't the tye.yaml
-                var hasViableFileType = ConfigFileFinder.TryFindSupportedFile(path.DirectoryName ?? ".",
+                var hasViableFileType = ConfigFileFinder.TryFindSupportedFile(path?.DirectoryName ?? ".",
                     out var filePath,
                     out var errorMessage,
                     new string[] { "*.csproj", "*.fsproj", "*.sln" });
