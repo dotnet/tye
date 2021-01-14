@@ -116,7 +116,7 @@ namespace Microsoft.Tye
 
                     if (instance == null)
                     {
-                        throw new CommandException($"Failed to resolve dotnet in {projectFile.Directory} or the PATH. Make sure the .NET SDK is installed and on the PATH.");
+                        throw new CommandException($"Failed to resolve dotnet in {projectFile.Directory} or the PATH. Make sure the .NET SDK is installed and is on the PATH.");
                     }
 
                     output?.WriteDebugLine("Found .NET SDK at: " + instance.MSBuildPath);
