@@ -24,11 +24,14 @@
     <ProjectReference Include="..\Test.Infrastructure\Test.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Microsoft.Tye.Core\Microsoft.Tye.Core.csproj" />
     <ProjectReference Include="..\..\src\tye\tye.csproj" />
+    
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Compile Remove="testassets\**\*" />
+    <None Remove="testassets\generate\apps-with-ingress.1.18.yaml" />
+    <Compile Include="..\..\src\shared\KubectlDetector.cs" Link="KubectlDetector.cs" />
   </ItemGroup>
 
   <ItemGroup>

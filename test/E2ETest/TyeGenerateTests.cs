@@ -379,9 +379,17 @@ namespace E2ETest
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
-                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.yaml");
 
-                YamlAssert.Equals(expectedContent, content, output);
+                if (await KubectlDetector.GetKubernetesServerVersion(outputContext) >= new Version(1, 19))
+                {
+                    var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.1.19.yaml");
+                    YamlAssert.Equals(expectedContent, content, output);
+                }
+                else
+                {
+                    var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.1.18.yaml");
+                    YamlAssert.Equals(expectedContent, content, output);
+                }
 
                 await DockerAssert.AssertImageExistsAsync(output, "appa");
                 await DockerAssert.AssertImageExistsAsync(output, "appb");
