@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace Microsoft.Tye.Hosting.Model
 {
@@ -17,6 +18,18 @@ namespace Microsoft.Tye.Hosting.Model
             Source = source.FullName;
             ContextDirectory = source.DirectoryName!;
             Services = services;
+
+            foreach (var s in Services.Values)
+            {
+                if (s.Description.RunInfo is ProjectRunInfo projectRunInfo)
+                {
+                    var projectFileName = projectRunInfo.ProjectFile.FullName;
+                    if (!ProjectFileLocks.ContainsKey(projectFileName))
+                    {
+                        ProjectFileLocks[projectFileName] = new SemaphoreSlim(1, 1);
+                    }
+                }
+            }
         }
 
         public string Source { get; }
@@ -24,6 +37,8 @@ namespace Microsoft.Tye.Hosting.Model
         public string ContextDirectory { get; }
 
         public Dictionary<string, Service> Services { get; }
+
+        internal Dictionary<string, SemaphoreSlim> ProjectFileLocks { get; } = new Dictionary<string, SemaphoreSlim>();
 
         public Dictionary<object, object> Items { get; } = new Dictionary<object, object>();
 

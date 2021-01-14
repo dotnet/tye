@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.Watcher
                     if (finishedTask == processTask)
                     {
                         // Now wait for a file to change before restarting process
-                        await fileSetWatcher.GetChangedFileAsync(cancellationToken, () => _logger.LogWarning("Waiting for a file to change before restarting dotnet..."));
+                        await fileSetWatcher.GetChangedFileAsync(cancellationToken, () => _logger.LogWarning("watch: {Replica} Waiting for a file to change before restarting dotnet...", replica));
                     }
 
                     if (!string.IsNullOrEmpty(fileSetTask.Result))
@@ -112,7 +112,8 @@ namespace Microsoft.DotNet.Watcher
                                 // Build failed, keep retrying builds until successful build. 
                             }
 
-                            await fileSetWatcher.GetChangedFileAsync(cancellationToken, () => _logger.LogWarning("Waiting for a file to change before restarting dotnet..."));
+                            // Now wait for a file to change before restarting process
+                            await fileSetWatcher.GetChangedFileAsync(cancellationToken, () => _logger.LogWarning("watch: {Replica} Waiting for a file to change before restarting dotnet...", replica));
                         }
                     }
                 }

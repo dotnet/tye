@@ -359,9 +359,24 @@ namespace Microsoft.Tye.Hosting
                             },
                             Build = async () =>
                             {
-                                if (service.Description.RunInfo is ProjectRunInfo)
+                                if (service.Description.RunInfo is ProjectRunInfo projectRunInfo)
                                 {
-                                    var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
+                                    ProcessResult buildResult;
+
+                                    var projectFile = projectRunInfo.ProjectFile.FullName;
+                                    var projectSemaphore = application.ProjectFileLocks[projectFile];
+                                    await projectSemaphore.WaitAsync();
+                                    try
+                                    {
+                                        _logger.LogDebug($"[{replica}] Building project {projectFile}:");
+                                        buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
+                                    }
+                                    finally
+                                    {
+                                        _logger.LogDebug($"[{replica}] Finished Building project {projectFile}:");
+                                        projectSemaphore.Release();
+                                    }
+
                                     if (buildResult.ExitCode != 0)
                                     {
                                         _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
