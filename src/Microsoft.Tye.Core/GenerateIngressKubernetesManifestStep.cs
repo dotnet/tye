@@ -12,10 +12,9 @@ namespace Microsoft.Tye
 
         public string Environment { get; set; } = "production";
 
-        public override Task ExecuteAsync(OutputContext output, ApplicationBuilder application, IngressBuilder ingress)
+        public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, IngressBuilder ingress)
         {
-            ingress.Outputs.Add(KubernetesManifestGenerator.CreateIngress(output, application, ingress));
-            return Task.CompletedTask;
+            ingress.Outputs.Add(await KubernetesManifestGenerator.CreateIngress(output, application, ingress));
         }
     }
 }
