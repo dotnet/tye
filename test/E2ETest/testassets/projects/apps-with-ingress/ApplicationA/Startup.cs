@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
@@ -32,6 +32,12 @@ namespace ApplicationA
                 endpoints.MapGet("/", async context =>
                 {
                     await context.Response.WriteAsync("Hello from Application A " + Environment.GetEnvironmentVariable("APP_INSTANCE") ?? Environment.GetEnvironmentVariable("HOSTNAME"));
+                    await context.Response.WriteAsync(context.Request.Path);
+                });
+
+                endpoints.MapGet("/C/test", async context =>
+                {
+                    await context.Response.WriteAsync("Hit path /C/test");
                 });
 
                 // This method returns the body content and query string back to the caller, to test that the ingress passes those properly
