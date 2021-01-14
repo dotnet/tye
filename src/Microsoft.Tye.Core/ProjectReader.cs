@@ -90,27 +90,33 @@ namespace Microsoft.Tye
                 {
                     output?.WriteDebugLine("Locating .NET SDK...");
 
-                    // It says VisualStudio - but we'll just use .NET SDK
-                    var instances = MSBuildLocator.QueryVisualStudioInstances(new VisualStudioInstanceQueryOptions()
-                    {
-                        DiscoveryTypes = DiscoveryType.DotNetSdk,
+                    // It says VisualStudio - but on .NET Core, it defaults to just DotNetSdk.
+                    // https://github.com/microsoft/MSBuildLocator/blob/v1.2.6/src/MSBuildLocator/VisualStudioInstanceQueryOptions.cs#L23
+                    // 
+                    // Resolve the SDK from the project directory and fall back to the global SDK.
+                    // We're making the assumption that all of the projects want to use the same
+                    // SDK version. This library is going load a single version of the SDK's
+                    // assemblies into our process, so we can't use support SDKs at once without
+                    // getting really tricky.
+                    //
+                    // The .NET SDK-based discovery uses `dotnet --info` and returns the SDK
+                    // in use for the directory.
+                    //
+                    // https://github.com/microsoft/MSBuildLocator/blob/v1.2.6/src/MSBuildLocator/DotNetSdkLocationHelper.cs#L68
+                    var instance = MSBuildLocator
+                        .QueryVisualStudioInstances(new VisualStudioInstanceQueryOptions { WorkingDirectory = projectFile.DirectoryName })
+                        .FirstOrDefault();
 
-                        // Using the project as the working directory. We're making the assumption that
-                        // all of the projects want to use the same SDK version. This library is going
-                        // load a single version of the SDK's assemblies into our process, so we can't
-                        // use support SDKs at once without getting really tricky.
-                        //
-                        // The .NET SDK-based discovery uses `dotnet --info` and returns the SDK
-                        // in use for the directory.
-                        //
-                        // https://github.com/microsoft/MSBuildLocator/blob/master/src/MSBuildLocator/MSBuildLocator.cs#L320
-                        WorkingDirectory = projectFile.DirectoryName,
-                    });
-
-                    var instance = instances.SingleOrDefault();
                     if (instance == null)
                     {
-                        throw new CommandException("Failed to find dotnet. Make sure the .NET SDK is installed and on the PATH.");
+                        instance = MSBuildLocator
+                            .QueryVisualStudioInstances()
+                            .FirstOrDefault();
+                    }
+
+                    if (instance == null)
+                    {
+                        throw new CommandException($"Failed to resolve dotnet in {projectFile.Directory} or the PATH. Make sure the .NET SDK is installed and is on the PATH.");
                     }
 
                     output?.WriteDebugLine("Found .NET SDK at: " + instance.MSBuildPath);
