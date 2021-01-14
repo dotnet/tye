@@ -30,7 +30,7 @@ namespace Microsoft.Tye
                 var hasViableFileType = ConfigFileFinder.TryFindSupportedFile(path.DirectoryName,
                     out var filePath,
                     out var errorMessage,
-                    new string[] {"*.csproj", "*.fsproj", "*.sln" });
+                    new string[] { "*.csproj", "*.fsproj", "*.sln" });
 
                 if (!hasViableFileType)
                 {
