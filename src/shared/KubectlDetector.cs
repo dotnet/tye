@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
@@ -36,28 +37,29 @@ namespace Microsoft.Tye
             {
                 // Ignoring the exit code and relying on Process to throw if kubectl is not found
                 // kubectl version will return non-zero if you're not connected to a cluster.
-                var result = await ProcessUtil.RunAsync("kubectl", "version", throwOnError: false);
+                var result = await ProcessUtil.RunAsync("kubectl", "version -o json", throwOnError: false);
 
                 var output = result.StandardOutput;
-                var serverStringIndex = output.IndexOf("Server Version: ");
+                using var jsonDoc = JsonDocument.Parse(output);
+                foreach (JsonProperty element in jsonDoc.RootElement.EnumerateObject())
+                {
+                    if (element.Name != "serverVersion")
+                    {
+                        continue;
+                    }
+                    var major = int.Parse(element.Value.GetProperty("major").GetString());
+                    var minor = int.Parse(element.Value.GetProperty("minor").GetString());
+                    var version = new Version(major, minor);
+                    return version;
+                }
 
-                var serverMajor = GetVersion(serverStringIndex, "Major:\"", "\"", output);
-                var serverMinor = GetVersion(serverStringIndex, "Minor:\"", "\"", output);
-                var version = new Version(serverMajor, serverMinor);
-                return version;
+                return null;
             }
             catch (Exception)
             {
                 // Unfortunately, process throws
                 return null;
             }
-        }
-
-        private static int GetVersion(int startIndex, string start, string end, string input)
-        {
-            var first = input.IndexOf(start, startIndex) + start.Length;
-            var second = input.IndexOf(end, first);
-            return int.Parse(input.Substring(first, second - first));
         }
 
         private static async Task<bool> DetectKubectlConnectedToCluster()
