@@ -13,7 +13,8 @@ if ($MyInvocation.CommandOrigin -eq 'runspace') {
 
 function dtye() {
     $ProjectPath = Join-Path (Join-Path $PSScriptRoot "src") "tye"
-    dotnet run --project "$ProjectPath" @args
+    Write-Host dotnet run --project "$ProjectPath" -- @args
+    dotnet run --project "$ProjectPath" -- @args
 }
 
 function deactivate ([switch]$init) {
