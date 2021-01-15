@@ -145,6 +145,10 @@ spec:
           serviceName: appb
           servicePort: 80
         path: /B(/|$)(.*)
+      - backend:
+          serviceName: appa
+          servicePort: 80
+        path: /()(C.*)
   - host: a.example.com
     http:
       paths:

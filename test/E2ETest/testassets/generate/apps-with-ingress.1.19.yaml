@@ -151,6 +151,13 @@ spec:
               number: 80
         path: /B(/|$)(.*)
         pathType: Prefix
+      - backend:
+          service:
+            name: appa
+            port:
+              number: 80
+        path: /()(C.*)
+        pathType: Prefix
   - host: a.example.com
     http:
       paths:
