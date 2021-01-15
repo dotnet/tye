@@ -32,10 +32,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="testassets\generate\single-project-registrypullsecret.yaml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.6.1" />
   </ItemGroup>
 
