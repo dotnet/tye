@@ -3,11 +3,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.Tye.Hosting.Model
 {
@@ -18,18 +19,6 @@ namespace Microsoft.Tye.Hosting.Model
             Source = source.FullName;
             ContextDirectory = source.DirectoryName!;
             Services = services;
-
-            foreach (var s in Services.Values)
-            {
-                if (s.Description.RunInfo is ProjectRunInfo projectRunInfo)
-                {
-                    var projectFileName = projectRunInfo.ProjectFile.FullName;
-                    if (!ProjectFileLocks.ContainsKey(projectFileName))
-                    {
-                        ProjectFileLocks[projectFileName] = new SemaphoreSlim(1, 1);
-                    }
-                }
-            }
         }
 
         public string Source { get; }
@@ -38,7 +27,7 @@ namespace Microsoft.Tye.Hosting.Model
 
         public Dictionary<string, Service> Services { get; }
 
-        internal Dictionary<string, SemaphoreSlim> ProjectFileLocks { get; } = new Dictionary<string, SemaphoreSlim>();
+        internal ConcurrentDictionary<string, TaskCompletionSource<ProcessResult>> ProjectProcesses { get; } = new ConcurrentDictionary<string, TaskCompletionSource<ProcessResult>>();
 
         public Dictionary<object, object> Items { get; } = new Dictionary<object, object>();
 

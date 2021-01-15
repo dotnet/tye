@@ -361,21 +361,24 @@ namespace Microsoft.Tye.Hosting
                             {
                                 if (service.Description.RunInfo is ProjectRunInfo projectRunInfo)
                                 {
-                                    ProcessResult buildResult;
-
                                     var projectFile = projectRunInfo.ProjectFile.FullName;
-                                    var projectSemaphore = application.ProjectFileLocks[projectFile];
-                                    await projectSemaphore.WaitAsync();
-                                    try
+                                    var newProcess = new TaskCompletionSource<ProcessResult>();
+                                    var ongoingProcess = application.ProjectProcesses.GetOrAdd(projectFile, newProcess);
+
+                                    if (ongoingProcess != newProcess)
                                     {
-                                        _logger.LogDebug($"[{replica}] Building project {projectFile}:");
-                                        buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
+                                        return (await ongoingProcess.Task).ExitCode;
                                     }
-                                    finally
-                                    {
-                                        _logger.LogDebug($"[{replica}] Finished Building project {projectFile}:");
-                                        projectSemaphore.Release();
-                                    }
+
+                                    _logger.LogDebug($"[{replica}] Building project {projectFile}:");
+                                    var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
+                                    _logger.LogDebug($"[{replica}] Finished Building project {projectFile}:");
+
+                                    ongoingProcess.SetResult(buildResult);
+
+                                    // Cannot remove a specific KVP until net5.0. Workaround is to cast to ICollection<KVP<>>
+                                    ICollection<KeyValuePair<string, TaskCompletionSource<ProcessResult>>> projectProcesses = application.ProjectProcesses;
+                                    projectProcesses.Remove(KeyValuePair.Create(projectFile, ongoingProcess));
 
                                     if (buildResult.ExitCode != 0)
                                     {
