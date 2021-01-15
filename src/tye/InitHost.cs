@@ -23,6 +23,23 @@ namespace Microsoft.Tye
                 ThrowIfTyeFilePresent(path, "tye.yaml");
             }
 
+            if (force)
+            {
+                // Don't use existing tye.yaml if we are force creating it again.
+                // path prior is pointing to the tye.yaml file still, so refind another file that isn't the tye.yaml
+                var hasViableFileType = ConfigFileFinder.TryFindSupportedFile(path?.DirectoryName ?? ".",
+                    out var filePath,
+                    out var errorMessage,
+                    new string[] { "*.csproj", "*.fsproj", "*.sln" });
+
+                if (!hasViableFileType)
+                {
+                    throw new CommandException(errorMessage!);
+                }
+
+                path = new FileInfo(filePath);
+            }
+
             var template = @"
 # tye application configuration file
 # read all about it at https://github.com/dotnet/tye
