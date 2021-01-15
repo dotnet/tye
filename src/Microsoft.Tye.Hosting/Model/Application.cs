@@ -27,7 +27,8 @@ namespace Microsoft.Tye.Hosting.Model
 
         public Dictionary<string, Service> Services { get; }
 
-        internal ConcurrentDictionary<string, TaskCompletionSource<ProcessResult>> ProjectProcesses { get; } = new ConcurrentDictionary<string, TaskCompletionSource<ProcessResult>>();
+        internal ConcurrentDictionary<string, TaskCompletionSource<ProcessResult>> OngoingBuildProjectProcesses { get; }
+            = new ConcurrentDictionary<string, TaskCompletionSource<ProcessResult>>();
 
         public Dictionary<object, object> Items { get; } = new Dictionary<object, object>();
 

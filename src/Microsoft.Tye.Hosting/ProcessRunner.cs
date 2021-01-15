@@ -363,7 +363,7 @@ namespace Microsoft.Tye.Hosting
                                 {
                                     var projectFile = projectRunInfo.ProjectFile.FullName;
                                     var newProcess = new TaskCompletionSource<ProcessResult>();
-                                    var ongoingProcess = application.ProjectProcesses.GetOrAdd(projectFile, newProcess);
+                                    var ongoingProcess = application.OngoingBuildProjectProcesses.GetOrAdd(projectFile, newProcess);
 
                                     if (ongoingProcess != newProcess)
                                     {
@@ -377,7 +377,7 @@ namespace Microsoft.Tye.Hosting
                                     ongoingProcess.SetResult(buildResult);
 
                                     // Cannot remove a specific KVP until net5.0. Workaround is to cast to ICollection<KVP<>>
-                                    ICollection<KeyValuePair<string, TaskCompletionSource<ProcessResult>>> projectProcesses = application.ProjectProcesses;
+                                    ICollection<KeyValuePair<string, TaskCompletionSource<ProcessResult>>> projectProcesses = application.OngoingBuildProjectProcesses;
                                     projectProcesses.Remove(KeyValuePair.Create(projectFile, ongoingProcess));
 
                                     if (buildResult.ExitCode != 0)
