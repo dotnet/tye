@@ -37,7 +37,7 @@ namespace Microsoft.Tye.Hosting
         public void MapRoutes(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapGet("/api/v1", ServiceIndex);
-            endpoints.MapPut("/api/v1/control/shutdown", ControlPlaneShutdown);
+            endpoints.MapDelete("/api/v1/control", ControlPlaneShutdown);
             endpoints.MapGet("/api/v1/services", Services);
             endpoints.MapGet("/api/v1/services/{name}", Service);
             endpoints.MapGet("/api/v1/logs/{name}", Logs);
