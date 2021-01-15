@@ -697,6 +697,10 @@ services:
 
                 Assert.StartsWith("Hello from Application A", await responseA.Content.ReadAsStringAsync());
                 Assert.StartsWith("Hello from Application B", await responseB.Content.ReadAsStringAsync());
+
+                // checking preservePath behavior
+                var responsePreservePath = await client.GetAsync(ingressUri + "/C/test");
+                Assert.Contains("Hit path /C/test", await responsePreservePath.Content.ReadAsStringAsync());
             });
         }
 
