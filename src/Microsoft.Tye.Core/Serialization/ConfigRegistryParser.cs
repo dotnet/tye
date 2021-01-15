@@ -41,7 +41,7 @@ namespace Tye.Serialization
 
                 switch (key)
                 {
-                    case "hostname":
+                    case "name":
                         configRegistry.Hostname = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     case "pullSecret":

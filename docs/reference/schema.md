@@ -100,7 +100,7 @@ If this is not specified in configuration, interactive deployments will prompt f
 
 ```yaml
 registry:
-  hostname: example.azurecr.io
+  name: example.azurecr.io
   pullSecret: acr-secret
 ```
 
