@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Tye.Hosting.Model;
 using Microsoft.Tye.Hosting.Model.V1;
 
@@ -36,6 +37,7 @@ namespace Microsoft.Tye.Hosting
         public void MapRoutes(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapGet("/api/v1", ServiceIndex);
+            endpoints.MapPut("/api/v1/control/shutdown", ControlPlaneShutdown);
             endpoints.MapGet("/api/v1/services", Services);
             endpoints.MapGet("/api/v1/services/{name}", Service);
             endpoints.MapGet("/api/v1/logs/{name}", Logs);
@@ -48,12 +50,22 @@ namespace Microsoft.Tye.Hosting
             context.Response.ContentType = "application/json";
             return JsonSerializer.SerializeAsync(context.Response.Body, new[]
             {
+                $"{context.Request.Scheme}://{context.Request.Host}/api/v1/control",
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/services",
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/logs/{{service}}",
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/metrics",
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/metrics/{{service}}",
             },
             _options);
+        }
+
+        private Task ControlPlaneShutdown(HttpContext context)
+        {
+            var lifetime = context.RequestServices.GetRequiredService<IHostApplicationLifetime>();
+
+            lifetime.StopApplication();
+
+            return context.Response.CompleteAsync();
         }
 
         private Task Services(HttpContext context)
