@@ -85,6 +85,11 @@ namespace Microsoft.AspNetCore.Proxy
                 }
             }
 
+            // Append request forwarding headers
+            requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-For", context.Connection.LocalIpAddress.ToString());
+            requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-Proto", request.Scheme);
+            requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-Host", request.Host.ToUriComponent());
+
             requestMessage.Headers.Host = uri.Authority;
             requestMessage.RequestUri = uri;
             requestMessage.Method = new HttpMethod(request.Method);
@@ -196,6 +201,16 @@ namespace Microsoft.AspNetCore.Proxy
             foreach (var header in responseMessage.Content.Headers)
             {
                 response.Headers[header.Key] = header.Value.ToArray();
+            }
+
+            // Append Via header so clients are aware of reverse-proxying.
+            if (response.Headers.TryGetValue("Via", out var via))
+            {
+                via.Append($"{responseMessage.Version} Tye");
+            }
+            else
+            {
+                response.Headers["Via"] = new[] { $"{responseMessage.Version} Tye" };
             }
 
             // SendAsync removes chunking from the response. This removes the header so it doesn't expect a chunked response.
