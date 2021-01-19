@@ -367,12 +367,13 @@ namespace Microsoft.Tye.Hosting
 
                                     if (ongoingProcess != newProcess)
                                     {
+                                        _logger.LogDebug($"[{replica}] A build has already been triggered for project {projectFile}");
                                         return (await ongoingProcess.Task).ExitCode;
                                     }
 
-                                    _logger.LogDebug($"[{replica}] Building project {projectFile}:");
+                                    _logger.LogDebug($"[{replica}] Building project {projectFile}");
                                     var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
-                                    _logger.LogDebug($"[{replica}] Finished Building project {projectFile}:");
+                                    _logger.LogDebug($"[{replica}] Finished Building project {projectFile}");
 
                                     ongoingProcess.SetResult(buildResult);
 
