@@ -88,7 +88,7 @@ namespace Microsoft.AspNetCore.Proxy
 
             // Append request forwarding headers
             requestMessage.Headers.TryAddWithoutValidation("Via", $"{context.Request.Protocol} Tye");
-            requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-For", context.Connection.LocalIpAddress.ToString());
+            requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-For", context.Connection.RemoteIpAddress.ToString());
             requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-Proto", request.Scheme);
             requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-Host", request.Host.ToUriComponent());
 
@@ -129,7 +129,7 @@ namespace Microsoft.AspNetCore.Proxy
             }
 
             AppendHeaderValue(client.Options, context.Request.Headers, "Via", context.Request.Protocol);
-            AppendHeaderValue(client.Options, context.Request.Headers, "X-Forwarded-For", context.Connection.LocalIpAddress.ToString());
+            AppendHeaderValue(client.Options, context.Request.Headers, "X-Forwarded-For", context.Connection.RemoteIpAddress.ToString());
             AppendHeaderValue(client.Options, context.Request.Headers, "X-Forwarded-Proto", context.Request.Scheme);
             AppendHeaderValue(client.Options, context.Request.Headers, "X-Forwarded-Host", context.Request.Host.ToUriComponent());
 
