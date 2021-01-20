@@ -267,7 +267,7 @@ namespace Microsoft.Tye
                     else if (!string.IsNullOrEmpty(configService.Repository))
                     {
                         // clone to .tye folder
-                        var path = configService.CloneDirectory ?? Path.Join(rootConfig.Source.DirectoryName, ".tye", "deps");
+                        var path = configService.CloneDirectory ?? Path.Join(".tye", "deps");
                         if (!Directory.Exists(path))
                         {
                             Directory.CreateDirectory(path);
@@ -282,7 +282,7 @@ namespace Microsoft.Tye
                                 throw new CommandException($"Cannot clone repository {configService.Repository} because git is not installed. Please install git if you'd like to use \"repository\" in tye.yaml.");
                             }
 
-                            var result = await ProcessUtil.RunAsync("git", $"clone {configService.Repository} \"{clonePath}\"", workingDirectory: path, throwOnError: false);
+                            var result = await ProcessUtil.RunAsync("git", $"clone {configService.Repository} \"{clonePath}\"", workingDirectory: rootConfig.Source.DirectoryName, throwOnError: false);
 
                             if (result.ExitCode != 0)
                             {
