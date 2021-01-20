@@ -279,7 +279,7 @@ namespace Microsoft.Tye.Extensions.Dapr
             }
             else
             {
-                var nixpath = Environment.ExpandEnvironmentVariables("$HOME/.dapr/bin/daprd");
+                var nixpath = Environment.ExpandEnvironmentVariables("%HOME%/.dapr/bin/daprd");
                 if (File.Exists(nixpath))
                 {
                     return nixpath;
