@@ -204,14 +204,7 @@ namespace Microsoft.AspNetCore.Proxy
             }
 
             // Append Via header so clients are aware of reverse-proxying.
-            if (response.Headers.TryGetValue("Via", out var via))
-            {
-                via.Append($"{responseMessage.Version} Tye");
-            }
-            else
-            {
-                response.Headers["Via"] = new[] { $"{responseMessage.Version} Tye" };
-            }
+            response.Headers.AppendCommaSeparatedValues("Via", $"{responseMessage.Version} Tye");
 
             // SendAsync removes chunking from the response. This removes the header so it doesn't expect a chunked response.
             response.Headers.Remove("transfer-encoding");
