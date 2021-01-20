@@ -273,7 +273,7 @@ namespace Microsoft.Tye
                             Directory.CreateDirectory(path);
                         }
 
-                        var clonePath = Path.Combine(path, configService.Name);
+                        var clonePath = Path.Combine(rootConfig.Source.DirectoryName!, path, configService.Name);
 
                         if (!Directory.Exists(clonePath))
                         {
