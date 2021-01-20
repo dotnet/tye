@@ -536,9 +536,9 @@ namespace Microsoft.Tye
             // running these targets we don't really care as long as we get the data.
             if (msbuildEvaluationResult.ExitCode != 0)
             {
-                output.WriteDebugLine($"Evaluating project failed with exit code {msbuildEvaluationResult.ExitCode}:" +
-                    $"{Environment.NewLine}Ouptut: {msbuildEvaluationResult.StandardOutput}" +
-                    $"{Environment.NewLine}Error: {msbuildEvaluationResult.StandardError}");
+                output.WriteInfoLine($"Evaluating project failed with exit code {msbuildEvaluationResult.ExitCode}");
+                output.WriteDebugLine($"Ouptut: {msbuildEvaluationResult.StandardOutput}");
+                output.WriteDebugLine($"Error: {msbuildEvaluationResult.StandardError}");
             }
 
             return msbuildEvaluationResult;
