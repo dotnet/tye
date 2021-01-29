@@ -240,7 +240,7 @@ namespace Microsoft.Tye.Hosting
                     // These are the ports that the application should use for binding
 
                     // 1. Tell the docker container what port to bind to
-                    portString = docker.Private ? "" : string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.ContainerPort ?? p.Port}{(p.Protocol == "udp" ? "/udp" : string.Empty)}"));
+                    portString = docker.Private ? "" : string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.ContainerPort ?? p.Port}{(string.Equals(p.Protocol, "udp", StringComparison.OrdinalIgnoreCase) ? "/udp" : string.Empty)}"));
 
                     if (docker.IsAspNet)
                     {
