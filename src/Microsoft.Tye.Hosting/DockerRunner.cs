@@ -79,6 +79,11 @@ namespace Microsoft.Tye.Hosting
                         continue;
                     }
 
+                    if (string.Equals(binding.Protocol, "udp", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        throw new CommandException("Proxy does not support the udp protocol yet.");
+                    }
+
                     var b = new ServiceBinding()
                     {
                         ConnectionString = binding.ConnectionString,
