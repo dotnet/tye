@@ -15,9 +15,9 @@ namespace Microsoft.Tye
             Name = name;
         }
 
-        public FileInfo Source { get; set; }
+        public FileInfo Source { get; }
 
-        public string Name { get; set; }
+        public string Name { get; }
 
         public string? Namespace { get; set; }
 
