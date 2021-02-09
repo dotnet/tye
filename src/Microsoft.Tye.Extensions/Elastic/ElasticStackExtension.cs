@@ -12,10 +12,9 @@ namespace Microsoft.Tye.Extensions.Elastic
     {
         public override Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
         {
-            var elasticPort = 9200;
-            var elasticContainerPort = 9200;
-            var kibanaPort = 5601;
-            var kibanaContainerPort = 5601;
+            var elasticPort = GetIntValueFromConfigData(config, "port", 9200);
+            var kibanaPort = GetIntValueFromConfigData(config, "port-kibana", 5601);
+
             if (context.Application.Services.Any(s => s.Name == "elastic"))
             {
                 context.Output.WriteDebugLine("elastic service already configured. Skipping...");
@@ -36,13 +35,13 @@ namespace Microsoft.Tye.Extensions.Elastic
                         {
                             Name = "kibana",
                             Port = kibanaPort,
-                            ContainerPort = kibanaContainerPort,
+                            ContainerPort = kibanaPort,
                             Protocol = "http",
                         },
                         new BindingBuilder()
                         {
                             Port = elasticPort,
-                            ContainerPort = elasticContainerPort,
+                            ContainerPort = elasticPort,
                             Protocol = "http",
                         },
                     },
@@ -108,6 +107,15 @@ namespace Microsoft.Tye.Extensions.Elastic
             }
 
             return Task.CompletedTask;
+        }
+
+        private static int? GetIntValueFromConfigData(ExtensionConfiguration config, string key, int defaultValue)
+        {
+            if (config.Data.TryGetValue(key, out var obj) && int.TryParse(obj?.ToString(), out int parsedValue))
+            {
+                return parsedValue;
+            }
+            return defaultValue;
         }
     }
 }
