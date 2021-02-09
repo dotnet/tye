@@ -12,6 +12,10 @@ namespace Microsoft.Tye.Extensions.Elastic
     {
         public override Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
         {
+            var elasticPort = 9200;
+            var elasticContainerPort = 9200;
+            var kibanaPort = 5601;
+            var kibanaContainerPort = 5601;
             if (context.Application.Services.Any(s => s.Name == "elastic"))
             {
                 context.Output.WriteDebugLine("elastic service already configured. Skipping...");
@@ -31,14 +35,14 @@ namespace Microsoft.Tye.Extensions.Elastic
                         new BindingBuilder()
                         {
                             Name = "kibana",
-                            Port = 5601,
-                            ContainerPort = 5601,
+                            Port = kibanaPort,
+                            ContainerPort = kibanaContainerPort,
                             Protocol = "http",
                         },
                         new BindingBuilder()
                         {
-                            Port = 9200,
-                            ContainerPort = 9200,
+                            Port = elasticPort,
+                            ContainerPort = elasticContainerPort,
                             Protocol = "http",
                         },
                     },
@@ -75,7 +79,7 @@ namespace Microsoft.Tye.Extensions.Elastic
                         if (context.Options!.LoggingProvider is null)
                         {
                             // For local development we hardcode the port and hostname
-                            context.Options.LoggingProvider = "elastic=http://localhost:9200";
+                            context.Options.LoggingProvider = $"elastic=http://localhost:{elasticPort}";
                         }
 
                         break;
