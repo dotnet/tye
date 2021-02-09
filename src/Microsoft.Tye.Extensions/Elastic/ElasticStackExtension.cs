@@ -10,10 +10,12 @@ namespace Microsoft.Tye.Extensions.Elastic
 {
     internal sealed class ElasticStackExtension : Extension
     {
+        const int DEFAULT_PORT_ELASTIC = 9200;
+        const int DEFAULT_PORT_KIBANA = 5601;
         public override Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
         {
-            var elasticPort = GetIntValueFromConfigData(config, "port", 9200);
-            var kibanaPort = GetIntValueFromConfigData(config, "port-kibana", 5601);
+            var elasticPort = GetIntValueFromConfigData(config, "port", DEFAULT_PORT_ELASTIC);
+            var kibanaPort = GetIntValueFromConfigData(config, "port-kibana", DEFAULT_PORT_KIBANA);
 
             if (context.Application.Services.Any(s => s.Name == "elastic"))
             {
@@ -35,13 +37,13 @@ namespace Microsoft.Tye.Extensions.Elastic
                         {
                             Name = "kibana",
                             Port = kibanaPort,
-                            ContainerPort = kibanaPort,
+                            ContainerPort = DEFAULT_PORT_KIBANA,
                             Protocol = "http",
                         },
                         new BindingBuilder()
                         {
                             Port = elasticPort,
-                            ContainerPort = elasticPort,
+                            ContainerPort = DEFAULT_PORT_ELASTIC,
                             Protocol = "http",
                         },
                     },
