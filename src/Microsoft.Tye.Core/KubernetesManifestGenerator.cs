@@ -358,6 +358,31 @@ namespace Microsoft.Tye
                 container.Add("image", $"{image.ImageName}:{image.ImageTag}");
                 container.Add("imagePullPolicy", "Always"); // helps avoid problems with development + weak versioning
 
+
+ 				var volumeMounts = new YamlSequenceNode();
+                var localMounts = new YamlSequenceNode();
+
+				if(project.Volumes.Count>0) {
+        			container.Add("volumeMounts", volumeMounts);
+                    spec.Add("volumes", localMounts);
+
+					foreach(var vol in project.Volumes) {
+                        var volumeMount = new YamlMappingNode();
+                        volumeMounts.Add(volumeMount);
+                        volumeMount.Add("name", vol.Name);
+                        volumeMount.Add("mountPath", vol.Target);
+
+                        var localMount = new YamlMappingNode();
+                        var hostPath = new YamlMappingNode();
+                        var path = new YamlMappingNode();
+
+                        localMounts.Add(localMount);
+                        localMount.Add("name", vol.Name);
+                        localMount.Add("hostPath", hostPath);
+                        hostPath.Add("path", vol.Source);
+                    }
+				}
+
                 if (project.EnvironmentVariables.Count > 0 ||
 
                     // We generate ASPNETCORE_URLS if there are bindings for http
@@ -388,8 +413,8 @@ namespace Microsoft.Tye
                         // volumeMounts:
                         // - name: shared-data
                         //   mountPath: /usr/share/nginx/html
-                        var volumeMounts = new YamlSequenceNode();
-                        container.Add("volumeMounts", volumeMounts);
+						if(!container.Children.ContainsKey("volumeMounts"))
+                        	container.Add("volumeMounts", volumeMounts);
 
                         var volumeMount = new YamlMappingNode();
                         volumeMounts.Add(volumeMount);
