@@ -108,7 +108,7 @@ namespace Microsoft.Tye.Hosting
             {
                 _processRunner.LaunchService(app, service);
             }
-            
+
             context.Response.Redirect($"/services/{name}");
 
             return Task.CompletedTask;
@@ -125,7 +125,7 @@ namespace Microsoft.Tye.Hosting
                 services.Add(name, service);
                 await _processRunner.KillRunningProcesses(services);
             }
-            
+
             context.Response.Redirect($"/services/{name}");
 
             return;

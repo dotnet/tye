@@ -471,7 +471,7 @@ namespace Microsoft.Tye.Hosting
                 }
                 return Task.CompletedTask;
             }
-            
+
             var index = 0;
             var tasks = new Task[services.Count];
             foreach (var s in services.Values)

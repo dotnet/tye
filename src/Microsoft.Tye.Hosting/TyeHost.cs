@@ -177,7 +177,7 @@ namespace Microsoft.Tye.Hosting
             builder.Services.AddSingleton(application);
 
             builder.Services.AddScoped(sp =>
-            { 
+            {
                 var server = sp.GetRequiredService<AspNetCore.Hosting.Server.IServer>();
                 var addressFeature = server.Features.Get<AspNetCore.Hosting.Server.Features.IServerAddressesFeature>();
                 string baseAddress = addressFeature.Addresses.First();
@@ -202,7 +202,8 @@ namespace Microsoft.Tye.Hosting
 
             app.UseRouting();
 
-            if (_logger != null && _replicaRegistry != null) {
+            if (_logger != null && _replicaRegistry != null)
+            {
                 var api = new TyeDashboardApi(new ProcessRunner(_logger, _replicaRegistry, ProcessRunnerOptions.FromHostOptions(_options)));
 
                 api.MapRoutes(app);
