@@ -20,8 +20,9 @@ namespace Microsoft.Tye.Hosting
     public class TyeDashboardApi
     {
         private readonly JsonSerializerOptions _options;
+        private readonly ProcessRunner _processRunner;
 
-        public TyeDashboardApi()
+        public TyeDashboardApi(ProcessRunner processRunner)
         {
             _options = new JsonSerializerOptions()
             {
@@ -31,12 +32,15 @@ namespace Microsoft.Tye.Hosting
             };
 
             _options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            _processRunner = processRunner;
         }
 
         public void MapRoutes(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapGet("/api/v1", ServiceIndex);
             endpoints.MapGet("/api/v1/services", Services);
+            endpoints.MapGet("/api/v1/services/{name}/stop", ServiceStop);
+            endpoints.MapGet("/api/v1/services/{name}/start", ServiceStart);
             endpoints.MapGet("/api/v1/services/{name}", Service);
             endpoints.MapGet("/api/v1/logs/{name}", Logs);
             endpoints.MapGet("/api/v1/metrics", AllMetrics);
@@ -93,6 +97,38 @@ namespace Microsoft.Tye.Hosting
             var serviceJson = CreateServiceJson(service);
 
             return JsonSerializer.SerializeAsync(context.Response.Body, serviceJson, _options);
+        }
+
+        private Task ServiceStart(HttpContext context)
+        {
+            var app = context.RequestServices.GetRequiredService<Application>();
+
+            var name = (string?)context.Request.RouteValues["name"];
+            if (!string.IsNullOrEmpty(name) && app.Services.TryGetValue(name, out var service))
+            {
+                _processRunner.LaunchService(app, service);
+            }
+            
+            context.Response.Redirect($"/services/{name}");
+
+            return Task.CompletedTask;
+        }
+
+        private async Task ServiceStop(HttpContext context)
+        {
+            var app = context.RequestServices.GetRequiredService<Application>();
+
+            var name = (string?)context.Request.RouteValues["name"];
+            if (!string.IsNullOrEmpty(name) && app.Services.TryGetValue(name, out var service))
+            {
+                var services = new Dictionary<string, Service>();
+                services.Add(name, service);
+                await _processRunner.KillRunningProcesses(services);
+            }
+            
+            context.Response.Redirect($"/services/{name}");
+
+            return;
         }
 
         private static V1Service CreateServiceJson(Service service)

@@ -81,9 +81,9 @@ namespace Microsoft.Tye.Hosting
 
             _logger.LogInformation("Executing application from {Source}", _application.Source);
 
-            ConfigureApplication(app);
-
             _replicaRegistry = new ReplicaRegistry(_application.ContextDirectory, _logger);
+
+            ConfigureApplication(app);
 
             _processor = CreateApplicationProcessor(_replicaRegistry, _options, _logger);
 
@@ -175,6 +175,15 @@ namespace Microsoft.Tye.Hosting
                 });
 
             builder.Services.AddSingleton(application);
+
+            builder.Services.AddScoped(sp =>
+            { 
+                var server = sp.GetRequiredService<AspNetCore.Hosting.Server.IServer>();
+                var addressFeature = server.Features.Get<AspNetCore.Hosting.Server.Features.IServerAddressesFeature>();
+                string baseAddress = addressFeature.Addresses.First();
+                return new System.Net.Http.HttpClient { BaseAddress = new Uri(baseAddress) };
+            });
+
             var app = builder.Build();
             return app;
         }
@@ -193,9 +202,11 @@ namespace Microsoft.Tye.Hosting
 
             app.UseRouting();
 
-            var api = new TyeDashboardApi();
+            if (_logger != null && _replicaRegistry != null) {
+                var api = new TyeDashboardApi(new ProcessRunner(_logger, _replicaRegistry, ProcessRunnerOptions.FromHostOptions(_options)));
 
-            api.MapRoutes(app);
+                api.MapRoutes(app);
+            }
 
             app.MapBlazorHub();
             app.MapFallbackToPage("/_Host");

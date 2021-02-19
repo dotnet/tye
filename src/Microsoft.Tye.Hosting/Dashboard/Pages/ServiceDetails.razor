@@ -1,5 +1,6 @@
 ﻿@page "/services/{ServiceName}"
 @inject Application application
+@inject HttpClient Http
 
 @if (Service == null)
 {
@@ -8,6 +9,14 @@
 else
 {
     <h3>@Service.Description.Name</h3>
+
+    @if (_service?.Replicas != null) {
+        if (_service.Replicas.Any()) {
+            <button @onclick="OnServiceStop" class="btn btn-danger">Stop</button>
+        } else {
+            <button @onclick="OnServiceStart" class="btn btn-success">Start</button>
+        }
+    }
 
     switch (Service.ServiceType)
     {
@@ -35,5 +44,15 @@ else
     protected override void OnInitialized()
     {
         application.Services.TryGetValue(ServiceName, out _service);
+    }
+
+    private async Task OnServiceStop()
+    {        
+        await Http.GetAsync($"/api/v1/services/{ServiceName}/stop");
+    }
+
+    private async Task OnServiceStart()
+    {
+        await Http.GetAsync($"/api/v1/services/{ServiceName}/start");
     }
 }
