@@ -106,7 +106,7 @@ namespace Microsoft.Tye
                 // Even though the Exited event has been raised, WaitForExit() must still be called to ensure the output buffers
                 // have been flushed before the process is considered completely done.
                 process.WaitForExit();
-                
+
                 if (throwOnError && process.ExitCode != 0)
                 {
                     processLifetimeTask.TrySetException(new InvalidOperationException($"Command {filename} {arguments} returned exit code {process.ExitCode}"));
