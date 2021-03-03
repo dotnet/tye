@@ -35,8 +35,6 @@ See the getting started instructions and tutorials [here](/docs/getting_started.
 
 ## How to Engage, Contribute, and Give Feedback
 
-If you want a *low-spam* way to follow what the team is doing. We post a status update approximately every 2 weeks. You can find the issue [here](https://github.com/dotnet/tye/issues/251). Use the `Notifications` button to subscribe. Only team-members can post on this issue, so it's a good way to get a digest of what's happening without having to read every conversation.
-
 Some of the best ways to contribute are to try things out, file issues, join in design conversations, and make pull-requests.
 
 - Download our latest daily builds
