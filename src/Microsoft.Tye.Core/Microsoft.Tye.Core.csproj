@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="KubernetesClient" Version="2.0.17" />
+    <PackageReference Include="KubernetesClient" Version="4.0.16" />
     <!--
       The Microsoft.Build.Locator package takes care of dynamically loading these assemblies
       at runtime. We don't need/want to ship them, just to have them as references.
