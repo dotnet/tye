@@ -88,7 +88,7 @@ services:
 - name: redis
   image: redis
   bindings:
-    - port: 6973
+    - port: 6379
 ``` 
 
 All that's needed to enable Dapr integration for an application is:
