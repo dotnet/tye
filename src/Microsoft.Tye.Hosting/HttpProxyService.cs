@@ -96,7 +96,7 @@ namespace Microsoft.Tye.Hosting
 
                                     service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
                                 }
-                                
+
                                 services.Configure<IServerAddressesFeature>(serverAddresses =>
                                 {
                                     var addresses = serverAddresses.Addresses;
@@ -113,8 +113,6 @@ namespace Microsoft.Tye.Hosting
                             });
                         });
 
-
-                    
                     var webApp = host.Build();
 
                     _webApplications.Add(webApp);

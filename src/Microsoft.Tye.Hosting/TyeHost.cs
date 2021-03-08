@@ -89,12 +89,12 @@ namespace Microsoft.Tye.Hosting
             _lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 
             var dashboardAddress = _addresses.First();
-            
+
             if (_computedPort != _options.Port && _computedPort != DefaultPort)
             {
                 _logger.LogInformation("Default dashboard port {DefaultPort} has been reserved by the application or is in use, choosing random port.", DefaultPort);
             }
-            
+
             _logger.LogInformation("Executing application from {Source}", _application.Source);
 
             _replicaRegistry = new ReplicaRegistry(_application.ContextDirectory, _logger);
