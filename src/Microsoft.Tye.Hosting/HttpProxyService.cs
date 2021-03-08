@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Proxy;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Tye.Hosting.Model;
 
@@ -24,7 +25,7 @@ namespace Microsoft.Tye.Hosting
 {
     public partial class HttpProxyService : IApplicationProcessor
     {
-        private List<WebApplication> _webApplications = new List<WebApplication>();
+        private List<IHost> _webApplications = new List<IHost>();
         private readonly ILogger _logger;
 
         private ConcurrentDictionary<int, bool> _readyPorts;
@@ -50,11 +51,16 @@ namespace Microsoft.Tye.Hosting
 
                 if (service.Description.RunInfo is IngressRunInfo runInfo)
                 {
+                    var host = Host.CreateDefaultBuilder()
+                                   .ConfigureWebHostDefaults(builder =>
+                                   {
+                                       builder.Configure(app =>
+                                       {
+
+                                       });
+                                   });
                     var builder = new WebApplicationBuilder();
 
-                    builder.Services.AddSingleton<MatcherPolicy, IngressHostMatcherPolicy>();
-
-                    builder.Logging.AddProvider(new ServiceLoggerProvider(service.Logs));
 
                     var addresses = new List<string>();
 

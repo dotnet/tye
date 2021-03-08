@@ -1105,7 +1105,7 @@ services:
             {
                 await StartHostAndWaitForReplicasToStart(host);
 
-                var uri = new Uri(host.DashboardWebApplication!.Addresses.First());
+                var uri = new Uri(host.Addresses!.First());
 
                 await execute(host.Application, uri!);
             }
@@ -1113,7 +1113,7 @@ services:
             {
                 if (host.DashboardWebApplication != null)
                 {
-                    var uri = new Uri(host.DashboardWebApplication!.Addresses.First());
+                    var uri = new Uri(host.Addresses!.First());
 
                     using var client = new HttpClient();
 
