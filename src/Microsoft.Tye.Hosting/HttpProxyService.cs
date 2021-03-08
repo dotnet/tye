@@ -12,11 +12,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Proxy;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Tye.Hosting.Model;
 
@@ -24,7 +26,7 @@ namespace Microsoft.Tye.Hosting
 {
     public partial class HttpProxyService : IApplicationProcessor
     {
-        private List<WebApplication> _webApplications = new List<WebApplication>();
+        private List<IHost> _webApplications = new List<IHost>();
         private readonly ILogger _logger;
 
         private ConcurrentDictionary<int, bool> _readyPorts;
@@ -50,44 +52,70 @@ namespace Microsoft.Tye.Hosting
 
                 if (service.Description.RunInfo is IngressRunInfo runInfo)
                 {
-                    var builder = new WebApplicationBuilder();
-
-                    builder.Services.AddSingleton<MatcherPolicy, IngressHostMatcherPolicy>();
-
-                    builder.Logging.AddProvider(new ServiceLoggerProvider(service.Logs));
-
-                    var addresses = new List<string>();
-
-                    // Bind to the addresses on this resource
-                    for (int i = 0; i < serviceDescription.Replicas; i++)
-                    {
-                        // Fake replicas since it's all running processes
-                        var replica = service.Description.Name + "_" + Guid.NewGuid().ToString().Substring(0, 10).ToLower();
-                        var status = new IngressStatus(service, replica);
-                        service.Replicas[replica] = status;
-
-                        var ports = new List<int>();
-
-                        foreach (var binding in serviceDescription.Bindings)
+                    var host = Host.CreateDefaultBuilder()
+                        .ConfigureWebHostDefaults(builder =>
                         {
-                            if (binding.Port == null)
+                            builder.Configure(app =>
                             {
-                                continue;
-                            }
 
-                            var port = binding.ReplicaPorts[i];
-                            ports.Add(port);
-                            var url = $"{binding.Protocol}://localhost:{port}";
-                            addresses.Add(url);
-                        }
+                            });
+                            builder.ConfigureServices(services =>
+                            {
+                                services.AddSingleton<MatcherPolicy, IngressHostMatcherPolicy>();
+                                services.AddLogging(loggingBuilder =>
+                                {
+                                    loggingBuilder.AddProvider(new ServiceLoggerProvider(service.Logs));
+                                });
 
-                        status.Ports = ports;
+                                var urls = new List<string>();
 
-                        service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
-                    }
+                                // Bind to the addresses on this resource
+                                for (int i = 0; i < serviceDescription.Replicas; i++)
+                                {
+                                    // Fake replicas since it's all running processes
+                                    var replica = service.Description.Name + "_" + Guid.NewGuid().ToString().Substring(0, 10).ToLower();
+                                    var status = new IngressStatus(service, replica);
+                                    service.Replicas[replica] = status;
 
-                    builder.Server.UseUrls(addresses.ToArray());
-                    var webApp = builder.Build();
+                                    var ports = new List<int>();
+
+                                    foreach (var binding in serviceDescription.Bindings)
+                                    {
+                                        if (binding.Port == null)
+                                        {
+                                            continue;
+                                        }
+
+                                        var port = binding.ReplicaPorts[i];
+                                        ports.Add(port);
+                                        var url = $"{binding.Protocol}://localhost:{port}";
+                                        urls.Add(url);
+                                    }
+
+                                    status.Ports = ports;
+
+                                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
+                                }
+                                
+                                services.Configure<IServerAddressesFeature>(serverAddresses =>
+                                {
+                                    var addresses = serverAddresses.Addresses;
+                                    if (addresses.IsReadOnly)
+                                    {
+                                        throw new NotSupportedException("Changing the URL isn't supported.");
+                                    }
+                                    addresses.Clear();
+                                    foreach (var u in urls)
+                                    {
+                                        addresses.Add(u);
+                                    }
+                                });
+                            });
+                        });
+
+
+                    
+                    var webApp = host.Build();
 
                     _webApplications.Add(webApp);
 
