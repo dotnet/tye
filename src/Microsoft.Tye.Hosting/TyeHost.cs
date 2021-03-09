@@ -205,7 +205,7 @@ namespace Microsoft.Tye.Hosting
                 api.MapRoutes(endpoints);
 
                 endpoints.MapBlazorHub();
-                endpoints.MapFallbackToPage("Dashboard/Pages/_Host");
+                endpoints.MapFallbackToPage("/_Host");
             });
         }
 
