@@ -84,11 +84,8 @@ namespace Microsoft.Tye.Hosting
             var app = BuildWebApplication(_application, _options, Sink);
             DashboardWebApplication = app;
 
-            _addresses = DashboardWebApplication.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>().Addresses;
             _logger = DashboardWebApplication.Services.GetRequiredService<ILogger<TyeHost>>();
             _lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
-
-            var dashboardAddress = _addresses.First();
 
             if (_computedPort != _options.Port && _computedPort != DefaultPort)
             {
@@ -102,6 +99,8 @@ namespace Microsoft.Tye.Hosting
             _processor = CreateApplicationProcessor(_replicaRegistry, _options, _logger);
 
             await app.StartAsync();
+
+            _addresses = DashboardWebApplication.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>().Addresses;
 
             _logger.LogInformation("Dashboard running on {Address}", _addresses.First());
 
@@ -206,7 +205,7 @@ namespace Microsoft.Tye.Hosting
                 api.MapRoutes(endpoints);
 
                 endpoints.MapBlazorHub();
-                endpoints.MapFallbackToPage("/_Host");
+                endpoints.MapFallbackToPage("Dashboard/Pages/_Host");
             });
         }
 
