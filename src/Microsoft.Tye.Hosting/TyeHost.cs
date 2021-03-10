@@ -184,6 +184,10 @@ namespace Microsoft.Tye.Hosting
 
                     builder.Configure(ConfigureApplication)
                            .UseUrls($"http://127.0.0.1:{port}");
+                    builder.ConfigureAppConfiguration((b, c) =>
+                    {
+                        b.HostingEnvironment.ApplicationName = "Microsoft.Tye.Hosting";
+                    });
                 })
                 .Build();
         }
@@ -202,10 +206,10 @@ namespace Microsoft.Tye.Hosting
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapBlazorHub();
                 api.MapRoutes(endpoints);
 
-                endpoints.MapBlazorHub();
-                endpoints.MapFallbackToPage("/_Host");
+                endpoints.MapFallbackToPage("Dashboard/Pages/_Host");
             });
         }
 
