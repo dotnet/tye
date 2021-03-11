@@ -116,7 +116,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
     `tye deploy` will not deploy the redis configuration, so you need to deploy it first. Run:
 
     ```text
-    kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/master/docs/tutorials/hello-tye/redis.yaml
+    kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/main/docs/tutorials/hello-tye/redis.yaml
     ```
 
     This will create a deployment and service for redis. You can see that by running:

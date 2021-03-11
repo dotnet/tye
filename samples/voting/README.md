@@ -22,12 +22,12 @@ A few things need to be configured before deploying to Kubernetes.
 - `Redis` can be deployed using the below command :
 
     ```
-    kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/master/docs/tutorials/hello-tye/redis.yaml
+    kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/main/docs/tutorials/hello-tye/redis.yaml
     ```
 - `Postgresql` can be installed by the following command :
 
     ```
-    kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/master/docs/tutorials/hello-tye/postgres.yaml
+    kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/main/docs/tutorials/hello-tye/postgres.yaml
     ```
 
 - Once the deployment is done, you need to keep a note of the below connection strings :

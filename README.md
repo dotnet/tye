@@ -25,7 +25,7 @@ For the duration of the experiment, consider every part of the tye experience to
 
 ---
 
-[![Build Status](https://dnceng.visualstudio.com/public/_apis/build/status/dotnet/tye/dotnet-tye-ci-public?branchName=master)](https://dnceng.visualstudio.com/public/_build/latest?definitionId=796&branchName=master)
+[![Build Status](https://dnceng.visualstudio.com/public/_apis/build/status/dotnet/tye/dotnet-tye-ci-public?branchName=main)](https://dnceng.visualstudio.com/public/_build/latest?definitionId=796&branchName=main)
 
 
 ## Getting Started

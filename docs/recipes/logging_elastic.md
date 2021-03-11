@@ -6,7 +6,7 @@ Tye can push logs to Elastic stack easily without the need for any SDKs or code 
 
 ## Getting started: running locally with Elastic stack
 
-> :bulb: If you want an existing sample to run, the [sample here](https://github.com/dotnet/tye/tree/master/samples/frontend-backend) will do. This recipe will show examples of UI and data based on that sample. You own application will work fine, but the data and examples will look different.
+> :bulb: If you want an existing sample to run, the [sample here](https://github.com/dotnet/tye/tree/main/samples/frontend-backend) will do. This recipe will show examples of UI and data based on that sample. You own application will work fine, but the data and examples will look different.
 
 The first step is to add the `elastic` extension to your `tye.yaml`. Add the `extensions` node and its children from the example below.
 
@@ -76,7 +76,7 @@ The basic idea is that because log aggregation pulls all of the logs together ac
 
 We'll use the discover tab to build a basic query. 
 
-First, perform some operation that will trigger a cross-service call so we have some data to use. If you're using the [sample here](https://github.com/dotnet/tye/tree/master/samples/frontend-backend) then visiting the frontend application in the browser will do.
+First, perform some operation that will trigger a cross-service call so we have some data to use. If you're using the [sample here](https://github.com/dotnet/tye/tree/main/samples/frontend-backend) then visiting the frontend application in the browser will do.
 
 Next, let's add some fields to the query. The left pane in Kibana has all of the known fields. Select the following by clicking on the `Add` button near each of them:
 

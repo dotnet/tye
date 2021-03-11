@@ -14,7 +14,7 @@ Tye can get distributed tracing working easily without adding any SDKs or librar
 
 The first step is to enable the W3C trace format in your .NET applications. **This is mandatory, you won't get traces without doing this!**
 
-> :bulb: If you want an existing sample to run, the [sample here](https://github.com/dotnet/tye/tree/master/samples/frontend-backend) will do. This sample code already initializes the trace format.
+> :bulb: If you want an existing sample to run, the [sample here](https://github.com/dotnet/tye/tree/main/samples/frontend-backend) will do. This sample code already initializes the trace format.
 
 You need to place the following statement somewhere early in your program:
 
@@ -97,7 +97,7 @@ To use zipkin for distributed tracing in a deployed application, we first need t
 Run the following to deploy a minimal zipkin configuration:
 
 ```sh
-kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/master/docs/recipes/zipkin.yaml
+kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/main/docs/recipes/zipkin.yaml
 ```
 
 > :warning: This is the most basic possible deployment of zipkin. There's no data persistence here!
@@ -125,7 +125,7 @@ Tye will prompt for the zipkin URI. If you've followed these basic instructions,
 
 Now to test it out!
 
-Use kubectl to port forward to one of your services. This is what it looks like using the [sample here](https://github.com/dotnet/tye/tree/master/samples/frontend-backend).
+Use kubectl to port forward to one of your services. This is what it looks like using the [sample here](https://github.com/dotnet/tye/tree/main/samples/frontend-backend).
 
 ```sh
 >  kubectl port-forward svc/frontend 5000:80
@@ -152,7 +152,7 @@ To remove the deployed application run the following commands:
 
 ```sh
 tye undeploy
-kubectl delete -f https://github.com/dotnet/tye/blob/master/docs/recipes/zipkin.yaml
+kubectl delete -f https://github.com/dotnet/tye/blob/main/docs/recipes/zipkin.yaml
 ```
 
 ## How this works
