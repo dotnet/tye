@@ -3,7 +3,6 @@ name: Format
 on:
   pull_request:
     branches:
-      - master
       - main
       - release/*
 
