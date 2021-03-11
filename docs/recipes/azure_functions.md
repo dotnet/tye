@@ -4,7 +4,7 @@
 
 ## Getting Started: Create an Azure Function
 
-Starting from the [sample here](https://github.com/dotnet/tye/tree/master/samples/frontend-backend), we are going to transform the backend from a web application to an azure function app.
+Starting from the [sample here](https://github.com/dotnet/tye/tree/main/samples/frontend-backend), we are going to transform the backend from a web application to an azure function app.
 
 To start, create an Azure Function project in a folder called `backend-function`. You can do this via:
 - [Visual Studio Code](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-function-vs-code?pivots=programming-language-csharp)

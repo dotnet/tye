@@ -36,7 +36,7 @@ Before opening our .sln files in Visual Studio or VS Code, we recommend performi
 
    This will download the required tools and build the entire repository once. At that point, you should be able to open .sln files to work on the projects you care about.
 
-   > :bulb: Pro tip: you will also want to run this command after pulling large sets of changes. On the master branch, we regularly update the versions of .NET Core SDK required to build the repo.
+   > :bulb: Pro tip: you will also want to run this command after pulling large sets of changes. On the main branch, we regularly update the versions of .NET Core SDK required to build the repo.
    > You will need to restart your editor every time we update the .NET Core SDK.
 
 2. Use the `startvs.cmd` script to open Visual Studio .sln files. This script first sets the required environment variables.
