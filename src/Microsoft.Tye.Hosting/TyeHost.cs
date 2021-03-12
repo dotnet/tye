@@ -211,8 +211,8 @@ namespace Microsoft.Tye.Hosting
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapBlazorHub();
                 api.MapRoutes(endpoints);
+                endpoints.MapBlazorHub();
 
                 endpoints.MapFallbackToPage("/_Host");
             });
