@@ -136,10 +136,10 @@ namespace Microsoft.Tye.Hosting
                     };
 
                     configuration
-                        .MinimumLevel.Is(logLevel)
-                        .Filter.ByExcluding(Matching.FromSource("Microsoft.AspNetCore"))
-                        .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions"))
-                        .Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting"))
+                        .MinimumLevel.Is(LogEventLevel.Verbose)
+                        //.Filter.ByExcluding(Matching.FromSource("Microsoft.AspNetCore"))
+                        //.Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions"))
+                        //.Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting"))
                         .Enrich
                         .FromLogContext()
                         .WriteTo
@@ -152,7 +152,12 @@ namespace Microsoft.Tye.Hosting
                 })
                 .ConfigureServices(services =>
                 {
-                    services.AddRazorPages(o => o.RootDirectory = "/Dashboard/Pages");
+                    services.AddRazorPages(o =>
+                    {
+                        o.RootDirectory = "/Dashboard/Pages";
+                    }
+                    );
+
                     services.AddServerSideBlazor();
                     services.AddOptions<StaticFileOptions>()
                             .PostConfigure(o =>
