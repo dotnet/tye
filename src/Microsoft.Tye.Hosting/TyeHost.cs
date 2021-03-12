@@ -11,6 +11,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Makaretu.Dns;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -46,6 +47,8 @@ namespace Microsoft.Tye.Hosting
 
         public Application Application => _application;
 
+        public IApplicationAdvertiser ApplicationAdvertiser { get; set; } = new MdnsApplicationAdvertiser();
+
         public WebApplication? DashboardWebApplication { get; set; }
 
         // An additional sink that output will be piped to. Useful for testing.
@@ -55,7 +58,12 @@ namespace Microsoft.Tye.Hosting
         {
             try
             {
-                await StartAsync();
+                var app = await StartAsync();
+
+                if (_options.Advertise)
+                {
+                    ApplicationAdvertiser.Advertise(app);
+                }
 
                 var waitForStop = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
                 _lifetime?.ApplicationStopping.Register(obj =>
@@ -89,7 +97,9 @@ namespace Microsoft.Tye.Hosting
 
             await app.StartAsync();
 
-            _logger.LogInformation("Dashboard running on {Address}", app.Addresses.First());
+            var dashboardAddress = app.Addresses.First();
+
+            _logger.LogInformation("Dashboard running on {Address}", dashboardAddress);
 
             try
             {
@@ -103,7 +113,7 @@ namespace Microsoft.Tye.Hosting
 
             if (_options.Dashboard)
             {
-                OpenDashboard(app.Addresses.First());
+                OpenDashboard(dashboardAddress);
             }
 
             return app;

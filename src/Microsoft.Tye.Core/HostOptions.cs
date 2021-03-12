@@ -8,6 +8,8 @@ namespace Microsoft.Tye
 {
     public class HostOptions
     {
+        public bool Advertise { get; set; } = true;
+
         public bool Dashboard { get; set; }
 
         public List<string> Debug { get; } = new List<string>();
