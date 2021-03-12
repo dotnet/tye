@@ -152,6 +152,7 @@ namespace Microsoft.Tye.Hosting
                 })
                 .ConfigureServices(services =>
                 {
+                    services.AddMvc();
                     services.AddRazorPages(o =>
                     {
                         o.RootDirectory = "/Dashboard/Pages";
