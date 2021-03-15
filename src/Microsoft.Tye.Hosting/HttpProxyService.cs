@@ -55,10 +55,36 @@ namespace Microsoft.Tye.Hosting
                     var host = Host.CreateDefaultBuilder()
                         .ConfigureWebHostDefaults(builder =>
                         {
-                            builder.Configure(app =>
-                            {
+                            var urls = new List<string>();
 
-                            });
+                            // Bind to the addresses on this resource
+                            for (int i = 0; i < serviceDescription.Replicas; i++)
+                            {
+                                // Fake replicas since it's all running processes
+                                var replica = service.Description.Name + "_" + Guid.NewGuid().ToString().Substring(0, 10).ToLower();
+                                var status = new IngressStatus(service, replica);
+                                service.Replicas[replica] = status;
+
+                                var ports = new List<int>();
+
+                                foreach (var binding in serviceDescription.Bindings)
+                                {
+                                    if (binding.Port == null)
+                                    {
+                                        continue;
+                                    }
+
+                                    var port = binding.ReplicaPorts[i];
+                                    ports.Add(port);
+                                    var url = $"{binding.Protocol}://localhost:{port}";
+                                    urls.Add(url);
+                                }
+
+                                status.Ports = ports;
+
+                                service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
+                            }
+
                             builder.ConfigureServices(services =>
                             {
                                 services.AddSingleton<MatcherPolicy, IngressHostMatcherPolicy>();
@@ -66,36 +92,6 @@ namespace Microsoft.Tye.Hosting
                                 {
                                     loggingBuilder.AddProvider(new ServiceLoggerProvider(service.Logs));
                                 });
-
-                                var urls = new List<string>();
-
-                                // Bind to the addresses on this resource
-                                for (int i = 0; i < serviceDescription.Replicas; i++)
-                                {
-                                    // Fake replicas since it's all running processes
-                                    var replica = service.Description.Name + "_" + Guid.NewGuid().ToString().Substring(0, 10).ToLower();
-                                    var status = new IngressStatus(service, replica);
-                                    service.Replicas[replica] = status;
-
-                                    var ports = new List<int>();
-
-                                    foreach (var binding in serviceDescription.Bindings)
-                                    {
-                                        if (binding.Port == null)
-                                        {
-                                            continue;
-                                        }
-
-                                        var port = binding.ReplicaPorts[i];
-                                        ports.Add(port);
-                                        var url = $"{binding.Protocol}://localhost:{port}";
-                                        urls.Add(url);
-                                    }
-
-                                    status.Ports = ports;
-
-                                    service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
-                                }
 
                                 services.Configure<IServerAddressesFeature>(serverAddresses =>
                                 {
@@ -111,91 +107,103 @@ namespace Microsoft.Tye.Hosting
                                     }
                                 });
                             });
+
+                            builder.UseUrls(urls.ToArray());
+
+                            builder.Configure(app =>
+                            {
+                                app.UseRouting();
+
+                                app.UseEndpoints(endpointBuilder =>
+                                {
+                                    foreach (var rule in runInfo.Rules)
+                                    {
+                                        if (!application.Services.TryGetValue(rule.Service, out var target))
+                                        {
+                                            continue;
+                                        }
+
+                                        _logger.LogInformation("Processing ingress rule: Path:{Path}, Host:{Host}, Service:{Service}", rule.Path, rule.Host, rule.Service);
+
+                                        var targetServiceDescription = target.Description;
+                                        RegisterListener(target);
+
+                                        var uris = new List<(int Port, Uri Uri)>();
+
+                                        // HTTP before HTTPS (this might change once we figure out certs...)
+                                        var targetBinding = targetServiceDescription.Bindings.FirstOrDefault(b => b.Protocol == "http") ??
+                                                            targetServiceDescription.Bindings.FirstOrDefault(b => b.Protocol == "https");
+
+                                        if (targetBinding == null)
+                                        {
+                                            _logger.LogInformation("Service {ServiceName} does not have any HTTP or HTTPs bindings", targetServiceDescription.Name);
+                                            continue;
+                                        }
+
+                                        // For each of the target service replicas, get the base URL
+                                        // based on the replica port
+                                        for (int i = 0; i < targetServiceDescription.Replicas; i++)
+                                        {
+                                            var port = targetBinding.ReplicaPorts[i];
+                                            var url = $"{targetBinding.Protocol}://localhost:{port}";
+                                            uris.Add((port, new Uri(url)));
+                                        }
+
+                                        _logger.LogInformation("Service {ServiceName} is using {Urls}", targetServiceDescription.Name, string.Join(",", uris.Select(u => u.ToString())));
+
+                                        // The only load balancing strategy here is round robin
+                                        long count = 0;
+                                        RequestDelegate del = async context =>
+                                        {
+                                            var next = (int)(Interlocked.Increment(ref count) % uris.Count);
+
+                                            // we find the first `Ready` port
+                                            for (int i = 0; i < uris.Count; i++)
+                                            {
+                                                if (_readyPorts.ContainsKey(uris[next].Port))
+                                                {
+                                                    break;
+                                                }
+
+                                                next = (int)(Interlocked.Increment(ref count) % uris.Count);
+                                            }
+
+                                            // if we've looped through all the port and didn't find a single one that is `Ready`, we return HTTP BadGateway
+                                            if (!_readyPorts.ContainsKey(uris[next].Port))
+                                            {
+                                                context.Response.StatusCode = (int)HttpStatusCode.BadGateway;
+                                                await context.Response.WriteAsync("Bad gateway");
+                                                return;
+                                            }
+                                            var uri = new UriBuilder(uris[next].Uri)
+                                            {
+                                                Path = rule.PreservePath ? $"{context.Request.Path}" : (string)context.Request.RouteValues["path"] ?? "/",
+                                                Query = context.Request.QueryString.Value
+                                            };
+
+                                            await context.ProxyRequest(invoker, uri.Uri);
+                                        };
+
+                                        IEndpointConventionBuilder conventions =
+                                            endpointBuilder.Map((rule.Path?.TrimEnd('/') ?? "") + "/{**path}", del);
+
+                                        if (rule.Host != null)
+                                        {
+                                            conventions.WithMetadata(new IngressHostMetadata(rule.Host));
+                                        }
+
+                                        conventions.WithDisplayName(rule.Service);
+                                    }
+                                });
+                            });
                         });
+
 
                     var webApp = host.Build();
 
                     _webApplications.Add(webApp);
 
                     // For each ingress rule, bind to the path and host
-                    foreach (var rule in runInfo.Rules)
-                    {
-                        if (!application.Services.TryGetValue(rule.Service, out var target))
-                        {
-                            continue;
-                        }
-
-                        _logger.LogInformation("Processing ingress rule: Path:{Path}, Host:{Host}, Service:{Service}", rule.Path, rule.Host, rule.Service);
-
-                        var targetServiceDescription = target.Description;
-                        RegisterListener(target);
-
-                        var uris = new List<(int Port, Uri Uri)>();
-
-                        // HTTP before HTTPS (this might change once we figure out certs...)
-                        var targetBinding = targetServiceDescription.Bindings.FirstOrDefault(b => b.Protocol == "http") ??
-                                            targetServiceDescription.Bindings.FirstOrDefault(b => b.Protocol == "https");
-
-                        if (targetBinding == null)
-                        {
-                            _logger.LogInformation("Service {ServiceName} does not have any HTTP or HTTPs bindings", targetServiceDescription.Name);
-                            continue;
-                        }
-
-                        // For each of the target service replicas, get the base URL
-                        // based on the replica port
-                        for (int i = 0; i < targetServiceDescription.Replicas; i++)
-                        {
-                            var port = targetBinding.ReplicaPorts[i];
-                            var url = $"{targetBinding.Protocol}://localhost:{port}";
-                            uris.Add((port, new Uri(url)));
-                        }
-
-                        _logger.LogInformation("Service {ServiceName} is using {Urls}", targetServiceDescription.Name, string.Join(",", uris.Select(u => u.ToString())));
-
-                        // The only load balancing strategy here is round robin
-                        long count = 0;
-                        RequestDelegate del = async context =>
-                        {
-                            var next = (int)(Interlocked.Increment(ref count) % uris.Count);
-
-                            // we find the first `Ready` port
-                            for (int i = 0; i < uris.Count; i++)
-                            {
-                                if (_readyPorts.ContainsKey(uris[next].Port))
-                                {
-                                    break;
-                                }
-
-                                next = (int)(Interlocked.Increment(ref count) % uris.Count);
-                            }
-
-                            // if we've looped through all the port and didn't find a single one that is `Ready`, we return HTTP BadGateway
-                            if (!_readyPorts.ContainsKey(uris[next].Port))
-                            {
-                                context.Response.StatusCode = (int)HttpStatusCode.BadGateway;
-                                await context.Response.WriteAsync("Bad gateway");
-                                return;
-                            }
-                            var uri = new UriBuilder(uris[next].Uri)
-                            {
-                                Path = rule.PreservePath ? $"{context.Request.Path}" : (string)context.Request.RouteValues["path"] ?? "/",
-                                Query = context.Request.QueryString.Value
-                            };
-
-                            await context.ProxyRequest(invoker, uri.Uri);
-                        };
-
-                        IEndpointConventionBuilder conventions =
-                            ((IEndpointRouteBuilder)webApp).Map((rule.Path?.TrimEnd('/') ?? "") + "/{**path}", del);
-
-                        if (rule.Host != null)
-                        {
-                            conventions.WithMetadata(new IngressHostMetadata(rule.Host));
-                        }
-
-                        conventions.WithDisplayName(rule.Service);
-                    }
 
                     await webApp.StartAsync();
 
