@@ -5,9 +5,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -136,10 +138,10 @@ namespace Microsoft.Tye.Hosting
                     };
 
                     configuration
-                        .MinimumLevel.Is(LogEventLevel.Verbose)
-                        //.Filter.ByExcluding(Matching.FromSource("Microsoft.AspNetCore"))
-                        //.Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions"))
-                        //.Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting"))
+                        .MinimumLevel.Is(logLevel)
+                        .Filter.ByExcluding(Matching.FromSource("Microsoft.AspNetCore"))
+                        .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions"))
+                        .Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting"))
                         .Enrich
                         .FromLogContext()
                         .WriteTo
@@ -150,14 +152,24 @@ namespace Microsoft.Tye.Hosting
                         configuration.WriteTo.Sink(sink, logLevel);
                     }
                 })
+                .ConfigureWebHostDefaults(builder =>
+                {
+                    var port = ComputePort(options.Port);
+                    _computedPort = port;
+
+                    builder.Configure(ConfigureApplication)
+                            .UseUrls($"http://127.0.0.1:{port}");
+                    builder.ConfigureAppConfiguration((b, c) =>
+                    {
+                        b.HostingEnvironment.ApplicationName = "Microsoft.Tye.Hosting";
+                    });
+                })
                 .ConfigureServices(services =>
                 {
-                    services.AddMvc();
                     services.AddRazorPages(o =>
                     {
                         o.RootDirectory = "/Dashboard/Pages";
-                    }
-                    );
+                    });
 
                     services.AddServerSideBlazor();
                     services.AddOptions<StaticFileOptions>()
@@ -183,18 +195,6 @@ namespace Microsoft.Tye.Hosting
                             });
                     services.AddSingleton(application);
                 })
-                .ConfigureWebHostDefaults(builder =>
-                {
-                    var port = ComputePort(options.Port);
-                    _computedPort = port;
-
-                    builder.Configure(ConfigureApplication)
-                           .UseUrls($"http://127.0.0.1:{port}");
-                    //builder.ConfigureAppConfiguration((b, c) =>
-                    //{
-                    //    b.HostingEnvironment.ApplicationName = "Microsoft.Tye.Hosting";
-                    //});
-                })
                 .Build();
         }
 
@@ -214,7 +214,6 @@ namespace Microsoft.Tye.Hosting
             {
                 api.MapRoutes(endpoints);
                 endpoints.MapBlazorHub();
-
                 endpoints.MapFallbackToPage("/_Host");
             });
         }
