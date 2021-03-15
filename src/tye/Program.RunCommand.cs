@@ -17,7 +17,7 @@ namespace Microsoft.Tye
     {
         private static Command CreateRunCommand()
         {
-            var command = new Command("ru", "run the application")
+            var command = new Command("run", "run the application")
             {
                 CommonArguments.Path_Required,
 
