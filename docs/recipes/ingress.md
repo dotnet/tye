@@ -1,10 +1,10 @@
 # Ingress
 
-For modern cloud runtime environments like Kubernetes, it's typical to keep the vast majority of services isolated from public internet traffic. Usually there's a single (or few) point of entry for public traffic using a highly configuable proxy server.
+For modern cloud runtime environments like Kubernetes, it's typical to keep the vast majority of services isolated from public internet traffic. Usually, there's a single (or few) point of entry for public traffic using a highly configurable proxy server.
 
-This approach is referred to as *ingress*. The proxy server and surrounding managment infrastructure are referred to as a *ingress controller* and the configurations of routing rules are referred to as *ingresses*. 
+This approach is referred to as *ingress*. The proxy server and surrounding management infrastructure are referred to as an *ingress controller* and the configurations of routing rules are referred to as *ingresses*. 
 
-Tye provides an opinionated and simple way of configuring ingress for local development, as well deploying to Kubernetes using the popular [NGINX Ingress Controller for Kubernetes](https://github.com/kubernetes/ingress-nginx).
+Tye provides an opinionated and simple way of configuring ingress for local development, as well as deploying to Kubernetes using the popular [NGINX Ingress Controller for Kubernetes](https://github.com/kubernetes/ingress-nginx).
 
 > :bulb: Ingress features related to deployment are new as part of the Tye 0.2 release. The local run part of this tutorial will work with the latest nuget.org release. For deployment, follow the instructions [here](/docs/getting_started.md#working-with-ci-builds) to install a newer build.
 
@@ -244,11 +244,11 @@ job.batch/ingress-nginx-admission-create   1/1           4s         20m
 job.batch/ingress-nginx-admission-patch    1/1           5s         20m
 ```
 
-This will list all of the resources of every type in the `ingress-nginx` namespace. It's not important to understand what all of these these are.
+This will list all of the resources of every type in the `ingress-nginx` namespace. It's not important to understand what all of these are.
 
 The main component is the `ingress-nginx-controller` service which both acts as the controller and the proxy. You can see from the listing above that it has a public IP of type `LoadBalancer` assigned. 
 
-> :warning: If you're using minikube you won't see output like the above. Instead you'll probably see an error that the `ingress-nginx` namespace doesn't exist. This is because `ingress-nginx` in a simplified form is bundled as part of minikube. You can see the controller by running `kubectl get pods -A`.
+> :warning: If you're using minikube you won't see output like the above. Instead, you'll probably see an error that the `ingress-nginx` namespace doesn't exist. This is because `ingress-nginx` in a simplified form is bundled as part of minikube. You can see the controller by running `kubectl get pods -A`.
 
 ---
 

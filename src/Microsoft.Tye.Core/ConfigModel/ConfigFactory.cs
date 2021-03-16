@@ -22,13 +22,13 @@ namespace Microsoft.Tye.ConfigModel
             {
                 case ".yaml":
                 case ".yml":
-                    if (fileName.StartsWith("tye", StringComparison.OrdinalIgnoreCase))
+                    if (fileName.Contains("docker-compose", StringComparison.OrdinalIgnoreCase))
                     {
-                        return FromTyeYaml(file);
+                        return FromDockerComposeYaml(file);
                     }
                     else
                     {
-                        return FromDockerComposeYaml(file);
+                        return FromTyeYaml(file);
                     }
 
                 case ".csproj":

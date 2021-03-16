@@ -12,7 +12,7 @@ Getting started documentation for Dapr can be found [here](https://docs.dapr.io/
 
 ## Sample Code
 
-There are two sample projects for the Dapr recipe [here](https://github.com/dotnet/tye/tree/master/samples/dapr).
+There are two sample projects for the Dapr recipe [here](https://github.com/dotnet/tye/tree/main/samples/dapr).
 
 They demonstrate
 
@@ -31,7 +31,7 @@ These services use a variety of Dapr's features:
 - Invoke (`store`, `products`)
 - Pub/Sub (`store`, `orders`)
 
-You can find the Dapr component files for the sample project [here](https://github.com/dotnet/tye/tree/master/samples/dapr/pub-sub/components).
+You can find the Dapr component files for the sample project [here](https://github.com/dotnet/tye/tree/main/samples/dapr/pub-sub/components).
 
 ## Running the sample locally
 
@@ -88,7 +88,7 @@ services:
 - name: redis
   image: redis
   bindings:
-    - port: 6973
+    - port: 6379
 ``` 
 
 All that's needed to enable Dapr integration for an application is:
