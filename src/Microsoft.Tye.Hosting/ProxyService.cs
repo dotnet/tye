@@ -185,7 +185,15 @@ namespace Microsoft.Tye.Hosting
 
             if (_host != null)
             {
-                await _host.StopAsync();
+                try
+                {
+                    await _host.StopAsync();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // System.ObjectDisposedException: Cannot access a disposed object.
+                    // From Bedrock.Framework. As we plan on removing this long term, not going to directly fix in bedrock.
+                }
 
                 if (_host is IAsyncDisposable disposable)
                 {
