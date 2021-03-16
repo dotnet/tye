@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bedrock.Framework" Version="0.1.38-alpha.gd25d5b37ad" />
-    <PackageReference Include="System.IO.Pipelines" Version="4.7.0" />
+    <PackageReference Include="Bedrock.Framework" Version="0.1.62-alpha.g8a965bbcba" />
+    <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />
   </ItemGroup>
 
   <!-- Include *.deps.json and *.runtimeconfig.json in ContentWithTargetPath so they will be copied to the output folder of projects

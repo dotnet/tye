@@ -246,7 +246,7 @@ namespace Test.Infrastructure
         {
             static async Task Purge(TyeHost host)
             {
-                var logger = host.DashboardWebApplication!.Logger;
+                var logger = host.Logger;
                 var replicaRegistry = new ReplicaRegistry(host.Application.ContextDirectory, logger);
                 var processRunner = new ProcessRunner(logger, replicaRegistry, new ProcessRunnerOptions());
                 var dockerRunner = new DockerRunner(logger, replicaRegistry);

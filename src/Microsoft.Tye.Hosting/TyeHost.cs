@@ -5,13 +5,17 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
@@ -32,6 +36,8 @@ namespace Microsoft.Tye.Hosting
 
         private Microsoft.Extensions.Logging.ILogger? _logger;
         private IHostApplicationLifetime? _lifetime;
+        private ICollection<string>? _addresses;
+        private int _computedPort;
         private AggregateApplicationProcessor? _processor;
 
         private readonly Application _application;
@@ -46,7 +52,11 @@ namespace Microsoft.Tye.Hosting
 
         public Application Application => _application;
 
-        public WebApplication? DashboardWebApplication { get; set; }
+        public IHost? DashboardWebApplication { get; set; }
+
+        public ICollection<string>? Addresses => _addresses;
+
+        public Extensions.Logging.ILogger? Logger => _logger;
 
         // An additional sink that output will be piped to. Useful for testing.
         public ILogEventSink? Sink { get; set; }
@@ -71,17 +81,20 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        public async Task<WebApplication> StartAsync()
+        public async Task<IHost> StartAsync()
         {
             var app = BuildWebApplication(_application, _options, Sink);
             DashboardWebApplication = app;
 
-            _logger = app.Logger;
-            _lifetime = app.ApplicationLifetime;
+            _logger = DashboardWebApplication.Services.GetRequiredService<ILogger<TyeHost>>();
+            _lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+
+            if (_computedPort != _options.Port && _computedPort != DefaultPort)
+            {
+                _logger.LogInformation("Default dashboard port {DefaultPort} has been reserved by the application or is in use, choosing random port.", DefaultPort);
+            }
 
             _logger.LogInformation("Executing application from {Source}", _application.Source);
-
-            ConfigureApplication(app);
 
             _replicaRegistry = new ReplicaRegistry(_application.ContextDirectory, _logger);
 
@@ -89,7 +102,9 @@ namespace Microsoft.Tye.Hosting
 
             await app.StartAsync();
 
-            _logger.LogInformation("Dashboard running on {Address}", app.Addresses.First());
+            _addresses = DashboardWebApplication.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>().Addresses;
+
+            _logger.LogInformation("Dashboard running on {Address}", _addresses.First());
 
             try
             {
@@ -103,88 +118,88 @@ namespace Microsoft.Tye.Hosting
 
             if (_options.Dashboard)
             {
-                OpenDashboard(app.Addresses.First());
+                OpenDashboard(_addresses.First());
             }
 
             return app;
         }
 
-        private static WebApplication BuildWebApplication(Application application, HostOptions options, ILogEventSink? sink)
+        private IHost BuildWebApplication(Application application, HostOptions options, ILogEventSink? sink)
         {
-            var args = new List<string>();
-            if (options.Port.HasValue)
-            {
-                args.Add("--port");
-                args.Add(options.Port.Value.ToString(CultureInfo.InvariantCulture));
-            }
-
-            var builder = WebApplication.CreateBuilder(args.ToArray());
-
-            // Logging for this application
-            builder.Host.UseSerilog((context, configuration) =>
-            {
-                var logLevel = options.LogVerbosity switch
+            return Host.CreateDefaultBuilder()
+                .UseSerilog((context, configuration) =>
                 {
-                    Verbosity.Quiet => LogEventLevel.Warning,
-                    Verbosity.Info => LogEventLevel.Information,
-                    Verbosity.Debug => LogEventLevel.Verbose,
-                    _ => default
-                };
+                    var logLevel = options.LogVerbosity switch
+                    {
+                        Verbosity.Quiet => LogEventLevel.Warning,
+                        Verbosity.Info => LogEventLevel.Information,
+                        Verbosity.Debug => LogEventLevel.Verbose,
+                        _ => default
+                    };
 
-                configuration
-                    .MinimumLevel.Is(logLevel)
-                    .Filter.ByExcluding(Matching.FromSource("Microsoft.AspNetCore"))
-                    .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions"))
-                    .Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting"))
-                    .Enrich
-                    .FromLogContext()
-                    .WriteTo
-                    .Console();
+                    configuration
+                        .MinimumLevel.Is(logLevel)
+                        .Filter.ByExcluding(Matching.FromSource("Microsoft.AspNetCore"))
+                        .Filter.ByExcluding(Matching.FromSource("Microsoft.Extensions"))
+                        .Filter.ByExcluding(Matching.FromSource("Microsoft.Hosting"))
+                        .Enrich
+                        .FromLogContext()
+                        .WriteTo
+                        .Console();
 
-                if (sink is object)
+                    if (sink is object)
+                    {
+                        configuration.WriteTo.Sink(sink, logLevel);
+                    }
+                })
+                .ConfigureWebHostDefaults(builder =>
                 {
-                    configuration.WriteTo.Sink(sink, logLevel);
-                }
-            });
+                    var port = ComputePort(options.Port);
+                    _computedPort = port;
 
-            builder.Services.AddRazorPages(o => o.RootDirectory = "/Dashboard/Pages");
-
-            builder.Services.AddServerSideBlazor();
-
-            builder.Services.AddOptions<StaticFileOptions>()
-                .PostConfigure(o =>
+                    builder.Configure(ConfigureApplication)
+                            .UseUrls($"http://127.0.0.1:{port}");
+                    builder.ConfigureAppConfiguration((b, c) =>
+                    {
+                        b.HostingEnvironment.ApplicationName = "Microsoft.Tye.Hosting";
+                    });
+                })
+                .ConfigureServices(services =>
                 {
-                    var fileProvider = new ManifestEmbeddedFileProvider(typeof(TyeHost).Assembly, "wwwroot");
+                    services.AddRazorPages(o =>
+                    {
+                        o.RootDirectory = "/Dashboard/Pages";
+                    });
 
-                    // Make sure we don't remove the existing file providers (blazor needs this)
-                    o.FileProvider = new CompositeFileProvider(o.FileProvider, fileProvider);
-                });
+                    services.AddServerSideBlazor();
+                    services.AddOptions<StaticFileOptions>()
+                            .PostConfigure(o =>
+                            {
+                                var fileProvider = new ManifestEmbeddedFileProvider(typeof(TyeHost).Assembly, "wwwroot");
 
-            builder.Services.AddCors(
-                options =>
-                {
-                    options.AddPolicy(
-                        "default",
-                        policy =>
-                        {
-                            policy
-                                .AllowAnyOrigin()
-                                .AllowAnyHeader()
-                                .AllowAnyMethod();
-                        });
-                });
-
-            builder.Services.AddSingleton(application);
-            var app = builder.Build();
-            return app;
+                                // Make sure we don't remove the existing file providers (blazor needs this)
+                                o.FileProvider = new CompositeFileProvider(o.FileProvider, fileProvider);
+                            });
+                    services.AddCors(
+                            options =>
+                            {
+                                options.AddPolicy(
+                                    "default",
+                                    policy =>
+                                    {
+                                        policy
+                                            .AllowAnyOrigin()
+                                            .AllowAnyHeader()
+                                            .AllowAnyMethod();
+                                    });
+                            });
+                    services.AddSingleton(application);
+                })
+                .Build();
         }
 
-        private void ConfigureApplication(WebApplication app)
+        private void ConfigureApplication(IApplicationBuilder app)
         {
-            var port = ComputePort(app);
-
-            app.Listen($"http://127.0.0.1:{port}");
-
             app.UseDeveloperExceptionPage();
 
             app.UseCors("default");
@@ -195,13 +210,15 @@ namespace Microsoft.Tye.Hosting
 
             var api = new TyeDashboardApi();
 
-            api.MapRoutes(app);
-
-            app.MapBlazorHub();
-            app.MapFallbackToPage("/_Host");
+            app.UseEndpoints(endpoints =>
+            {
+                api.MapRoutes(endpoints);
+                endpoints.MapBlazorHub();
+                endpoints.MapFallbackToPage("/_Host");
+            });
         }
 
-        private int ComputePort(WebApplication app)
+        private int ComputePort(int? port)
         {
             // logic for computing the port:
             // - we allow the user to specify the port... if they don't
@@ -210,17 +227,15 @@ namespace Microsoft.Tye.Hosting
             // - we don't want to cause conflicts with any of the users known bindings
             //   or something else running.
 
-            var port = app.Configuration["port"];
-            if (!string.IsNullOrEmpty(port))
+            if (port.HasValue)
             {
                 // Port was passed in at the command-line, use it!
-                return int.Parse(port, NumberStyles.Number, CultureInfo.InvariantCulture);
+                return port.Value;
             }
 
             if (IsPortInUseByBinding(_application, DefaultPort))
             {
                 // Port has been reserved for the app.
-                app.Logger.LogInformation("Default dashboard port {DefaultPort} has been reserved by the application, choosing random port.", DefaultPort);
                 return AutodetectPort;
             }
 
@@ -228,8 +243,8 @@ namespace Microsoft.Tye.Hosting
             {
                 return DefaultPort;
             }
+
             // Port is in use by something already running.
-            app.Logger.LogInformation("Default dashboard port {DefaultPort} is in use, choosing random port.", DefaultPort);
             return AutodetectPort;
         }
 
