@@ -98,8 +98,6 @@ namespace Microsoft.Tye.Hosting
 
             _replicaRegistry = new ReplicaRegistry(_application.ContextDirectory, _logger);
 
-            ConfigureApplication(app);
-
             _processor = CreateApplicationProcessor(_replicaRegistry, _options, _logger);
 
             await app.StartAsync();
