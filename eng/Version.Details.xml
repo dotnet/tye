@@ -3,25 +3,25 @@
   <ProductDependencies>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="6.0.0-beta.21165.1">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="6.0.0-beta.21166.5">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>d88b466beb295e15b5e3bcb36b02b7900d4fd0ca</Sha>
+      <Sha>b80229ca3c7bae93ff9b4a50807c7efb0518e771</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="6.0.0-beta.21165.1">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="6.0.0-beta.21166.5">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>d88b466beb295e15b5e3bcb36b02b7900d4fd0ca</Sha>
+      <Sha>b80229ca3c7bae93ff9b4a50807c7efb0518e771</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SignTool" Version="6.0.0-beta.21165.1">
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="6.0.0-beta.21166.5">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>d88b466beb295e15b5e3bcb36b02b7900d4fd0ca</Sha>
+      <Sha>b80229ca3c7bae93ff9b4a50807c7efb0518e771</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="6.0.0-beta.21165.1">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="6.0.0-beta.21166.5">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>d88b466beb295e15b5e3bcb36b02b7900d4fd0ca</Sha>
+      <Sha>b80229ca3c7bae93ff9b4a50807c7efb0518e771</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="6.0.0-beta.21165.1">
+    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="6.0.0-beta.21166.5">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>d88b466beb295e15b5e3bcb36b02b7900d4fd0ca</Sha>
+      <Sha>b80229ca3c7bae93ff9b4a50807c7efb0518e771</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.19556.4">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
