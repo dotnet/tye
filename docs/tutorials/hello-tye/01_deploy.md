@@ -30,10 +30,11 @@ Now that we have our application running locally, let's deploy the application. 
     ```text
     tye deploy --interactive
     ```
-
     > Enter the Container Registry (ex: 'example.azurecr.io' for Azure or 'example' for dockerhub):
 
     You will be prompted to enter your container registry. This is needed to tag images, and to push them to a location accessible by kubernetes.
+
+    > :bulb: Under the hood `tye` uses `kubectl` and to execute deployments. In cases if you don't have `kubectl` installed or it's current context is invalid `tye deploy` will fail with the following error: "Drats! 'deploy' failed: Cannot apply manifests because kubectl is not installed." 
 
     If you are using dockerhub, the registry name will your dockerhub username. If you are a standalone container registry (for instance from your cloud provider), the registry name will look like a hostname, eg: `example.azurecr.io`.
 
