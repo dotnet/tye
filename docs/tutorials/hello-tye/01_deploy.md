@@ -30,7 +30,6 @@ Now that we have our application running locally, let's deploy the application. 
     ```text
     tye deploy --interactive
     ```
-    
     > Enter the Container Registry (ex: 'example.azurecr.io' for Azure or 'example' for dockerhub):
 
     You will be prompted to enter your container registry. This is needed to tag images, and to push them to a location accessible by kubernetes.
