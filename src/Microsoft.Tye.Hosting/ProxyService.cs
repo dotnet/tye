@@ -189,6 +189,9 @@ namespace Microsoft.Tye.Hosting
                 {
                     await _host.StopAsync();
                 }
+                catch (AggregateException)
+                {
+                }
                 catch (ObjectDisposedException)
                 {
                     // System.ObjectDisposedException: Cannot access a disposed object.
