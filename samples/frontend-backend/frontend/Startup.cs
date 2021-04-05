@@ -4,7 +4,6 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
@@ -72,19 +71,9 @@ namespace Frontend
                     await context.Response.WriteAsync($"Backend Hostname: {backendInfo.Hostname}{Environment.NewLine}");
                     var addresses = await Dns.GetHostAddressesAsync(uri.Host);
                     await context.Response.WriteAsync($"Backend Host Addresses: {string.Join(", ", addresses.Select(a => a.ToString()))}");
-
                 });
 
                 endpoints.MapHealthChecks("/healthz");
-
-                Task.Run(async () => 
-                {
-                    while (true)
-                    {
-                        await Task.Delay(1000);
-                    logger.LogInformation("Backend URL: {BackendUrl}", uri);
-                    }
-                });
             });
         }
 

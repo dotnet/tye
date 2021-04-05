@@ -171,10 +171,7 @@ namespace Microsoft.Tye.Hosting
                         o.RootDirectory = "/Dashboard/Pages";
                     });
 
-                    services.AddServerSideBlazor().AddCircuitOptions(o =>
-                    {
-                        o.DetailedErrors = true;
-                    });
+                    services.AddServerSideBlazor();
 
                     services.AddOptions<StaticFileOptions>()
                             .PostConfigure(o =>
