@@ -172,7 +172,6 @@ namespace Microsoft.Tye.Hosting
                     });
 
                     services.AddServerSideBlazor();
-
                     services.AddOptions<StaticFileOptions>()
                             .PostConfigure(o =>
                             {
