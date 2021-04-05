@@ -31,7 +31,7 @@ else
         </button>
     </div>
     <div id="logview" class="autoscroll" @onmousedown=DisableAutoScroll>
-        @foreach (var log in ApplicationLogs.TakeLast(1000))
+        @foreach (var log in ApplicationLogs)
         {
             <div>@log.Text</div>
         }
