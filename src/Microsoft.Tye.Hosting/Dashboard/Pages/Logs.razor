@@ -1,6 +1,32 @@
 ﻿@page "/logs/{ServiceName}"
+@inject IJSRuntime JS
 @inject Application application
 @implements IDisposable
+
+<style>
+    #logview {
+        overflow-y: scroll;
+        position: absolute;
+        height: 70vh;
+        width: 75%;
+        color: white;
+        background-color: black;
+        padding: 10px;
+    }
+
+    .autoscroll {
+        overscroll-behavior-y: contain;
+        -webkit-scroll-snap-type: y proximity;
+        -ms-scroll-snap-type: y proximity;
+        scroll-snap-type: y proximity;
+    }
+
+    .autoscroll > div:last-child {
+        scroll-snap-align: end;
+        -moz-scroll-snap-align: end;
+        padding-bottom: 1rem;
+    }
+</style>
 
 <h3>Logs for @ServiceName</h3>
 
@@ -13,10 +39,10 @@ else
     <div style="padding:10px">
         <button type="button" class="btn btn-primary" @onclick=ClearLogs>Clear Log</button>
     </div>
-    <div style="overflow-y: scroll;position: absolute;height: 84%; width:75%; color:white;background-color:black;padding:10px">
-        @foreach (var log in ApplicationLogs)
+    <div id="logview" class="autoscroll">
+        @foreach (var log in ApplicationLogs.TakeLast(1000))
         {
-            <div style="width:100%">@log.Text</div>
+            <div>@log.Text</div>
         }
     </div>
 }
@@ -36,6 +62,7 @@ else
         {
             ApplicationLogs = service.CachedLogs.Select((item, index) => (item, index)).ToList();
             var count = ApplicationLogs.Count;
+            StateHasChanged();
 
             _subscription = service.Logs.Subscribe(log =>
             {
@@ -51,6 +78,14 @@ else
         base.OnInitialized();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await ScrollToBottom();
+
+        await base.OnAfterRenderAsync(firstRender);
+    }    
+
     private void ClearLogs()
     {
         ApplicationLogs?.Clear();
@@ -60,4 +95,10 @@ else
     {
         _subscription?.Dispose();
     }
+
+    ValueTask ScrollToBottom()
+    {
+        return JS.InvokeVoidAsync("logviewScrollToBottom", "logview");
+    }
 }
+    protected override Task
