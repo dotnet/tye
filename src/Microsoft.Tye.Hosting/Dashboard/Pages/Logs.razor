@@ -13,19 +13,6 @@
         background-color: black;
         padding: 10px;
     }
-
-    .autoscroll {
-        overscroll-behavior-y: contain;
-        -webkit-scroll-snap-type: y proximity;
-        -ms-scroll-snap-type: y proximity;
-        scroll-snap-type: y proximity;
-    }
-
-    .autoscroll > div:last-child {
-        scroll-snap-align: end;
-        -moz-scroll-snap-align: end;
-        padding-bottom: 1rem;
-    }
 </style>
 
 <h3>Logs for @ServiceName</h3>
@@ -38,8 +25,12 @@ else
 {
     <div style="padding:10px">
         <button type="button" class="btn btn-primary" @onclick=ClearLogs>Clear Log</button>
+        <button type="button" class="btn btn-primary @(@_autoScroll ? "active" : "")" 
+                @onclick=ToggleAutoScroll>
+            Follow Logs [@(_autoScroll ? "ON" : "OFF")]
+        </button>
     </div>
-    <div id="logview" class="autoscroll">
+    <div id="logview" class="autoscroll" @onmousedown=DisableAutoScroll>
         @foreach (var log in ApplicationLogs.TakeLast(1000))
         {
             <div>@log.Text</div>
@@ -54,6 +45,8 @@ else
     public List<(string Text, int Id)>? ApplicationLogs { get; set; } 
 
     private IDisposable? _subscription;
+
+    private bool _autoScroll = true;
 
     protected override void OnInitialized()
     {
@@ -80,7 +73,7 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (_autoScroll)
             await ScrollToBottom();
 
         await base.OnAfterRenderAsync(firstRender);
@@ -90,6 +83,10 @@ else
     {
         ApplicationLogs?.Clear();
     }
+    
+    private void ToggleAutoScroll() => _autoScroll = !_autoScroll;
+
+    private void DisableAutoScroll() => _autoScroll = false;
 
     void IDisposable.Dispose()
     {
