@@ -74,7 +74,9 @@ else
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (_autoScroll)
+        {
             await ScrollToBottom();
+        }
 
         await base.OnAfterRenderAsync(firstRender);
     }    
