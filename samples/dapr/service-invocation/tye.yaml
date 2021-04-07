@@ -9,8 +9,8 @@ extensions:
 - name: dapr
 
   # If you want to use a different tag or container port
-  placement-image: daprio/dapr
-  placement-container-port: 50005
+  # placement-image: daprio/dapr
+  # placement-container-port: 50005
 
   # log-level configures the log level of the dapr sidecar
   log-level: debug
