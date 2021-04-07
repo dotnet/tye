@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Watcher.Internal
                     cancellationToken.ThrowIfCancellationRequested();
 
                     var args = new StringBuilder();
-                    args.Append($"msbuild \"{_projectFile}\" /p:_DotNetWatchListFile={watchList}");
+                    args.Append($"msbuild \"{_projectFile}\" /p:_DotNetWatchListFile=\"{watchList}\"");
                     foreach (var flag in _buildFlags)
                     {
                         args.Append(" ");
