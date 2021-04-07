@@ -39,8 +39,8 @@ namespace Microsoft.Tye.Hosting
         {
             endpoints.MapGet("/api/v1", ServiceIndex);
             endpoints.MapGet("/api/v1/services", Services);
-            endpoints.MapGet("/api/v1/services/{name}/stop", ServiceStop);
-            endpoints.MapGet("/api/v1/services/{name}/start", ServiceStart);
+            endpoints.MapPost("/api/v1/services/{name}/stop", ServiceStop);
+            endpoints.MapPost("/api/v1/services/{name}/start", ServiceStart);
             endpoints.MapGet("/api/v1/services/{name}", Service);
             endpoints.MapGet("/api/v1/logs/{name}", Logs);
             endpoints.MapGet("/api/v1/metrics", AllMetrics);

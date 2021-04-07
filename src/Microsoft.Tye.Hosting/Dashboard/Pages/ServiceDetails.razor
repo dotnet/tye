@@ -48,11 +48,11 @@ else
 
     private async Task OnServiceStop()
     {        
-        await Http.GetAsync($"/api/v1/services/{ServiceName}/stop");
+        await Http.PostAsync($"/api/v1/services/{ServiceName}/stop", null);
     }
 
     private async Task OnServiceStart()
     {
-        await Http.GetAsync($"/api/v1/services/{ServiceName}/start");
+        await Http.PostAsync($"/api/v1/services/{ServiceName}/start", null);
     }
 }
