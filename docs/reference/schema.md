@@ -106,9 +106,9 @@ registry:
 
 ### Registry Properties
 
-#### `hostname` (string) *required*
+#### `name` (string) *required*
 
-The `hostname` could be a DockerHub username (`exampleuser`) or the hostname of a container registry (`example.azurecr.io`).
+The `name` could be a DockerHub username (`exampleuser`) or the hostname of a container registry (`example.azurecr.io`).
 
 
 #### `pullSecret` (string)
