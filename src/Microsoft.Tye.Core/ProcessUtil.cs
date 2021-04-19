@@ -23,6 +23,18 @@ namespace Microsoft.Tye
 
         private static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
+        public static Task<int> ExecuteAsync(
+            string command,
+            string args,
+            string? workingDir = null,
+            Action<string>? stdOut = null,
+            Action<string>? stdErr = null,
+            params (string key, string value)[] environmentVariables)
+        {
+            command = CheckForPodman(command);
+            return System.CommandLine.Invocation.Process.ExecuteAsync(command, args, workingDir, stdOut, stdErr, environmentVariables);
+        }
+
         public static async Task<ProcessResult> RunAsync(
             string filename,
             string arguments,
@@ -35,6 +47,7 @@ namespace Microsoft.Tye
             Action<int>? onStop = null,
             CancellationToken cancellationToken = default)
         {
+            filename = CheckForPodman(filename);
             using var process = new Process()
             {
                 StartInfo =
@@ -109,7 +122,7 @@ namespace Microsoft.Tye
 
                 if (throwOnError && process.ExitCode != 0)
                 {
-                    processLifetimeTask.TrySetException(new InvalidOperationException($"Command {filename} {arguments} returned exit code {process.ExitCode}"));
+                    processLifetimeTask.TrySetException(new InvalidOperationException($"Command {filename} {arguments} returned exit code {process.ExitCode}. Standard error: \"{errorBuilder.ToString()}\""));
                 }
                 else
                 {
@@ -174,6 +187,15 @@ namespace Microsoft.Tye
             }
             catch (ArgumentException) { }
             catch (InvalidOperationException) { }
+        }
+
+        private static string CheckForPodman(string command)
+        {
+            if (command == "docker" && DockerDetector.Instance.IsPodman)
+            {
+                return "podman";
+            }
+            return command;
         }
     }
 }

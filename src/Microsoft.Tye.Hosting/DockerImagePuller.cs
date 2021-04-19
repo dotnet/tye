@@ -36,18 +36,11 @@ namespace Microsoft.Tye.Hosting
                 return;
             }
 
-            if (!await DockerDetector.Instance.IsDockerInstalled.Value)
+            if (!DockerDetector.Instance.IsUsable(out string? unusableReason))
             {
-                _logger.LogError("Unable to detect docker installation. Docker is not installed.");
+                _logger.LogError($"Unable to pull image: {unusableReason}.");
 
-                throw new CommandException("Docker is not installed.");
-            }
-
-            if (!await DockerDetector.Instance.IsDockerConnectedToDaemon.Value)
-            {
-                _logger.LogError("Unable to connect to docker daemon. Docker is not running.");
-
-                throw new CommandException("Docker is not running.");
+                throw new CommandException($"Unable to pull image: {unusableReason}.");
             }
 
             var tasks = new Task[images.Count];

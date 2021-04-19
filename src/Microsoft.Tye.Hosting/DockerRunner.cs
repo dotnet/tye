@@ -148,17 +148,12 @@ namespace Microsoft.Tye.Hosting
             // Stash information outside of the application services
             application.Items[typeof(DockerApplicationInformation)] = new DockerApplicationInformation(dockerNetwork, proxies);
 
-            var tasks = new Task[containers.Count];
-            var index = 0;
-
             foreach (var s in containers)
             {
                 var docker = (DockerRunInfo)s.Description.RunInfo!;
 
-                tasks[index++] = StartContainerAsync(application, s, docker, dockerNetwork);
+                StartContainerAsync(application, s, docker, dockerNetwork);
             }
-
-            await Task.WhenAll(tasks);
         }
 
         public async Task StopAsync(Application application)
@@ -199,24 +194,20 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        private async Task StartContainerAsync(Application application, Service service, DockerRunInfo docker, string? dockerNetwork)
+        private void StartContainerAsync(Application application, Service service, DockerRunInfo docker, string? dockerNetwork)
         {
             var serviceDescription = service.Description;
-            var environmentArguments = "";
-            var volumes = "";
             var workingDirectory = docker.WorkingDirectory != null ? $"-w \"{docker.WorkingDirectory}\"" : "";
-            var hostname = "host.docker.internal";
-            var dockerImage = docker.Image ?? service.Description.Name;
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            var hostname = DockerDetector.Instance.ContainerHost;
+            if (hostname == null)
             {
-                // See: https://github.com/docker/for-linux/issues/264
-                //
-                // host.docker.internal is making it's way into linux docker but doesn't work yet
-                // instead we use the machine IP
-                var addresses = await Dns.GetHostAddressesAsync(Dns.GetHostName());
-                hostname = addresses[0].ToString();
+                _logger.LogError("Configuration doesn't allow containers to access services on the host.");
+
+                throw new CommandException("Configuration doesn't allow containers to access services on the host.");
             }
+
+            var dockerImage = docker.Image ?? service.Description.Name;
 
             async Task RunDockerContainer(IEnumerable<(int ExternalPort, int Port, int? ContainerPort, string? Protocol)> ports, CancellationToken cancellationToken)
             {
@@ -276,17 +267,19 @@ namespace Microsoft.Tye.Hosting
 
                 status.Environment = environment;
 
+                var environmentArguments = "";
                 foreach (var pair in environment)
                 {
                     environmentArguments += $"-e \"{pair.Key}={pair.Value}\" ";
                 }
 
+                var volumes = "";
                 foreach (var volumeMapping in docker.VolumeMappings)
                 {
                     if (volumeMapping.Source != null)
                     {
                         var sourcePath = Path.GetFullPath(Path.Combine(application.ContextDirectory, volumeMapping.Source));
-                        volumes += $"-v \"{sourcePath}:{volumeMapping.Target}\" ";
+                        volumes += $"-v \"{sourcePath}:{volumeMapping.Target}:{(volumeMapping.ReadOnly ? "ro," : "")}z\" ";
                     }
                     else if (volumeMapping.Name != null)
                     {
@@ -294,7 +287,13 @@ namespace Microsoft.Tye.Hosting
                     }
                 }
 
-                var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {dockerImage} {docker.Args ?? ""}";
+                var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped";
+                if (!string.IsNullOrEmpty(dockerNetwork))
+                {
+                    status.DockerNetworkAlias = docker.NetworkAlias ?? serviceDescription!.Name;
+                    command += $" --network {dockerNetwork} --network-alias {status.DockerNetworkAlias}";
+                }
+                command += $" {dockerImage} {docker.Args ?? ""}";
 
                 if (!docker.IsProxy)
                 {
@@ -346,21 +345,6 @@ namespace Microsoft.Tye.Hosting
                 status.ContainerId = shortContainerId;
 
                 _logger.LogInformation("Running container {ContainerName} with ID {ContainerId}", replica, shortContainerId);
-
-                if (!string.IsNullOrEmpty(dockerNetwork))
-                {
-                    status.DockerNetworkAlias = docker.NetworkAlias ?? serviceDescription!.Name;
-
-                    var networkCommand = $"network connect {dockerNetwork} {replica} --alias {status.DockerNetworkAlias}";
-
-                    service.Logs.OnNext($"[{replica}]: docker {networkCommand}");
-
-                    _logger.LogInformation("Running docker command {Command}", networkCommand);
-
-                    result = await ProcessUtil.RunAsync("docker", networkCommand);
-
-                    PrintStdOutAndErr(service, replica, result);
-                }
 
                 var sentStartedEvent = false;
 

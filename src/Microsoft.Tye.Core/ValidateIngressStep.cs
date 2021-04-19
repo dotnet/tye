@@ -122,7 +122,7 @@ namespace Microsoft.Tye
                 output.WriteDebugLine($"Running 'minikube addons enable ingress'");
                 output.WriteCommandLine("minikube", "addon enable ingress");
                 var capture = output.Capture();
-                var exitCode = await Process.ExecuteAsync(
+                var exitCode = await ProcessUtil.ExecuteAsync(
                     $"minikube",
                     $"addons enable ingress",
                     System.Environment.CurrentDirectory,
@@ -149,7 +149,7 @@ namespace Microsoft.Tye
                 output.WriteDebugLine($"Running 'kubectl apply'");
                 output.WriteCommandLine("kubectl", $"apply -f \"https://aka.ms/tye/ingress/deploy\"");
                 var capture = output.Capture();
-                var exitCode = await Process.ExecuteAsync(
+                var exitCode = await ProcessUtil.ExecuteAsync(
                     $"kubectl",
                     $"apply -f \"https://aka.ms/tye/ingress/deploy\"",
                     System.Environment.CurrentDirectory);

@@ -25,14 +25,9 @@ namespace Microsoft.Tye
                 return;
             }
 
-            if (!await DockerDetector.Instance.IsDockerInstalled.Value)
+            if (!DockerDetector.Instance.IsUsable(out string? unusableReason))
             {
-                throw new CommandException($"Cannot generate a docker image for '{service.Name}' because docker is not installed.");
-            }
-
-            if (!await DockerDetector.Instance.IsDockerConnectedToDaemon.Value)
-            {
-                throw new CommandException($"Cannot generate a docker image for '{service.Name}' because docker is not running.");
+                throw new CommandException($"Cannot generate a docker image for '{service.Name}' because {unusableReason}.");
             }
 
             if (project is DotnetProjectServiceBuilder dotnetProject)

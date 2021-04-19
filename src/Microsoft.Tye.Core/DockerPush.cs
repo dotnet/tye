@@ -30,7 +30,7 @@ namespace Microsoft.Tye
             output.WriteDebugLine("Running 'docker push'.");
             output.WriteCommandLine("docker", $"push {imageName}:{imageTag}");
             var capture = output.Capture();
-            var exitCode = await Process.ExecuteAsync(
+            var exitCode = await ProcessUtil.ExecuteAsync(
                 $"docker",
                 $"push {imageName}:{imageTag}",
                 stdOut: capture.StdOut,
