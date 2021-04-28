@@ -36,7 +36,7 @@ namespace Microsoft.Tye.Hosting
                 return;
             }
 
-            if (!DockerDetector.Instance.IsUsable(out string? unusableReason))
+            if (!application.ContainerEngine.IsUsable(out string? unusableReason))
             {
                 _logger.LogError($"Unable to pull image: {unusableReason}.");
 
@@ -47,18 +47,17 @@ namespace Microsoft.Tye.Hosting
             var index = 0;
             foreach (var image in images)
             {
-                tasks[index++] = PullContainerAsync(image);
+                tasks[index++] = PullContainerAsync(application, image);
             }
 
             await Task.WhenAll(tasks);
         }
 
-        private async Task PullContainerAsync(string image)
+        private async Task PullContainerAsync(Application application, string image)
         {
             await Task.Yield();
 
-            var result = await ProcessUtil.RunAsync(
-                                    "docker",
+            var result = await application.ContainerEngine.RunAsync(
                                     $"images --filter \"reference={image}\" --format \"{{{{.ID}}}}\"",
                                     throwOnError: false);
 
@@ -78,8 +77,7 @@ namespace Microsoft.Tye.Hosting
 
             _logger.LogInformation("Running docker command {command}", command);
 
-            result = await ProcessUtil.RunAsync(
-                             "docker",
+            result = await application.ContainerEngine.RunAsync(
                              command,
                              outputDataReceived: data => _logger.LogInformation("{Image}: " + data, image),
                              errorDataReceived: data => _logger.LogInformation("{Image}: " + data, image),

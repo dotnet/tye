@@ -13,6 +13,11 @@
             "description": "Dockerhub username or hostname of remote registry. Used for tagging images.",
             "type": "string"
         },
+        "engine": {
+            "description": "Container engine.",
+            "type": "string",
+            "enum": ["docker", "podman"]
+        },
         "namespace": {
             "description": "The Kubernetes namespace to use.",
             "type": "string"

@@ -27,7 +27,7 @@ namespace Microsoft.Tye
 
             foreach (var image in service.Outputs.OfType<DockerImageOutput>())
             {
-                await DockerPush.ExecuteAsync(output, image.ImageName, image.ImageTag);
+                await DockerPush.ExecuteAsync(output, application.ContainerEngine, image.ImageName, image.ImageTag);
                 output.WriteInfoLine($"Pushed docker image: '{image.ImageName}:{image.ImageTag}'");
             }
         }

@@ -505,7 +505,7 @@ services:
             });
 
             // Delete the volume
-            await ProcessUtil.RunAsync("docker", $"volume rm {volumeName}");
+            await ContainerEngine.Default.RunAsync($"volume rm {volumeName}");
         }
 
         [ConditionalFact]
@@ -522,7 +522,7 @@ services:
             application.Network = dockerNetwork;
 
             // Create the existing network
-            await ProcessUtil.RunAsync("docker", $"network create {dockerNetwork}");
+            await ContainerEngine.Default.RunAsync($"network create {dockerNetwork}");
 
             var handler = new HttpClientHandler
             {
@@ -561,7 +561,7 @@ services:
             finally
             {
                 // Delete the network
-                await ProcessUtil.RunAsync("docker", $"network rm {dockerNetwork}");
+                await ContainerEngine.Default.RunAsync($"network rm {dockerNetwork}");
             }
         }
 

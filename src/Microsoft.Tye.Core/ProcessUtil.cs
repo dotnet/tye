@@ -31,7 +31,6 @@ namespace Microsoft.Tye
             Action<string>? stdErr = null,
             params (string key, string value)[] environmentVariables)
         {
-            command = CheckForPodman(command);
             return System.CommandLine.Invocation.Process.ExecuteAsync(command, args, workingDir, stdOut, stdErr, environmentVariables);
         }
 
@@ -47,7 +46,6 @@ namespace Microsoft.Tye
             Action<int>? onStop = null,
             CancellationToken cancellationToken = default)
         {
-            filename = CheckForPodman(filename);
             using var process = new Process()
             {
                 StartInfo =
@@ -187,15 +185,6 @@ namespace Microsoft.Tye
             }
             catch (ArgumentException) { }
             catch (InvalidOperationException) { }
-        }
-
-        private static string CheckForPodman(string command)
-        {
-            if (command == "docker" && DockerDetector.Instance.IsPodman)
-            {
-                return "podman";
-            }
-            return command;
         }
     }
 }

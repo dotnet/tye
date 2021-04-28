@@ -28,6 +28,8 @@ namespace Microsoft.Tye.ConfigModel
 
         public string? Registry { get; set; }
 
+        public ContainerEngineType? ContainerEngineType { get; set; }
+
         public string? Network { get; set; }
 
         public List<Dictionary<string, object>> Extensions { get; set; } = new List<Dictionary<string, object>>();

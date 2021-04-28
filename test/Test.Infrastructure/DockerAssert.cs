@@ -23,8 +23,7 @@ namespace Test.Infrastructure
             var builder = new StringBuilder();
 
             output.WriteLine($"> docker images \"{repository}\" --format \"{{{{.Repository}}}}\"");
-            var exitCode = await ProcessUtil.ExecuteAsync(
-                "docker",
+            var exitCode = await ContainerEngine.Default.ExecuteAsync(
                 $"images \"{repository}\" --format \"{{{{.Repository}}}}\"",
                 stdOut: OnOutput,
                 stdErr: OnOutput);
@@ -59,8 +58,7 @@ namespace Test.Infrastructure
             {
 
                 output.WriteLine($"> docker rmi \"{id}\" --force");
-                var exitCode = await ProcessUtil.ExecuteAsync(
-                    "docker",
+                var exitCode = await ContainerEngine.Default.ExecuteAsync(
                     $"rmi \"{id}\" --force",
                     stdOut: OnOutput,
                     stdErr: OnOutput);
@@ -84,8 +82,7 @@ namespace Test.Infrastructure
             var builder = new StringBuilder();
 
             output.WriteLine($"> docker ps --format \"{{{{.ID}}}}\"");
-            var exitCode = await ProcessUtil.ExecuteAsync(
-                "docker",
+            var exitCode = await ContainerEngine.Default.ExecuteAsync(
                 $"ps --format \"{{{{.ID}}}}\"",
                 stdOut: OnOutput,
                 stdErr: OnOutput);
@@ -112,8 +109,7 @@ namespace Test.Infrastructure
             var builder = new StringBuilder();
 
             output.WriteLine($"> docker images -q \"{repository}\"");
-            var exitCode = await ProcessUtil.ExecuteAsync(
-                "docker",
+            var exitCode = await ContainerEngine.Default.ExecuteAsync(
                 $"images -q \"{repository}\"",
                 stdOut: OnOutput,
                 stdErr: OnOutput);

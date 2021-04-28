@@ -43,8 +43,7 @@ namespace Microsoft.Tye
             output.WriteDebugLine("Running 'docker build'.");
             output.WriteCommandLine("docker", $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"");
             var capture = output.Capture();
-            var exitCode = await ProcessUtil.ExecuteAsync(
-                $"docker",
+            var exitCode = await application.ContainerEngine.ExecuteAsync(
                 $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"",
                 new FileInfo(containerService.DockerFile).DirectoryName,
                 stdOut: capture.StdOut,
@@ -148,8 +147,7 @@ namespace Microsoft.Tye
                 output.WriteDebugLine("Running 'docker build'.");
                 output.WriteCommandLine("docker", $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"");
                 var capture = output.Capture();
-                var exitCode = await ProcessUtil.ExecuteAsync(
-                    $"docker",
+                var exitCode = await application.ContainerEngine.ExecuteAsync(
                     $"build \"{contextDirectory}\" -t {container.ImageName}:{container.ImageTag} -f \"{dockerFilePath}\"",
                     project.ProjectFile.DirectoryName,
                     stdOut: capture.StdOut,

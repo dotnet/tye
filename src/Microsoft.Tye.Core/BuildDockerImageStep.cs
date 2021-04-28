@@ -25,7 +25,7 @@ namespace Microsoft.Tye
                 return;
             }
 
-            if (!DockerDetector.Instance.IsUsable(out string? unusableReason))
+            if (!application.ContainerEngine.IsUsable(out string? unusableReason))
             {
                 throw new CommandException($"Cannot generate a docker image for '{service.Name}' because {unusableReason}.");
             }

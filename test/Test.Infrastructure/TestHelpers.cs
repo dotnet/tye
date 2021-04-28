@@ -251,8 +251,8 @@ namespace Test.Infrastructure
                 var processRunner = new ProcessRunner(logger, replicaRegistry, new ProcessRunnerOptions());
                 var dockerRunner = new DockerRunner(logger, replicaRegistry);
 
-                await processRunner.StartAsync(new Application(new FileInfo(host.Application.Source), new Dictionary<string, Service>()));
-                await dockerRunner.StartAsync(new Application(new FileInfo(host.Application.Source), new Dictionary<string, Service>()));
+                await processRunner.StartAsync(new Application(new FileInfo(host.Application.Source), new Dictionary<string, Service>(), ContainerEngine.Default));
+                await dockerRunner.StartAsync(new Application(new FileInfo(host.Application.Source), new Dictionary<string, Service>(), ContainerEngine.Default));
             }
 
             await DoOperationAndWaitForReplicasToChangeState(host, ReplicaState.Stopped, replicas.Length, replicas.ToHashSet(), new HashSet<string>(), TimeSpan.Zero, Purge);

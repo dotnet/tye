@@ -5,6 +5,7 @@
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.Tye;
+using Microsoft.Tye.ConfigModel;
 
 namespace Test.Infrastructure
 {
@@ -14,7 +15,7 @@ namespace Test.Infrastructure
         public SkipIfDockerNotRunningAttribute()
         {
             // TODO Check performance of this.
-            IsMet = DockerDetector.Instance.IsUsable(out string unusableReason) && !(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AGENT_OS")));
+            IsMet = ContainerEngine.Default.IsUsable(out string unusableReason) && !(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AGENT_OS")));
             SkipReason = $"Container engine not usable: {unusableReason}";
         }
 
