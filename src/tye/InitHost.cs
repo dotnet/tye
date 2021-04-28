@@ -17,7 +17,7 @@ namespace Microsoft.Tye
 
         public static (string, string) CreateTyeFileContent(FileInfo? path, bool force)
         {
-            if (path is FileInfo && path.Exists && !force)
+            if (path is { Exists: true } && !force)
             {
                 ThrowIfTyeFilePresent(path, "tye.yml");
                 ThrowIfTyeFilePresent(path, "tye.yaml");
@@ -30,7 +30,7 @@ namespace Microsoft.Tye
                 var hasViableFileType = ConfigFileFinder.TryFindSupportedFile(path?.DirectoryName ?? ".",
                     out var filePath,
                     out var errorMessage,
-                    new string[] { "*.csproj", "*.fsproj", "*.sln" });
+                    new[] { "*.csproj", "*.fsproj", "*.sln" });
 
                 if (!hasViableFileType)
                 {
@@ -69,39 +69,42 @@ services:
             // output next to the input file.
             var outputFilePath = "tye.yaml";
 
-            if (path is FileInfo && path.Exists)
+            if (!(path is { Exists: true }))
             {
-                var application = ConfigFactory.FromFile(path);
-                var serializer = YamlSerializer.CreateSerializer();
+                return (template, outputFilePath);
+            }
 
-                var extension = path.Extension.ToLowerInvariant();
-                var directory = path.Directory;
+            var application = ConfigFactory.FromFile(path);
+            var serializer = YamlSerializer.CreateSerializer();
 
-                // Clear all bindings if any for solutions and project files
-                if (extension == ".sln" || extension == ".csproj" || extension == ".fsproj")
+            var extension = path.Extension.ToLowerInvariant();
+            var directory = path.Directory;
+
+            // Clear all bindings if any for solutions and project files
+            if (extension == ".sln" || extension == ".csproj" || extension == ".fsproj")
+            {
+                // If the input file is a project or solution then use that as the name
+                application.Extensions = null!;
+                application.Ingress = null!;
+
+                foreach (var service in application.Services)
                 {
-                    // If the input file is a project or solution then use that as the name
-                    application.Extensions = null!;
-                    application.Ingress = null!;
-
-                    foreach (var service in application.Services)
-                    {
-                        service.Bindings = null!;
-                        service.Configuration = null!;
-                        service.Volumes = null!;
-                        service.Project = service.Project!.Substring(directory!.FullName.Length).TrimStart('/');
-                    }
-
-                    // If the input file is a sln/project then place the config next to it
-                    outputFilePath = Path.Combine(directory!.FullName, "tye.yaml");
-                }
-                else
-                {
-                    // If the input file is a yaml, then replace it.
-                    outputFilePath = path.FullName;
+                    service.Bindings = null!;
+                    service.Configuration = null!;
+                    service.Volumes = null!;
+                    service.Project = service.Project!.Substring(directory!.FullName.Length).TrimStart('/');
                 }
 
-                template = @"
+                // If the input file is a sln/project then place the config next to it
+                outputFilePath = Path.Combine(directory!.FullName, "tye.yaml");
+            }
+            else
+            {
+                // If the input file is a yaml, then replace it.
+                outputFilePath = path.FullName;
+            }
+
+            template = @"
 # tye application configuration file
 # read all about it at https://github.com/dotnet/tye
 #
@@ -109,7 +112,6 @@ services:
 #    https://aka.ms/AA7q20u
 #
 ".TrimStart() + serializer.Serialize(application);
-            }
 
             return (template, outputFilePath);
         }
