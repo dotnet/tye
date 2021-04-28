@@ -40,19 +40,17 @@ namespace Microsoft.Tye
                 return 1;
             });
 
-            var builder = new CommandLineBuilder(command);
-            builder.UseHelp();
-            builder.UseVersionOption();
-            builder.UseDebugDirective();
-            builder.UseParseErrorReporting();
-            builder.ParseResponseFileAs(ResponseFileHandling.ParseArgsAsSpaceSeparated);
+            var parser = new CommandLineBuilder(command)
+                .UseHelp()
+                .UseVersionOption()
+                .UseDebugDirective()
+                .UseParseErrorReporting()
+                .ParseResponseFileAs(ResponseFileHandling.ParseArgsAsSpaceSeparated)
+                .CancelOnProcessTermination()
+                .UseExceptionHandler(HandleException)
+                .UseMiddleware(DefaultOptionsMiddleware)
+                .Build();
 
-            builder.CancelOnProcessTermination();
-            builder.UseExceptionHandler(HandleException);
-
-            builder.UseMiddleware(DefaultOptionsMiddleware);
-
-            var parser = builder.Build();
             return parser.InvokeAsync(args);
         }
 
