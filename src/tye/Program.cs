@@ -58,47 +58,48 @@ namespace Microsoft.Tye
 
         private static void HandleException(Exception exception, InvocationContext context)
         {
-            context.Console.ResetTerminalForegroundColor();
-            context.Console.SetTerminalForegroundColor(ConsoleColor.Red);
+            var console = context.Console;
 
-            if (exception is TargetInvocationException tie &&
-                tie.InnerException is object)
+            console.ResetTerminalForegroundColor();
+            console.SetTerminalForegroundColor(ConsoleColor.Red);
+
+            if (exception is TargetInvocationException { InnerException: { } } tie)
             {
                 exception = tie.InnerException;
             }
 
             if (exception is OperationCanceledException)
             {
-                context.Console.Error.WriteLine("Oh dear! Operation canceled.");
+                console.Error.WriteLine("Oh dear! Operation canceled.");
             }
             else if (exception is CommandException command)
             {
-                context.Console.Error.WriteLine($"Drats! '{context.ParseResult.CommandResult.Command.Name}' failed:");
-                context.Console.Error.WriteLine($"\t{command.Message}");
+                console.Error.WriteLine($"Drats! '{context.ParseResult.CommandResult.Command.Name}' failed:");
+                console.Error.WriteLine($"\t{command.Message}");
 
                 if (command.InnerException != null)
                 {
-                    context.Console.Error.WriteLine();
-                    context.Console.Error.WriteLine(command.InnerException.ToString());
+                    console.Error.WriteLine();
+                    console.Error.WriteLine(command.InnerException.ToString());
                 }
             }
             else if (exception is TyeYamlException yaml)
             {
-                context.Console.Error.WriteLine($"{yaml.Message}");
+                console.Error.WriteLine($"{yaml.Message}");
 
                 if (yaml.InnerException != null)
                 {
-                    context.Console.Error.WriteLine();
-                    context.Console.Error.WriteLine(yaml.InnerException.ToString());
+                    console.Error.WriteLine();
+                    console.Error.WriteLine(yaml.InnerException.ToString());
                 }
             }
             else
             {
-                context.Console.Error.WriteLine("An unhandled exception has occurred, how unseemly: ");
-                context.Console.Error.WriteLine(exception.ToString());
+                console.Error.WriteLine("An unhandled exception has occurred, how unseemly: ");
+                console.Error.WriteLine(exception.ToString());
             }
 
-            context.Console.ResetTerminalForegroundColor();
+            console.ResetTerminalForegroundColor();
 
             context.ResultCode = 1;
         }
