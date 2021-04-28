@@ -13,7 +13,7 @@ namespace Microsoft.Tye
 {
     public static class GenerateHost
     {
-        public static async Task GenerateAsync(OutputContext output, FileInfo path, bool interactive, string ns, string? framework = null, ApplicationFactoryFilter? filter = null)
+        public static async Task GenerateAsync(OutputContext output, FileInfo path, bool interactive, string @namespace, string? framework = null, ApplicationFactoryFilter? filter = null)
         {
             var application = await ApplicationFactory.CreateAsync(output, path, framework, filter);
 
@@ -21,9 +21,9 @@ namespace Microsoft.Tye
             {
                 throw new CommandException($"No services found in \"{application.Source.Name}\"");
             }
-            if (!string.IsNullOrEmpty(ns))
+            if (!string.IsNullOrEmpty(@namespace))
             {
-                application.Namespace = ns;
+                application.Namespace = @namespace;
             }
             await ExecuteGenerateAsync(output, application, environment: "production", interactive);
         }
