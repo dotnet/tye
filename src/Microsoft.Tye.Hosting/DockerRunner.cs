@@ -33,7 +33,7 @@ namespace Microsoft.Tye.Hosting
 
         public async Task StartAsync(Application application)
         {
-            await PurgeFromPreviousRun();
+            await PurgeFromPreviousRun(application);
 
             var containers = new List<Service>();
 
@@ -100,7 +100,7 @@ namespace Microsoft.Tye.Hosting
 
             if (!string.IsNullOrEmpty(application.Network))
             {
-                var dockerNetworkResult = await ProcessUtil.RunAsync("docker", $"network ls --filter \"name={application.Network}\" --format \"{{{{.ID}}}}\"", throwOnError: false);
+                var dockerNetworkResult = await application.ContainerEngine.RunAsync($"network ls --filter \"name={application.Network}\" --format \"{{{{.ID}}}}\"", throwOnError: false);
                 if (dockerNetworkResult.ExitCode != 0)
                 {
                     _logger.LogError("{Network}: Run docker network ls command failed", application.Network);
@@ -135,7 +135,7 @@ namespace Microsoft.Tye.Hosting
 
                 _logger.LogInformation("Running docker command {Command}", command);
 
-                var dockerNetworkResult = await ProcessUtil.RunAsync("docker", command, throwOnError: false);
+                var dockerNetworkResult = await application.ContainerEngine.RunAsync(command, throwOnError: false);
 
                 if (dockerNetworkResult.ExitCode != 0)
                 {
@@ -148,17 +148,12 @@ namespace Microsoft.Tye.Hosting
             // Stash information outside of the application services
             application.Items[typeof(DockerApplicationInformation)] = new DockerApplicationInformation(dockerNetwork, proxies);
 
-            var tasks = new Task[containers.Count];
-            var index = 0;
-
             foreach (var s in containers)
             {
                 var docker = (DockerRunInfo)s.Description.RunInfo!;
 
-                tasks[index++] = StartContainerAsync(application, s, docker, dockerNetwork);
+                StartContainerAsync(application, s, docker, dockerNetwork);
             }
-
-            await Task.WhenAll(tasks);
         }
 
         public async Task StopAsync(Application application)
@@ -195,28 +190,24 @@ namespace Microsoft.Tye.Hosting
                 _logger.LogInformation("Running docker command {Command}", command);
 
                 // Clean up the network we created
-                await ProcessUtil.RunAsync("docker", command, throwOnError: false);
+                await application.ContainerEngine.RunAsync(command, throwOnError: false);
             }
         }
 
-        private async Task StartContainerAsync(Application application, Service service, DockerRunInfo docker, string? dockerNetwork)
+        private void StartContainerAsync(Application application, Service service, DockerRunInfo docker, string? dockerNetwork)
         {
             var serviceDescription = service.Description;
-            var environmentArguments = "";
-            var volumes = "";
             var workingDirectory = docker.WorkingDirectory != null ? $"-w \"{docker.WorkingDirectory}\"" : "";
-            var hostname = "host.docker.internal";
-            var dockerImage = docker.Image ?? service.Description.Name;
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            var hostname = application.ContainerEngine.ContainerHost;
+            if (hostname == null)
             {
-                // See: https://github.com/docker/for-linux/issues/264
-                //
-                // host.docker.internal is making it's way into linux docker but doesn't work yet
-                // instead we use the machine IP
-                var addresses = await Dns.GetHostAddressesAsync(Dns.GetHostName());
-                hostname = addresses[0].ToString();
+                _logger.LogError("Configuration doesn't allow containers to access services on the host.");
+
+                throw new CommandException("Configuration doesn't allow containers to access services on the host.");
             }
+
+            var dockerImage = docker.Image ?? service.Description.Name;
 
             async Task RunDockerContainer(IEnumerable<(int ExternalPort, int Port, int? ContainerPort, string? Protocol)> ports, CancellationToken cancellationToken)
             {
@@ -276,17 +267,19 @@ namespace Microsoft.Tye.Hosting
 
                 status.Environment = environment;
 
+                var environmentArguments = "";
                 foreach (var pair in environment)
                 {
                     environmentArguments += $"-e \"{pair.Key}={pair.Value}\" ";
                 }
 
+                var volumes = "";
                 foreach (var volumeMapping in docker.VolumeMappings)
                 {
                     if (volumeMapping.Source != null)
                     {
                         var sourcePath = Path.GetFullPath(Path.Combine(application.ContextDirectory, volumeMapping.Source));
-                        volumes += $"-v \"{sourcePath}:{volumeMapping.Target}\" ";
+                        volumes += $"-v \"{sourcePath}:{volumeMapping.Target}:{(volumeMapping.ReadOnly ? "ro," : "")}z\" ";
                     }
                     else if (volumeMapping.Name != null)
                     {
@@ -294,7 +287,13 @@ namespace Microsoft.Tye.Hosting
                     }
                 }
 
-                var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped {dockerImage} {docker.Args ?? ""}";
+                var command = $"run -d {workingDirectory} {volumes} {environmentArguments} {portString} --name {replica} --restart=unless-stopped";
+                if (!string.IsNullOrEmpty(dockerNetwork))
+                {
+                    status.DockerNetworkAlias = docker.NetworkAlias ?? serviceDescription!.Name;
+                    command += $" --network {dockerNetwork} --network-alias {status.DockerNetworkAlias}";
+                }
+                command += $" {dockerImage} {docker.Args ?? ""}";
 
                 if (!docker.IsProxy)
                 {
@@ -311,8 +310,7 @@ namespace Microsoft.Tye.Hosting
                 status.DockerNetwork = dockerNetwork;
 
                 WriteReplicaToStore(replica);
-                var result = await ProcessUtil.RunAsync(
-                    "docker",
+                var result = await application.ContainerEngine.RunAsync(
                     command,
                     throwOnError: false,
                     cancellationToken: cancellationToken,
@@ -336,7 +334,7 @@ namespace Microsoft.Tye.Hosting
                 while (string.IsNullOrEmpty(containerId))
                 {
                     // Try to get the ID of the container
-                    result = await ProcessUtil.RunAsync("docker", $"ps --no-trunc -f name={replica} --format " + "{{.ID}}");
+                    result = await application.ContainerEngine.RunAsync($"ps --no-trunc -f name={replica} --format " + "{{.ID}}");
 
                     containerId = result.ExitCode == 0 ? result.StandardOutput.Trim() : null;
                 }
@@ -347,21 +345,6 @@ namespace Microsoft.Tye.Hosting
 
                 _logger.LogInformation("Running container {ContainerName} with ID {ContainerId}", replica, shortContainerId);
 
-                if (!string.IsNullOrEmpty(dockerNetwork))
-                {
-                    status.DockerNetworkAlias = docker.NetworkAlias ?? serviceDescription!.Name;
-
-                    var networkCommand = $"network connect {dockerNetwork} {replica} --alias {status.DockerNetworkAlias}";
-
-                    service.Logs.OnNext($"[{replica}]: docker {networkCommand}");
-
-                    _logger.LogInformation("Running docker command {Command}", networkCommand);
-
-                    result = await ProcessUtil.RunAsync("docker", networkCommand);
-
-                    PrintStdOutAndErr(service, replica, result);
-                }
-
                 var sentStartedEvent = false;
 
                 while (!cancellationToken.IsCancellationRequested)
@@ -369,7 +352,7 @@ namespace Microsoft.Tye.Hosting
                     if (sentStartedEvent)
                     {
                         using var restartCts = new CancellationTokenSource(DockerStopTimeout);
-                        result = await ProcessUtil.RunAsync("docker", $"restart {containerId}", throwOnError: false, cancellationToken: restartCts.Token);
+                        result = await application.ContainerEngine.RunAsync($"restart {containerId}", throwOnError: false, cancellationToken: restartCts.Token);
 
                         if (restartCts.IsCancellationRequested)
                         {
@@ -398,7 +381,7 @@ namespace Microsoft.Tye.Hosting
 
                     while (!status.StoppingTokenSource.Token.IsCancellationRequested)
                     {
-                        var logsRes = await ProcessUtil.RunAsync("docker", $"logs -f {containerId}",
+                        var logsRes = await application.ContainerEngine.RunAsync($"logs -f {containerId}",
                             outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
                             errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
                             throwOnError: false,
@@ -435,7 +418,7 @@ namespace Microsoft.Tye.Hosting
 
                 _logger.LogInformation("Stopping container {ContainerName} with ID {ContainerId}", replica, shortContainerId);
 
-                result = await ProcessUtil.RunAsync("docker", $"stop {containerId}", throwOnError: false, cancellationToken: timeoutCts.Token);
+                result = await application.ContainerEngine.RunAsync($"stop {containerId}", throwOnError: false, cancellationToken: timeoutCts.Token);
 
                 if (timeoutCts.IsCancellationRequested)
                 {
@@ -451,7 +434,7 @@ namespace Microsoft.Tye.Hosting
 
                 _logger.LogInformation("Stopped container {ContainerName} with ID {ContainerId} exited with {ExitCode}", replica, shortContainerId, result.ExitCode);
 
-                result = await ProcessUtil.RunAsync("docker", $"rm {containerId}", throwOnError: false, cancellationToken: timeoutCts.Token);
+                result = await application.ContainerEngine.RunAsync($"rm {containerId}", throwOnError: false, cancellationToken: timeoutCts.Token);
 
                 if (timeoutCts.IsCancellationRequested)
                 {
@@ -486,8 +469,7 @@ namespace Microsoft.Tye.Hosting
                         arguments.Append($" --build-arg {buildArg.Key}={buildArg.Value}");
                     }
 
-                    var dockerBuildResult = await ProcessUtil.RunAsync(
-                        $"docker",
+                    var dockerBuildResult = await application.ContainerEngine.RunAsync(
                         arguments.ToString(),
                         outputDataReceived: Log,
                         errorDataReceived: Log,
@@ -550,13 +532,13 @@ namespace Microsoft.Tye.Hosting
             service.Items[typeof(DockerInformation)] = dockerInfo;
         }
 
-        private async Task PurgeFromPreviousRun()
+        private async Task PurgeFromPreviousRun(Application application)
         {
             var dockerReplicas = await _replicaRegistry.GetEvents(DockerReplicaStore);
             foreach (var replica in dockerReplicas)
             {
                 var container = replica["container"];
-                await ProcessUtil.RunAsync("docker", $"rm -f {container}", throwOnError: false);
+                await application.ContainerEngine.RunAsync($"rm -f {container}", throwOnError: false);
                 _logger.LogInformation("removed container {container} from previous run", container);
             }
 

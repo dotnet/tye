@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using Microsoft.Tye.ConfigModel;
 using YamlDotNet.RepresentationModel;
 
@@ -28,6 +29,21 @@ namespace Tye.Serialization
                         break;
                     case "registry":
                         app.Registry = YamlParser.GetScalarValue(key, child.Value);
+                        break;
+                    case "containerEngine":
+                        string engine = YamlParser.GetScalarValue(key, child.Value);
+                        if (engine.Equals("docker", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            app.ContainerEngineType = ContainerEngineType.Docker;
+                        }
+                        else if (engine.Equals("podman", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            app.ContainerEngineType = ContainerEngineType.Podman;
+                        }
+                        else
+                        {
+                            throw new TyeYamlException($"Unknown container engine: \"{engine}\"");
+                        }
                         break;
                     case "ingress":
                         YamlParser.ThrowIfNotYamlSequence(key, child.Value);

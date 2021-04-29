@@ -87,10 +87,12 @@ namespace Microsoft.Tye.Hosting
             // This is .NET specific
             var userSecretStore = GetUserSecretsPathFromSecrets();
 
+            Directory.CreateDirectory(userSecretStore);
+
             if (!string.IsNullOrEmpty(userSecretStore))
             {
                 // Map the user secrets on this drive to user secrets
-                dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: userSecretStore, name: null, target: "/root/.microsoft/usersecrets:ro"));
+                dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: userSecretStore, name: null, target: "/root/.microsoft/usersecrets", readOnly: true));
             }
 
             // Default to development environment
@@ -116,7 +118,7 @@ namespace Microsoft.Tye.Hosting
                 serviceDescription.Configuration.Add(new EnvironmentVariable("Kestrel__Certificates__Development__Password", certPassword));
 
                 // Certificate Path: https://github.com/dotnet/aspnetcore/blob/a9d702624a02ad4ebf593d9bf9c1c69f5702a6f5/src/Servers/Kestrel/Core/src/KestrelConfigurationLoader.cs#L419
-                dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: certificateDirectory.DirectoryPath, name: null, target: "/root/.aspnet/https:ro"));
+                dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: certificateDirectory.DirectoryPath, name: null, target: "/root/.aspnet/https", readOnly: true));
             }
 
             // Change the project into a container info

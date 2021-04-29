@@ -217,15 +217,10 @@ namespace Microsoft.Tye.Hosting
 
                 if (hasPorts)
                 {
-                    // We need to bind to all interfaces on linux since the container -> host communication won't work
-                    // if we use the IP address to reach out of the host. This works fine on osx and windows
-                    // but doesn't work on linux.
-                    var host = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "*" : "localhost";
-
                     // These are the ports that the application should use for binding
 
                     // 1. Configure ASP.NET Core to bind to those same ports
-                    environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://{host}:{p.Port}"));
+                    environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://{application.ContainerEngine.AspNetUrlsHost}:{p.Port}"));
 
                     // Set the HTTPS port for the redirect middleware
                     foreach (var p in ports)

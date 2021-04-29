@@ -10,7 +10,7 @@ namespace Microsoft.Tye
 {
     internal static class DockerPush
     {
-        public static async Task ExecuteAsync(OutputContext output, string imageName, string imageTag)
+        public static async Task ExecuteAsync(OutputContext output, ContainerEngine containerEngine, string imageName, string imageTag)
         {
             if (output is null)
             {
@@ -30,8 +30,7 @@ namespace Microsoft.Tye
             output.WriteDebugLine("Running 'docker push'.");
             output.WriteCommandLine("docker", $"push {imageName}:{imageTag}");
             var capture = output.Capture();
-            var exitCode = await Process.ExecuteAsync(
-                $"docker",
+            var exitCode = await containerEngine.ExecuteAsync(
                 $"push {imageName}:{imageTag}",
                 stdOut: capture.StdOut,
                 stdErr: capture.StdErr);
