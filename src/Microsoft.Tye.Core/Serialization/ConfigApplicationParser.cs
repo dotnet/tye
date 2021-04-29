@@ -30,7 +30,7 @@ namespace Tye.Serialization
                     case "registry":
                         app.Registry = YamlParser.GetScalarValue(key, child.Value);
                         break;
-                    case "engine":
+                    case "containerEngine":
                         string engine = YamlParser.GetScalarValue(key, child.Value);
                         if (engine.Equals("docker", StringComparison.InvariantCultureIgnoreCase))
                         {
