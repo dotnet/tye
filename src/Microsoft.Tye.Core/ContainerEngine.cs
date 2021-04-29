@@ -108,13 +108,9 @@ namespace Microsoft.Tye
                 return true;
             }
 
-            if (!Version.TryParse(result.StandardOutput, out Version? version))
-            {
-                unusableReason = $"cannot parse podman version '{result.StandardOutput}'.";
-                return true;
-            }
             Version minVersion = new Version(3, 1);
-            if (version < minVersion)
+            if (Version.TryParse(result.StandardOutput, out Version? version) &&
+                version < minVersion)
             {
                 unusableReason = $"podman version '{result.StandardOutput}' is less than the required '{minVersion}'.";
                 return true;
