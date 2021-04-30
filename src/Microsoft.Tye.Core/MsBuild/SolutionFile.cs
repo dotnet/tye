@@ -91,11 +91,10 @@ namespace Microsoft.Build.Construction
         private const char CommentStartChar = '#';
         #endregion
         #region Member data
-        private string _solutionFile;                 // Could be absolute or relative path to the .SLN file.
-        private string _solutionFilterFile;          // Could be absolute or relative path to the .SLNF file.
-        private HashSet<string> _solutionFilter;     // The project files to include in loading the solution.
-        private bool _parsingForConversionOnly;      // Are we parsing this solution to get project reference data during
-                                                     // conversion, or in preparation for actually building the solution?
+        private string _solutionFile;
+        private string _solutionFilterFile;
+        private HashSet<string> _solutionFilter;
+        private bool _parsingForConversionOnly;
 
         // The list of projects in this SLN, keyed by the project GUID.
         private Dictionary<string, ProjectInSolution> _projects;
@@ -721,25 +720,14 @@ namespace Microsoft.Build.Construction
         /// <param name="versionString"></param>
         private void ValidateSolutionFileVersion(string versionString)
         {
-            //ErrorUtilities.VerifyThrow(versionString != null, "ValidateSolutionFileVersion() got a null line!");
-
             if (!System.Version.TryParse(versionString, out Version version))
             {
                 throw new Exception();
-                //ProjectFileErrorUtilities.VerifyThrowInvalidProjectFile(false, "SubCategoryForSolutionParsingErrors",
-                    //new BuildEventFileInfo(FullPath, _currentLineNumber, 0), "SolutionParseVersionMismatchError",
-                    //slnFileMinUpgradableVersion, slnFileMaxVersion);
             }
 
             Version = version.Major;
 
             // Validate against our min & max
-            //ProjectFileErrorUtilities.VerifyThrowInvalidProjectFile(
-            //    Version >= slnFileMinUpgradableVersion,
-            //    "SubCategoryForSolutionParsingErrors",
-            //    new BuildEventFileInfo(FullPath, _currentLineNumber, 0),
-            //    "SolutionParseVersionMismatchError",
-            //    slnFileMinUpgradableVersion, slnFileMaxVersion);
 
             // If the solution file version is greater than the maximum one we will create a comment rather than warn
             // as users such as blend opening a dev10 project cannot do anything about it.
@@ -800,8 +788,6 @@ namespace Microsoft.Build.Construction
                         {
                             throw new Exception();
                         }
-                        //ProjectFileErrorUtilities.VerifyThrowInvalidProjectFile(match.Success, "SubCategoryForSolutionParsingErrors",
-                            //new BuildEventFileInfo(FullPath, _currentLineNumber, 0), "SolutionParseProjectDepGuidError", proj.ProjectName);
 
                         string referenceGuid = match.Groups["PROPERTYNAME"].Value.Trim();
                         proj.AddDependency(referenceGuid);
@@ -811,11 +797,6 @@ namespace Microsoft.Build.Construction
                 }
                 else if (line.StartsWith("Project(", StringComparison.Ordinal))
                 {
-                    // Another Project spotted instead of EndProject for the current one - solution file is malformed
-                    //string warning = ResourceUtilities.FormatResourceStringStripCodeAndKeyword(out _, out _, "Shared.InvalidProjectFile",
-                        //_solutionFile, proj.ProjectName);
-                    //SolutionParserWarnings.Add(warning);
-
                     // The line with new project is already read and we can't go one line back - we have no choice but to recursively parse spotted project
                     ParseProject(line);
 
@@ -823,9 +804,6 @@ namespace Microsoft.Build.Construction
                     break;
                 }
             }
-
-            //ProjectFileErrorUtilities.VerifyThrowInvalidProjectFile(line != null, "SubCategoryForSolutionParsingErrors",
-                //new BuildEventFileInfo(FullPath), "SolutionParseProjectEofError", proj.ProjectName);
 
             // Add the project to the collection
             AddProjectToSolution(proj);

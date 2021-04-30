@@ -399,7 +399,7 @@ namespace Microsoft.Build.Construction
                             if (proj == null)
                             {
                                 throw new Exception();
-                            }    
+                            }
                         }
 
                         uniqueName = proj.GetUniqueProjectName() + "\\";
