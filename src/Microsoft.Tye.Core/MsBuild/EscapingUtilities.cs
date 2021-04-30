@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
+#pragma warning disable CS8618, CS8625, CS8601, CS8600, CS8604, CS0162, CS8603, CS0168
+
 namespace Microsoft.Build.Shared
 {
     /// <summary>

@@ -18,34 +18,10 @@ namespace Microsoft.Tye
 {
     public static class ProjectReader
     {
-        private static object @lock = new object();
-
-        private static bool registered;
 
         public static IEnumerable<FileInfo> EnumerateProjects(FileInfo solutionFile)
         {
-            var sln = SolutionFile.Parse(solutionFile.FullName);
-            foreach (var project in sln.ProjectsInOrder)
-            {
-                if (project.ProjectType != SolutionProjectType.KnownToBeMSBuildFormat)
-                {
-                    continue;
-                }
-
-                var extension = Path.GetExtension(project.AbsolutePath).ToLower();
-                switch (extension)
-                {
-                    case ".csproj":
-                    case ".fsproj":
-                        break;
-                    default:
-                        continue;
-                }
-
-                yield return new FileInfo(project.AbsolutePath.Replace('\\', '/'));
-            }
-
-            //return EnumerateProjectsCore(solutionFile);
+            return EnumerateProjectsCore(solutionFile);
         }
 
         // Do not load MSBuild types before using EnsureMSBuildRegistered.

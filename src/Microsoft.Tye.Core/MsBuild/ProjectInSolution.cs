@@ -9,9 +9,10 @@ using System.Security;
 using System.Text;
 using System.Xml;
 using Microsoft.Build.Shared;
-
 using System.Collections.ObjectModel;
 using System.Linq;
+
+#pragma warning disable CS8618, CS8625, CS8601, CS8600, CS8604, CS0162, CS8603, CS0168, CS8602
 
 namespace Microsoft.Build.Construction
 {
