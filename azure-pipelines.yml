@@ -115,10 +115,12 @@ stages:
         steps:
         - checkout: self
           clean: true
-        - script: eng/common/cibuild.sh
+        - script: eng/common/build.sh --restore --build --pack --publish --ci
             --configuration $(_BuildConfig)
             --prepareMachine
           displayName: Build
+        - script: .dotnet/dotnet test tye.sln
+          displayName: Test
         - task: PublishBuildArtifacts@1
           displayName: Upload TestResults
           condition: always()
@@ -146,10 +148,12 @@ stages:
         steps:
         - checkout: self
           clean: true
-        - script: eng/common/cibuild.sh
+        - script: eng/common/build.sh --restore --build --pack --publish --ci
             --configuration $(_BuildConfig)
             --prepareMachine
           displayName: Build
+        - script: .dotnet/dotnet test tye.sln
+          displayName: Test
         - task: PublishBuildArtifacts@1
           displayName: Upload TestResults
           condition: always()
