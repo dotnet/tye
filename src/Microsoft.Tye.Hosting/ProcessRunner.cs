@@ -145,11 +145,7 @@ namespace Microsoft.Tye.Hosting
 
                 _logger.LogInformation("Building projects");
 
-                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build --no-restore \"{projectPath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory,
-                    outputDataReceived: (s) => _logger.LogInformation(s),
-                    errorDataReceived: (s) => _logger.LogInformation(s));
-
-                _logger.LogInformation("Built projects");
+                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build --no-restore \"{projectPath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
 
                 if (buildResult.ExitCode != 0)
                 {
@@ -187,8 +183,6 @@ namespace Microsoft.Tye.Hosting
 
             async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol)> ports, string copiedArgs)
             {
-                _logger.LogInformation("Running application");
-
                 // Make sure we yield before trying to start the process, this is important so we don't block startup
                 await Task.Yield();
 
@@ -400,8 +394,6 @@ namespace Microsoft.Tye.Hosting
                         }
                         else
                         {
-                            _logger.LogInformation("Starting process");
-
                             await ProcessUtil.RunAsync(processInfo, status.StoppingTokenSource.Token, throwOnError: false);
                         }
                     }
