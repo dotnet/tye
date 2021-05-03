@@ -13,6 +13,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Extensions;
 using Microsoft.Tye;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
@@ -50,32 +51,31 @@ namespace E2ETest
         [Fact]
         public async Task FrontendBackendRunTest()
         {
-            await Task.CompletedTask;
-            //using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
+            using var projectDirectory = CopyTestProjectDirectory("frontend-backend");
 
-            //var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
-            //var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            //var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile).DefaultTimeout(30000);
 
-            //var handler = new HttpClientHandler
-            //{
-            //    ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
-            //    AllowAutoRedirect = false
-            //};
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
 
-            //var client = new HttpClient(new RetryHandler(handler));
+            var client = new HttpClient(new RetryHandler(handler));
 
-            //await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
-            //{
-            //    var frontendUri = await GetServiceUrl(client, uri, "frontend");
-            //    var backendUri = await GetServiceUrl(client, uri, "backend");
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var frontendUri = await GetServiceUrl(client, uri, "frontend").DefaultTimeout(30000);
+                var backendUri = await GetServiceUrl(client, uri, "backend").DefaultTimeout(30000);
 
-            //    var backendResponse = await client.GetAsync(backendUri);
-            //    var frontendResponse = await client.GetAsync(frontendUri);
+                var backendResponse = await client.GetAsync(backendUri).DefaultTimeout(30000);
+                var frontendResponse = await client.GetAsync(frontendUri).DefaultTimeout(30000);
 
-            //    Assert.True(backendResponse.IsSuccessStatusCode);
-            //    Assert.True(frontendResponse.IsSuccessStatusCode);
-            //});
+                Assert.True(backendResponse.IsSuccessStatusCode);
+                Assert.True(frontendResponse.IsSuccessStatusCode);
+            }).DefaultTimeout(30000);
         }
 
 //        [Fact(Skip = "Need to figure out how to install func before running")]
