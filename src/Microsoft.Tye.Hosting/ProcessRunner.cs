@@ -147,6 +147,8 @@ namespace Microsoft.Tye.Hosting
 
                 var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{projectPath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
 
+                _logger.LogInformation("Built projects");
+
                 if (buildResult.ExitCode != 0)
                 {
                     throw new TyeBuildException($"Building projects failed with exit code {buildResult.ExitCode}: \r\n{buildResult.StandardOutput}");
@@ -183,6 +185,8 @@ namespace Microsoft.Tye.Hosting
 
             async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol)> ports, string copiedArgs)
             {
+                _logger.LogInformation("Running application");
+
                 // Make sure we yield before trying to start the process, this is important so we don't block startup
                 await Task.Yield();
 
@@ -394,6 +398,8 @@ namespace Microsoft.Tye.Hosting
                         }
                         else
                         {
+                            _logger.LogInformation("Starting process");
+
                             await ProcessUtil.RunAsync(processInfo, status.StoppingTokenSource.Token, throwOnError: false);
                         }
                     }
