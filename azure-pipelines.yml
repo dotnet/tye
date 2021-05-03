@@ -119,8 +119,6 @@ stages:
             --configuration $(_BuildConfig)
             --prepareMachine
           displayName: Build
-        - script: .dotnet/dotnet test tye.sln
-          displayName: Test
         - task: PublishBuildArtifacts@1
           displayName: Upload TestResults
           condition: always()
@@ -152,8 +150,6 @@ stages:
             --configuration $(_BuildConfig)
             --prepareMachine
           displayName: Build
-        - script: .dotnet/dotnet test tye.sln
-          displayName: Test
         - task: PublishBuildArtifacts@1
           displayName: Upload TestResults
           condition: always()

@@ -25,7 +25,6 @@ using static Test.Infrastructure.TestHelpers;
 
 namespace E2ETest
 {
-
     public class TyeRunTests
     {
         private readonly ITestOutputHelper _output;
