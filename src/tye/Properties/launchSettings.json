@@ -2,7 +2,7 @@
   "profiles": {
     "tye": {
       "commandName": "Project",
-      "commandLineArgs": "r",
+      "commandLineArgs": "run",
       "workingDirectory": "..\\..\\samples\\frontend-backend\\"
     }
   }
