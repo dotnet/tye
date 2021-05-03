@@ -2,8 +2,8 @@
   "profiles": {
     "tye": {
       "commandName": "Project",
-      "commandLineArgs": "build --framework netcoreapp3.1",
-      "workingDirectory": "..\\..\\samples\\app-with-targetframeworks\\"
+      "commandLineArgs": "r",
+      "workingDirectory": "..\\..\\samples\\frontend-backend\\"
     }
   }
 }
