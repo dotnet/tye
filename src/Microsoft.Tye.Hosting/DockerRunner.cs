@@ -202,9 +202,10 @@ namespace Microsoft.Tye.Hosting
             var hostname = application.ContainerEngine.ContainerHost;
             if (hostname == null)
             {
-                _logger.LogError("Configuration doesn't allow containers to access services on the host.");
+                _logger.LogWarning("Configuration doesn't allow containers to access services on the host.");
 
-                throw new CommandException("Configuration doesn't allow containers to access services on the host.");
+                // Set a value even though it won't be usable.
+                hostname = "host.docker.internal";
             }
 
             var dockerImage = docker.Image ?? service.Description.Name;
