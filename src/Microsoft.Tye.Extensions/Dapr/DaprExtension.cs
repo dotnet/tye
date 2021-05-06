@@ -107,7 +107,7 @@ namespace Microsoft.Tye.Extensions.Dapr
 
                         // These environment variables are replaced with environment variables
                         // defined for this service.
-                        Args = $"run -app-id {project.Name} -app-port %APP_PORT% -dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT% --placement-host-address localhost:{daprPlacementPort}",
+                        Args = $"-app-id {project.Name} -app-port %APP_PORT% -dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT% --placement-host-address localhost:{daprPlacementPort}",
                     };
 
                     // When running locally `-config` specifies a filename, not a configuration name. By convention
@@ -271,7 +271,7 @@ namespace Microsoft.Tye.Extensions.Dapr
             // Starting with dapr version 11, dapr is installed in user profile/home.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var windowsPath = Environment.ExpandEnvironmentVariables("%HOMEDRIVE%/dapr/dapr.exe");
+                var windowsPath = Environment.ExpandEnvironmentVariables("%USERPROFILE%/.dapr/bin/daprd.exe");
                 if (File.Exists(windowsPath))
                 {
                     return windowsPath;
@@ -279,7 +279,7 @@ namespace Microsoft.Tye.Extensions.Dapr
             }
             else
             {
-                var nixpath = "/usr/local/bin/dapr";
+                var nixpath = Environment.ExpandEnvironmentVariables("%HOME%/.dapr/bin/daprd");
                 if (File.Exists(nixpath))
                 {
                     return nixpath;
@@ -287,7 +287,7 @@ namespace Microsoft.Tye.Extensions.Dapr
             }
 
             // Older version of dapr don't have dapr in the bin directory, but it is usually on the path.
-            return "dapr";
+            return "daprd";
         }
     }
 }
