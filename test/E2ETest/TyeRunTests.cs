@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -24,7 +25,6 @@ using static Test.Infrastructure.TestHelpers;
 
 namespace E2ETest
 {
-
     public class TyeRunTests
     {
         private readonly ITestOutputHelper _output;
@@ -504,7 +504,7 @@ services:
             });
 
             // Delete the volume
-            await ProcessUtil.RunAsync("docker", $"volume rm {volumeName}");
+            await ContainerEngine.Default.RunAsync($"volume rm {volumeName}");
         }
 
         [ConditionalFact]
@@ -521,7 +521,7 @@ services:
             application.Network = dockerNetwork;
 
             // Create the existing network
-            await ProcessUtil.RunAsync("docker", $"network create {dockerNetwork}");
+            await ContainerEngine.Default.RunAsync($"network create {dockerNetwork}");
 
             var handler = new HttpClientHandler
             {
@@ -560,7 +560,7 @@ services:
             finally
             {
                 // Delete the network
-                await ProcessUtil.RunAsync("docker", $"network rm {dockerNetwork}");
+                await ContainerEngine.Default.RunAsync($"network rm {dockerNetwork}");
             }
         }
 
@@ -771,6 +771,14 @@ services:
         [SkipIfDockerNotRunning]
         public async Task NginxIngressTest()
         {
+            // https://github.com/dotnet/tye/issues/428
+            // nginx container fails to start succesfully on non-Windows because it
+            // can't resolve the upstream hosts.
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return;
+            }
+
             using var projectDirectory = CopyTestProjectDirectory("nginx-ingress");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));

@@ -34,8 +34,7 @@ app {
 }
 
 .main .top-row {
-     background-color:#6b7c8c;
-     border-bottom: 1px solid #d6d5d5;
+    background-color:#0F2547;
     justify-content: flex-end;
 }
 
@@ -54,11 +53,12 @@ app {
 }
 
 .sidebar .top-row {
-     background-color: #6b7c8c;
+     background-color: #0F2547;
 }
 
 .sidebar .navbar-brand {
     font-size: 1.1rem;
+    vertical-align: top;
 }
 
 .sidebar .oi {
@@ -74,7 +74,7 @@ app {
 }
 
 .sidebar .nav-item:first-of-type {
-     padding-top: 1rem;
+    padding-top: 1rem;
 }
 
 .sidebar .nav-item:last-of-type {

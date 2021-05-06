@@ -30,7 +30,7 @@ namespace Microsoft.Tye
             var rootConfig = ConfigFactory.FromFile(source);
             rootConfig.Validate();
 
-            var root = new ApplicationBuilder(source, rootConfig.Name!)
+            var root = new ApplicationBuilder(source, rootConfig.Name!, new ContainerEngine(rootConfig.ContainerEngineType))
             {
                 Namespace = rootConfig.Namespace
             };
@@ -519,7 +519,7 @@ namespace Microsoft.Tye
             var projectEvaluationTargets = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets");
             var msbuildEvaluationResult = await ProcessUtil.RunAsync(
                 "dotnet",
-                $"build " +
+                $"build  --no-restore " +
                     $"\"{projectPath}\" " +
                     // CustomAfterMicrosoftCommonTargets is imported by non-crosstargeting (single TFM) projects
                     @$"/p:CustomAfterMicrosoftCommonTargets=""{projectEvaluationTargets}"" " +

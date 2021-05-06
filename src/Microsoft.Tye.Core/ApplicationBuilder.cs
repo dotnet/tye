@@ -9,10 +9,11 @@ namespace Microsoft.Tye
 {
     public sealed class ApplicationBuilder
     {
-        public ApplicationBuilder(FileInfo source, string name)
+        public ApplicationBuilder(FileInfo source, string name, ContainerEngine containerEngine)
         {
             Source = source;
             Name = name;
+            ContainerEngine = containerEngine;
         }
 
         public FileInfo Source { get; set; }
@@ -22,6 +23,8 @@ namespace Microsoft.Tye
         public string? Namespace { get; set; }
 
         public ContainerRegistry? Registry { get; set; }
+
+        public ContainerEngine ContainerEngine { get; set; }
 
         public List<ExtensionConfiguration> Extensions { get; } = new List<ExtensionConfiguration>();
 
