@@ -343,9 +343,9 @@ namespace Microsoft.Tye.Hosting
                     {
                         await DashboardWebApplication.StopAsync();
                     }
-                    catch (Exception)
+                    catch (OperationCanceledException)
                     {
-                        // ignore failures from stop async
+                        // ignore cancellation failures from stop async
                     }
                 }
             }
