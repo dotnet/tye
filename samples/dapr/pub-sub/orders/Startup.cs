@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -51,17 +50,7 @@ namespace orders
 
             app.UseAuthorization();
 
-            app.Use(async (context, next) =>
-            {
-                await next();
-            });
-
             app.UseCloudEvents();
-
-            app.Use(async (context, next) =>
-            {
-                await next();
-            });
 
             app.UseEndpoints(endpoints =>
             {
