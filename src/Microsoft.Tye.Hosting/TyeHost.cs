@@ -339,7 +339,14 @@ namespace Microsoft.Tye.Hosting
                 if (DashboardWebApplication != null)
                 {
                     // Stop the host after everything else has been shutdown
-                    await DashboardWebApplication.StopAsync();
+                    try
+                    {
+                        await DashboardWebApplication.StopAsync();
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // ignore cancellation failures from stop async
+                    }
                 }
             }
 
