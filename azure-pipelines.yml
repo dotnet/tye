@@ -104,7 +104,8 @@ stages:
         variables:
         - name: _SignType
           value: none
-          
+        - name: MSBUILDDISABLENODEREUSE
+          value: 1
         - ${{ if and(eq(variables['System.TeamProject'], 'internal'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           - name: _OfficialBuildArgs
             value: -p:OfficialBuildId=$(Build.BuildNumber)
@@ -115,7 +116,7 @@ stages:
         steps:
         - checkout: self
           clean: true
-        - script: eng/common/build.sh --restore --build --pack --publish --ci
+        - script: eng/common/cibuild.sh
             --configuration $(_BuildConfig)
             --prepareMachine
           displayName: Build
@@ -136,6 +137,8 @@ stages:
         variables:
         - name: _SignType
           value: none
+        - name: MSBUILDDISABLENODEREUSE
+          value: 1
         - ${{ if and(eq(variables['System.TeamProject'], 'internal'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           - name: _OfficialBuildArgs
             value: -p:OfficialBuildId=$(Build.BuildNumber)
@@ -146,7 +149,7 @@ stages:
         steps:
         - checkout: self
           clean: true
-        - script: eng/common/build.sh --restore --build --pack --publish --ci
+        - script: eng/common/cibuild.sh
             --configuration $(_BuildConfig)
             --prepareMachine
           displayName: Build
