@@ -104,7 +104,8 @@ stages:
         variables:
         - name: _SignType
           value: none
-          
+        - name: MSBUILDDISABLENODEREUSE
+          value: 1
         - ${{ if and(eq(variables['System.TeamProject'], 'internal'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           - name: _OfficialBuildArgs
             value: -p:OfficialBuildId=$(Build.BuildNumber)
@@ -136,6 +137,8 @@ stages:
         variables:
         - name: _SignType
           value: none
+        - name: MSBUILDDISABLENODEREUSE
+          value: 1
         - ${{ if and(eq(variables['System.TeamProject'], 'internal'), notin(variables['Build.Reason'], 'PullRequest')) }}:
           - name: _OfficialBuildArgs
             value: -p:OfficialBuildId=$(Build.BuildNumber)
