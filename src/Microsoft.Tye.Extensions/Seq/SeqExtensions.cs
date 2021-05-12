@@ -16,7 +16,7 @@ namespace Microsoft.Tye.Extensions.Seq
             var seqService = context.Application.Services.FirstOrDefault(x => x.Name == "seq");
             if (seqService != null)
             {
-                context.Output.WriteInfoLine("seq service already configured. Skipping...");
+                context.Output.WriteDebugLine("seq service already configured. Skipping...");
                 if (seqService.Bindings.Count == 1)
                 {
                     var bindings = seqService.Bindings.First();
@@ -37,11 +37,11 @@ namespace Microsoft.Tye.Extensions.Seq
                     }
                 }
 
-                context.Output.WriteInfoLine($"get seq logger provider url from existing service: {loggerProvider}");
+                context.Output.WriteDebugLine($"get seq logger provider url from existing service: {loggerProvider}");
             }
             else
             {
-                context.Output.WriteInfoLine("Injecting seq service...");
+                context.Output.WriteDebugLine("Injecting seq service...");
 
                 var port = config.Data.TryGetValue("port", out var portValue) &&
                            portValue is string portString &&
