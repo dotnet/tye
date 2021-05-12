@@ -3,7 +3,7 @@
     "tye": {
       "commandName": "Project",
       "commandLineArgs": "run",
-      "workingDirectory": "E:\\Dev\\Inextend\\Backend\\src\\"
+      "workingDirectory": "..\\..\\samples\\frontend-backend\\"
     }
   }
 }
