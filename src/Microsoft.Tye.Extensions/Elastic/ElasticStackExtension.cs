@@ -113,7 +113,7 @@ namespace Microsoft.Tye.Extensions.Elastic
 
         private static int? GetIntValueFromConfigData(ExtensionConfiguration config, string key, int defaultValue)
         {
-            if (config.Data.TryGetValue(key, out var obj) && int.TryParse(obj?.ToString(), out int parsedValue))
+            if (config.Data.TryGetValue(key, out var obj) && obj is not null && int.TryParse(obj.ToString(), out int parsedValue))
             {
                 return parsedValue;
             }
