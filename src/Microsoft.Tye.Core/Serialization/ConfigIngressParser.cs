@@ -149,7 +149,9 @@ namespace Tye.Serialization
                         if (YamlParser.GetScalarValue(key, child.Value) is string ipString
                             && (IPAddress.TryParse(ipString, out var ip) || ipString == "*"))
                         {
-                            binding.IPAddress = ip == IPAddress.Loopback || ip == IPAddress.IPv6Loopback ? null: ipString;
+                            binding.IPAddress = ip == IPAddress.Any || ip == IPAddress.IPv6Any ? "*"
+                                : ip == IPAddress.Loopback || ip == IPAddress.IPv6Loopback ? null
+                                : ipString;
                         }
                         else
                         {

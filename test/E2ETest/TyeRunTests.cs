@@ -771,8 +771,10 @@ services:
         [Fact]
         public async Task IngressAllIPTest()
         {
+#if !DEBUG
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return; //disables running this test on windows as it stucks the test runner on the firewall open prompt
+#endif
 
             using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
 
@@ -791,7 +793,8 @@ services:
             await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
             {
                 var ip = (from ni in NetworkInterface.GetAllNetworkInterfaces()
-                         let prop = ni.GetIPProperties()
+                          where ni.OperationalStatus == OperationalStatus.Up
+                          let prop = ni.GetIPProperties()
                          from unicast in prop.UnicastAddresses
                          let addr = unicast.Address
                          where addr != IPAddress.Loopback && addr != IPAddress.IPv6Loopback
@@ -815,10 +818,12 @@ services:
         [Fact]
         public async Task IngressAllIPv6Test()
         {
+#if !DEBUG
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return; //disables running this test on windows as it stucks the test runner on the firewall open prompt
-
+#endif
             var ip = (from ni in NetworkInterface.GetAllNetworkInterfaces()
+                      where ni.OperationalStatus == OperationalStatus.Up
                       let prop = ni.GetIPProperties()
                       from unicast in prop.UnicastAddresses
                       let addr = unicast.Address
@@ -862,12 +867,15 @@ services:
         [Fact]
         public async Task IngressAllIPv4Test()
         {
+#if !DEBUG
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return; //disables running this test on windows as it stucks the test runner on the firewall open prompt
+#endif
 
             using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
 
             var ip = (from ni in NetworkInterface.GetAllNetworkInterfaces()
+                      where ni.OperationalStatus == OperationalStatus.Up
                       let prop = ni.GetIPProperties()
                       from unicast in prop.UnicastAddresses
                       let addr = unicast.Address
