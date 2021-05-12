@@ -771,6 +771,9 @@ services:
         [Fact]
         public async Task IngressAllIPTest()
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return; //disables running this test on windows as it stucks the test runner on the firewall open prompt
+
             using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-allip-ui.yaml"));
