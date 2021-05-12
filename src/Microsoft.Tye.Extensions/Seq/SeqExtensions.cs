@@ -12,9 +12,32 @@ namespace Microsoft.Tye.Extensions.Seq
     {
         public override Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
         {
-            if (context.Application.Services.Any(s => s.Name == "seq"))
+            string loggerProvider;
+            var seqService = context.Application.Services.FirstOrDefault(x => x.Name == "seq");
+            if (seqService != null)
             {
                 context.Output.WriteDebugLine("seq service already configured. Skipping...");
+                if (seqService.Bindings.Count == 1)
+                {
+                    var bindings = seqService.Bindings.First();
+                    loggerProvider = $"seq={bindings.Protocol}://{bindings.Host}:{bindings.Port}";
+                }
+                else
+                {
+                    var ingestionBinding = seqService.Bindings.FirstOrDefault(x => x.Name == "ingestion");
+                    if (ingestionBinding != null)
+                    {
+                        loggerProvider =
+                            $"seq={ingestionBinding.Protocol}://{ingestionBinding.Host}:{ingestionBinding.Port}";
+                    }
+                    else
+                    {
+                        var bindings = seqService.Bindings.First();
+                        loggerProvider = $"seq={bindings.Protocol}://{bindings.Host}:{bindings.Port}";
+                    }
+                }
+
+                context.Output.WriteDebugLine($"get seq logger provider url from existing service: {loggerProvider}");
             }
             else
             {
@@ -47,11 +70,19 @@ namespace Microsoft.Tye.Extensions.Seq
                 };
                 context.Application.Services.Add(seq);
 
+                loggerProvider = $"seq=http://localhost:{port}";
+
                 if (config.Data.TryGetValue("logPath", out var obj) &&
                     obj is string logPath &&
                     !string.IsNullOrEmpty(logPath))
                 {
                     seq.Volumes.Add(new VolumeBuilder(logPath, "seq-data", "/data"));
+                }
+                else if (config.Data.TryGetValue("name", out var nameValue) &&
+                         nameValue is string name &&
+                         !string.IsNullOrEmpty(name))
+                {
+                    seq.Volumes.Add(new VolumeBuilder(null, name, "/data"));
                 }
 
                 foreach (var serviceBuilder in context.Application.Services)
@@ -76,7 +107,7 @@ namespace Microsoft.Tye.Extensions.Seq
                         if (context.Options!.LoggingProvider is null)
                         {
                             // For local development we hardcode the port and hostname
-                            context.Options.LoggingProvider = "seq=http://localhost:5341";
+                            context.Options.LoggingProvider = loggerProvider;
                         }
 
                         break;
