@@ -16,11 +16,11 @@ namespace Microsoft.Tye.Extensions.Seq
             var seqService = context.Application.Services.FirstOrDefault(x => x.Name == "seq");
             if (seqService != null)
             {
-                context.Output.WriteDebugLine("seq service already configured. Skipping...");
+                context.Output.WriteInfoLine("seq service already configured. Skipping...");
                 if (seqService.Bindings.Count == 1)
                 {
                     var bindings = seqService.Bindings.First();
-                    loggerProvider = $"seq={bindings.Protocol}://{bindings.Host}:{bindings.Port}";
+                    loggerProvider = $"seq={bindings.Protocol}://{bindings.Host ?? "localhost"}:{bindings.Port}";
                 }
                 else
                 {
@@ -28,20 +28,20 @@ namespace Microsoft.Tye.Extensions.Seq
                     if (ingestionBinding != null)
                     {
                         loggerProvider =
-                            $"seq={ingestionBinding.Protocol}://{ingestionBinding.Host}:{ingestionBinding.Port}";
+                            $"seq={ingestionBinding.Protocol}://{ingestionBinding.Host ?? "localhost"}:{ingestionBinding.Port}";
                     }
                     else
                     {
                         var bindings = seqService.Bindings.First();
-                        loggerProvider = $"seq={bindings.Protocol}://{bindings.Host}:{bindings.Port}";
+                        loggerProvider = $"seq={bindings.Protocol}://{bindings.Host ?? "localhost"}:{bindings.Port}";
                     }
                 }
 
-                context.Output.WriteDebugLine($"get seq logger provider url from existing service: {loggerProvider}");
+                context.Output.WriteInfoLine($"get seq logger provider url from existing service: {loggerProvider}");
             }
             else
             {
-                context.Output.WriteDebugLine("Injecting seq service...");
+                context.Output.WriteInfoLine("Injecting seq service...");
 
                 var port = config.Data.TryGetValue("port", out var portValue) &&
                            portValue is string portString &&
