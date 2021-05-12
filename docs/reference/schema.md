@@ -514,6 +514,10 @@ The port of the binding.
 
 The protocol (`http` or `https`).
 
+#### `ip` (`string`)
+
+The optional IP adress to bind to. Can be '*' for all addresses.
+
 ## IngressRule
 
 `IngressRule` elements appear in an array within the `rules` property of the `Ingress` element. Rules configure the routing behavior of the ingress proxy.
