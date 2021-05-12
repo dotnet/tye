@@ -20,6 +20,12 @@ namespace Microsoft.Tye.Extensions.Seq
             {
                 context.Output.WriteDebugLine("Injecting seq service...");
 
+                var port = config.Data.TryGetValue("port", out var portValue) &&
+                           portValue is string portString &&
+                           int.TryParse(portString, out var value)
+                    ? value
+                    : 5341;
+
                 var seq = new ContainerServiceBuilder("seq", "datalust/seq")
                 {
                     EnvironmentVariables =
@@ -33,7 +39,7 @@ namespace Microsoft.Tye.Extensions.Seq
                     {
                         new BindingBuilder()
                         {
-                            Port = 5341,
+                            Port = port,
                             ContainerPort = 80,
                             Protocol = "http",
                         },
