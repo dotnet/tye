@@ -207,6 +207,7 @@ namespace Microsoft.Tye
                         Name = binding.Name,
                         Port = binding.Port,
                         Protocol = binding.Protocol,
+                        IPAddress = binding.IPAddress,
                     });
                 }
 

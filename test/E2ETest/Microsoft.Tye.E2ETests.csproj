@@ -31,6 +31,7 @@
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Compile Remove="testassets\**\*" />
     <None Remove="testassets\generate\apps-with-ingress.1.18.yaml" />
+    <None Remove="testassets\projects\apps-with-ingress\tye-allip-ui.yaml" />
     <Compile Include="..\..\src\shared\KubectlDetector.cs" Link="KubectlDetector.cs" />
   </ItemGroup>
 

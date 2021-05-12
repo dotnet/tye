@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Net;
 using Microsoft.Tye.ConfigModel;
 using YamlDotNet.RepresentationModel;
 
@@ -143,6 +144,17 @@ namespace Tye.Serialization
                         }
 
                         binding.Port = port;
+                        break;
+                    case "ip":
+                        if (YamlParser.GetScalarValue(key, child.Value) is string ipString
+                            && (IPAddress.TryParse(ipString, out var ip) || ipString == "*"))
+                        {
+                            binding.IPAddress = ip == IPAddress.Loopback || ip == IPAddress.IPv6Loopback ? "*" : ipString;
+                        }
+                        else
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnIPAddress(key));
+                        }
                         break;
                     case "protocol":
                         binding.Protocol = YamlParser.GetScalarValue(key, child.Value);

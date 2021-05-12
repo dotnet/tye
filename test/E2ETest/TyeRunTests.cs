@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -766,6 +767,47 @@ services:
                 htmlResponse.EnsureSuccessStatusCode();
             });
         }
+
+        [Fact]
+        public async Task IngressAllIPTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-allip-ui.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = true
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var ip = (from ni in NetworkInterface.GetAllNetworkInterfaces()
+                         let prop = ni.GetIPProperties()
+                         from unicast in prop.UnicastAddresses
+                         let addr = unicast.Address
+                         where addr != IPAddress.Loopback && addr != IPAddress.IPv6Loopback
+                         select addr).First();
+
+                var ingressUri = await GetServiceUrl(client, uri, "ingress");
+                var reqUri = new UriBuilder(ingressUri + "/index.html")
+                {
+                    Host = ip.ToString()
+                };
+
+                var htmlRequest = new HttpRequestMessage(HttpMethod.Get, reqUri.Uri);
+                htmlRequest.Headers.Host = "ui.example.com";
+
+                var htmlResponse = await client.SendAsync(htmlRequest);
+                htmlResponse.EnsureSuccessStatusCode();
+            });
+        }
+
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
