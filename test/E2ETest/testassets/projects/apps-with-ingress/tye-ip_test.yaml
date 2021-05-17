@@ -9,7 +9,7 @@ ingress:
   - name: ingress
     bindings:
       - port: 8080
-        ip: '::'
+        ip: __TEST_IP_STRING__
     rules:
       - host: ui.example.com
         service: appC-ui
