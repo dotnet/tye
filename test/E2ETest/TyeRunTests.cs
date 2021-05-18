@@ -9,6 +9,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -764,6 +766,101 @@ services:
 
                 var htmlResponse = await client.SendAsync(htmlRequest);
                 htmlResponse.EnsureSuccessStatusCode();
+            });
+        }
+
+        [Fact]
+        public async Task IngressSpecificIPTest()
+        {
+            var allIps = GetLiveIPAddresses().ToList();
+            var testIp = allIps[new Random().Next(allIps.Count)];
+            await TestIngressIP($"'{testIp}'", new[] { testIp }, allIps.Where(ip => ip != testIp).Take(1));
+        }
+
+
+        [Fact]
+        public async Task IngressAllIPv6Test()
+        {
+            var ipV6 = GetLiveIPAddresses(AddressFamily.InterNetworkV6).FirstOrDefault();
+            if (ipV6 == null) return;
+            await TestIngressIP($"'{IPAddress.IPv6Any}'", ipV6);
+        }
+
+        [Fact]
+        public async Task IngressAllIPv4Test()
+        {
+            var ipV4 = GetLiveIPAddresses(AddressFamily.InterNetwork).FirstOrDefault();
+            if (ipV4 == null) return;
+            var ipV6 = GetLiveIPAddresses(AddressFamily.InterNetworkV6).FirstOrDefault();
+            var failIp = ipV6 == null ? Enumerable.Empty<IPAddress>() : new[] { ipV6 };
+            await TestIngressIP($"'{IPAddress.Any}'", new[] { ipV4 }, failIp);
+        }
+
+        [Fact]
+        public async Task IngressAllIPTest()
+        {
+            await TestIngressIP($"'*'", GetLiveIPAddresses().FirstOrDefault());
+        }
+
+
+        private static IEnumerable<IPAddress> GetLiveIPAddresses(AddressFamily? family = null)
+        {
+            return from ni in NetworkInterface.GetAllNetworkInterfaces()
+                   where ni.OperationalStatus == OperationalStatus.Up
+                   let prop = ni.GetIPProperties()
+                   from unicast in prop.UnicastAddresses
+                   let addr = unicast.Address
+                   where addr != IPAddress.IPv6Loopback && (family == null || addr.AddressFamily == family)
+                   select addr;
+        }
+
+        private Task TestIngressIP(string ipSetting, params IPAddress[] mustAnswer) => TestIngressIP(ipSetting, mustAnswer, Enumerable.Empty<IPAddress>());
+        private async Task TestIngressIP(string ipSetting, IEnumerable<IPAddress> mustAnswer, IEnumerable<IPAddress> mustFail)
+        {
+#if !DEBUG
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return; //disables running this test on windows as it stucks the test runner on the firewall open prompt
+#endif
+            if (!mustAnswer.Any() && !mustFail.Any())
+                return; // no IP to test against
+
+            using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-ip_test.yaml"));
+            File.WriteAllText(projectFile.FullName, File.ReadAllText(projectFile.FullName).Replace("__TEST_IP_STRING__", ipSetting));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = true
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                foreach (var ip in mustAnswer.Concat(mustFail))
+                {
+                    try
+                    {
+                        var ingressUri = await GetServiceUrl(client, uri, "ingress");
+                        var reqUri = new UriBuilder(ingressUri + "/index.html")
+                        {
+                            Host = ip.ToString()
+                        };
+
+                        var htmlRequest = new HttpRequestMessage(HttpMethod.Get, reqUri.Uri);
+                        htmlRequest.Headers.Host = "ui.example.com";
+
+                        var htmlResponse = await client.SendAsync(htmlRequest);
+                        htmlResponse.EnsureSuccessStatusCode();
+                    }
+                    catch (Exception) when (mustFail.Contains(ip))
+                    {
+                        // this is an expected failure
+                    }
+                }
             });
         }
 
