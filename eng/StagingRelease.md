@@ -4,7 +4,7 @@
 
 1. Grab latest build off dnceng/internal.
 2. Download it locally.
-3. `dotnet nuget push <PACKAGE> --source https://api.nuget.org/v3/index.json -k <APIKEY>
+3. `dotnet nuget push <PACKAGE> --source https://api.nuget.org/v3/index.json -k <APIKEY>`
 
 ## Updating repo to next version
 
