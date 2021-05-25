@@ -114,9 +114,12 @@ namespace Microsoft.Tye
 
             process.Exited += (_, e) =>
             {
-                // Even though the Exited event has been raised, WaitForExit() must still be called to ensure the output buffers
-                // have been flushed before the process is considered completely done.
-                process.WaitForExit();
+                lock (process)
+                {
+                    // Even though the Exited event has been raised, WaitForExit() must still be called to ensure the output buffers
+                    // have been flushed before the process is considered completely done.
+                    process.WaitForExit();
+                }
 
                 if (throwOnError && process.ExitCode != 0)
                 {
@@ -128,11 +131,15 @@ namespace Microsoft.Tye
                 }
             };
 
-            process.Start();
-            onStart?.Invoke(process.Id);
+            // lock ensures we're reading output when WaitForExit is called in process.Exited event.
+            lock (process)
+            {
+                process.Start();
+                onStart?.Invoke(process.Id);
 
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+            }
 
             var cancelledTcs = new TaskCompletionSource<object?>();
             await using var _ = cancellationToken.Register(() => cancelledTcs.TrySetResult(null));

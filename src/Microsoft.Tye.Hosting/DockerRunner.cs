@@ -311,16 +311,17 @@ namespace Microsoft.Tye.Hosting
                 status.DockerNetwork = dockerNetwork;
 
                 WriteReplicaToStore(replica);
+                var stderr = new StringBuilder();
                 var result = await application.ContainerEngine.RunAsync(
                     command,
                     throwOnError: false,
                     cancellationToken: cancellationToken,
                     outputDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"),
-                    errorDataReceived: data => service.Logs.OnNext($"[{replica}]: {data}"));
+                    errorDataReceived: data => { service.Logs.OnNext($"[{replica}]: {data}"); stderr.AppendLine(data); });
 
                 if (result.ExitCode != 0)
                 {
-                    _logger.LogError("docker run failed for {ServiceName} with exit code {ExitCode}:" + result.StandardError, service.Description.Name, result.ExitCode);
+                    _logger.LogError("docker run failed for {ServiceName} with exit code {ExitCode}: " + stderr, service.Description.Name, result.ExitCode);
                     service.Replicas.TryRemove(replica, out var _);
                     service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
 
