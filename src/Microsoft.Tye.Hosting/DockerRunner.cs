@@ -280,6 +280,15 @@ namespace Microsoft.Tye.Hosting
                     if (volumeMapping.Source != null)
                     {
                         var sourcePath = Path.GetFullPath(Path.Combine(application.ContextDirectory, volumeMapping.Source));
+                        if (application.ContainerEngine.IsPodman)
+                        {
+                            // unlike docker, podman doesn't create the host directory when it doesn't exist.
+                            // https://github.com/containers/podman/issues/10471
+                            if (!File.Exists(sourcePath) && !Directory.Exists(sourcePath))
+                            {
+                                Directory.CreateDirectory(sourcePath);
+                            }
+                        }
                         volumes += $"-v \"{sourcePath}:{volumeMapping.Target}:{(volumeMapping.ReadOnly ? "ro," : "")}z\" ";
                     }
                     else if (volumeMapping.Name != null)
