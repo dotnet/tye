@@ -69,29 +69,24 @@ namespace Microsoft.DotNet.Watcher
 
                     await Task.WhenAll(processTask, fileSetTask);
 
-                    if (processTask.Result.ExitCode != 0 && finishedTask == processTask && !cancellationToken.IsCancellationRequested)
-                    {
-                        // Only show this error message if the process exited non-zero due to a normal process exit.
-                        // Don't show this if dotnet-watch killed the inner process due to file change or CTRL+C by the user
-                        _logger.LogError($"watch: Exited with error code {processTask.Result}");
-                    }
-                    else
-                    {
-                        _logger.LogInformation("watch: {Replica} Exited", replica);
-                    }
-
                     if (finishedTask == cancelledTaskSource.Task || cancellationToken.IsCancellationRequested)
                     {
                         return;
                     }
-
-                    if (finishedTask == processTask)
+                    else if (finishedTask == processTask)
                     {
-                        // Now wait for a file to change before restarting process
-                        await fileSetWatcher.GetChangedFileAsync(cancellationToken, () => _logger.LogWarning("Waiting for a file to change before restarting dotnet..."));
+                        if (processTask.Result.ExitCode != 0)
+                        {
+                            // Only show this error message if the process exited non-zero due to a normal process exit.
+                            // Don't show this if dotnet-watch killed the inner process due to file change or CTRL+C by the user
+                            _logger.LogError($"watch: {replica} exited with exit code {processTask.Result.ExitCode}");
+                        }
+                        else
+                        {
+                            _logger.LogInformation("watch: {Replica} Exited", replica);
+                        }
                     }
-
-                    if (!string.IsNullOrEmpty(fileSetTask.Result))
+                    else if (!string.IsNullOrEmpty(fileSetTask.Result))
                     {
                         _logger.LogInformation($"watch: File changed: {fileSetTask.Result}");
                     }
