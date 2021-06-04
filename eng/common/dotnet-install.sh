@@ -52,7 +52,7 @@ done
 # Use uname to determine what the CPU is, see https://en.wikipedia.org/wiki/Uname#Examples
 cpuname=$(uname -m)
 case $cpuname in
-  aarch64)
+  aarch64|arm64)
     buildarch=arm64
     ;;
   amd64|x86_64)
