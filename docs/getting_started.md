@@ -2,10 +2,10 @@
 
 Tye is a tool that makes developing, testing, and deploying microservices and distributed applications easier. Project Tye includes a local orchestrator to make developing microservices easier and the ability to deploy microservices to Kubernetes with minimal configuration.
 
-## Installing tye
+## Installing Tye
 
 1. Install [.NET Core 3.1](<http://dot.net>).
-2. Install tye via the following command:
+1. Install tye via the following command:
 
     ```text
     dotnet tool install -g Microsoft.Tye --version "0.7.0-alpha.21279.2"
@@ -17,10 +17,19 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
     dotnet tool update -g Microsoft.Tye --version "0.7.0-alpha.21279.2"
     ```
 
+    > If using Mac and, if getting "command not found" errors when running `tye`, you may need to ensure that the `$HOME/.dotnet/tools` directory has been added to `PATH`.
+    >
+    > For example, add the following to the end of your `~/.zshrc` or `~/.zprofile`:
+    >
+    > ```
+    > # Add .NET global tools (like Tye) to PATH.
+    > export PATH=$HOME/.dotnet/tools:$PATH
+    > ```
+
 ## Next steps
 
 1. Once tye is installed, continue to the [Basic Tutorial](/docs/tutorials/hello-tye/00_run_locally.md).
-2. Check out additional samples for more advanced concepts, such as using redis, rabbitmq, and service discovery.
+1. Check out additional samples for more advanced concepts, such as using redis, rabbitmq, and service discovery.
 
 
 ## Working with CI builds
