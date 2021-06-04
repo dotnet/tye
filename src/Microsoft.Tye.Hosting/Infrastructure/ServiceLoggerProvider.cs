@@ -47,9 +47,12 @@ namespace Microsoft.Tye.Hosting
                 return true;
             }
 
-            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception, string>? formatter)
             {
-                _logs.OnNext($"[{logLevel}]: {formatter(state, exception)}");
+                if (formatter != null && exception != null)
+                {
+                    _logs.OnNext($"[{logLevel}]: {formatter(state, exception)}");
+                }
 
                 if (exception != null)
                 {

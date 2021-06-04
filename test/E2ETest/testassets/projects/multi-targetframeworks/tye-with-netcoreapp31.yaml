@@ -6,4 +6,4 @@ services:
   project: multi-targetframeworks/multi-targetframeworks.csproj
   buildProperties:
     - name: TargetFramework
-      value: netcoreapp3.1
+      value: net6.0

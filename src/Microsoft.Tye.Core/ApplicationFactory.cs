@@ -164,7 +164,8 @@ namespace Microsoft.Tye
 
                     if (!string.IsNullOrEmpty(configService.Project))
                     {
-                        var project = new DotnetProjectServiceBuilder(configService.Name!, new FileInfo(configService.ProjectFullPath));
+                        // TODO: Investigate possible null.
+                        var project = new DotnetProjectServiceBuilder(configService.Name!, new FileInfo(configService.ProjectFullPath!));
                         service = project;
 
                         project.Build = configService.Build ?? true;

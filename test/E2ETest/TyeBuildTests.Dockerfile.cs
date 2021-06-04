@@ -226,7 +226,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-no-buildproperties.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "net6.0");
 
             application.Registry = new ContainerRegistry("test");
 
@@ -260,7 +260,7 @@ namespace E2ETest
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-with-netcoreapp31.yaml"));
 
             var outputContext = new OutputContext(sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "net6.0");
 
             application.Registry = new ContainerRegistry("test");
 

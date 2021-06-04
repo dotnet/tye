@@ -64,7 +64,8 @@ namespace Microsoft.Tye.Proxy
 
                                             logger.LogDebug("Attempting to connect to {ServiceName} listening on {Port}:{ExternalPort}", serviceName, mapping.Port, mapping.ExternalPort);
 
-                                            await target.ConnectAsync(containerHost, mapping.ExternalPort);
+                                            // TODO: Investigate null host.
+                                            await target.ConnectAsync(containerHost!, mapping.ExternalPort);
 
                                             logger.LogDebug("Successfully connected to {ServiceName} listening on {Port}:{ExternalPort}", serviceName, mapping.Port, mapping.ExternalPort);
 
@@ -87,11 +88,13 @@ namespace Microsoft.Tye.Proxy
                                         {
                                             logger.LogDebug("Proxying traffic to {ServiceName} {Port}:{ExternalPort}", serviceName, mapping.Port, mapping.ExternalPort);
 
-                                            // external -> internal
-                                            var reading = Task.Run(() => connection.Transport.Input.CopyToAsync(targetStream, notificationFeature.ConnectionClosedRequested));
+                                            // TODO: Investigate possible null.
+                                            // external -> internal                                            
+                                            var reading = Task.Run(() => connection.Transport.Input.CopyToAsync(targetStream, notificationFeature!.ConnectionClosedRequested));
 
+                                            // TODO: Investigate possible null.
                                             // internal -> external
-                                            var writing = Task.Run(() => targetStream.CopyToAsync(connection.Transport.Output, notificationFeature.ConnectionClosedRequested));
+                                            var writing = Task.Run(() => targetStream.CopyToAsync(connection.Transport.Output, notificationFeature!.ConnectionClosedRequested));
 
                                             await Task.WhenAll(reading, writing);
                                         }
@@ -105,7 +108,8 @@ namespace Microsoft.Tye.Proxy
                                         }
                                         catch (OperationCanceledException ex)
                                         {
-                                            if (!notificationFeature.ConnectionClosedRequested.IsCancellationRequested)
+                                            // TODO: Investigate possible null.
+                                            if (!notificationFeature!.ConnectionClosedRequested.IsCancellationRequested)
                                             {
                                                 logger.LogDebug(0, ex, "Proxy error for service {ServiceName}", serviceName);
                                             }

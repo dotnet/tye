@@ -1040,7 +1040,7 @@ services:
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-no-buildproperties.yaml"));
             var outputContext = new OutputContext(_sink, Verbosity.Debug);
-            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "net6.0");
 
             var handler = new HttpClientHandler
             {

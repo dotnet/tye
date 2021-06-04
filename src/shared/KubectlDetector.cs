@@ -47,8 +47,9 @@ namespace Microsoft.Tye
                     {
                         continue;
                     }
-                    var major = int.Parse(element.Value.GetProperty("major").GetString());
-                    var minor = int.Parse(element.Value.GetProperty("minor").GetString().Trim('+'));
+                    // TODO: Investigate possible null.
+                    var major = int.Parse(element.Value!.GetProperty("major")!.GetString()!);
+                    var minor = int.Parse(element.Value!.GetProperty("minor")!.GetString()!.Trim('+'));
                     var version = new Version(major, minor);
                     return version;
                 }

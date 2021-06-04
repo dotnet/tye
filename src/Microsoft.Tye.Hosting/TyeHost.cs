@@ -102,7 +102,8 @@ namespace Microsoft.Tye.Hosting
 
             await app.StartAsync();
 
-            _addresses = DashboardWebApplication.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>().Addresses;
+            // TODO: Investigate possible null.
+            _addresses = DashboardWebApplication.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses;
 
             _logger.LogInformation("Dashboard running on {Address}", _addresses.First());
 
