@@ -37,6 +37,7 @@ namespace Microsoft.Tye.Hosting
         public void MapRoutes(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapGet("/api/v1", ServiceIndex);
+            endpoints.MapGet("/api/v1/control", ControlIndex);
             endpoints.MapDelete("/api/v1/control", ControlPlaneShutdown);
             endpoints.MapGet("/api/v1/services", Services);
             endpoints.MapGet("/api/v1/services/{name}", Service);
@@ -57,6 +58,19 @@ namespace Microsoft.Tye.Hosting
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/metrics/{{service}}",
             },
             _options);
+        }
+
+        private Task ControlIndex(HttpContext context)
+        {
+            context.Response.ContentType = "application/json";
+
+            return JsonSerializer.SerializeAsync(
+                context.Response.Body,
+                new V1Control
+                {
+                    Name = "<unknown>"
+                },
+                _options);     
         }
 
         private Task ControlPlaneShutdown(HttpContext context)
