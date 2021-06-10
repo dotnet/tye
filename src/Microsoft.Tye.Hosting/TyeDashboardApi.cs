@@ -74,7 +74,7 @@ namespace Microsoft.Tye.Hosting
                     Name = app.Name,
                     Source = app.Source
                 },
-                _options);     
+                _options);
         }
 
         private Task ControlPlaneShutdown(HttpContext context)
