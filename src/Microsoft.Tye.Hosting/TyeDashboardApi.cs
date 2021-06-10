@@ -62,13 +62,17 @@ namespace Microsoft.Tye.Hosting
 
         private Task ControlIndex(HttpContext context)
         {
+            var app = context.RequestServices.GetRequiredService<Application>();
+
             context.Response.ContentType = "application/json";
 
             return JsonSerializer.SerializeAsync(
                 context.Response.Body,
                 new V1Control
                 {
-                    Name = "<unknown>"
+                    ID = app.ID,
+                    Name = app.Name,
+                    Source = app.Source
                 },
                 _options);     
         }
