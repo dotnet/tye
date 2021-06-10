@@ -37,7 +37,7 @@ namespace Microsoft.Tye.Hosting
         public void MapRoutes(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapGet("/api/v1", ServiceIndex);
-            endpoints.MapGet("/api/v1/control", ControlIndex);
+            endpoints.MapGet("/api/v1/application", ApplicationIndex);
             endpoints.MapDelete("/api/v1/control", ControlPlaneShutdown);
             endpoints.MapGet("/api/v1/services", Services);
             endpoints.MapGet("/api/v1/services/{name}", Service);
@@ -51,16 +51,17 @@ namespace Microsoft.Tye.Hosting
             context.Response.ContentType = "application/json";
             return JsonSerializer.SerializeAsync(context.Response.Body, new[]
             {
+                $"{context.Request.Scheme}://{context.Request.Host}/api/v1/application",
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/control",
-                $"{context.Request.Scheme}://{context.Request.Host}/api/v1/services",
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/logs/{{service}}",
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/metrics",
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/metrics/{{service}}",
+                $"{context.Request.Scheme}://{context.Request.Host}/api/v1/services",
             },
             _options);
         }
 
-        private Task ControlIndex(HttpContext context)
+        private Task ApplicationIndex(HttpContext context)
         {
             var app = context.RequestServices.GetRequiredService<Application>();
 
@@ -68,7 +69,7 @@ namespace Microsoft.Tye.Hosting
 
             return JsonSerializer.SerializeAsync(
                 context.Response.Body,
-                new V1Control
+                new V1Application
                 {
                     ID = app.ID,
                     Name = app.Name,
