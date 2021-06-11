@@ -1,6 +1,6 @@
 # Frontend Backend sample with tye run
 
-This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandline/tye-run.md) to run a multi-project application. If you haven't so already, follow the [Getting Started Instructions](/docs/getting_started.md) to install tye.
+This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandline/tye-run.md) to run a multi-project application. If you haven't done so already, follow the [Getting Started Instructions](/docs/getting_started.md) to install tye.
 
 ## Running a single application with tye run
 
@@ -28,7 +28,7 @@ This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandlin
     The dashboard should show the `frontend` application running.
 
     - The `Logs` column has a link to view the streaming logs for the service.
-    - the `Bindings` column has links to the listening URLs of the service.
+    - The `Bindings` column has links to the listening URLs of the service.
     
     Navigate to the `frontend` service using one of the urls on the dashboard in the *Bindings* column. It should be in the form of <http://localhost:[port]> or <https://localhost:[port]>.
 
