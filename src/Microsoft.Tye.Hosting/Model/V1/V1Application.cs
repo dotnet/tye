@@ -6,7 +6,7 @@ namespace Microsoft.Tye.Hosting.Model.V1
 {
     public class V1Application
     {
-        public string? ID { get; set; }
+        public string? Id { get; set; }
 
         public string? Name { get; set; }
 

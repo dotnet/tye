@@ -21,7 +21,7 @@ namespace Microsoft.Tye.Hosting.Model
             ContainerEngine = containerEngine;
         }
 
-        public string ID { get; } = Guid.NewGuid().ToString();
+        public string Id { get; } = Guid.NewGuid().ToString();
 
         public string Name { get; }
 

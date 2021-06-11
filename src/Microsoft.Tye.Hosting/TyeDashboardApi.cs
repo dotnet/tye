@@ -71,7 +71,7 @@ namespace Microsoft.Tye.Hosting
                 context.Response.Body,
                 new V1Application
                 {
-                    ID = app.ID,
+                    Id = app.Id,
                     Name = app.Name,
                     Source = app.Source
                 },
