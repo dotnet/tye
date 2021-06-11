@@ -36,7 +36,7 @@ Now that we have our application running locally, let's deploy the application. 
 
     > :bulb: Under the hood `tye` uses `kubectl` and to execute deployments. In cases if you don't have `kubectl` installed or it's current context is invalid `tye deploy` will fail with the following error: "Drats! 'deploy' failed: Cannot apply manifests because kubectl is not installed." 
 
-    If you are using dockerhub, the registry name will your dockerhub username. If you are a standalone container registry (for instance from your cloud provider), the registry name will look like a hostname, eg: `example.azurecr.io`.
+    If you are using dockerhub, the registry name will be your dockerhub username. If you are a standalone container registry (for instance from your cloud provider), the registry name will look like a hostname, eg: `example.azurecr.io`.
 
     `tye deploy` does many different things to deploy an application to Kubernetes. It will:
     - Create a docker image for each project in your application.
