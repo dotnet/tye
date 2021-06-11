@@ -78,6 +78,13 @@ namespace Microsoft.Tye
                     config.Services;
 
                 var sw = Stopwatch.StartNew();
+
+                // This will correctly expand full paths to all service files and projects
+                EvaluatePaths(
+                  configServices: services, 
+                  configRoot: config.Source.DirectoryName!, 
+                  output: output);
+
                 // Project services will be restored and evaluated before resolving all other services.
                 // This batching will mitigate the performance cost of running MSBuild out of process.
                 var projectServices = services.Where(s => !string.IsNullOrEmpty(s.Project));
@@ -119,6 +126,11 @@ namespace Microsoft.Tye
                 if (multiTFMProjects.Any())
                 {
                     output.WriteDebugLine("Re-evaluating multi-targeted projects");
+
+                    EvaluatePaths(
+                      configServices: multiTFMProjects, 
+                      configRoot: config.Source.DirectoryName!, 
+                      output: output);
 
                     var multiTFMEvaluationResult = await EvaluateProjectsAsync(
                         projects: multiTFMProjects,
@@ -212,7 +224,7 @@ namespace Microsoft.Tye
                             Args = configService.Args,
                             Build = configService.Build ?? true,
                             Replicas = configService.Replicas ?? 1,
-                            DockerFile = Path.Combine(source.DirectoryName!, configService.DockerFile),
+                            DockerFile = Path.Combine(source.DirectoryName!, configService.DockerFileFullPath!),
                             // Supplying an absolute path with trailing slashes fails for DockerFileContext when calling docker build, so trim trailing slash.
                             DockerFileContext = GetDockerFileContext(source, configService),
                             BuildArgs = configService.DockerFileArgs
@@ -476,6 +488,27 @@ namespace Microsoft.Tye
             return root;
         }
 
+        private static void EvaluatePaths(IEnumerable<ConfigService> configServices, string configRoot, OutputContext output)
+        {
+          output.WriteDebugLine("Evaluating configuration paths");
+
+          foreach (var configService in configServices) 
+          {
+            if (!string.IsNullOrEmpty(configService.Project))
+            {
+              configService.ProjectFullPath = Path.Combine(
+                configRoot, 
+                Environment.ExpandEnvironmentVariables(configService.Project!));
+            }
+            if (!string.IsNullOrEmpty(configService.DockerFile))
+            {
+              configService.DockerFileFullPath = Path.Combine(
+                configRoot, 
+                Environment.ExpandEnvironmentVariables(configService.DockerFile!));
+            }
+          }
+        }
+
         private static async Task<ProcessResult> EvaluateProjectsAsync(IEnumerable<ConfigService> projects, string configRoot, OutputContext output)
         {
             using var directory = TempDirectory.Create();
@@ -487,9 +520,6 @@ namespace Microsoft.Tye
 
             foreach (var project in projects)
             {
-                var expandedProject = Environment.ExpandEnvironmentVariables(project.Project!);
-                project.ProjectFullPath = Path.Combine(configRoot, expandedProject);
-
                 if (!File.Exists(project.ProjectFullPath))
                 {
                     throw new CommandException($"Failed to locate project: '{project.ProjectFullPath}'.");
