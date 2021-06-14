@@ -37,6 +37,7 @@ namespace Microsoft.Tye.Hosting
         public void MapRoutes(IEndpointRouteBuilder endpoints)
         {
             endpoints.MapGet("/api/v1", ServiceIndex);
+            endpoints.MapGet("/api/v1/application", ApplicationIndex);
             endpoints.MapDelete("/api/v1/control", ControlPlaneShutdown);
             endpoints.MapGet("/api/v1/services", Services);
             endpoints.MapGet("/api/v1/services/{name}", Service);
@@ -50,13 +51,31 @@ namespace Microsoft.Tye.Hosting
             context.Response.ContentType = "application/json";
             return JsonSerializer.SerializeAsync(context.Response.Body, new[]
             {
+                $"{context.Request.Scheme}://{context.Request.Host}/api/v1/application",
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/control",
-                $"{context.Request.Scheme}://{context.Request.Host}/api/v1/services",
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/logs/{{service}}",
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/metrics",
                 $"{context.Request.Scheme}://{context.Request.Host}/api/v1/metrics/{{service}}",
+                $"{context.Request.Scheme}://{context.Request.Host}/api/v1/services",
             },
             _options);
+        }
+
+        private Task ApplicationIndex(HttpContext context)
+        {
+            var app = context.RequestServices.GetRequiredService<Application>();
+
+            context.Response.ContentType = "application/json";
+
+            return JsonSerializer.SerializeAsync(
+                context.Response.Body,
+                new V1Application
+                {
+                    Id = app.Id,
+                    Name = app.Name,
+                    Source = app.Source
+                },
+                _options);
         }
 
         private Task ControlPlaneShutdown(HttpContext context)
