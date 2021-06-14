@@ -81,9 +81,9 @@ namespace Microsoft.Tye
 
                 // This will correctly expand full paths to all service files and projects
                 EvaluatePaths(
-                  configServices: services, 
-                  configRoot: config.Source.DirectoryName!, 
-                  output: output);
+                    configServices: services, 
+                    configRoot: config.Source.DirectoryName!, 
+                    output: output);
 
                 // Project services will be restored and evaluated before resolving all other services.
                 // This batching will mitigate the performance cost of running MSBuild out of process.
@@ -128,9 +128,9 @@ namespace Microsoft.Tye
                     output.WriteDebugLine("Re-evaluating multi-targeted projects");
 
                     EvaluatePaths(
-                      configServices: multiTFMProjects, 
-                      configRoot: config.Source.DirectoryName!, 
-                      output: output);
+                        configServices: multiTFMProjects, 
+                        configRoot: config.Source.DirectoryName!, 
+                        output: output);
 
                     var multiTFMEvaluationResult = await EvaluateProjectsAsync(
                         projects: multiTFMProjects,
@@ -490,23 +490,23 @@ namespace Microsoft.Tye
 
         private static void EvaluatePaths(IEnumerable<ConfigService> configServices, string configRoot, OutputContext output)
         {
-          output.WriteDebugLine("Evaluating configuration paths");
+            output.WriteDebugLine("Evaluating configuration paths");
 
-          foreach (var configService in configServices) 
-          {
-            if (!string.IsNullOrEmpty(configService.Project))
+            foreach (var configService in configServices) 
             {
-              configService.ProjectFullPath = Path.Combine(
-                configRoot, 
-                Environment.ExpandEnvironmentVariables(configService.Project!));
+                if (!string.IsNullOrEmpty(configService.Project))
+                {
+                    configService.ProjectFullPath = Path.Combine(
+                        configRoot, 
+                        Environment.ExpandEnvironmentVariables(configService.Project!));
+                }
+                if (!string.IsNullOrEmpty(configService.DockerFile))
+                {
+                    configService.DockerFileFullPath = Path.Combine(
+                        configRoot, 
+                        Environment.ExpandEnvironmentVariables(configService.DockerFile!));
+                }
             }
-            if (!string.IsNullOrEmpty(configService.DockerFile))
-            {
-              configService.DockerFileFullPath = Path.Combine(
-                configRoot, 
-                Environment.ExpandEnvironmentVariables(configService.DockerFile!));
-            }
-          }
         }
 
         private static async Task<ProcessResult> EvaluateProjectsAsync(IEnumerable<ConfigService> projects, string configRoot, OutputContext output)
