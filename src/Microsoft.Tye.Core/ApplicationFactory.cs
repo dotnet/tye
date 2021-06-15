@@ -81,8 +81,8 @@ namespace Microsoft.Tye
 
                 // This will correctly expand full paths to all service files and projects
                 EvaluatePaths(
-                    configServices: services, 
-                    configRoot: config.Source.DirectoryName!, 
+                    configServices: services,
+                    configRoot: config.Source.DirectoryName!,
                     output: output);
 
                 // Project services will be restored and evaluated before resolving all other services.
@@ -128,8 +128,8 @@ namespace Microsoft.Tye
                     output.WriteDebugLine("Re-evaluating multi-targeted projects");
 
                     EvaluatePaths(
-                        configServices: multiTFMProjects, 
-                        configRoot: config.Source.DirectoryName!, 
+                        configServices: multiTFMProjects,
+                        configRoot: config.Source.DirectoryName!,
                         output: output);
 
                     var multiTFMEvaluationResult = await EvaluateProjectsAsync(
@@ -492,18 +492,18 @@ namespace Microsoft.Tye
         {
             output.WriteDebugLine("Evaluating configuration paths");
 
-            foreach (var configService in configServices) 
+            foreach (var configService in configServices)
             {
                 if (!string.IsNullOrEmpty(configService.Project))
                 {
                     configService.ProjectFullPath = Path.Combine(
-                        configRoot, 
+                        configRoot,
                         Environment.ExpandEnvironmentVariables(configService.Project!));
                 }
                 if (!string.IsNullOrEmpty(configService.DockerFile))
                 {
                     configService.DockerFileFullPath = Path.Combine(
-                        configRoot, 
+                        configRoot,
                         Environment.ExpandEnvironmentVariables(configService.DockerFile!));
                 }
             }
