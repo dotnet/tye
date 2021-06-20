@@ -10,8 +10,13 @@ namespace Microsoft.Tye.Extensions.Elastic
 {
     internal sealed class ElasticStackExtension : Extension
     {
+        const int DEFAULT_PORT_ELASTIC = 9200;
+        const int DEFAULT_PORT_KIBANA = 5601;
         public override Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
         {
+            var elasticPort = GetIntValueFromConfigData(config, "port", DEFAULT_PORT_ELASTIC);
+            var kibanaPort = GetIntValueFromConfigData(config, "port-kibana", DEFAULT_PORT_KIBANA);
+
             if (context.Application.Services.Any(s => s.Name == "elastic"))
             {
                 context.Output.WriteDebugLine("elastic service already configured. Skipping...");
@@ -31,14 +36,14 @@ namespace Microsoft.Tye.Extensions.Elastic
                         new BindingBuilder()
                         {
                             Name = "kibana",
-                            Port = 5601,
-                            ContainerPort = 5601,
+                            Port = kibanaPort,
+                            ContainerPort = DEFAULT_PORT_KIBANA,
                             Protocol = "http",
                         },
                         new BindingBuilder()
                         {
-                            Port = 9200,
-                            ContainerPort = 9200,
+                            Port = elasticPort,
+                            ContainerPort = DEFAULT_PORT_ELASTIC,
                             Protocol = "http",
                         },
                     },
@@ -75,7 +80,7 @@ namespace Microsoft.Tye.Extensions.Elastic
                         if (context.Options!.LoggingProvider is null)
                         {
                             // For local development we hardcode the port and hostname
-                            context.Options.LoggingProvider = "elastic=http://localhost:9200";
+                            context.Options.LoggingProvider = $"elastic=http://localhost:{elasticPort}";
                         }
 
                         break;
@@ -104,6 +109,15 @@ namespace Microsoft.Tye.Extensions.Elastic
             }
 
             return Task.CompletedTask;
+        }
+
+        private static int? GetIntValueFromConfigData(ExtensionConfiguration config, string key, int defaultValue)
+        {
+            if (config.Data.TryGetValue(key, out var obj) && obj is not null && int.TryParse(obj.ToString(), out int parsedValue))
+            {
+                return parsedValue;
+            }
+            return defaultValue;
         }
     }
 }
