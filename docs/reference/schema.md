@@ -162,6 +162,10 @@ Including `image` marks the service as a *container*:
 
 The Dockerfile to build from. Uses the name of the service as the name of the image. Only supported for `tye run` currently.
 
+#### `dockerFileArgs` (`string[]`)
+
+Build arguments to use when building a Docker image. This is only used when `dockerFile` is specified.
+
 #### `dockerFileContext` (string)
 
 Path to the Dockerfile Context to run docker build against. This is only used when `dockerFile` is specified as well.
