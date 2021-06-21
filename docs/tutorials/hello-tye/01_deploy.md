@@ -34,9 +34,9 @@ Now that we have our application running locally, let's deploy the application. 
 
     You will be prompted to enter your container registry. This is needed to tag images, and to push them to a location accessible by kubernetes.
 
-    > :bulb: Under the hood `tye` uses `kubectl` and to execute deployments. In cases if you don't have `kubectl` installed or it's current context is invalid `tye deploy` will fail with the following error: "Drats! 'deploy' failed: Cannot apply manifests because kubectl is not installed." 
+    > :bulb: Under the hood `tye` uses `kubectl` to execute deployments. In cases where you don't have `kubectl` installed or it's current context is invalid `tye deploy` will fail with the following error: "Drats! 'deploy' failed: Cannot apply manifests because kubectl is not installed." 
 
-    If you are using dockerhub, the registry name will your dockerhub username. If you are a standalone container registry (for instance from your cloud provider), the registry name will look like a hostname, eg: `example.azurecr.io`.
+    If you are using dockerhub, the registry name will be your dockerhub username. If you use a standalone container registry (for instance from your cloud provider), the registry name will look like a hostname, eg: `example.azurecr.io`.
 
     `tye deploy` does many different things to deploy an application to Kubernetes. It will:
     - Create a docker image for each project in your application.
@@ -77,9 +77,9 @@ Now that we have our application running locally, let's deploy the application. 
     kubectl port-forward svc/frontend 5000:80
     ```
 
-    Now navigate to <http://localhost:5000> to view the frontend application working on Kubernetes. You should see the list of weather forecasts just like when you were running locally.
+    Now navigate to <http://localhost:5000> to view the frontend application running on Kubernetes. You should see the list of weather forecasts just like when you were running locally.
 
-    > :bulb: Currently `tye` does not provide a way to expose pods/services created to the public internet. We'll add features related to `Ingress` in future releases.
+    > :bulb: Currently `tye` does not provide a way to expose pods/services to the public internet. We'll add features related to `Ingress` in future releases.
 
     > :warning: Currently `tye` does not automatically enable TLS within the cluster, and so communication takes place over HTTP instead of HTTPS. This is typical way to deploy services in kubernetes - we may look to enable TLS as an option or by default in the future.
 
@@ -128,11 +128,11 @@ Tye has a optional configuration file (`tye.yaml`) to allow customizing settings
     registry: <registry_name>
     ```
 
-    If you are using dockerhub, the registry_name will your dockerhub username. If you are a standalone container registry (for instance from your cloud provider), the registry_name will look like a hostname, eg: `example.azurecr.io`.
+    If you are using dockerhub, the registry_name will your dockerhub username. If you use a standalone container registry (for instance from your cloud provider), the registry_name will look like a hostname, eg: `example.azurecr.io`.
 
     Now it's possible to use `tye deploy` without `--interactive` since the registry is stored as part of configuration.
 
-    > :question: This step may not make much sense if you're using `tye.yaml` to store a personal Dockerhub username. A more typical use case would storing the name of a private registry for use in a CI/CD system.
+    > :question: This step may not make much sense if you're using `tye.yaml` to store a personal Dockerhub username. A more typical use case would be storing the name of a private registry for use in a CI/CD system.
 
 ## Undeploying the application
 

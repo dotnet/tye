@@ -21,7 +21,7 @@ extensions:
   #
   # config: myconfig
 
-  # components-path configures the components path of the dapr sidecard
+  # components-path configures the components path of the dapr sidecar
   components-path: "./components/"
 
   # You can instruct Tye to not create the Dapr placement container on your behalf. This is required if you have Dapr running and want to use that container.

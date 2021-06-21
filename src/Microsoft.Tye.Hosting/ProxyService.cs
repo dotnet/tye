@@ -63,6 +63,11 @@ namespace Microsoft.Tye.Hosting
                                         continue;
                                     }
 
+                                    if (string.Equals(binding.Protocol, "udp", StringComparison.InvariantCultureIgnoreCase))
+                                    {
+                                        throw new CommandException("Proxy does not support the udp protocol yet.");
+                                    }
+
                                     var ports = binding.ReplicaPorts;
 
                                     // We need to bind to all interfaces on linux since the container -> host communication won't work
