@@ -1,12 +1,12 @@
 {
   "tools": {
-    "dotnet": "6.0.100-preview.4.21253.7",
+    "dotnet": "6.0.100-preview.5.21302.13",
     "runtimes": {
       "dotnet": [
-        "6.0.0-preview.4.21253.7"
+        "6.0.0-preview.5.21301.5"
       ],
       "aspnetcore": [
-        "6.0.0-preview.4.21253.5"
+        "6.0.0-preview.5.21301.17"
       ]
     }
   },
