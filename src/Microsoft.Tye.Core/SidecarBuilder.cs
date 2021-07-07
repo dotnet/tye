@@ -15,11 +15,11 @@ namespace Microsoft.Tye
             ImageTag = imageTag;
         }
 
-        public string Name { get; set; }
+        public string Name { get; }
 
-        public string ImageName { get; set; }
+        public string ImageName { get; }
 
-        public string ImageTag { get; set; }
+        public string ImageTag { get; }
 
         public List<string> Args { get; } = new List<string>();
 

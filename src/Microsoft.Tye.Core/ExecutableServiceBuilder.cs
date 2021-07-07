@@ -14,7 +14,7 @@ namespace Microsoft.Tye
             Executable = executable;
         }
 
-        public string Executable { get; set; }
+        public string Executable { get; }
 
         public string? WorkingDirectory { get; set; }
 

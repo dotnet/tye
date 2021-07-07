@@ -13,7 +13,7 @@ namespace Microsoft.Tye
             Name = name;
         }
 
-        public string Name { get; set; }
+        public string Name { get; }
 
         public int Replicas { get; set; } = 1;
 

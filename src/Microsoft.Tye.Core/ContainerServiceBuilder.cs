@@ -14,7 +14,7 @@ namespace Microsoft.Tye
             Image = image;
         }
 
-        public string Image { get; set; }
+        public string Image { get; }
 
         public bool IsAspNet { get; set; }
 
