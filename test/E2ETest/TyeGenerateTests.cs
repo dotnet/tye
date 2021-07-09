@@ -41,7 +41,7 @@ namespace E2ETest
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Need to add docker registry for generate
-            application.Registry = new ContainerRegistry("test");
+            application.Registry = new ContainerRegistry("test", null);
 
             try
             {
@@ -79,7 +79,7 @@ namespace E2ETest
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Need to add docker registry for generate
-            application.Registry = new ContainerRegistry("test");
+            application.Registry = new ContainerRegistry("test", null);
 
             try
             {
@@ -120,7 +120,7 @@ namespace E2ETest
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
             // Need to add docker registry for generate
-            application.Registry = new ContainerRegistry("test");
+            application.Registry = new ContainerRegistry("test", null);
 
             try
             {
@@ -146,9 +146,9 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
-        public async Task GenerateWorksWithoutRegistry()
+        public async Task GenerateWorksWithRegistryPullSecret()
         {
-            await DockerAssert.DeleteDockerImagesAsync(output, "test-project");
+            await DockerAssert.DeleteDockerImagesAsync(output, "test/test-project");
 
             var projectName = "single-project";
             var environment = "production";
@@ -160,21 +160,61 @@ namespace E2ETest
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
+            // Need to add docker registry with pull secret for generate
+            application.Registry = new ContainerRegistry("test", "credsecret");
+
             try
             {
                 await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
 
                 // name of application is the folder
                 var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
-                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}-noregistry.yaml");
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}-registrypullsecret.yaml");
 
                 YamlAssert.Equals(expectedContent, content, output);
 
-                await DockerAssert.AssertImageExistsAsync(output, "test-project");
+                await DockerAssert.AssertImageExistsAsync(output, "test/test-project");
             }
             finally
             {
-                await DockerAssert.DeleteDockerImagesAsync(output, "test-project");
+                await DockerAssert.DeleteDockerImagesAsync(output, "test/test-project");
+            }
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task GenerateWorksWithoutRegistry()
+        {
+            await DockerAssert.DeleteDockerImagesAsync(output, "test/test-project");
+
+            var projectName = "single-project";
+            var environment = "production";
+
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            // Need to add docker registry for generate
+            application.Registry = new ContainerRegistry("test", null);
+
+            try
+            {
+                await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
+
+                // name of application is the folder
+                var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{projectName}-generate-{environment}.yaml"));
+                var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{projectName}.yaml");
+
+                YamlAssert.Equals(expectedContent, content, output);
+
+                await DockerAssert.AssertImageExistsAsync(output, "test/test-project");
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, "test/test-project");
             }
         }
 
