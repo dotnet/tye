@@ -194,6 +194,13 @@ namespace Microsoft.Tye.Hosting
                                     });
                             });
                     services.AddSingleton(application);
+                    services.AddScoped(sp =>
+                    {
+                        var server = sp.GetRequiredService<AspNetCore.Hosting.Server.IServer>();
+                        var addressFeature = server.Features.Get<AspNetCore.Hosting.Server.Features.IServerAddressesFeature>();
+                        string baseAddress = addressFeature.Addresses.First();
+                        return new System.Net.Http.HttpClient { BaseAddress = new Uri(baseAddress) };
+                    });
                 })
                 .Build();
         }
@@ -208,14 +215,17 @@ namespace Microsoft.Tye.Hosting
 
             app.UseRouting();
 
-            var api = new TyeDashboardApi();
-
-            app.UseEndpoints(endpoints =>
+            if (_logger != null && _replicaRegistry != null)
             {
-                api.MapRoutes(endpoints);
-                endpoints.MapBlazorHub();
-                endpoints.MapFallbackToPage("/_Host");
-            });
+                var api = new TyeDashboardApi(new ProcessRunner(_logger, _replicaRegistry, ProcessRunnerOptions.FromHostOptions(_options)));
+
+                app.UseEndpoints(endpoints =>
+                {
+                    api.MapRoutes(endpoints);
+                    endpoints.MapBlazorHub();
+                    endpoints.MapFallbackToPage("/_Host");
+                });
+            }
         }
 
         private int ComputePort(int? port)
