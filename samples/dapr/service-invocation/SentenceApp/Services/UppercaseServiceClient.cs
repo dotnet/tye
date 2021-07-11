@@ -25,15 +25,10 @@ namespace SentenceApp.Services
 
         public async Task<ConvertedResult> Convert(string sentence)
         {
-            // Using Dapr sidecar and service invocation building block
-            return await _daprClient.InvokeMethodAsync<object, ConvertedResult>("uppercaseservice", "uppercase", new object(),
-                HttpInvocationOptions.UsingGet()
-                    .WithQueryParam("sentence", sentence));
-
-            // If you're using Tye alone (without dapr)
-            //var responseMessage = await _client.GetAsync($"/uppercase?sentence={sentence}");
-            //var stream = await responseMessage.Content.ReadAsStreamAsync();
-            //return await JsonSerializer.DeserializeAsync<ConvertedResult>(stream, _options);
+            var client = DaprClient.CreateInvokeHttpClient(appId: "uppercaseservice");
+            var responseMessage = await client.GetAsync($"/uppercase?sentence={sentence}");
+            var stream = await responseMessage.Content.ReadAsStreamAsync();
+            return await JsonSerializer.DeserializeAsync<ConvertedResult>(stream, _options);
         }
     }
 }
