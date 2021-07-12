@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.Tye
 {
-    public sealed class ExecutableServiceBuilder : ServiceBuilder
+    public sealed class ExecutableServiceBuilder : LaunchedServiceBuilder
     {
         public ExecutableServiceBuilder(string name, string executable)
             : base(name)
@@ -19,10 +19,6 @@ namespace Microsoft.Tye
         public string? WorkingDirectory { get; set; }
 
         public string? Args { get; set; }
-
-        public int Replicas { get; set; } = 1;
-
-        public List<EnvironmentVariableBuilder> EnvironmentVariables { get; } = new List<EnvironmentVariableBuilder>();
 
         public ProbeBuilder? Liveness { get; set; }
 

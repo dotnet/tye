@@ -77,8 +77,11 @@ namespace Microsoft.Tye.Extensions.Dapr
                 }
 
                 // For local run, enumerate all projects, and add services for each dapr proxy.
-                var projects = context.Application.Services.OfType<ProjectServiceBuilder>().ToList();
-                foreach (var project in projects)
+                var projects = context.Application.Services.OfType<ProjectServiceBuilder>().Cast<LaunchedServiceBuilder>();
+                var executables = context.Application.Services.OfType<ExecutableServiceBuilder>().Cast<LaunchedServiceBuilder>();
+                var services = projects.Concat(executables).ToList();
+
+                foreach (var project in services)
                 {
                     // Dapr requires http. If this project isn't listening to HTTP then it's not daprized.
                     var httpBinding = project.Bindings.FirstOrDefault(b => b.Protocol == "http");
