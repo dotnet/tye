@@ -383,6 +383,13 @@
                     "description": "The Dockerfile to use.",
                     "type": "string"
                 },
+                "dockerFileArgs": {
+                    "description": "Build arguments to use when building the image.",
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                },
                 "dockerFileContext": {
                     "description": "The Dockerfile context to run docker build on.",
                     "type": "string"
