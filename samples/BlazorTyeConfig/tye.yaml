@@ -1,0 +1,17 @@
+﻿# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
+#
+name: BlazorTyeConfig
+services:
+
+  # Frontend
+  - name: blazor-host
+    project: Blazor.Host\Blazor.Host.csproj
+    
+  # Backend
+  - name: backend
+    project: Backend\Backend.csproj
+
