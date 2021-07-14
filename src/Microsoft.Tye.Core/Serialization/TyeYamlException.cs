@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.IO;
 using YamlDotNet.Core;
 
 namespace Tye.Serialization
@@ -20,7 +21,12 @@ namespace Tye.Serialization
         }
 
         public TyeYamlException(Mark start, string message, Exception? innerException)
-            : base($"Error parsing tye.yaml: ({start.Line}, {start.Column}): {message}", innerException)
+            : base($"Error parsing YAML: ({start.Line}, {start.Column}): {message}", innerException)
+        {
+        }
+
+        public TyeYamlException(Mark start, string message, Exception? innerException, FileInfo fileInfo)
+            : base($"Error parsing '{fileInfo.Name}': ({start.Line}, {start.Column}): {message}", innerException)
         {
         }
 
