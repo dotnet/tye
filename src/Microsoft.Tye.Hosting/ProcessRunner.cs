@@ -220,7 +220,8 @@ namespace Microsoft.Tye.Hosting
                     // These are the ports that the application should use for binding
 
                     // 1. Configure ASP.NET Core to bind to those same ports
-                    environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://{application.ContainerEngine.AspNetUrlsHost}:{p.Port}"));
+                    var urlPorts = ports.Where(p => p.Protocol == null || p.Protocol == "http" || p.Protocol == "https");
+                    environment["ASPNETCORE_URLS"] = string.Join(";", urlPorts.Select(p => $"{p.Protocol ?? "http"}://{application.ContainerEngine.AspNetUrlsHost}:{p.Port}"));
 
                     // Set the HTTPS port for the redirect middleware
                     foreach (var p in ports)
