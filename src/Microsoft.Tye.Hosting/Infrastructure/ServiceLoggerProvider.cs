@@ -37,9 +37,9 @@ namespace Microsoft.Tye.Hosting
                 _logs = logs;
             }
 
-            public IDisposable? BeginScope<TState>(TState state)
+            public IDisposable BeginScope<TState>(TState state)
             {
-                return null;
+                return new NoOpScope();
             }
 
             public bool IsEnabled(LogLevel logLevel)
@@ -57,6 +57,13 @@ namespace Microsoft.Tye.Hosting
                 if (exception != null)
                 {
                     _logs.OnNext(exception.ToString());
+                }
+            }
+
+            private sealed class NoOpScope : IDisposable
+            {
+                public void Dispose()
+                {
                 }
             }
         }

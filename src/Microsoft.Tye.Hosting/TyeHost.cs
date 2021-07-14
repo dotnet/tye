@@ -333,7 +333,7 @@ namespace Microsoft.Tye.Hosting
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while shutting down");
+                _logger?.LogError(ex, "Error while shutting down");
             }
             finally
             {
@@ -375,7 +375,7 @@ namespace Microsoft.Tye.Hosting
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error launching dashboard.");
+                _logger?.LogError(ex, "Error launching dashboard.");
             }
         }
 
