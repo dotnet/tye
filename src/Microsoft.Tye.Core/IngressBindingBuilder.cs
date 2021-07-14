@@ -9,5 +9,6 @@ namespace Microsoft.Tye
         public string? Name { get; set; }
         public int? Port { get; set; }
         public string? Protocol { get; set; } // HTTP or HTTPS
+        public string? IPAddress { get; set; }
     }
 }
