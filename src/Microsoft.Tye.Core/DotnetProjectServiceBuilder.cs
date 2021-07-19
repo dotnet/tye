@@ -9,8 +9,8 @@ namespace Microsoft.Tye
 {
     public class DotnetProjectServiceBuilder : ProjectServiceBuilder
     {
-        public DotnetProjectServiceBuilder(string name, FileInfo projectFile)
-            : base(name)
+        public DotnetProjectServiceBuilder(string name, FileInfo projectFile, ServiceSource source)
+            : base(name, source)
         {
             ProjectFile = projectFile;
         }

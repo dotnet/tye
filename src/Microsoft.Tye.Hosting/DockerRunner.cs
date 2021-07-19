@@ -96,7 +96,7 @@ namespace Microsoft.Tye.Hosting
                     b.ReplicaPorts.Add(b.Port.Value);
                     proxyDescription.Bindings.Add(b);
                 }
-                var proxyContainerService = new Service(proxyDescription);
+                var proxyContainerService = new Service(proxyDescription, ServiceSource.Host);
                 containers.Add(proxyContainerService);
                 proxies.Add(proxyContainerService);
             }

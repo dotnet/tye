@@ -6,8 +6,8 @@ namespace Microsoft.Tye
 {
     public sealed class ExternalServiceBuilder : ServiceBuilder
     {
-        public ExternalServiceBuilder(string name)
-            : base(name)
+        public ExternalServiceBuilder(string name, ServiceSource source)
+            : base(name, source)
         {
         }
     }
