@@ -8,8 +8,8 @@ namespace Microsoft.Tye
 {
     public class ProjectServiceBuilder : LaunchedServiceBuilder
     {
-        public ProjectServiceBuilder(string name)
-            : base(name)
+        public ProjectServiceBuilder(string name, ServiceSource source)
+            : base(name, source)
         {
         }
         public bool IsAspNet { get; set; }

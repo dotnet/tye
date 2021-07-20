@@ -4,11 +4,11 @@
 
 namespace Microsoft.Tye
 {
-    public sealed class ExternalServiceBuilder : ServiceBuilder
+    public enum ServiceSource
     {
-        public ExternalServiceBuilder(string name, ServiceSource source)
-            : base(name, source)
-        {
-        }
+        Unknown = 0,
+        Configuration,
+        Extension,
+        Host
     }
 }

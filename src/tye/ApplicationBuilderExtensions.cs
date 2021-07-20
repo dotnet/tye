@@ -180,7 +180,7 @@ namespace Microsoft.Tye
                     });
                 }
 
-                services.Add(service.Name, new Service(description));
+                services.Add(service.Name, new Service(description, service.Source));
             }
 
             // Ingress get turned into services for hosting
@@ -210,7 +210,7 @@ namespace Microsoft.Tye
                     });
                 }
 
-                services.Add(ingress.Name, new Service(description));
+                services.Add(ingress.Name, new Service(description, ServiceSource.Host));
             }
 
             return new Application(application.Name, application.Source, services, application.ContainerEngine) { Network = application.Network };
