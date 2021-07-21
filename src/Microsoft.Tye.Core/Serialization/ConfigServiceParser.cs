@@ -165,6 +165,10 @@ namespace Tye.Serialization
                     case "cloneDirectory":
                         service.CloneDirectory = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "node":
+                        service.Node = new ConfigNode();
+                        HandleNode((YamlMappingNode)child.Value, service.Node);
+                        break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
@@ -232,6 +236,35 @@ namespace Tye.Serialization
                 var volume = new ConfigVolume();
                 HandleServiceVolumeNameMapping((YamlMappingNode)child, volume);
                 volumes.Add(volume);
+            }
+        }
+
+        private static void HandleNode(YamlSequenceNode yamlSequenceNode, ConfigNode node)
+        {
+            foreach (var child in yamlSequenceNode.Children)
+            {
+                YamlParser.ThrowIfNotYamlMapping(child);
+                HandleNode((YamlMappingNode)child, node);
+            }
+        }
+
+        private static void HandleNode(YamlMappingNode yamlMappingNode, ConfigNode node)
+        {
+            foreach (var child in yamlMappingNode.Children)
+            {
+                var key = YamlParser.GetScalarValue(child.Key);
+
+                switch (key)
+                {
+                    case "package":
+                        node.Package =  YamlParser.GetScalarValue("package", child.Value);
+                        break;
+                    case "script":
+                        node.Script =  YamlParser.GetScalarValue("script", child.Value);
+                        break;
+                    default:
+                        throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
+                }
             }
         }
 

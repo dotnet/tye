@@ -337,6 +337,18 @@ namespace Microsoft.Tye
                         var external = new ExternalServiceBuilder(configService.Name, ServiceSource.Configuration);
                         service = external;
                     }
+                    else if (configService.Node != null)
+                    {
+                        string packagePath = Path.GetFullPath(Path.Combine(config.Source.Directory!.FullName, configService.Node.Package));
+
+                        var node = new NodeServiceBuilder(configService.Name, packagePath, ServiceSource.Configuration)
+                        {
+                            Replicas = configService.Replicas ?? 1,
+                            Script = configService.Node.Script
+                        };
+
+                        service = node;
+                    }
                     else
                     {
                         throw new CommandException("Unable to determine service type.");

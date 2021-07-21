@@ -152,6 +152,35 @@ namespace Microsoft.Tye
                     liveness = null;
                     readiness = null;
                 }
+                else if (service is NodeServiceBuilder node)
+                {
+                    string executablePath = "node";
+                    string? workingDirectory = Path.GetDirectoryName(node.PackagePath);
+
+                    var input = new StringReader(File.ReadAllText(node.PackagePath));
+
+                    var yaml = new YamlDotNet.RepresentationModel.YamlStream();
+
+                    yaml.Load(input);
+
+                    var mapping = (YamlDotNet.RepresentationModel.YamlMappingNode)yaml.Documents[0].RootNode;
+
+                    var mainNode = (YamlDotNet.RepresentationModel.YamlScalarNode)mapping.Children[new YamlDotNet.RepresentationModel.YamlScalarNode("main")];
+
+                    var main = mainNode.Value;
+
+                    string args = $"{main}";
+
+                    runInfo = new ExecutableRunInfo(executablePath, workingDirectory, args);
+                    replicas = node.Replicas;
+                    liveness = null;
+                    readiness = null;
+
+                    foreach (var entry in node.EnvironmentVariables)
+                    {
+                        env.Add(entry.ToHostingEnvironmentVariable());
+                    }
+                }
                 else
                 {
                     throw new InvalidOperationException($"Cannot figure out how to run service '{service.Name}'.");
