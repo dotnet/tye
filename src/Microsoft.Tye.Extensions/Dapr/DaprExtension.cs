@@ -78,8 +78,14 @@ namespace Microsoft.Tye.Extensions.Dapr
 
                 // For local run, enumerate all projects, and add services for each dapr proxy.
                 var projects = context.Application.Services.OfType<ProjectServiceBuilder>().Cast<LaunchedServiceBuilder>();
+                // TODO: Is there a better hierarchy to capture all "launched" services (can we just use LaunchedServiceBuilder)?
+                var node = context.Application.Services.OfType<NodeServiceBuilder>().Cast<LaunchedServiceBuilder>();
                 var executables = context.Application.Services.OfType<ExecutableServiceBuilder>().Cast<LaunchedServiceBuilder>();
-                var services = projects.Concat(executables).ToList();
+                var services =
+                    projects
+                        .Concat(node)
+                        .Concat(executables)
+                        .ToList();
 
                 foreach (var project in services)
                 {

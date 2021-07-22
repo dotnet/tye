@@ -14,6 +14,8 @@ namespace Microsoft.Tye
             PackagePath = packagePath;
         }
 
+        public bool? EnableDebugging { get; set; }
+
         public string PackagePath { get; set; }
 
         public string? Script { get; set; }

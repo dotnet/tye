@@ -239,15 +239,6 @@ namespace Tye.Serialization
             }
         }
 
-        private static void HandleNode(YamlSequenceNode yamlSequenceNode, ConfigNode node)
-        {
-            foreach (var child in yamlSequenceNode.Children)
-            {
-                YamlParser.ThrowIfNotYamlMapping(child);
-                HandleNode((YamlMappingNode)child, node);
-            }
-        }
-
         private static void HandleNode(YamlMappingNode yamlMappingNode, ConfigNode node)
         {
             foreach (var child in yamlMappingNode.Children)
@@ -256,11 +247,19 @@ namespace Tye.Serialization
 
                 switch (key)
                 {
+                    case "enableDebugging":
+                        if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var enableDebugging))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeABoolean(key));
+                        }
+
+                        node.EnableDebugging = enableDebugging;
+                        break;
                     case "package":
-                        node.Package =  YamlParser.GetScalarValue("package", child.Value);
+                        node.Package =  YamlParser.GetScalarValue(key, child.Value);
                         break;
                     case "script":
-                        node.Script =  YamlParser.GetScalarValue("script", child.Value);
+                        node.Script =  YamlParser.GetScalarValue(key, child.Value);
                         break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));

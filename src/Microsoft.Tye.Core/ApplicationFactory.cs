@@ -343,6 +343,7 @@ namespace Microsoft.Tye
 
                         var node = new NodeServiceBuilder(configService.Name, packagePath, ServiceSource.Configuration)
                         {
+                            EnableDebugging = configService.Node.EnableDebugging,
                             Replicas = configService.Replicas ?? 1,
                             Script = configService.Node.Script
                         };

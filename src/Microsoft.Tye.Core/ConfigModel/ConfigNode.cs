@@ -8,6 +8,8 @@ namespace Microsoft.Tye.ConfigModel
 {
     public class ConfigNode
     {
+        public bool? EnableDebugging { get; set; }
+
         [Required]
         public string Package { get; set; } = default!;
 
