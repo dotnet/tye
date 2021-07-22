@@ -8,8 +8,8 @@ namespace Microsoft.Tye
 {
     public sealed class ExecutableServiceBuilder : LaunchedServiceBuilder
     {
-        public ExecutableServiceBuilder(string name, string executable)
-            : base(name)
+        public ExecutableServiceBuilder(string name, string executable, ServiceSource source)
+            : base(name, source)
         {
             Executable = executable;
         }

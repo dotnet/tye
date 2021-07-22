@@ -249,7 +249,7 @@ services:
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
-            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}")
+            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}", ServiceSource.Configuration)
             {
                 IsAspNet = true
             };
@@ -296,7 +296,7 @@ services:
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
-            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}")
+            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}", ServiceSource.Configuration)
             {
                 IsAspNet = true
             };

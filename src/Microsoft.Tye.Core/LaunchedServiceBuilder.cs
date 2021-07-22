@@ -8,8 +8,8 @@ namespace Microsoft.Tye
 {
     public abstract class LaunchedServiceBuilder : ServiceBuilder
     {
-        public LaunchedServiceBuilder(string name)
-            : base(name)
+        public LaunchedServiceBuilder(string name, ServiceSource source)
+            : base(name, source)
         {
         }
 

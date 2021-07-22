@@ -228,6 +228,7 @@ namespace Microsoft.Tye.Hosting
 
             var serviceJson = new V1Service()
             {
+                ServiceSource = service.ServiceSource,
                 ServiceType = service.ServiceType,
                 Status = v1Status,
                 Description = v1ServiceDescription,

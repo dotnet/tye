@@ -165,7 +165,7 @@ namespace Microsoft.Tye
                     if (!string.IsNullOrEmpty(configService.Project))
                     {
                         // TODO: Investigate possible null.
-                        var project = new DotnetProjectServiceBuilder(configService.Name!, new FileInfo(configService.ProjectFullPath!));
+                        var project = new DotnetProjectServiceBuilder(configService.Name!, new FileInfo(configService.ProjectFullPath!), ServiceSource.Configuration);
                         service = project;
 
                         project.Build = configService.Build ?? true;
@@ -196,7 +196,7 @@ namespace Microsoft.Tye
                     }
                     else if (!string.IsNullOrEmpty(configService.Image))
                     {
-                        var container = new ContainerServiceBuilder(configService.Name!, configService.Image!)
+                        var container = new ContainerServiceBuilder(configService.Name!, configService.Image!, ServiceSource.Configuration)
                         {
                             Args = configService.Args,
                             Replicas = configService.Replicas ?? 1
@@ -208,7 +208,7 @@ namespace Microsoft.Tye
                     }
                     else if (!string.IsNullOrEmpty(configService.DockerFile))
                     {
-                        var dockerFile = new DockerFileServiceBuilder(configService.Name!, configService.Image!)
+                        var dockerFile = new DockerFileServiceBuilder(configService.Name!, configService.Image!, ServiceSource.Configuration)
                         {
                             Args = configService.Args,
                             Build = configService.Build ?? true,
@@ -242,7 +242,7 @@ namespace Microsoft.Tye
                             workingDirectory = Path.GetDirectoryName(expandedExecutable)!;
                         }
 
-                        var executable = new ExecutableServiceBuilder(configService.Name!, expandedExecutable)
+                        var executable = new ExecutableServiceBuilder(configService.Name!, expandedExecutable, ServiceSource.Configuration)
                         {
                             Args = configService.Args,
                             WorkingDirectory = configService.WorkingDirectory != null ?
@@ -311,7 +311,8 @@ namespace Microsoft.Tye
 
                         var functionBuilder = new AzureFunctionServiceBuilder(
                             configService.Name,
-                            azureFunctionDirectory)
+                            azureFunctionDirectory,
+                            ServiceSource.Configuration)
                         {
                             Args = configService.Args,
                             Replicas = configService.Replicas ?? 1,
@@ -333,7 +334,7 @@ namespace Microsoft.Tye
                     }
                     else if (configService.External)
                     {
-                        var external = new ExternalServiceBuilder(configService.Name);
+                        var external = new ExternalServiceBuilder(configService.Name, ServiceSource.Configuration);
                         service = external;
                     }
                     else

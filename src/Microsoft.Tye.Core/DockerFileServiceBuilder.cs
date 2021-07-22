@@ -8,8 +8,8 @@ namespace Microsoft.Tye
 {
     public class DockerFileServiceBuilder : ProjectServiceBuilder
     {
-        public DockerFileServiceBuilder(string name, string image)
-            : base(name)
+        public DockerFileServiceBuilder(string name, string image, ServiceSource source)
+            : base(name, source)
         {
             Image = image;
         }

@@ -58,7 +58,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                     }
 
                     context.Output.WriteDebugLine("Injecting Dapr placement service...");
-                    var daprPlacement = new ContainerServiceBuilder("placement", daprPlacementImage)
+                    var daprPlacement = new ContainerServiceBuilder("placement", daprPlacementImage, ServiceSource.Extension)
                     {
                         Args = "./placement",
                         Bindings = {
@@ -104,7 +104,7 @@ namespace Microsoft.Tye.Extensions.Dapr
 
                     var daprExecutablePath = GetDaprExecutablePath();
 
-                    var proxy = new ExecutableServiceBuilder($"{project.Name}-dapr", daprExecutablePath)
+                    var proxy = new ExecutableServiceBuilder($"{project.Name}-dapr", daprExecutablePath, ServiceSource.Extension)
                     {
                         WorkingDirectory = context.Application.Source.DirectoryName,
 

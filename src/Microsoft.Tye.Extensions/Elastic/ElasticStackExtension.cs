@@ -24,7 +24,7 @@ namespace Microsoft.Tye.Extensions.Elastic
                 // easy to set up.
                 //
                 // See: https://elk-docker.readthedocs.io/
-                var elastic = new ContainerServiceBuilder("elastic", "sebp/elk")
+                var elastic = new ContainerServiceBuilder("elastic", "sebp/elk", ServiceSource.Extension)
                 {
                     Bindings =
                     {
