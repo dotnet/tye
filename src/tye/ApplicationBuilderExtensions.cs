@@ -169,10 +169,9 @@ namespace Microsoft.Tye
 
                     var main = mainNode.Value;
 
-                    string enableDebuggingArg = !node.EnableDebugging.HasValue || node.EnableDebugging.Value ? "--inspect ": "";
-                    string args = $"{enableDebuggingArg}{main}";
+                    string args = $"{main}";
 
-                    runInfo = new ExecutableRunInfo(executablePath, workingDirectory, args);
+                    runInfo = new NodeRunInfo(executablePath, workingDirectory, args, node.EnableDebugging);
                     replicas = node.Replicas;
                     liveness = null;
                     readiness = null;

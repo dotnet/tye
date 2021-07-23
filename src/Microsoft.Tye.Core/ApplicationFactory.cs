@@ -343,10 +343,16 @@ namespace Microsoft.Tye
 
                         var node = new NodeServiceBuilder(configService.Name, packagePath, ServiceSource.Configuration)
                         {
-                            EnableDebugging = configService.Node.EnableDebugging,
+                            EnableDebugging = !configService.Node.EnableDebugging.HasValue || configService.Node.EnableDebugging.Value,
                             Replicas = configService.Replicas ?? 1,
                             Script = configService.Node.Script
                         };
+
+                        // If debugging but no explicit binding to the Node.js inspector port has been defined, add one...
+                        if (node.EnableDebugging && !node.Bindings.Any(binding => StringComparer.OrdinalIgnoreCase.Equals(binding.Protocol, "inspector")))
+                        {
+                            node.Bindings.Add(new BindingBuilder { Protocol = "inspector" });
+                        }
 
                         service = node;
                     }

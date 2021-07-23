@@ -233,7 +233,8 @@ namespace Microsoft.Tye.Hosting
                     }
 
                     // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
-                    environment["PORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
+                    var webPorts = ports.Where(port => StringComparer.OrdinalIgnoreCase.Equals(port.Protocol, "http") || StringComparer.OrdinalIgnoreCase.Equals(port.Protocol, "https"));                                                          
+                    environment["PORT"] = string.Join(";", webPorts.Select(p => $"{p.Port}"));
 
                     if (service.ServiceType == ServiceType.Function)
                     {
@@ -244,6 +245,13 @@ namespace Microsoft.Tye.Hosting
                         {
                             copiedArgs += " --useHttps";
                         }
+                    }
+
+                    if (service.Description.RunInfo is NodeRunInfo info && info.EnableDebugging)
+                    {
+                        var binding = ports.First(port => StringComparer.OrdinalIgnoreCase.Equals(port.Protocol, "inspector"));
+
+                        copiedArgs = $"--inspect={binding.Port} {copiedArgs}";
                     }
                 }
 

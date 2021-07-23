@@ -167,6 +167,12 @@ namespace Microsoft.Tye.Hosting
                     v1RunInfo.WorkingDirectory = dockerRunInfo.WorkingDirectory;
                     v1RunInfo.Args = dockerRunInfo.Args;
                     break;
+                case NodeRunInfo nodeRunInfo:
+                    v1RunInfo.Type = V1RunInfoType.Node;
+                    v1RunInfo.Args = nodeRunInfo.Args;
+                    v1RunInfo.Executable = nodeRunInfo.Executable;
+                    v1RunInfo.WorkingDirectory = nodeRunInfo.WorkingDirectory;
+                    break;
                 case ExecutableRunInfo executableRunInfo:
                     v1RunInfo.Type = V1RunInfoType.Executable;
                     v1RunInfo.Args = executableRunInfo.Args;

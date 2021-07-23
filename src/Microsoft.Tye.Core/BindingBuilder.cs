@@ -4,7 +4,8 @@
 
 namespace Microsoft.Tye
 {
-    public sealed class BindingBuilder
+    public sealed class 
+    BindingBuilder
     {
         public string? Name { get; set; }
         public string? ConnectionString { get; set; }

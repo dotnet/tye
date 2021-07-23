@@ -8,6 +8,7 @@ namespace Microsoft.Tye.Hosting.Model.V1
     {
         Project,
         Executable,
-        Docker
+        Docker,
+        Node
     }
 }
