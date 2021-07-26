@@ -23,6 +23,8 @@ namespace Microsoft.Tye
 
         private static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
+        private const int ProcessExitTimeoutMs = 60 * 1000; // 1 minute timeout for the process to exit.
+
         public static Task<int> ExecuteAsync(
             string command,
             string args,
@@ -118,7 +120,12 @@ namespace Microsoft.Tye
                 {
                     // Even though the Exited event has been raised, WaitForExit() must still be called to ensure the output buffers
                     // have been flushed before the process is considered completely done.
-                    process.WaitForExit();
+                    // Because of the bug in the dotnet runtime https://github.com/dotnet/runtime/issues/29232, Process.WaitForExit()
+                    // hangs for processes that spawn another long-running processes.
+                    // Since these are expected to be long running processes and we're typically not concerned with capturing all of its output
+                    // i.e. it's probably ok for some output to be lost on shutdown, since Tye is shutting down anyway,
+                    // we call Process.WaitForProcessExit(ProcessExitTimeoutMs).
+                    process.WaitForExit(ProcessExitTimeoutMs);
                 }
 
                 if (throwOnError && process.ExitCode != 0)
