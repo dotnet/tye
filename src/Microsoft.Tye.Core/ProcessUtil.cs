@@ -23,7 +23,7 @@ namespace Microsoft.Tye
 
         private static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-        private const int ProcessExitTimeoutMs = 60 * 1000; // 1 minute timeout for the process to exit.
+        private const int ProcessExitTimeoutMs = 30 * 1000; // 30 seconds timeout for the process to exit.
 
         public static Task<int> ExecuteAsync(
             string command,
