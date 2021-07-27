@@ -125,6 +125,7 @@ namespace Microsoft.Tye
                     // Since these are expected to be long running processes and we're typically not concerned with capturing all of its output
                     // i.e. it's probably ok for some output to be lost on shutdown, since Tye is shutting down anyway,
                     // we call Process.WaitForProcessExit(ProcessExitTimeoutMs).
+                    // Also, since this is a process.Exited event, process.ExitCode is valid even if WaitForExit() times out.
                     process.WaitForExit(ProcessExitTimeoutMs);
                 }
 
@@ -134,6 +135,7 @@ namespace Microsoft.Tye
                 }
                 else
                 {
+                    // Since the process has exited, no additional data will be written to either output buffer or error buffer, it's thread-safe to call ToString() on both outputBuilder and errorBuilder.
                     processLifetimeTask.TrySetResult(new ProcessResult(outputBuilder.ToString(), errorBuilder.ToString(), process.ExitCode));
                 }
             };
