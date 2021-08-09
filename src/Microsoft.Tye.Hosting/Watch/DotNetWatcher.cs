@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Watcher
                     {
                         // Only show this error message if the process exited non-zero due to a normal process exit.
                         // Don't show this if dotnet-watch killed the inner process due to file change or CTRL+C by the user
-                        _logger.LogError($"watch: Exited with exit code {processTask.Result.ExitCode}");
+                        _logger.LogError("watch: {Replica} process exited with exit code {ExitCode}", replica, processTask.Result.ExitCode);
                     }
                     else
                     {
