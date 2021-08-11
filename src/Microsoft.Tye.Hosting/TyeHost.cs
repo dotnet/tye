@@ -109,6 +109,7 @@ namespace Microsoft.Tye.Hosting
             try
             {
                 await _processor.StartAsync(_application);
+                _logger.LogInformation($"Application {_application.Name} started successfully with Pid: {Process.GetCurrentProcess().Id}");
             }
             catch (TyeBuildException ex)
             {
