@@ -16,7 +16,7 @@
     <!-- Lots of our dependencies are not strong-named -->
     <NoWarn>$(NoWarn);8002</NoWarn>
     <Nullable>enable</Nullable>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>10.0</LangVersion>
   </PropertyGroup>
 
   <Import Project="$(RepoRoot)test\Test.Infrastructure\Microsoft.AspNetCore.Testing.props" Condition=" '$(IsTestProject)' == 'true' " />
