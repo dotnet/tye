@@ -380,8 +380,8 @@ namespace Microsoft.Tye.Hosting
                 {
                     var metric = new V1Metric
                     {
-                        Name = key, 
-                        Value = value, 
+                        Name = key,
+                        Value = value,
                         Metadata = new V1MetricMetadata { Instance = instance }
                     };
                     metrics.Add(metric);
