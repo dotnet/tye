@@ -85,6 +85,14 @@ Allows configuring the Docker network used for `tye run`.
 
 If a network is configured, then all services running in containers will connect to the specified network. Otherwise a Docker network will be created with a generated name, and used to connect all containers.
 
+#### `dashboardPort` (int)
+
+Allows configuring the dashboard port used for `tye run`.
+
+If a `--port` is provided via the CLI, it will be used instead.
+
+If no `--port` argument or `dashboardPort` value is specified, Tye will use the default port (8000), or a random port if the default port is in use.
+
 #### `ingress` (`Ingress[]`)
 
 Specifies the list of ingresses.
