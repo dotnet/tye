@@ -45,6 +45,16 @@ namespace Tye.Serialization
                             throw new TyeYamlException($"Unknown container engine: \"{engine}\"");
                         }
                         break;
+                    case "dashboardPort":
+                        if (int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var dashboardPort))
+                        {
+                            app.DashboardPort = dashboardPort;
+                        }
+                        else
+                        {
+                            throw new TyeYamlException(child.Key.Start, CoreStrings.FormatMustBeAnInteger(key));
+                        }
+                        break;
                     case "ingress":
                         YamlParser.ThrowIfNotYamlSequence(key, child.Value);
                         ConfigIngressParser.HandleIngress((child.Value as YamlSequenceNode)!, app.Ingress);

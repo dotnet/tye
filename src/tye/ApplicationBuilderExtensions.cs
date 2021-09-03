@@ -213,7 +213,7 @@ namespace Microsoft.Tye
                 services.Add(ingress.Name, new Service(description, ServiceSource.Host));
             }
 
-            return new Application(application.Name, application.Source, services, application.ContainerEngine) { Network = application.Network };
+            return new Application(application.Name, application.Source, application.DashboardPort, services, application.ContainerEngine) { Network = application.Network };
         }
 
         public static Tye.Hosting.Model.EnvironmentVariable ToHostingEnvironmentVariable(this EnvironmentVariableBuilder builder)
