@@ -1094,6 +1094,93 @@ services:
             });
         }
 
+        [ConditionalTheory]
+        [SkipIfDockerNotRunning]
+        [InlineData("non-standard-dashboard-port", "mcr.microsoft.com/dotnet/core/aspnet:3.1", 8005)]
+        [InlineData("non-standard-dashboard-port-5.0", "mcr.microsoft.com/dotnet/aspnet:5.0", 8006)]
+        public async Task RunUsesYamlDashboardPort(string projectName, string baseImage, int expectedDashboardPort)
+        {
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            Assert.Equal(expectedDashboardPort, application.DashboardPort);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions() { Docker = true, }, async (app, uri) =>
+            {
+                // Make sure the dashboard is running on the expected port
+                Assert.Equal(expectedDashboardPort, uri.Port);
+
+                // Make sure we're running containers
+                Assert.True(app.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
+
+                // Ensure correct image used
+                var dockerRunInfo = app.Services.Single().Value.Description.RunInfo as DockerRunInfo;
+                Assert.Equal(baseImage, dockerRunInfo?.Image);
+
+                // Ensure app runs
+                var testProjectUri = await GetServiceUrl(client, uri, "test-project");
+                var response = await client.GetAsync(testProjectUri);
+
+                Assert.True(response.IsSuccessStatusCode);
+            });
+        }
+
+        [ConditionalTheory]
+        [SkipIfDockerNotRunning]
+        [InlineData("non-standard-dashboard-port", "mcr.microsoft.com/dotnet/core/aspnet:3.1", 8005)]
+        [InlineData("non-standard-dashboard-port-5.0", "mcr.microsoft.com/dotnet/aspnet:5.0", 8006)]
+        public async Task RunCliPortOverridesYamlDashboardPort(string projectName, string baseImage, int tyeYamlDashboardPort)
+        {
+            var cliDashboardPort = 8008;
+
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            Assert.Equal(tyeYamlDashboardPort, application.DashboardPort);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions() { Docker = true, Port = cliDashboardPort }, async (app, uri) =>
+            {
+                // Make sure the dashboard is running on the expected port passed from the CLI, not the value from tye.yaml
+                Assert.Equal(cliDashboardPort, uri.Port);
+                Assert.NotEqual(tyeYamlDashboardPort, uri.Port);
+
+                // Make sure we're running containers
+                Assert.True(app.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
+
+                // Ensure correct image used
+                var dockerRunInfo = app.Services.Single().Value.Description.RunInfo as DockerRunInfo;
+                Assert.Equal(baseImage, dockerRunInfo?.Image);
+
+                // Ensure app runs
+                var testProjectUri = await GetServiceUrl(client, uri, "test-project");
+                var response = await client.GetAsync(testProjectUri);
+
+                Assert.True(response.IsSuccessStatusCode);
+            });
+        }
+
         private async Task<string> GetServiceUrl(HttpClient client, Uri uri, string serviceName)
         {
             var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceName}");
