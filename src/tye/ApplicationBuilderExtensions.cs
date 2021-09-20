@@ -151,6 +151,11 @@ namespace Microsoft.Tye
                     replicas = function.Replicas;
                     liveness = null;
                     readiness = null;
+
+                    foreach (var entry in function.EnvironmentVariables)
+                    {
+                        env.Add(entry.ToHostingEnvironmentVariable());
+                    }
                 }
                 else
                 {
