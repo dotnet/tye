@@ -32,7 +32,8 @@ namespace Microsoft.Tye
 
             var root = new ApplicationBuilder(source, rootConfig.Name!, new ContainerEngine(rootConfig.ContainerEngineType), rootConfig.DashboardPort)
             {
-                Namespace = rootConfig.Namespace
+                Namespace = rootConfig.Namespace,
+                BuildSolution = rootConfig.BuildSolution,
             };
 
             queue.Enqueue((rootConfig, new HashSet<string>()));

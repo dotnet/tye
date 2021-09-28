@@ -26,15 +26,19 @@ namespace Microsoft.Tye.Hosting
         private readonly ProcessRunnerOptions _options;
         private readonly ReplicaRegistry _replicaRegistry;
 
+        private WatchBuilderWorker _watchBuilderWorker;
+
         public ProcessRunner(ILogger logger, ReplicaRegistry replicaRegistry, ProcessRunnerOptions options)
         {
             _logger = logger;
             _replicaRegistry = replicaRegistry;
             _options = options;
+            _watchBuilderWorker = new WatchBuilderWorker(logger);
         }
 
         public async Task StartAsync(Application application)
         {
+            _watchBuilderWorker.SolutionPath = application.BuildSolution;
             await PurgeFromPreviousRun();
 
             await BuildAndRunProjects(application);
@@ -356,12 +360,9 @@ namespace Microsoft.Tye.Hosting
                             {
                                 if (service.Description.RunInfo is ProjectRunInfo)
                                 {
-                                    var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
-                                    if (buildResult.ExitCode != 0)
-                                    {
-                                        _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
-                                    }
-                                    return buildResult.ExitCode;
+                                    var exitCode = await _watchBuilderWorker.buildProjectFileAsync(service.Status.ProjectFilePath, application.ContextDirectory);
+                                    _logger.LogInformation($"Built {service.Status.ProjectFilePath} with exit code {exitCode}");
+                                    return exitCode;
                                 }
 
                                 return 0;

@@ -239,7 +239,7 @@ namespace Microsoft.Build.Construction
 
         #region Methods
 
-        internal bool ProjectShouldBuild(string projectFile)
+        public bool ProjectShouldBuild(string projectFile)
         {
             return _solutionFilter?.Contains(FileUtilities.FixFilePath(projectFile)) != false;
         }
@@ -823,6 +823,22 @@ namespace Microsoft.Build.Construction
                 _projects[proj.ProjectGuid] = proj;
             }
             _projectsInOrder.Add(proj);
+        }
+
+        /// <summary>
+        /// Get the target name for the given project file in this solution, or null if the project file is not referenced by
+        /// this solution.
+        /// </summary>
+        /// <param name="projectFile">projectFile</param>
+        public string GetProjectName(string projectFile)
+        {
+            foreach(var project in _projects) {
+                if(project.Value.AbsolutePath == FileUtilities.FixFilePath(projectFile))
+                {
+                    return project.Value.GetOriginalProjectName();
+                }
+            }
+            return null;
         }
 
         /// <summary>
