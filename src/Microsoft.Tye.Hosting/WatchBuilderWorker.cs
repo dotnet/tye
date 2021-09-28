@@ -124,7 +124,7 @@ namespace Microsoft.Tye.Hosting
                                 projectBatch[item.projectFilePath].Add(item);
                             }
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             item.complete(-1);
                         }

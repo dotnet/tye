@@ -360,7 +360,7 @@ namespace Microsoft.Tye.Hosting
                             {
                                 if (service.Description.RunInfo is ProjectRunInfo)
                                 {
-                                    var exitCode = await _watchBuilderWorker.buildProjectFileAsync(service.Status.ProjectFilePath, application.ContextDirectory);
+                                    var exitCode = await _watchBuilderWorker.buildProjectFileAsync(service.Status.ProjectFilePath!, application.ContextDirectory);
                                     _logger.LogInformation($"Built {service.Status.ProjectFilePath} with exit code {exitCode}");
                                     return exitCode;
                                 }
