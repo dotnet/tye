@@ -109,7 +109,7 @@ namespace Microsoft.Tye.Hosting
                                     {
                                         targets += ",";
                                     }
-                                    targets += GetProjectName(solution, item.projectFilePath);
+                                    targets += GetProjectName(solution, item.projectFilePath); // note, assuming the default target is Build
                                     solutionBatch.Add(item.projectFilePath, new List<BuildRequest>());
                                 }
                                 solutionBatch[item.projectFilePath].Add(item);
@@ -135,7 +135,7 @@ namespace Microsoft.Tye.Hosting
                     {
                         tasks.Add(Task.Run(async () => {
                             _logger.LogInformation("Building projects from solution: " + targets);
-                            var buildResult = await ProcessUtil.RunAsync("dotnet", "msbuild -targets:" + targets, throwOnError: false, workingDirectory: workingDirectory);
+                            var buildResult = await ProcessUtil.RunAsync("dotnet", $"msbuild {SolutionPath} -target:{targets}", throwOnError: false, workingDirectory: workingDirectory);
                             if (buildResult.ExitCode != 0)
                             {
                                 _logger.LogInformation("Building solution failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
