@@ -31,6 +31,13 @@
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Compile Remove="testassets\**\*" />
     <None Remove="testassets\generate\apps-with-ingress.1.18.yaml" />
+    <None Remove="testassets\projects\non-standard-dashboard-port\test-project\appsettings.Development.json" />
+    <None Remove="testassets\projects\non-standard-dashboard-port\test-project\appsettings.json" />
+    <None Remove="testassets\projects\non-standard-dashboard-port\test-project\Properties\launchSettings.json" />
+    <None Remove="testassets\projects\non-standard-dashboard-port\tye.yaml" />
+    <None Remove="testassets\projects\non-standard-dashboard-port-5.0\test-project\appsettings.Development.json" />
+    <None Remove="testassets\projects\non-standard-dashboard-port-5.0\test-project\appsettings.json" />
+    <None Remove="testassets\projects\non-standard-dashboard-port-5.0\tye.yaml" />
     <Compile Include="..\..\src\shared\KubectlDetector.cs" Link="KubectlDetector.cs" />
   </ItemGroup>
 

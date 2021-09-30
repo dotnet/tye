@@ -1,0 +1,7 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: non-standard-dashboard-port
+dashboardPort: 8006
+services:
+- name: test-project
+  project: test-project/test-project.csproj
