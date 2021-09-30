@@ -26,6 +26,10 @@
             "description": "The Docker network to use.",
             "type": "string"
         },
+        "dashboardPort": {
+            "description": "Configure the dashboard port used for `tye run`. Can be overridden using the `--port` CLI argument, and falls back to port 8000 if free, or a random port if 8000 is in use.",
+            "type": "integer"
+        },
         "ingress": {
             "description": "The application's ingresses.",
             "type": "array",
