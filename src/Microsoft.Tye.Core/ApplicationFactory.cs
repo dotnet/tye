@@ -403,6 +403,10 @@ namespace Microsoft.Tye
                         {
                             executable.EnvironmentVariables.Add(envVar);
                         }
+                        else if (service is AzureFunctionServiceBuilder azureFunction)
+                        {
+                            azureFunction.EnvironmentVariables.Add(envVar);
+                        }
                         else if (service is ExternalServiceBuilder)
                         {
                             throw new CommandException("External services do not support environment variables.");
