@@ -826,22 +826,6 @@ namespace Microsoft.Build.Construction
         }
 
         /// <summary>
-        /// Get the target name for the given project file in this solution, or null if the project file is not referenced by
-        /// this solution.
-        /// </summary>
-        /// <param name="projectFile">projectFile</param>
-        public string GetProjectName(string projectFile)
-        {
-            foreach(var project in _projects) {
-                if(project.Value.AbsolutePath == FileUtilities.FixFilePath(projectFile))
-                {
-                    return project.Value.GetOriginalProjectName();
-                }
-            }
-            return null;
-        }
-
-        /// <summary>
         /// Validate relative path of a project
         /// </summary>
         /// <param name="proj">proj</param>
