@@ -8,10 +8,6 @@ name: dapr
 extensions:
 - name: dapr
 
-  # If you want to use a different tag or container port
-  # placement-image: daprio/dapr
-  # placement-container-port: 50005
-
   # log-level configures the log level of the dapr sidecar
   log-level: debug
 
@@ -24,11 +20,8 @@ extensions:
   # components-path configures the components path of the dapr sidecar
   components-path: "./components/"
 
-  # You can instruct Tye to not create the Dapr placement container on your behalf. This is required if you have Dapr running and want to use that container.
-  # Doing a `docker ps` can show if its already running. If it's running then you can set 'exclude-placement-container: true' with `placement-port: xxxx` set to the host port of that container.
-  # (i.e. In Windows + WSL2, Dapr uses 6050 as the host port)
-
-  # exclude-placement-container: true
+  # If not using the default Dapr placement service or otherwise using a placement service on a nonstandard port,
+  # you can configure the Dapr sidecar to use an explicit port.
   # placement-port: 6050
 services:
 - name: orders
