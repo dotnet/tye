@@ -7,19 +7,22 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye.Extensions.Dapr
 {
     internal sealed class DaprExtension : Extension
     {
-        public override Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
+        public override async Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
         {
             // If we're getting called then the user configured dapr in their tye.yaml.
             // We don't have any of our own config.
 
             if (context.Operation == ExtensionContext.OperationKind.LocalRun)
             {
+                await VerifyDaprInitialized(context);
+
                 int? daprPlacementPort = null;
 
                 // see if a placement port number has been defined
@@ -223,8 +226,43 @@ namespace Microsoft.Tye.Extensions.Dapr
                     }
                 }
             }
+        }
 
-            return Task.CompletedTask;
+        private static Task VerifyDaprInitialized(ExtensionContext context)
+        {
+            return Task.Run(
+                () =>
+                {
+                    string? stdout = null;
+
+                    try
+                    {
+                        ProcessExtensions.RunProcessAndWaitForExit("dapr", "--version", TimeSpan.FromSeconds(10), out stdout);
+                    }
+                    catch
+                    {
+                    }
+
+                    if (stdout != null)
+                    {
+                        var match = Regex.Match(stdout, "^Runtime version: (?<version>.+)$", RegexOptions.Multiline);
+
+                        if (match.Success)
+                        {
+                            if (match.Groups["version"].Value == "n/a")
+                            {
+                                throw new CommandException("Dapr has not been initialized (e.g. via `dapr init`).");                           
+                            }
+                            else
+                            {
+                                // Some version of Dapr has been initialized...
+                                return;
+                            }
+                        }
+                    }
+
+                    context.Output.WriteAlwaysLine($"Unable to determine whether Dapr has been installed and initialized (e.g. via `dapr init`).");
+                });
         }
 
         private string GetDaprExecutablePath()
