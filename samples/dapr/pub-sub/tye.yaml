@@ -42,7 +42,7 @@ services:
 #
 # Doing a `docker ps` can show if its already running. If that's the case
 # then comment out out when running locally. 
-- name: redis
-  image: redis
-  bindings: 
-  - port: 6379
+# - name: redis
+#   image: redis
+#   bindings: 
+#   - port: 6379

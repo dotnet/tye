@@ -18,54 +18,15 @@ namespace Microsoft.Tye.Extensions.Dapr
             // If we're getting called then the user configured dapr in their tye.yaml.
             // We don't have any of our own config.
 
-            int? daprPlacementPort = null;
-
             if (context.Operation == ExtensionContext.OperationKind.LocalRun)
             {
+                int? daprPlacementPort = null;
+
                 // see if a placement port number has been defined
                 if (config.Data.TryGetValue("placement-port", out var obj) && obj?.ToString() is string && int.TryParse(obj.ToString(), out var customPlacementPort))
                 {
                     context.Output.WriteDebugLine($"Using Dapr placement service host port {customPlacementPort} from 'placement-port'");
                     daprPlacementPort = customPlacementPort;
-                }
-
-                if (config.Data.TryGetValue("include-placement-container", out obj) && obj?.ToString() is string includePlacementContainer && includePlacementContainer == "true")
-                {
-                    var daprPlacementImage = "daprio/dapr";
-                    var daprPlacementContainerPort = 50005;
-                    daprPlacementPort = NextPortFinder.GetNextPort();
-
-                    // see if a placement image has been defined
-                    if (config.Data.TryGetValue("placement-image", out obj) && obj?.ToString() is string customPlacementImage)
-                    {
-                        context.Output.WriteDebugLine($"Using Dapr placement service image {customPlacementImage} from 'placement-image'");
-                        daprPlacementImage = customPlacementImage;
-                    }
-
-                    // see if a placement container port has been defined
-                    if (config.Data.TryGetValue("placement-container-port", out obj) && obj?.ToString() is string && int.TryParse(obj.ToString(), out var customPlacementContainerPort))
-                    {
-                        context.Output.WriteDebugLine($"Using Dapr placement service container port {customPlacementContainerPort} from 'placement-container-port'");
-                        daprPlacementContainerPort = customPlacementContainerPort;
-                    }
-
-                    context.Output.WriteDebugLine("Injecting Dapr placement service...");
-                    var daprPlacement = new ContainerServiceBuilder("placement", daprPlacementImage, ServiceSource.Extension)
-                    {
-                        Args = "./placement",
-                        Bindings = {
-                            new BindingBuilder() {
-                                Port = daprPlacementPort,
-                                ContainerPort = daprPlacementContainerPort,
-                                Protocol = "http"
-                            }
-                        }
-                    };
-                    context.Application.Services.Add(daprPlacement);
-                }
-                else
-                {
-                    context.Output.WriteDebugLine("Skipping injecting Dapr placement service because 'include-placement-container=false'.");
                 }
 
                 // For local run, enumerate all projects, and add services for each dapr proxy.
