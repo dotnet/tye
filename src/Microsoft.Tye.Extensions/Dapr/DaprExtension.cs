@@ -251,7 +251,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                         {
                             if (match.Groups["version"].Value == "n/a")
                             {
-                                throw new CommandException("Dapr has not been initialized (e.g. via `dapr init`).");                           
+                                throw new CommandException("Dapr has not been initialized (e.g. via `dapr init`).");
                             }
                             else
                             {
