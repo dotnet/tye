@@ -91,7 +91,8 @@ namespace Tye.Serialization
             {
                 var key = YamlParser.GetScalarValue(mapping.Key);
 
-                dictionary[key] = mapping.Value.NodeType switch {
+                dictionary[key] = mapping.Value.NodeType switch
+                {
                     YamlNodeType.Scalar => YamlParser.GetScalarValue(key, mapping.Value)!,
                     YamlNodeType.Mapping => YamlParser.GetDictionary(mapping.Value),
                     _ => throw new TyeYamlException(mapping.Value.Start,
