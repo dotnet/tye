@@ -77,6 +77,31 @@ namespace Tye.Serialization
             return app;
         }
 
+        public static Dictionary<string, object> GetDictionary(YamlNode node)
+        {
+            if (node.NodeType != YamlNodeType.Mapping)
+            {
+                throw new TyeYamlException(node.Start,
+                    CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), node.NodeType.ToString()));
+            }
+
+            var dictionary = new Dictionary<string, object>();
+
+            foreach (var mapping in (YamlMappingNode)node)
+            {
+                var key = YamlParser.GetScalarValue(mapping.Key);
+
+                dictionary[key] = mapping.Value.NodeType switch {
+                    YamlNodeType.Scalar => YamlParser.GetScalarValue(key, mapping.Value)!,
+                    YamlNodeType.Mapping => YamlParser.GetDictionary(mapping.Value),
+                    _ => throw new TyeYamlException(mapping.Value.Start,
+                            CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), mapping.Value.NodeType.ToString()))
+                };
+            }
+
+            return dictionary;
+        }
+
         public static string GetScalarValue(YamlNode node)
         {
             if (node.NodeType != YamlNodeType.Scalar)

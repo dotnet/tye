@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -12,6 +13,71 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Tye.Extensions.Dapr
 {
+    internal abstract class DaprExtensionCommonConfiguration
+    {
+        public int? PlacementPort  { get; set; }
+    }
+
+    internal sealed class DaprExtensionServiceConfiguration : DaprExtensionCommonConfiguration
+    {
+        public bool? Enabled { get; set; }
+    }
+
+    internal sealed class DaprExtensionConfiguration : DaprExtensionCommonConfiguration
+    {
+        public IReadOnlyDictionary<string, DaprExtensionServiceConfiguration> Services { get; set; }
+            = new Dictionary<string, DaprExtensionServiceConfiguration>();
+    }
+
+    internal static class DaprExtensionConfigurationReader
+    {
+        public static DaprExtensionConfiguration ReadConfiguration(IDictionary<string, object> rawConfiguration)
+        {
+            var configuration = new DaprExtensionConfiguration();
+
+            ReadCommonConfiguration(rawConfiguration, configuration);
+
+            if (rawConfiguration.TryGetValue("services", out var servicesObject) && servicesObject is Dictionary<string, object> rawServicesConfiguration)
+            {
+                var services = new Dictionary<string, DaprExtensionServiceConfiguration>();
+
+                foreach (var kvp in rawServicesConfiguration)
+                {
+                    if (kvp.Value is Dictionary<string, object> rawServiceConfiguration)
+                    {
+                        var serviceConfiguration = new DaprExtensionServiceConfiguration();
+
+                        ReadServiceConfiguration(rawServiceConfiguration, serviceConfiguration);
+
+                        services.Add(kvp.Key, serviceConfiguration);                        
+                    }
+                }
+
+                configuration.Services = services;
+            }
+
+            return configuration;
+        }
+
+        private static void ReadServiceConfiguration(IDictionary<string, object> rawConfiguration, DaprExtensionServiceConfiguration serviceConfiguration)
+        {
+            ReadCommonConfiguration(rawConfiguration, serviceConfiguration);
+
+            if (rawConfiguration.TryGetValue("enabled", out var obj) && obj is string && Boolean.TryParse(obj.ToString(), out var enabled))
+            {
+                serviceConfiguration.Enabled = enabled;
+            }
+        }
+
+        private static void ReadCommonConfiguration(IDictionary<string, object> rawConfiguration, DaprExtensionCommonConfiguration commonConfiguration)
+        {
+            if (rawConfiguration.TryGetValue("placement-port", out var obj) && obj?.ToString() is string && int.TryParse(obj.ToString(), out var customPlacementPort))
+            {
+                commonConfiguration.PlacementPort = customPlacementPort;
+            }
+        }
+    }
+
     internal sealed class DaprExtension : Extension
     {
         public override async Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
@@ -23,14 +89,7 @@ namespace Microsoft.Tye.Extensions.Dapr
             {
                 await VerifyDaprInitialized(context);
 
-                int? daprPlacementPort = null;
-
-                // see if a placement port number has been defined
-                if (config.Data.TryGetValue("placement-port", out var obj) && obj?.ToString() is string && int.TryParse(obj.ToString(), out var customPlacementPort))
-                {
-                    context.Output.WriteDebugLine($"Using Dapr placement service host port {customPlacementPort} from 'placement-port'");
-                    daprPlacementPort = customPlacementPort;
-                }
+                var extensionConfiguration = DaprExtensionConfigurationReader.ReadConfiguration(config.Data);
 
                 // For local run, enumerate all projects, and add services for each dapr proxy.
                 var projects = context.Application.Services.OfType<ProjectServiceBuilder>().Cast<LaunchedServiceBuilder>();
@@ -39,10 +98,25 @@ namespace Microsoft.Tye.Extensions.Dapr
 
                 foreach (var project in services)
                 {
-                    // Dapr requires http. If this project isn't listening to HTTP then it's not daprized.
-                    var httpBinding = project.Bindings.FirstOrDefault(b => b.Protocol == "http");
-                    if (httpBinding == null)
+                    extensionConfiguration.Services.TryGetValue(project.Name, out DaprExtensionServiceConfiguration? serviceConfiguration);
+
+                    if (serviceConfiguration?.Enabled != null && serviceConfiguration.Enabled.Value == false)
                     {
+                        context.Output.WriteDebugLine($"Dapr has been disabled for service {project.Name}.");
+                        continue;
+                    }
+
+                    var httpBinding = project.Bindings.FirstOrDefault(b => b.Protocol == "http");
+
+                    if (httpBinding == null && project.Bindings.Count == 1 && project.Bindings[0].Protocol == null)
+                    {
+                        // Assume the only untyped binding is HTTP...
+                        httpBinding = project.Bindings[0];
+                    }
+
+                    if (httpBinding == null && (serviceConfiguration?.Enabled == null || !serviceConfiguration.Enabled.Value))
+                    {
+                        context.Output.WriteDebugLine($"Dapr has been disabled for unbound service {project.Name}.");
                         continue;
                     }
 
@@ -66,17 +140,25 @@ namespace Microsoft.Tye.Extensions.Dapr
 
                         // These environment variables are replaced with environment variables
                         // defined for this service.
-                        Args = $"run --app-id {project.Name} --app-port %APP_PORT% --dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT%",
+                        Args = $"run --app-id {project.Name} --dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT%",
                     };
+
+                    if (httpBinding != null)
+                    {
+                        proxy.Args += $" --app-port %APP_PORT%";
+                    }
+
+                    var daprPlacementPort = serviceConfiguration?.PlacementPort ?? extensionConfiguration.PlacementPort;
 
                     if (daprPlacementPort.HasValue)
                     {
+                        context.Output.WriteDebugLine($"Using Dapr placement service host port {daprPlacementPort.Value} from 'placement-port' for service {project.Name}.");
                         proxy.Args += $" --placement-host-address localhost:{daprPlacementPort.Value}";
                     }
 
                     // When running locally `-config` specifies a filename, not a configuration name. By convention
                     // we'll assume the filename and config name are the same.
-                    if (config.Data.TryGetValue("config", out obj) && obj?.ToString() is string daprConfig)
+                    if (config.Data.TryGetValue("config", out var obj) && obj?.ToString() is string daprConfig)
                     {
                         var configFile = Path.Combine(context.Application.Source.DirectoryName!, "components", $"{daprConfig}.yaml");
                         if (File.Exists(configFile))
@@ -132,15 +214,18 @@ namespace Microsoft.Tye.Extensions.Dapr
                     };
                     proxy.Bindings.Add(metrics);
 
-                    // Set APP_PORT based on the project's assigned port for http
-                    var appPort = new EnvironmentVariableBuilder("APP_PORT")
+                    if (httpBinding != null)
                     {
-                        Source = new EnvironmentVariableSourceBuilder(project.Name, binding: httpBinding.Name)
+                        // Set APP_PORT based on the project's assigned port for http
+                        var appPort = new EnvironmentVariableBuilder("APP_PORT")
                         {
-                            Kind = EnvironmentVariableSourceBuilder.SourceKind.Port,
-                        },
-                    };
-                    proxy.EnvironmentVariables.Add(appPort);
+                            Source = new EnvironmentVariableSourceBuilder(project.Name, binding: httpBinding.Name)
+                            {
+                                Kind = EnvironmentVariableSourceBuilder.SourceKind.Port,
+                            },
+                        };
+                        proxy.EnvironmentVariables.Add(appPort);
+                    }
 
                     // Set DAPR_GRPC_PORT based on this service's assigned port
                     var daprGrpcPort = new EnvironmentVariableBuilder("DAPR_GRPC_PORT")
