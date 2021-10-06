@@ -154,7 +154,7 @@
     <value>"{value}" value must be an integer.</value>
   </data>
   <data name="MustBeAnIPAddress" xml:space="preserve">
-    <value>"{value}" value must be an IP address, * or localhost.</value>
+    <value>"{value}" value must be an IP address, "*" or "localhost".</value>
   </data>
   <data name="MustBePositive" xml:space="preserve">
     <value>"{value}" value cannot be negative.</value>
