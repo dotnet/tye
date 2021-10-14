@@ -24,6 +24,8 @@ namespace Microsoft.Tye.ConfigModel
 
         public string? Name { get; set; }
 
+        public int? DashboardPort { get; set; }
+
         public string? Namespace { get; set; }
 
         public string? Registry { get; set; }

@@ -156,7 +156,7 @@ namespace Microsoft.Tye.Hosting
                 })
                 .ConfigureWebHostDefaults(builder =>
                 {
-                    var port = ComputePort(options.Port);
+                    var port = ComputePort(options.Port ?? application.DashboardPort);
                     _computedPort = port;
 
                     builder.Configure(ConfigureApplication)

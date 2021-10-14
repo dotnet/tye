@@ -1,6 +1,9 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using Dapr.Client;
 using Shared;
 
@@ -26,9 +29,9 @@ namespace SentenceApp.Services
         public async Task<ConvertedResult> Convert(string sentence)
         {
             // Using Dapr sidecar and service invocation building block
-            return await _daprClient.InvokeMethodAsync<object, ConvertedResult>("uppercaseservice", "uppercase", new object(),
-                HttpInvocationOptions.UsingGet()
-                    .WithQueryParam("sentence", sentence));
+            var req = _daprClient.CreateInvokeMethodRequest("uppercaseservice", $"uppercase?sentence={sentence}");
+            req.Method = HttpMethod.Get;
+            return await _daprClient.InvokeMethodAsync<ConvertedResult>(req);
 
             // If you're using Tye alone (without dapr)
             //var responseMessage = await _client.GetAsync($"/uppercase?sentence={sentence}");

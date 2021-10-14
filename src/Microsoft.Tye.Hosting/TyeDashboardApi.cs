@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Net.Http.Headers;
 using Microsoft.Tye.Hosting.Model;
 using Microsoft.Tye.Hosting.Model.V1;
 
@@ -262,6 +264,52 @@ namespace Microsoft.Tye.Hosting
         {
             var app = context.RequestServices.GetRequiredService<Application>();
 
+            var acceptHeader = context.Request.Headers[HeaderNames.Accept];
+
+            if (acceptHeader == MediaTypeNames.Application.Json)
+            {
+                context.Response.ContentType = MediaTypeNames.Application.Json;
+                var servicesMetricsCollection = CreateServicesMetricsCollectionJson(app);
+                return JsonSerializer.SerializeAsync(context.Response.Body, servicesMetricsCollection, _options);
+            }
+
+            context.Response.ContentType = MediaTypeNames.Text.Plain;
+            var response = CreateServicesMetricsCollectionText(app);
+            return context.Response.WriteAsync(response);
+        }
+
+        private Task Metrics(HttpContext context)
+        {
+            var app = context.RequestServices.GetRequiredService<Application>();
+
+            var name = (string?)context.Request.RouteValues["name"];
+
+            if (string.IsNullOrEmpty(name) || !app.Services.TryGetValue(name, out var service))
+            {
+                context.Response.StatusCode = 404;
+                return JsonSerializer.SerializeAsync(context.Response.Body, new
+                {
+                    message = $"Unknown service {name}"
+                },
+                _options);
+            }
+
+            var acceptHeader = context.Request.Headers[HeaderNames.Accept];
+
+            if (acceptHeader == MediaTypeNames.Application.Json)
+            {
+                context.Response.ContentType = MediaTypeNames.Application.Json;
+                var metricsCollectionJson = CreateMetricsCollectionJson(service);
+                return JsonSerializer.SerializeAsync(context.Response.Body, metricsCollectionJson, _options);
+            }
+
+            context.Response.ContentType = MediaTypeNames.Text.Plain;
+            var response = CreateMetricsCollectionText(service);
+            return context.Response.WriteAsync(response);
+        }
+
+        private static string CreateServicesMetricsCollectionText(Application app)
+        {
             var sb = new StringBuilder();
             foreach (var (serviceName, service) in app.Services.OrderBy(s => s.Key))
             {
@@ -283,27 +331,28 @@ namespace Microsoft.Tye.Hosting
                 sb.AppendLine();
             }
 
-            return context.Response.WriteAsync(sb.ToString());
+            return sb.ToString();
         }
 
-        private Task Metrics(HttpContext context)
+        private static List<V1ServiceMetrics> CreateServicesMetricsCollectionJson(Application app)
         {
-            var app = context.RequestServices.GetRequiredService<Application>();
-
-            var sb = new StringBuilder();
-
-            var name = (string?)context.Request.RouteValues["name"];
-            context.Response.ContentType = "application/json";
-
-            if (string.IsNullOrEmpty(name) || !app.Services.TryGetValue(name, out var service))
+            var servicesMetrics = new List<V1ServiceMetrics>(app.Services.Count);
+            foreach (var (serviceName, service) in app.Services.OrderBy(s => s.Key))
             {
-                context.Response.StatusCode = 404;
-                return JsonSerializer.SerializeAsync(context.Response.Body, new
+                var serviceMetrics = new V1ServiceMetrics
                 {
-                    message = $"Unknown service {name}"
-                },
-                _options);
+                    Service = serviceName,
+                    Metrics = CreateMetricsCollectionJson(service)
+                };
+                servicesMetrics.Add(serviceMetrics);
             }
+
+            return servicesMetrics;
+        }
+
+        private static string CreateMetricsCollectionText(Service service)
+        {
+            var sb = new StringBuilder();
 
             foreach (var (instance, replica) in service.Replicas)
             {
@@ -319,7 +368,27 @@ namespace Microsoft.Tye.Hosting
                 }
             }
 
-            return context.Response.WriteAsync(sb.ToString());
+            return sb.ToString();
+        }
+
+        private static List<V1Metric> CreateMetricsCollectionJson(Service service)
+        {
+            var metrics = new List<V1Metric>();
+            foreach (var (instance, replica) in service.Replicas)
+            {
+                foreach (var (key, value) in replica.Metrics)
+                {
+                    var metric = new V1Metric
+                    {
+                        Name = key,
+                        Value = value,
+                        Metadata = new V1MetricMetadata { Instance = instance }
+                    };
+                    metrics.Add(metric);
+                }
+            }
+
+            return metrics;
         }
     }
 }

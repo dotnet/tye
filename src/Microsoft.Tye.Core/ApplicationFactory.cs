@@ -30,7 +30,7 @@ namespace Microsoft.Tye
             var rootConfig = ConfigFactory.FromFile(source);
             rootConfig.Validate();
 
-            var root = new ApplicationBuilder(source, rootConfig.Name!, new ContainerEngine(rootConfig.ContainerEngineType))
+            var root = new ApplicationBuilder(source, rootConfig.Name!, new ContainerEngine(rootConfig.ContainerEngineType), rootConfig.DashboardPort)
             {
                 Namespace = rootConfig.Namespace
             };
@@ -403,6 +403,10 @@ namespace Microsoft.Tye
                         {
                             executable.EnvironmentVariables.Add(envVar);
                         }
+                        else if (service is AzureFunctionServiceBuilder azureFunction)
+                        {
+                            azureFunction.EnvironmentVariables.Add(envVar);
+                        }
                         else if (service is ExternalServiceBuilder)
                         {
                             throw new CommandException("External services do not support environment variables.");
@@ -457,6 +461,7 @@ namespace Microsoft.Tye
                             Name = configBinding.Name,
                             Port = configBinding.Port,
                             Protocol = configBinding.Protocol ?? "http",
+                            IPAddress = configBinding.IPAddress,
                         };
                         ingress.Bindings.Add(binding);
                     }
