@@ -16,10 +16,10 @@ namespace Microsoft.Tye.Hosting
 
         public string? SolutionPath { get => _solutionPath; set => _solutionPath = value; }
 
-        public WatchBuilderWorker(ILogger logger) 
+        public WatchBuilderWorker(ILogger logger)
         {
-            _logger = logger; 
-            _queue = Channel.CreateUnbounded<BuildRequest>(); 
+            _logger = logger;
+            _queue = Channel.CreateUnbounded<BuildRequest>();
             _processor = Task.Run(ProcessTaskQueueAsync);
         }
 
@@ -92,7 +92,7 @@ namespace Microsoft.Tye.Hosting
                     await Task.Delay(100);
 
                     var solution = (SolutionPath != null) ? SolutionFile.Parse(SolutionPath) : null;
-                    string targets = ""; 
+                    string targets = "";
                     string workingDirectory = ""; // FIXME: should be set in the worker constructor
                     while (_queue.Reader.TryRead(out BuildRequest item))
                     {
@@ -135,16 +135,23 @@ namespace Microsoft.Tye.Hosting
                     {
                         tasks.Add(Task.Run(async () => {
                             _logger.LogInformation("Building projects from solution: " + targets);
-                            var buildResult = await ProcessUtil.RunAsync("dotnet", $"msbuild {SolutionPath} -target:{targets}", throwOnError: false, workingDirectory: workingDirectory);
-                            if (buildResult.ExitCode != 0)
+                            int exitCode = -1;
+                            try
                             {
-                                _logger.LogInformation("Building solution failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
-                            }
-                            foreach(var project in solutionBatch)
-                            {
-                                foreach(var buildRequest in project.Value)
+                                var buildResult = await ProcessUtil.RunAsync("dotnet", $"msbuild {SolutionPath} -target:{targets}", throwOnError: false, workingDirectory: workingDirectory);
+                                if (buildResult.ExitCode != 0)
                                 {
-                                    buildRequest.complete(buildResult.ExitCode);
+                                    _logger.LogInformation("Building solution failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
+                                }
+                                exitCode = buildResult.ExitCode;
+                            }
+                            finally {
+                                foreach(var project in solutionBatch)
+                                {
+                                    foreach(var buildRequest in project.Value)
+                                    {
+                                        buildRequest.complete(exitCode);
+                                    }
                                 }
                             }
                         }));
