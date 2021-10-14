@@ -462,6 +462,7 @@ namespace Microsoft.Tye
                             Name = configBinding.Name,
                             Port = configBinding.Port,
                             Protocol = configBinding.Protocol ?? "http",
+                            IPAddress = configBinding.IPAddress,
                         };
                         ingress.Bindings.Add(binding);
                     }

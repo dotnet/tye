@@ -463,6 +463,10 @@
                 "protocol": {
                     "description": "The protocol used by the binding",
                     "type": "string"
+                },
+                "ip": {
+                    "description": "The ip address the ingress listens on.",
+                    "type": "string"
                 }
             }
         },

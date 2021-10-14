@@ -16,13 +16,7 @@ namespace Tye.Serialization
                 switch (child.NodeType)
                 {
                     case YamlNodeType.Mapping:
-                        var extensionDictionary = new Dictionary<string, object>();
-                        foreach (var mapping in (YamlMappingNode)child)
-                        {
-                            var key = YamlParser.GetScalarValue(mapping.Key);
-                            extensionDictionary[key] = YamlParser.GetScalarValue(key, mapping.Value)!;
-                        }
-
+                        var extensionDictionary = YamlParser.GetDictionary(child);
                         extensions.Add(extensionDictionary);
                         break;
                     default:

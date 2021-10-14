@@ -76,7 +76,8 @@ namespace Microsoft.Tye.Hosting
 
                                     var port = binding.ReplicaPorts[i];
                                     ports.Add(port);
-                                    var url = $"{binding.Protocol}://localhost:{port}";
+
+                                    var url = $"{binding.Protocol}://{binding.IPAddress ?? "localhost"}:{port}";
                                     urls.Add(url);
                                 }
 
