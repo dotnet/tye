@@ -94,6 +94,7 @@ namespace Microsoft.Tye.Hosting
                         Protocol = binding.Protocol
                     };
                     b.ReplicaPorts.Add(b.Port.Value);
+                    b.Routes.AddRange(binding.Routes);
                     proxyDescription.Bindings.Add(b);
                 }
                 var proxyContainerService = new Service(proxyDescription, ServiceSource.Host);

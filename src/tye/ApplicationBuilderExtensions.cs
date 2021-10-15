@@ -174,7 +174,7 @@ namespace Microsoft.Tye
 
                 foreach (var binding in service.Bindings)
                 {
-                    description.Bindings.Add(new ServiceBinding()
+                    var sb = new ServiceBinding()
                     {
                         ConnectionString = binding.ConnectionString,
                         Host = binding.Host,
@@ -182,7 +182,9 @@ namespace Microsoft.Tye
                         Name = binding.Name,
                         Port = binding.Port,
                         Protocol = binding.Protocol,
-                    });
+                    };
+                    sb.Routes.AddRange(binding.Routes?.Split(';', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>());
+                    description.Bindings.Add(sb);
                 }
 
                 services.Add(service.Name, new Service(description, service.Source));

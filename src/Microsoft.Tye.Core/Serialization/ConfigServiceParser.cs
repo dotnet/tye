@@ -218,6 +218,9 @@ namespace Tye.Serialization
                     case "protocol":
                         binding.Protocol = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "routes":
+                        binding.Routes = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }

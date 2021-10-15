@@ -55,6 +55,11 @@
                                 {
                                     var url = GetUrl(b);
                                     <span><a href="@url" target="_blank">@url</a></span>
+                                    foreach (var r in b.Routes)
+                                    {
+                                        var routeUrl = url + r;
+                                        <span><a href="@routeUrl" target="_blank">@routeUrl</a></span>
+                                    }
                                 }
                                 else
                                 {

@@ -12,5 +12,6 @@ namespace Microsoft.Tye
         public int? ContainerPort { get; set; }
         public string? Host { get; set; }
         public string? Protocol { get; set; }
+        public string? Routes { get; set; }
     }
 }
