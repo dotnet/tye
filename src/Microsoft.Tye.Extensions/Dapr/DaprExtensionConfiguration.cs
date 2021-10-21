@@ -8,12 +8,22 @@ namespace Microsoft.Tye.Extensions.Dapr
 {
     internal abstract class DaprExtensionCommonConfiguration
     {
+        public string? ComponentsPath { get; set;}
+        public string? Config { get; set; }
+        public bool? EnableProfiling { get; set; }
+        public int? HttpMaxRequestSize { get; set; }
+        public string? LogLevel { get; set; }
         public int? PlacementPort { get; set; }
     }
 
     internal sealed class DaprExtensionServiceConfiguration : DaprExtensionCommonConfiguration
     {
+        public string? AppId { get; set; }
         public bool? Enabled { get; set; }
+        public int? GrpcPort { get; set; }
+        public int? HttpPort { get; set; }
+        public int? MetricsPort { get; set; }
+        public int? ProfilePort { get; set; }
     }
 
     internal sealed class DaprExtensionConfiguration : DaprExtensionCommonConfiguration

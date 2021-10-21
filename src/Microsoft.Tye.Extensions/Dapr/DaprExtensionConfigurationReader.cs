@@ -41,18 +41,47 @@ namespace Microsoft.Tye.Extensions.Dapr
         {
             ReadCommonConfiguration(rawConfiguration, serviceConfiguration);
 
-            if (rawConfiguration.TryGetValue("enabled", out var obj) && obj is string && Boolean.TryParse(obj.ToString(), out var enabled))
-            {
-                serviceConfiguration.Enabled = enabled;
-            }
+            serviceConfiguration.AppId = TryGetValue(rawConfiguration, "app-id");
+            serviceConfiguration.Enabled = TryGetValue<bool>(rawConfiguration, "enabled");
+            serviceConfiguration.GrpcPort = TryGetValue<int>(rawConfiguration, "grpc-port");
+            serviceConfiguration.HttpPort = TryGetValue<int>(rawConfiguration, "http-port");
+            serviceConfiguration.MetricsPort = TryGetValue<int>(rawConfiguration, "metrics-port");
+            serviceConfiguration.ProfilePort = TryGetValue<int>(rawConfiguration, "profile-port");
         }
 
         private static void ReadCommonConfiguration(IDictionary<string, object> rawConfiguration, DaprExtensionCommonConfiguration commonConfiguration)
         {
-            if (rawConfiguration.TryGetValue("placement-port", out var obj) && obj?.ToString() is string && int.TryParse(obj.ToString(), out var customPlacementPort))
+            commonConfiguration.ComponentsPath = TryGetValue(rawConfiguration, "components-path");
+            commonConfiguration.Config = TryGetValue(rawConfiguration, "config");
+            commonConfiguration.EnableProfiling = TryGetValue<bool>(rawConfiguration, "enable-profiling");
+            commonConfiguration.HttpMaxRequestSize = TryGetValue<int>(rawConfiguration, "http-max-request-size");
+            commonConfiguration.LogLevel = TryGetValue(rawConfiguration, "log-level");
+            commonConfiguration.PlacementPort = TryGetValue<int>(rawConfiguration, "placement-port");
+        }
+
+        private static string? TryGetValue(IDictionary<string, object> rawConfiguration, string name)
+        {
+            return rawConfiguration.TryGetValue(name, out var obj) && obj?.ToString() is string
+                ? obj.ToString()
+                : null;
+        }
+
+        private static T? TryGetValue<T>(IDictionary<string, object> rawConfiguration, string name)
+            where T : struct
+        {
+            if (rawConfiguration.TryGetValue(name, out var obj) && obj?.ToString() is string)
             {
-                commonConfiguration.PlacementPort = customPlacementPort;
+                try
+                {
+                    return (T?)Convert.ChangeType(obj.ToString(), typeof(T));
+                }
+                catch
+                {
+                    // No-op.
+                }
             }
+
+            return null;
         }
     }
 }
