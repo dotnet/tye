@@ -6,6 +6,8 @@
     <AssemblyName>Microsoft.Tye.E2ETest</AssemblyName>
     <IsTestProject>true</IsTestProject>
     <IsUnitTestProject>true</IsUnitTestProject>
+    <!-- TODO: Investigate Ubuntu >16.04 test hangs and re-enable E2E tests on Linux. -->
+    <IsUnitTestProject Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">false</IsUnitTestProject>
     <TestRunnerName>XUnit</TestRunnerName>
   </PropertyGroup>
 
