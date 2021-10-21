@@ -86,6 +86,27 @@ namespace Microsoft.Tye.Extensions.Dapr
                         proxy.Args += $" --app-port %APP_PORT%";
                     }
 
+                    var appMaxConcurrency = serviceConfiguration?.AppMaxConcurrency ?? extensionConfiguration?.AppMaxConcurrency;
+
+                    if (appMaxConcurrency != null)
+                    {
+                        proxy.Args += $" --app-max-concurrency {appMaxConcurrency}";
+                    }
+
+                    var appProtocol = serviceConfiguration?.AppProtocol ?? extensionConfiguration?.AppProtocol;
+
+                    if (appProtocol != null)
+                    {
+                        proxy.Args += $" --app-protocol {appProtocol}";
+                    }
+
+                    var appSsl = serviceConfiguration?.AppSsl ?? extensionConfiguration?.AppSsl;
+
+                    if (appSsl == true)
+                    {
+                        proxy.Args += " --app-ssl";
+                    }
+
                     var daprPlacementPort = serviceConfiguration?.PlacementPort ?? extensionConfiguration?.PlacementPort;
 
                     if (daprPlacementPort.HasValue)

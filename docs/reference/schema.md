@@ -742,6 +742,19 @@ The following properties are annotated as follows:
 
 The ID for your application, used for service discovery.
 
+#### `app-max-concurrency` (`integer`) *overridable*
+
+The concurrency level of the 
+application (otherwise unlimited).
+
+#### `app-protocol` (`string`) *overridable*
+
+The protocol (gRPC or HTTP) Dapr uses to talk to the application (with HTTP being the default).
+
+#### `app-ssl` (`boolean`) *overridable*
+
+Enable HTTPS when Dapr invokes the application.
+
 #### `components-path` (`string`) *overridable*
 
 The path of the components directory. If relative, is relative to the root directory of the application (i.e. of the `tye.yaml`).

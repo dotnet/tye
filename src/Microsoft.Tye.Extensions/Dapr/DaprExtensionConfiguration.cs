@@ -8,6 +8,9 @@ namespace Microsoft.Tye.Extensions.Dapr
 {
     internal abstract class DaprExtensionCommonConfiguration
     {
+        public int? AppMaxConcurrency { get; set; }
+        public string? AppProtocol { get; set; }
+        public bool? AppSsl { get; set; }
         public string? ComponentsPath { get; set;}
         public string? Config { get; set; }
         public bool? EnableProfiling { get; set; }

@@ -51,6 +51,9 @@ namespace Microsoft.Tye.Extensions.Dapr
 
         private static void ReadCommonConfiguration(IDictionary<string, object> rawConfiguration, DaprExtensionCommonConfiguration commonConfiguration)
         {
+            commonConfiguration.AppMaxConcurrency = TryGetValue<int>(rawConfiguration, "app-max-concurrency");
+            commonConfiguration.AppProtocol = TryGetValue(rawConfiguration, "app-protocol");
+            commonConfiguration.AppSsl = TryGetValue<bool>(rawConfiguration, "app-ssl");
             commonConfiguration.ComponentsPath = TryGetValue(rawConfiguration, "components-path");
             commonConfiguration.Config = TryGetValue(rawConfiguration, "config");
             commonConfiguration.EnableProfiling = TryGetValue<bool>(rawConfiguration, "enable-profiling");
