@@ -164,10 +164,11 @@ namespace Microsoft.DotNet.Watcher.Internal
             var targetPath = searchPaths.Select(p => Path.Combine(p, WatchTargetsFileName)).FirstOrDefault(File.Exists);
             if (targetPath == null)
             {
-                _logger.LogError("Fatal error: could not find DotNetWatch.targets");
+                _logger.LogError($"Fatal error: could not find {WatchTargetsFileName}");
                 return null!;
             }
-            return targetPath;
+
+            return $"\"{targetPath}\"";
         }
     }
 }
