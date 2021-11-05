@@ -219,7 +219,12 @@ namespace Tye.Serialization
                         binding.Protocol = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     case "routes":
-                        binding.Routes = YamlParser.GetScalarValue(key, child.Value);
+                        if (child.Value.NodeType != YamlNodeType.Sequence)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
+                        }
+
+                        HandleServiceBindingRoutes((child.Value as YamlSequenceNode)!, binding.Routes);
                         break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
@@ -574,6 +579,16 @@ namespace Tye.Serialization
                 tags.Add(tag);
             }
         }
+
+        private static void HandleServiceBindingRoutes(YamlSequenceNode yamlSequenceNode, List<string> routes)
+        {
+            foreach (var child in yamlSequenceNode!.Children)
+            {
+                var route = YamlParser.GetScalarValue(child);
+                routes.Add(route);
+            }
+        }
+
         private static void HandleServiceDockerArgsNameMapping(YamlMappingNode yamlMappingNode, IDictionary<string, string> dockerArguments)
         {
             foreach (var child in yamlMappingNode!.Children)

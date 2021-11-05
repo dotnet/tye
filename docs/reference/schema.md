@@ -402,9 +402,9 @@ Specifies the protocol used by the binding. The protocol is used in [service dis
 
 Specifies the hostname used by the binding. The protocol is used in [service discovery](/docs/reference/service_discovery.md) to construct a URL. It's safe to omit the `host` when localhost should be used for local development.
 
-#### `routes` (string)
+#### `routes` (`string[]`)
 
-Specifies the additional routes as semicolon separated list to show in Bindings on the Dashboard for easy access. Example value: /swagger;/graphql
+Specifies the list of additional routes to show in Bindings on the Dashboard for easy access. Example route value: /swagger.
 
 #### `port` (string)
 

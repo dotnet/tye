@@ -183,7 +183,7 @@ namespace Microsoft.Tye
                         Port = binding.Port,
                         Protocol = binding.Protocol,
                     };
-                    sb.Routes.AddRange(binding.Routes?.Split(';', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>());
+                    sb.Routes.AddRange(binding.Routes);
                     description.Bindings.Add(sb);
                 }
 
