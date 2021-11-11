@@ -133,7 +133,7 @@ stages:
       - job: OSX_10_14
         displayName: 'OSX'
         pool:
-          vmImage: macOS-10.14
+          vmImage: macOS-11
         variables:
         - name: _SignType
           value: none
