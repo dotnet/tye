@@ -37,9 +37,9 @@ namespace Microsoft.Tye.Hosting
                 _logs = logs;
             }
 
-            public IDisposable? BeginScope<TState>(TState state)
+            public IDisposable BeginScope<TState>(TState state)
             {
-                return null;
+                return null!;
             }
 
             public bool IsEnabled(LogLevel logLevel)
@@ -47,12 +47,15 @@ namespace Microsoft.Tye.Hosting
                 return true;
             }
 
-            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception, string>? formatter)
             {
-                _logs.OnNext($"[{logLevel}]: {formatter(state, exception)}");
-
                 if (exception != null)
                 {
+                    if (formatter != null)
+                    {
+                        _logs.OnNext($"[{logLevel}]: {formatter(state, exception)}");
+                    }
+
                     _logs.OnNext(exception.ToString());
                 }
             }

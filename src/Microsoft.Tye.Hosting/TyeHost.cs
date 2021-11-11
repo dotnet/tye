@@ -102,9 +102,18 @@ namespace Microsoft.Tye.Hosting
 
             await app.StartAsync();
 
-            _addresses = DashboardWebApplication.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>().Addresses;
+            _addresses = DashboardWebApplication.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()?.Addresses;
 
-            _logger.LogInformation("Dashboard running on {Address}", _addresses.First());
+            var dashboardAddress = _addresses?.FirstOrDefault();
+
+            if (dashboardAddress != null)
+            {
+                _logger.LogInformation("Dashboard running on {Address}", dashboardAddress);
+            }
+            else
+            {
+                _logger.LogWarning("Dashboard is not running");
+            }
 
             try
             {
@@ -117,9 +126,9 @@ namespace Microsoft.Tye.Hosting
                 _lifetime.StopApplication();
             }
 
-            if (_options.Dashboard)
+            if (dashboardAddress != null && _options.Dashboard)
             {
-                OpenDashboard(_addresses.First());
+                OpenDashboard(dashboardAddress);
             }
 
             return app;
@@ -333,7 +342,7 @@ namespace Microsoft.Tye.Hosting
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error while shutting down");
+                _logger?.LogError(ex, "Error while shutting down");
             }
             finally
             {
@@ -375,7 +384,7 @@ namespace Microsoft.Tye.Hosting
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error launching dashboard.");
+                _logger?.LogError(ex, "Error launching dashboard.");
             }
         }
 
