@@ -47,10 +47,16 @@ namespace Microsoft.Tye
                     {
                         continue;
                     }
-                    var major = int.Parse(element.Value.GetProperty("major").GetString());
-                    var minor = int.Parse(element.Value.GetProperty("minor").GetString().Trim('+'));
-                    var version = new Version(major, minor);
-                    return version;
+                    var majorString = element.Value.GetProperty("major").GetString();
+                    var minorString = element.Value.GetProperty("minor").GetString();
+
+                    if (majorString != null && minorString != null)
+                    {
+                        var major = int.Parse(majorString);
+                        var minor = int.Parse(minorString.Trim('+'));
+                        var version = new Version(major, minor);
+                        return version;
+                    }
                 }
 
                 return null;

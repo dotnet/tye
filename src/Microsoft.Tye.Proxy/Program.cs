@@ -19,7 +19,7 @@ namespace Microsoft.Tye.Proxy
         static async Task Main(string[] args)
         {
             var serviceName = Environment.GetEnvironmentVariable("APP_INSTANCE");
-            var containerHost = Environment.GetEnvironmentVariable("CONTAINER_HOST");
+            var containerHost = Environment.GetEnvironmentVariable("CONTAINER_HOST") ?? throw new ArgumentNullException("CONTAINER_HOST was not specified.");
 
             using var host = new HostBuilder()
                     .ConfigureLogging(logging =>
@@ -88,10 +88,10 @@ namespace Microsoft.Tye.Proxy
                                             logger.LogDebug("Proxying traffic to {ServiceName} {Port}:{ExternalPort}", serviceName, mapping.Port, mapping.ExternalPort);
 
                                             // external -> internal
-                                            var reading = Task.Run(() => connection.Transport.Input.CopyToAsync(targetStream, notificationFeature.ConnectionClosedRequested));
+                                            var reading = Task.Run(() => connection.Transport.Input.CopyToAsync(targetStream, notificationFeature?.ConnectionClosedRequested ?? default));
 
                                             // internal -> external
-                                            var writing = Task.Run(() => targetStream.CopyToAsync(connection.Transport.Output, notificationFeature.ConnectionClosedRequested));
+                                            var writing = Task.Run(() => targetStream.CopyToAsync(connection.Transport.Output, notificationFeature?.ConnectionClosedRequested ?? default));
 
                                             await Task.WhenAll(reading, writing);
                                         }
@@ -105,7 +105,7 @@ namespace Microsoft.Tye.Proxy
                                         }
                                         catch (OperationCanceledException ex)
                                         {
-                                            if (!notificationFeature.ConnectionClosedRequested.IsCancellationRequested)
+                                            if (notificationFeature is null || !notificationFeature.ConnectionClosedRequested.IsCancellationRequested)
                                             {
                                                 logger.LogDebug(0, ex, "Proxy error for service {ServiceName}", serviceName);
                                             }
