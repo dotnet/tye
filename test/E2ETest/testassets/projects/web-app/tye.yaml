@@ -8,3 +8,5 @@ name: web-app
 services:
 - name: web-app
   project: web-app.csproj
+  bindings:
+  - protocol: http

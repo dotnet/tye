@@ -4,5 +4,9 @@ name: frontend-backend
 services:
 - name: backend
   project: backend/backend.csproj
+  bindings:
+  - protocol: http
 - name: frontend
   project: frontend/frontend.csproj
+  bindings:
+  - protocol: http
