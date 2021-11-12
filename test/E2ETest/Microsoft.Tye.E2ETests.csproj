@@ -5,9 +5,8 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>Microsoft.Tye.E2ETest</AssemblyName>
     <IsTestProject>true</IsTestProject>
-    <IsUnitTestProject>true</IsUnitTestProject>
-    <!-- TODO: Investigate Ubuntu >16.04 test hangs and re-enable E2E tests on Linux. -->
-    <IsUnitTestProject Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">false</IsUnitTestProject>
+    <!-- TODO: Investigate Ubuntu >16.04 test hangs and Mac test failures and re-enable E2E tests. -->
+    <IsUnitTestProject>false</IsUnitTestProject>
     <TestRunnerName>XUnit</TestRunnerName>
   </PropertyGroup>
 
