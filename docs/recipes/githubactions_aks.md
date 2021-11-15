@@ -51,17 +51,17 @@ env:
   ACR_RESOURCE_URI: myregistry.azurecr.io
 ```
 
-Next, ensure that the version of .NET Core and tye are installed.
+Next, ensure that Tye and its dependent .NET runtime are installed.
 
 ```yaml
-- name: 🧰 Setup .NET Core
+- name: 🧰 Setup .NET
     uses: actions/setup-dotnet@v1.5.0
     with:
-    dotnet-version: 3.1.300
+    dotnet-version: 6.0.100
 
 - name: 🛠 Install Tye tools
     run: |
-    dotnet tool install -g Microsoft.Tye --version "0.2.0-alpha.20258.3"
+    dotnet tool install -g Microsoft.Tye --version "0.10.0-alpha.21420.1"
 ```
 
 Using the name of the registry and the [Azure docker action](https://github.com/Azure/docker-login) to login to your registry. This step is needed prior to running the `deploy` command which will build and push the images to the registry. 
