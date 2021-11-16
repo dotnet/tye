@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Description>Orchestration host APIs.</Description>
     <AssemblyName>Microsoft.Tye.Hosting</AssemblyName>
     <PackageId>Microsoft.Tye.Hosting</PackageId>

@@ -799,7 +799,8 @@ services:
         [Fact]
         public async Task IngressAllIPTest()
         {
-            await TestIngressIP($"'*'", GetLiveIPAddresses().FirstOrDefault());
+            var address = GetLiveIPAddresses().FirstOrDefault();
+            await TestIngressIP($"'*'", address == null ? Array.Empty<IPAddress>() : new[] { address });
         }
 
 
