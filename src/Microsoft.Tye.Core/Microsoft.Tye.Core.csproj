@@ -19,6 +19,8 @@
     <PackageReference Include="System.Security.Principal.Windows" Version="4.7.0" />
     <PackageReference Include="YamlDotNet" Version="8.1.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.5" />
+    <!-- Bumps transitive dependency for Component Detection step -->
+    <PackageReference Include="System.Text.Encodings.Web" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
