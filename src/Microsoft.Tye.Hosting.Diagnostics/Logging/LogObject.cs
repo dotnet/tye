@@ -11,7 +11,7 @@ namespace Microsoft.Tye.Hosting.Diagnostics.Logging
 {
     internal class LogObject : IReadOnlyList<KeyValuePair<string, object?>>
     {
-        internal static readonly Func<object, Exception, string> Callback = (state, exception) => ((LogObject)state).ToString();
+        internal static readonly Func<object, Exception?, string> Callback = (state, exception) => ((LogObject)state).ToString();
 
         private readonly string? _formattedMessage;
         private List<KeyValuePair<string, object?>> _items = new List<KeyValuePair<string, object?>>();
