@@ -40,6 +40,8 @@ namespace Microsoft.Tye.ConfigModel
 
         public List<ConfigIngress> Ingress { get; set; } = new List<ConfigIngress>();
 
+        public bool AksGenerateAzureADPodIdBindings { get; set; }
+
         public void Validate()
         {
             var config = this;

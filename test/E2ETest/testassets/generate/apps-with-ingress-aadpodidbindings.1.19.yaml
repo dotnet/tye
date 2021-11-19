@@ -1,0 +1,187 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: appa
+  labels:
+    app.kubernetes.io/name: 'appa'
+    app.kubernetes.io/part-of: 'apps-with-ingress-aadpodidbindings'
+    aadpodidbinding: 'apps-with-ingress-aadpodidbindings-appa-service'
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: appa
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: 'appa'
+        app.kubernetes.io/part-of: 'apps-with-ingress-aadpodidbindings'
+        aadpodidbinding: 'apps-with-ingress-aadpodidbindings-appa-service'
+    spec:
+      containers:
+      - name: appa
+        image: appa:1.0.0
+        imagePullPolicy: Always
+        env:
+        - name: DOTNET_LOGGING__CONSOLE__DISABLECOLORS
+          value: 'true'
+        - name: ASPNETCORE_URLS
+          value: 'http://*'
+        - name: PORT
+          value: '80'
+        - name: SERVICE__APPA__PROTOCOL
+          value: 'http'
+        - name: SERVICE__APPA__PORT
+          value: '80'
+        - name: SERVICE__APPA__HOST
+          value: 'appa'
+        - name: SERVICE__APPB__PROTOCOL
+          value: 'http'
+        - name: SERVICE__APPB__PORT
+          value: '80'
+        - name: SERVICE__APPB__HOST
+          value: 'appb'
+        ports:
+        - containerPort: 80
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: appa
+  labels:
+    app.kubernetes.io/name: 'appa'
+    app.kubernetes.io/part-of: 'apps-with-ingress'
+    aadpodidbinding: 'apps-with-ingress-aadpodidbindings-appa-service'
+spec:
+  selector:
+    app.kubernetes.io/name: appa
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+...
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: appb
+  labels:
+    app.kubernetes.io/name: 'appb'
+    app.kubernetes.io/part-of: 'apps-with-ingress'
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: appb
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: 'appb'
+        app.kubernetes.io/part-of: 'apps-with-ingress'
+        aadpodidbinding: 'bob'
+    spec:
+      containers:
+      - name: appb
+        image: appb:1.0.0
+        imagePullPolicy: Always
+        env:
+        - name: DOTNET_LOGGING__CONSOLE__DISABLECOLORS
+          value: 'true'
+        - name: ASPNETCORE_URLS
+          value: 'http://*'
+        - name: PORT
+          value: '80'
+        - name: SERVICE__APPB__PROTOCOL
+          value: 'http'
+        - name: SERVICE__APPB__PORT
+          value: '80'
+        - name: SERVICE__APPB__HOST
+          value: 'appb'
+        - name: SERVICE__APPA__PROTOCOL
+          value: 'http'
+        - name: SERVICE__APPA__PORT
+          value: '80'
+        - name: SERVICE__APPA__HOST
+          value: 'appa'
+        ports:
+        - containerPort: 80
+...
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: appb
+  labels:
+    app.kubernetes.io/name: 'appb'
+    app.kubernetes.io/part-of: 'apps-with-ingress'
+    aadpodidbinding: 'bob'
+spec:
+  selector:
+    app.kubernetes.io/name: appb
+  type: ClusterIP
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+...
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: ingress
+  annotations:
+    kubernetes.io/ingress.class: 'nginx'
+    nginx.ingress.kubernetes.io/rewrite-target: '/$2'
+  labels:
+    app.kubernetes.io/part-of: 'apps-with-ingress'
+    aadpodidbinding: 'alice'
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: appa
+            port:
+              number: 80
+        path: /A(/|$)(.*)
+        pathType: Prefix
+      - backend:
+          service:
+            name: appb
+            port:
+              number: 80
+        path: /B(/|$)(.*)
+        pathType: Prefix
+      - backend:
+          service:
+            name: appa
+            port:
+              number: 80
+        path: /()(C.*)
+        pathType: Prefix
+  - host: a.example.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: appa
+            port:
+              number: 80
+        path: /()(.*)
+        pathType: Prefix
+  - host: b.example.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: appb
+            port:
+              number: 80
+        path: /()(.*)
+        pathType: Prefix
+...

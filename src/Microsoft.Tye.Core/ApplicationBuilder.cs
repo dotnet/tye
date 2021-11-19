@@ -36,5 +36,7 @@ namespace Microsoft.Tye
         public List<IngressBuilder> Ingress { get; } = new List<IngressBuilder>();
 
         public string? Network { get; set; }
+
+        public bool AksGenerateAzureADPodIdBindings { get; set; }
     }
 }

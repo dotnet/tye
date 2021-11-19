@@ -45,6 +45,7 @@ namespace Microsoft.Tye.ConfigModel
         public string? FuncExecutable { get; set; }
         public string? Version { get; set; }
         public string? Architecture { get; set; }
-        public string? CloneDirectory { get; internal set; }
+        public string? CloneDirectory { get; set; }
+        public string? AksPodIdentityName { get; set; }
     }
 }

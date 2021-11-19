@@ -1,0 +1,35 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
+#
+name: apps-with-ingress-aadpodidbindings
+aksGenerateAadPodIdBindings: true
+ingress:
+  - name: ingress
+    aksPodIdentityName: alice
+    bindings:
+      - port: 8080
+    rules:
+      - path: /A
+        service: appA
+      - path: /B
+        service: appB
+      - path: /C
+        service: appA
+        preservePath: true
+      - host: a.example.com
+        service: appA
+      - host: b.example.com
+        service: appB
+
+services:
+- name: appA
+  project: ApplicationA/ApplicationA.csproj
+  replicas: 2
+#  aksPodIdBinding: leaves convention-based name
+- name: appB
+  project: ApplicationB/ApplicationB.csproj
+  replicas: 2
+  aksPodIdentityName: bob

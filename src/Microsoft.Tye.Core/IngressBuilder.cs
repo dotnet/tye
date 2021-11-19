@@ -22,5 +22,7 @@ namespace Microsoft.Tye
         public List<IngressRuleBuilder> Rules { get; set; } = new List<IngressRuleBuilder>();
 
         public List<IngressOutput> Outputs { get; } = new List<IngressOutput>();
+
+        public string? AksPodIdentityName { get; set; }
     }
 }

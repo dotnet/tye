@@ -55,6 +55,13 @@ namespace Tye.Serialization
                             throw new TyeYamlException(child.Key.Start, CoreStrings.FormatMustBeAnInteger(key));
                         }
                         break;
+                    case "aksGenerateAadPodIdBindings":
+                        if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var generateAadPodIdBindings))
+                        {
+                            throw new TyeYamlException(child.Key.Start, CoreStrings.FormatMustBeABoolean(key));
+                        }
+                        app.AksGenerateAzureADPodIdBindings = generateAadPodIdBindings;
+                        break;
                     case "ingress":
                         YamlParser.ThrowIfNotYamlSequence(key, child.Value);
                         ConfigIngressParser.HandleIngress((child.Value as YamlSequenceNode)!, app.Ingress);

@@ -20,5 +20,7 @@ namespace Microsoft.Tye
         public HashSet<string> Dependencies { get; } = new HashSet<string>();
 
         public ServiceSource Source { get; }
+
+        public string? AksPodIdentityName { get; set; }
     }
 }

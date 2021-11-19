@@ -403,6 +403,52 @@ namespace E2ETest
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        public async Task Generate_Ingress_WithAadPodIdBindings()
+        {
+            var solutionName = "apps-with-ingress";
+            var applicationName = solutionName + "-aadpodidbindings";
+            var environment = "production";
+
+            await DockerAssert.DeleteDockerImagesAsync(output, "appa");
+            await DockerAssert.DeleteDockerImagesAsync(output, "appa");
+
+            using var projectDirectory = TestHelpers.CopyTestProjectDirectory(solutionName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-with-aadpodidbindings.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            try
+            {
+                await GenerateHost.ExecuteGenerateAsync(outputContext, application, environment, interactive: false);
+
+                // name of application is the folder
+                var content = await File.ReadAllTextAsync(Path.Combine(projectDirectory.DirectoryPath, $"{applicationName}-generate-{environment}.yaml"));
+
+                if (await KubectlDetector.GetKubernetesServerVersion(outputContext) >= new Version(1, 19))
+                {
+                    var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.1.19.yaml");
+                    YamlAssert.Equals(expectedContent, content, output);
+                }
+                else
+                {
+                    var expectedContent = await File.ReadAllTextAsync($"testassets/generate/{applicationName}.1.18.yaml");
+                    YamlAssert.Equals(expectedContent, content, output);
+                }
+
+                await DockerAssert.AssertImageExistsAsync(output, "appa");
+                await DockerAssert.AssertImageExistsAsync(output, "appb");
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, "appa");
+                await DockerAssert.DeleteDockerImagesAsync(output, "appb");
+            }
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
         public async Task Generate_HealthChecks()
         {
             var applicationName = "health-checks";

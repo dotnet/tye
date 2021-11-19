@@ -165,6 +165,9 @@ namespace Tye.Serialization
                     case "cloneDirectory":
                         service.CloneDirectory = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "aksPodIdentityName":
+                        service.AksPodIdentityName = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }

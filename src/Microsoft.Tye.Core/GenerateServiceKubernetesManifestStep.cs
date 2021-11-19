@@ -35,6 +35,11 @@ namespace Microsoft.Tye
             deployment.Labels.TryAdd("app.kubernetes.io/name", project.Name);
             deployment.Labels.TryAdd("app.kubernetes.io/part-of", application.Name);
 
+            if (application.AksGenerateAzureADPodIdBindings)
+            {
+                deployment.Labels.TryAdd("aadpodidbinding", service.AksPodIdentityName ?? $"{application.Name}-{project.Name}-service");
+            }
+
             service.Outputs.Add(KubernetesManifestGenerator.CreateDeployment(output, application, project, deployment));
 
             if (service.Bindings.Count > 0 &&
@@ -43,6 +48,11 @@ namespace Microsoft.Tye
                 // Initialize defaults for service-related settings
                 k8sService.Labels.TryAdd("app.kubernetes.io/name", project.Name);
                 k8sService.Labels.TryAdd("app.kubernetes.io/part-of", application.Name);
+
+                if (application.AksGenerateAzureADPodIdBindings)
+                {
+                    k8sService.Labels.TryAdd("aadpodidbinding", service.AksPodIdentityName ?? $"{application.Name}-{project.Name}-service");
+                }
 
                 service.Outputs.Add(KubernetesManifestGenerator.CreateService(output, application, project, deployment, k8sService));
             }

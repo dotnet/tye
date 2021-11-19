@@ -69,6 +69,9 @@ namespace Tye.Serialization
 
                         HandleIngressTags((child.Value as YamlSequenceNode)!, configIngress.Tags);
                         break;
+                    case "aksPodIdentityName":
+                        configIngress.AksPodIdentityName = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }

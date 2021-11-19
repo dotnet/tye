@@ -32,7 +32,8 @@ namespace Microsoft.Tye
 
             var root = new ApplicationBuilder(source, rootConfig.Name!, new ContainerEngine(rootConfig.ContainerEngineType), rootConfig.DashboardPort)
             {
-                Namespace = rootConfig.Namespace
+                Namespace = rootConfig.Namespace,
+                AksGenerateAzureADPodIdBindings = rootConfig.AksGenerateAzureADPodIdBindings,
             };
 
             queue.Enqueue((rootConfig, new HashSet<string>()));
@@ -165,11 +166,12 @@ namespace Microsoft.Tye
                     if (!string.IsNullOrEmpty(configService.Project))
                     {
                         // TODO: Investigate possible null.
-                        var project = new DotnetProjectServiceBuilder(configService.Name!, new FileInfo(configService.ProjectFullPath!), ServiceSource.Configuration);
+                        var project = new DotnetProjectServiceBuilder(configService.Name, new FileInfo(configService.ProjectFullPath!), ServiceSource.Configuration);
                         service = project;
-
                         project.Build = configService.Build ?? true;
                         project.Args = configService.Args;
+                        project.AksPodIdentityName = configService.AksPodIdentityName;
+
                         foreach (var buildProperty in configService.BuildProperties)
                         {
                             project.BuildProperties.Add(buildProperty.Name, buildProperty.Value);
@@ -199,7 +201,7 @@ namespace Microsoft.Tye
                         var container = new ContainerServiceBuilder(configService.Name!, configService.Image!, ServiceSource.Configuration)
                         {
                             Args = configService.Args,
-                            Replicas = configService.Replicas ?? 1
+                            Replicas = configService.Replicas ?? 1,
                         };
                         service = container;
 
@@ -216,7 +218,8 @@ namespace Microsoft.Tye
                             DockerFile = Path.Combine(source.DirectoryName!, configService.DockerFile),
                             // Supplying an absolute path with trailing slashes fails for DockerFileContext when calling docker build, so trim trailing slash.
                             DockerFileContext = GetDockerFileContext(source, configService),
-                            BuildArgs = configService.DockerFileArgs
+                            BuildArgs = configService.DockerFileArgs,
+                            AksPodIdentityName = configService.AksPodIdentityName,
                         };
                         service = dockerFile;
 
@@ -449,8 +452,11 @@ namespace Microsoft.Tye
 
                 foreach (var configIngress in ingresses)
                 {
-                    var ingress = new IngressBuilder(configIngress.Name!);
-                    ingress.Replicas = configIngress.Replicas ?? 1;
+                    var ingress = new IngressBuilder(configIngress.Name)
+                    {
+                        Replicas = configIngress.Replicas ?? 1,
+                        AksPodIdentityName = configIngress.AksPodIdentityName,
+                    };
 
                     root.Ingress.Add(ingress);
 

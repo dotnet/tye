@@ -15,5 +15,6 @@ namespace Microsoft.Tye.ConfigModel
         public List<ConfigIngressRule> Rules { get; set; } = new List<ConfigIngressRule>();
         public List<ConfigIngressBinding> Bindings { get; set; } = new List<ConfigIngressBinding>();
         public List<string> Tags { get; set; } = new List<string>();
+        public string? AksPodIdentityName { get; set; }
     }
 }

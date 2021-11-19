@@ -50,6 +50,12 @@ namespace Microsoft.Tye
             metadata.Add("labels", labels);
             labels.Add("app.kubernetes.io/part-of", new YamlScalarNode(application.Name) { Style = ScalarStyle.SingleQuoted, });
 
+            if (application.AksGenerateAzureADPodIdBindings)
+            {
+                var podId = ingress.AksPodIdentityName ?? $"{application.Name}-{ingress.Name}-ingress";
+                labels.Add("aadpodidbinding", new YamlScalarNode(podId) { Style = ScalarStyle.SingleQuoted, });
+            }
+
             var spec = new YamlMappingNode();
             root.Add("spec", spec);
 

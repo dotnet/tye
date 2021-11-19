@@ -22,6 +22,10 @@
             "description": "The Kubernetes namespace to use.",
             "type": "string"
         },
+        "aksGenerateAadPodIdBindings": {
+            "description": "When true `aadpodidbing` labels are generated allowing the assignement of managed identities in AKS.",
+            "type": "boolean"
+        },
         "network": {
             "description": "The Docker network to use.",
             "type": "string"
@@ -362,6 +366,10 @@
                     "items": {
                         "$ref": "#/definitions/binding"
                     }
+                },
+                "aksPodIdentityName": {
+                    "description": "The name of the pod identity in AKS.",
+                    "type": "string"                    
                 }
             },
             "required": [
@@ -419,6 +427,10 @@
                     "items": {
                         "$ref": "#/definitions/binding"
                     }
+                },
+                "aksPodIdentityName": {
+                    "description": "The name of the pod identity in AKS.",
+                    "type": "string"                    
                 }
             },
             "required": [
@@ -446,6 +458,10 @@
                     "items": {
                         "$ref": "#/definitions/ingress-rule"
                     }
+                },
+                "aksPodIdentityName": {
+                    "description": "The name of the pod identity in AKS.",
+                    "type": "string"                    
                 }
             }
         },
@@ -537,6 +553,10 @@
                     "items": {
                         "$ref": "#/definitions/binding"
                     }
+                },
+                "aksPodIdentityName": {
+                    "description": "The name of the pod identity in AKS.",
+                    "type": "string"                    
                 }
             },
             "required": [
