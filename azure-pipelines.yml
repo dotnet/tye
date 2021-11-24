@@ -130,10 +130,10 @@ stages:
             artifactType: Container
             parallel: true
 
-      - job: OSX_10_14
+      - job: OSX_10_15
         displayName: 'OSX'
         pool:
-          vmImage: macOS-11
+          vmImage: macOS-1015
         variables:
         - name: _SignType
           value: none
