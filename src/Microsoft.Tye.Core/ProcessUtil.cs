@@ -165,7 +165,7 @@ namespace Microsoft.Tye
                 {
                     if (!process.CloseMainWindow())
                     {
-                        process.Kill();
+                        process.Kill(entireProcessTree: true);
                     }
                 }
 
@@ -177,7 +177,7 @@ namespace Microsoft.Tye
 
                     if (!process.HasExited)
                     {
-                        process.Kill();
+                        process.Kill(entireProcessTree: true);
                     }
                 }
             }
@@ -197,7 +197,7 @@ namespace Microsoft.Tye
             try
             {
                 using var process = Process.GetProcessById(pid);
-                process?.Kill();
+                process?.Kill(entireProcessTree: true);
             }
             catch (ArgumentException) { }
             catch (InvalidOperationException) { }

@@ -117,7 +117,7 @@ namespace Microsoft.Tye
             }
             else
             {
-                process?.Kill();
+                process?.Kill(entireProcessTree: true);
             }
         }
     }
