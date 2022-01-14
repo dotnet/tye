@@ -97,7 +97,7 @@ stages:
             artifactType: Container
             parallel: true
 
-      - job: Ubuntu
+      - job: Linux
         pool:
           vmImage: ubuntu-20.04
         variables:
