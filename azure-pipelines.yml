@@ -97,8 +97,7 @@ stages:
             artifactType: Container
             parallel: true
 
-      - job: Ubuntu_20_04
-        displayName: 'Ubuntu 20.04'
+      - job: Linux
         pool:
           vmImage: ubuntu-20.04
         variables:
@@ -130,8 +129,7 @@ stages:
             artifactType: Container
             parallel: true
 
-      - job: OSX_10_14
-        displayName: 'OSX'
+      - job: Mac
         pool:
           vmImage: macOS-11
         variables:
