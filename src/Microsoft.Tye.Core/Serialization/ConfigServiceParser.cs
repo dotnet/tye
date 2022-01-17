@@ -49,6 +49,14 @@ namespace Tye.Serialization
                     case "dockerFile":
                         service.DockerFile = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "ignoreDockerFile":
+                        if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var ignoreDockerFile))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeABoolean(key));
+                        }
+
+                        service.IgnoreDockerFile = ignoreDockerFile;
+                        break;
                     case "dockerFileArgs":
                         if (child.Value.NodeType != YamlNodeType.Sequence)
                         {

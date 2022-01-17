@@ -537,6 +537,11 @@
                     "items": {
                         "$ref": "#/definitions/binding"
                     }
+                },
+                "ignoreDockerFile": {
+                    "description": "If `true`, the project related Dockerfile will be ignored. Default: `false`",
+                    "type": "boolean",
+                    "default": false
                 }
             },
             "required": [
