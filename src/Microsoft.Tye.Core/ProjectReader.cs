@@ -62,7 +62,7 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(project));
             }
 
-            if (project is null)
+            if (metadataFile is null)
             {
                 throw new ArgumentNullException(nameof(metadataFile));
             }
