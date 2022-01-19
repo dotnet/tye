@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Microsoft.Tye</RootNamespace>
     <AssemblyName>tye</AssemblyName>
     <PackageId>Microsoft.Tye</PackageId>
@@ -27,7 +27,7 @@
 
   <ItemGroup>
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20104.2" />
-    <PackageReference Include="YamlDotNet" Version="8.1.2" />
+    <PackageReference Include="YamlDotNet" Version="11.2.1" />
   </ItemGroup>
 
 </Project>

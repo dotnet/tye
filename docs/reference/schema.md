@@ -711,3 +711,98 @@ If both `port` and `protocol` are provided, Tye selects the first biding with th
 #### `headers` (`(name, value)[]`)  
 
 Array of headers that are sent as part of the HTTP request that probes the replicas of the service.  
+
+## Extensions
+
+Each of the Tye extensions have their own custom configuration schema.
+
+### Dapr
+
+For the Dapr extension, the available properties closely follow those found on the [`dapr run` command line](https://docs.dapr.io/reference/cli/dapr-run/).  The Dapr extension allows many properties to be set and/or overridden on a service-by-service basis using the `services` dictionary.
+
+```yaml
+extensions:
+- name: dapr
+  config: common
+  enable-profiling: true
+  services:
+    frontend:
+      components-path: "./frontend/components"
+    backend:
+      components-path: "./backend/components"
+
+services:
+- name: frontend
+- name: backend
+```
+
+The following properties are annotated as follows:
+
+ - *extension-level*: Can only be set at the root of the extension configuration.
+ - *service-level*: Can only be set for a specific service within the `services` dictionary.
+ - *overridable*: Can be set at both the root of the extension configuration or be overridden for a specific service within the `services` dictionary.
+
+#### `app-id` (`string`) *service-level*
+
+The ID for your application, used for service discovery.
+
+#### `app-max-concurrency` (`integer`) *overridable*
+
+The concurrency level of the 
+application (otherwise unlimited).
+
+#### `app-protocol` (`string`) *overridable*
+
+The protocol (gRPC or HTTP) Dapr uses to talk to the application (with HTTP being the default).
+
+#### `app-ssl` (`boolean`) *overridable*
+
+Enable HTTPS when Dapr invokes the application.
+
+#### `components-path` (`string`) *overridable*
+
+The path of the components directory. If relative, is relative to the root directory of the application (i.e. of the `tye.yaml`).
+
+#### `config` (`string`) *overridable*
+
+The name of the Dapr configuration file (without extension). Assumed to be relative to the `components-path` directory, if specified, else the `components` folder in the root directory of the application (i.e. of the `tye.yaml`).
+
+#### `enabled` (`boolean`) *service-level*
+
+Whether a Dapr sidecar is created for the service. If `true`, a sidecar is created even if the default for the service type would be not to create one.  If `false`, a sidecar is *not* created even if the default for the service type would be to create one.
+
+#### `enable-profiling` (`boolean`) *overridable*
+
+Enable `pprof` profiling via an HTTP endpoint.
+
+#### `grpc-port` (`integer`) *service-level*
+
+The gRPC port for Dapr to listen on.
+
+#### `http-max-request-size` (`integer`) *overridable*
+
+The maximum size of an HTTP request body in MB.
+
+#### `http-port` (`integer`) *service-level*
+
+The HTTP port for Dapr to listen on.
+
+#### `log-level` (`string`) *overridable*
+
+The log verbosity. Valid values are: `debug`, `info`, `warn`, `error`, `fatal`, and `panic`.
+
+#### `metrics-port` (`integer`) *service-level*
+
+The port used to collect Dapr metrics.
+
+#### `placement-port` (`integer`) *service-level*
+
+The port of the Dapr placement service.
+
+#### `profile-port` (`integer`) *service-level*
+
+The port for the Dapr profile servicer to listen on.
+
+#### `services` (`(string, object)[]`) *extension-level*
+
+The dictionary in which service-level configuration can be set.

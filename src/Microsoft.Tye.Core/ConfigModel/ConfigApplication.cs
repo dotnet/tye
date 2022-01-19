@@ -144,7 +144,7 @@ namespace Microsoft.Tye.ConfigModel
                 foreach (var probe in probes)
                 {
                     context = new ValidationContext(probe.Probe!);
-                    if (!Validator.TryValidateObject(probe.Probe, context, results, validateAllProperties: true))
+                    if (!Validator.TryValidateObject(probe.Probe!, context, results, validateAllProperties: true))
                     {
                         throw new TyeYamlException(
                             $"Probe '{probe.Name}' in service '{service.Name}' validation failed." + Environment.NewLine +

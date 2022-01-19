@@ -21,7 +21,7 @@ These steps are sequentially executed for each project or service.
 
 ### Configure defaults for docker
 
-Sets defaults for any projects that will create docker images. For example, for any ASP.NET Core projects, this step will set the container base image to `mcr.microsoft.com/dotnet/core/aspnet`. It will also select the image tag based on the .NET version specified (2.1, 3.1, etc.).
+Sets defaults for any projects that will create docker images. For example, for any ASP.NET Core projects, this step will set the container base image to `mcr.microsoft.com/dotnet/core/aspnet`. It will also select the image tag based on the .NET version specified (2.1, 3.1, 5, 6, etc.).
 
 This is also where Tye requires a container registry to properly set the image name. If running `tye deploy` (no interactive), tye requires a registry to be defined in `tye.yaml`. If running interactively (`tye deploy -i`), tye will prompt the user for one if not specified in `tye.yaml`.
 

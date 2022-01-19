@@ -37,7 +37,7 @@ namespace Microsoft.Tye
                     throw new CommandException(errorMessage!);
                 }
 
-                path = new FileInfo(filePath);
+                path = new FileInfo(filePath!);
             }
 
             var template = @"

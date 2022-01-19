@@ -62,7 +62,7 @@ namespace Microsoft.Tye.Hosting
 
                 // Inject a proxy per non-container service. This allows the container to use normal host names within the
                 // container network to talk to services on the host
-                var proxyContainer = new DockerRunInfo($"mcr.microsoft.com/dotnet/core/sdk:3.1", "dotnet Microsoft.Tye.Proxy.dll")
+                var proxyContainer = new DockerRunInfo($"mcr.microsoft.com/dotnet/sdk:6.0", "dotnet Microsoft.Tye.Proxy.dll")
                 {
                     WorkingDirectory = "/app",
                     NetworkAlias = service.Description.Name,
@@ -216,7 +216,7 @@ namespace Microsoft.Tye.Hosting
 
             var dockerImage = docker.Image ?? service.Description.Name;
 
-            async Task RunDockerContainer(IEnumerable<(int ExternalPort, int Port, int? ContainerPort, string? Protocol)> ports, CancellationToken cancellationToken)
+            async Task RunDockerContainer(IEnumerable<(int ExternalPort, int Port, int? ContainerPort, string? Protocol, string? Host)> ports, CancellationToken cancellationToken)
             {
                 var hasPorts = ports.Any();
 
@@ -238,7 +238,7 @@ namespace Microsoft.Tye.Hosting
                     // These are the ports that the application should use for binding
 
                     // 1. Tell the docker container what port to bind to
-                    portString = docker.Private ? "" : string.Join(" ", ports.Select(p => $"-p {p.Port}:{p.ContainerPort ?? p.Port}{(string.Equals(p.Protocol, "udp", StringComparison.OrdinalIgnoreCase) ? "/udp" : string.Empty)}"));
+                    portString = docker.Private ? "" : string.Join(" ", ports.Select(p => $"-p {(!string.IsNullOrWhiteSpace(p.Host) ? $"{p.Host}:" : string.Empty)}{p.Port}:{p.ContainerPort ?? p.Port}{(string.Equals(p.Protocol, "udp", StringComparison.OrdinalIgnoreCase) ? "/udp" : string.Empty)}"));
 
                     if (docker.IsAspNet)
                     {
@@ -512,7 +512,7 @@ namespace Microsoft.Tye.Hosting
                     // port
                     for (var i = 0; i < serviceDescription.Replicas; i++)
                     {
-                        var ports = new List<(int, int, int?, string?)>();
+                        var ports = new List<(int, int, int?, string?, string?)>();
                         foreach (var binding in serviceDescription.Bindings)
                         {
                             if (binding.Port == null)
@@ -520,7 +520,7 @@ namespace Microsoft.Tye.Hosting
                                 continue;
                             }
 
-                            ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.ContainerPort, binding.Protocol));
+                            ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.ContainerPort, binding.Protocol, binding.Host));
                         }
 
                         tasks[i] = RunDockerContainer(ports, cancellationToken);
@@ -530,7 +530,7 @@ namespace Microsoft.Tye.Hosting
                 {
                     for (var i = 0; i < service.Description.Replicas; i++)
                     {
-                        tasks[i] = RunDockerContainer(Enumerable.Empty<(int, int, int?, string?)>(), cancellationToken);
+                        tasks[i] = RunDockerContainer(Enumerable.Empty<(int, int, int?, string?, string?)>(), cancellationToken);
                     }
                 }
 
