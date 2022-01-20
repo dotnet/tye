@@ -376,6 +376,7 @@ namespace Microsoft.Tye
                                 ContainerPort = configBinding.ContainerPort,
                                 Port = configBinding.Port,
                                 Protocol = configBinding.Protocol,
+                                Routes = configBinding.Routes
                             };
 
                             // Assume HTTP for projects only (containers may be different)

@@ -17,5 +17,6 @@ namespace Microsoft.Tye.Hosting.Model
         public string? IPAddress { get; set; }
         public string? Protocol { get; set; }
         public List<int> ReplicaPorts { get; } = new List<int>();
+        public List<string> Routes { get; } = new List<string>();
     }
 }
