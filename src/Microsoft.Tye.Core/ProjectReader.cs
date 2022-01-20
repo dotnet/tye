@@ -77,6 +77,26 @@ namespace Microsoft.Tye
             }
         }
 
+        public static void ReadAzureFunctionProjectDetails(OutputContext output, AzureFunctionServiceBuilder project, string metadataFile)
+        {
+            if (output is null)
+            {
+                throw new ArgumentNullException(nameof(output));
+            }
+
+            if (project is null)
+            {
+                throw new ArgumentNullException(nameof(project));
+            }
+
+            if (metadataFile is null)
+            {
+                throw new ArgumentNullException(nameof(metadataFile));
+            }
+
+            EvaluateAzureFunctionProject(output, project, metadataFile);
+        }
+
         // Do not load MSBuild types before using EnsureMSBuildRegistered.
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void EvaluateProject(OutputContext output, DotnetProjectServiceBuilder project, string metadataFile)
@@ -157,6 +177,31 @@ namespace Microsoft.Tye
             string? GetMetadataValueOrNull(string key) => metadata!.TryGetValue(key, out var value) ? value : null;
             string GetMetadataValueOrEmpty(string key) => metadata!.TryGetValue(key, out var value) ? value : string.Empty;
             bool MetadataIsTrue(string key) => metadata!.TryGetValue(key, out var value) && bool.Parse(value);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void EvaluateAzureFunctionProject(OutputContext output, AzureFunctionServiceBuilder project, string metadataFile)
+        {
+            var sw = Stopwatch.StartNew();
+
+            var metadata = new Dictionary<string, string>();
+            var metadataKVPs = File.ReadLines(metadataFile).Select(l => l.Split(new[] { ':' }, 2));
+
+            foreach (var metadataKVP in metadataKVPs)
+            {
+                if (!string.IsNullOrEmpty(metadataKVP[1]))
+                {
+                    metadata.Add(metadataKVP[0], metadataKVP[1].Trim());
+                }
+            }
+
+            project.AzureFunctionsVersion = GetMetadataValueOrNull("AzureFunctionsVersion");
+
+            output.WriteDebugLine($"AzureFunctionsVersion={project.AzureFunctionsVersion}");
+
+            output.WriteDebugLine($"Evaluation Took: {sw.Elapsed.TotalMilliseconds}ms");
+
+            string? GetMetadataValueOrNull(string key) => metadata!.TryGetValue(key, out var value) ? value : null;
         }
 
         private static string NormalizePath(string path)
