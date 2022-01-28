@@ -78,35 +78,35 @@ namespace Microsoft.Tye.Hosting
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var funcPathStandalone = Environment.ExpandEnvironmentVariables("%PROGRAMFILES%/Microsoft/Azure Functions Core Tools/func.dll");
+                var funcPathStandalone = Environment.ExpandEnvironmentVariables("%PROGRAMFILES%/Microsoft/Azure Functions Core Tools/func.exe");
                 if (File.Exists(funcPathStandalone))
                 {
                     return funcPathStandalone;
                 }
 
-                return Environment.ExpandEnvironmentVariables("%APPDATA%/npm/node_modules/azure-functions-core-tools/bin/func.dll");
+                return Environment.ExpandEnvironmentVariables("%APPDATA%/npm/node_modules/azure-functions-core-tools/bin/func.exe");
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                var funcPathStandalone = $"/usr/lib/azure-functions-core-tools-{version}/func.dll";
+                var funcPathStandalone = $"/usr/lib/azure-functions-core-tools-{version}/func";
                 if (File.Exists(funcPathStandalone))
                 {
                     return funcPathStandalone;
                 }
 
-                return "/usr/local/lib/node_modules/azure-functions-core-tools/bin/func.dll";
+                return "/usr/local/lib/node_modules/azure-functions-core-tools/bin/func";
             }
             else
             {
                 // For brew path, just find a folder that supports functions v{version}.
                 var funcDirectories = Directory.GetDirectories($"/usr/local/Cellar/azure-functions-core-tools@{version}/");
-                var funcPathStandalone = Path.Combine(funcDirectories.LastOrDefault() ?? "", "func.dll");
+                var funcPathStandalone = Path.Combine(funcDirectories.LastOrDefault() ?? "", "func");
                 if (File.Exists(funcPathStandalone))
                 {
                     return funcPathStandalone;
                 }
 
-                return "/usr/local/lib/node_modules/azure-functions-core-tools/bin/func.dll";
+                return "/usr/local/lib/node_modules/azure-functions-core-tools/bin/func";
             }
         }
 

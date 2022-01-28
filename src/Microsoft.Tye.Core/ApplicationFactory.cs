@@ -199,7 +199,10 @@ namespace Microsoft.Tye
                             ProjectFile = configService.Project
                         };
 
-                        ProjectReader.ReadAzureFunctionProjectDetails(output, functionBuilder, projectMetadata[configService.Name]);
+                        if (functionBuilder.ProjectFile != null)
+                        {
+                            ProjectReader.ReadAzureFunctionProjectDetails(output, functionBuilder, projectMetadata[configService.Name]);
+                        }
 
                         // TODO liveness?
                         service = functionBuilder;
