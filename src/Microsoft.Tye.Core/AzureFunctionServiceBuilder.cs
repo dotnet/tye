@@ -19,6 +19,7 @@ namespace Microsoft.Tye
         public string FunctionPath { get; }
         public string? FuncExecutablePath { get; set; }
         public string? ProjectFile { get; set; }
+        public string? AzureFunctionsVersion { get; set; }
         public List<EnvironmentVariableBuilder> EnvironmentVariables { get; } = new List<EnvironmentVariableBuilder>();
     }
 }
