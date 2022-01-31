@@ -52,10 +52,10 @@ namespace Microsoft.Tye.Hosting
         private string? FindFuncForVersion(AzureFunctionRunInfo func)
         {
             int version = 4; // Default to the latest version (v4).
-            
+
             if (!string.IsNullOrWhiteSpace(func.AzureFunctionsVersion))
             {
-                var match = Regex.Match(func.AzureFunctionsVersion, @"^[vV](?<number>\d+)$");
+                var match = Regex.Match(func.AzureFunctionsVersion, @"^[vV]?(?<number>\d+)$");
 
                 if (match.Success && int.TryParse(match.Groups["number"].Value, out int parsedValue))
                 {
