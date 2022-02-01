@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Channels;
@@ -7,7 +11,7 @@ using Microsoft.Build.Construction;
 
 namespace Microsoft.Tye.Hosting
 {
-    class WatchBuilderWorker
+    internal class WatchBuilderWorker
     {
         private readonly ILogger _logger;
         private readonly Channel<BuildRequest> _queue;
@@ -23,39 +27,13 @@ namespace Microsoft.Tye.Hosting
             _processor = Task.Run(ProcessTaskQueueAsync);
         }
 
-        class BuildRequest
-        {
-            public BuildRequest(string projectFilePath, string workingDirectory)
-            {
-                this.projectFilePath = projectFilePath;
-                this.workingDirectory = workingDirectory;
-            }
-
-            public string projectFilePath { get; set; }
-
-            public string workingDirectory { get; set; }
-
-            private TaskCompletionSource<int> _result = new TaskCompletionSource<int>();
-
-            public Task<int> task()
-            {
-                return _result.Task;
-            }
-
-            public void complete(int exitCode)
-            {
-                if(!_result.TrySetResult(exitCode))
-                    throw new Exception("failed to set result");
-            }
-        }
-
-        public Task<int> buildProjectFileAsync(string projectFilePath, string workingDirectory) {
+        public Task<int> BuildProjectFileAsync(string projectFilePath, string workingDirectory) {
             var buildRequest = new BuildRequest(projectFilePath, workingDirectory);
             _queue.Writer.WriteAsync(buildRequest);
-            return buildRequest.task();
+            return buildRequest.Task;
         }
 
-        public Task<int> buildProjectFileAsyncImpl(string projectFilePath, string workingDirectory) {
+        private Task<int> BuildProjectFileAsyncImpl(string projectFilePath, string workingDirectory) {
             _logger.LogInformation($"Building project ${projectFilePath}...");
             return ProcessUtil.RunAsync("dotnet", $"build \"{projectFilePath}\" /nologo", throwOnError: false, workingDirectory: workingDirectory)
                 .ContinueWith((processTask) => {
@@ -94,39 +72,39 @@ namespace Microsoft.Tye.Hosting
                     var solution = (SolutionPath != null) ? SolutionFile.Parse(SolutionPath) : null;
                     string targets = "";
                     string workingDirectory = ""; // FIXME: should be set in the worker constructor
-                    while (_queue.Reader.TryRead(out BuildRequest item))
+                    while (_queue.Reader.TryRead(out BuildRequest? item))
                     {
                         try {
                             if(workingDirectory.Length == 0)
                             {
-                                workingDirectory = item.workingDirectory;
+                                workingDirectory = item.WorkingDirectory;
                             }
-                            if(solution != null && solution.ProjectShouldBuild(item.projectFilePath))
+                            if(solution != null && solution.ProjectShouldBuild(item.ProjectFilePath))
                             {
-                                if(!solutionBatch.ContainsKey(item.projectFilePath))
+                                if(!solutionBatch.ContainsKey(item.ProjectFilePath))
                                 {
                                     if(targets.Length > 0)
                                     {
                                         targets += ",";
                                     }
-                                    targets += GetProjectName(solution, item.projectFilePath); // note, assuming the default target is Build
-                                    solutionBatch.Add(item.projectFilePath, new List<BuildRequest>());
+                                    targets += GetProjectName(solution, item.ProjectFilePath); // note, assuming the default target is Build
+                                    solutionBatch.Add(item.ProjectFilePath, new List<BuildRequest>());
                                 }
-                                solutionBatch[item.projectFilePath].Add(item);
+                                solutionBatch[item.ProjectFilePath].Add(item);
                             }
                             else
                             {
                                 // this will also prevent us building multiple times if a project is used by multiple services
-                                if(!projectBatch.ContainsKey(item.projectFilePath))
+                                if(!projectBatch.ContainsKey(item.ProjectFilePath))
                                 {
-                                    projectBatch.Add(item.projectFilePath, new List<BuildRequest>());
+                                    projectBatch.Add(item.ProjectFilePath, new List<BuildRequest>());
                                 }
-                                projectBatch[item.projectFilePath].Add(item);
+                                projectBatch[item.ProjectFilePath].Add(item);
                             }
                         }
                         catch (Exception)
                         {
-                            item.complete(-1);
+                            item.Complete(-1);
                         }
                     }
 
@@ -150,7 +128,7 @@ namespace Microsoft.Tye.Hosting
                                 {
                                     foreach(var buildRequest in project.Value)
                                     {
-                                        buildRequest.complete(exitCode);
+                                        buildRequest.Complete(exitCode);
                                     }
                                 }
                             }
@@ -162,10 +140,10 @@ namespace Microsoft.Tye.Hosting
                         {
                             // FIXME: this is serial
                             tasks.Add(Task.Run(async () => {
-                                var exitCode = await buildProjectFileAsyncImpl(project.Key, workingDirectory);
+                                var exitCode = await BuildProjectFileAsyncImpl(project.Key, workingDirectory);
                                 foreach(var buildRequest in project.Value)
                                 {
-                                    buildRequest.complete(exitCode);
+                                    buildRequest.Complete(exitCode);
                                 }
                             }));
                         }
@@ -181,6 +159,31 @@ namespace Microsoft.Tye.Hosting
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred executing task work item.");
+            }
+        }
+
+        private class BuildRequest
+        {
+            private readonly TaskCompletionSource<int> _result = new TaskCompletionSource<int>();
+
+            public BuildRequest(string projectFilePath, string workingDirectory)
+            {
+                ProjectFilePath = projectFilePath;
+                WorkingDirectory = workingDirectory;
+            }
+
+            public string ProjectFilePath { get; }
+
+            public string WorkingDirectory { get; }
+
+            public Task<int> Task => _result.Task;
+
+            public void Complete(int exitCode)
+            {
+                if(!_result.TrySetResult(exitCode))
+                {
+                    throw new Exception("failed to set result");
+                }
             }
         }
     }
