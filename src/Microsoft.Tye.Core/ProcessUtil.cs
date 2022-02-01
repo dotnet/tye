@@ -76,6 +76,27 @@ namespace Microsoft.Tye
                 }
             }
 
+            var outputLock = new SpinLock();
+
+            void WithOutputLock(Action action)
+            {
+                bool gotLock = false;
+
+                try
+                {
+                    outputLock.Enter(ref gotLock);
+
+                    action();
+                }
+                finally
+                {
+                    if (gotLock)
+                    {
+                        outputLock.Exit();
+                    }
+                }
+            }
+
             var outputBuilder = new StringBuilder();
             process.OutputDataReceived += (_, e) =>
             {
@@ -90,7 +111,7 @@ namespace Microsoft.Tye
                 }
                 else
                 {
-                    outputBuilder.AppendLine(e.Data);
+                    WithOutputLock(() => outputBuilder.AppendLine(e.Data));
                 }
             };
 
@@ -108,7 +129,7 @@ namespace Microsoft.Tye
                 }
                 else
                 {
-                    errorBuilder.AppendLine(e.Data);
+                    WithOutputLock(() => errorBuilder.AppendLine(e.Data));
                 }
             };
 
@@ -129,15 +150,21 @@ namespace Microsoft.Tye
                     process.WaitForExit(ProcessExitTimeoutMs);
                 }
 
-                if (throwOnError && process.ExitCode != 0)
-                {
-                    processLifetimeTask.TrySetException(new InvalidOperationException($"Command {filename} {arguments} returned exit code {process.ExitCode}. Standard error: \"{errorBuilder.ToString()}\""));
-                }
-                else
-                {
-                    // Since the process has exited, no additional data will be written to either output buffer or error buffer, it's thread-safe to call ToString() on both outputBuilder and errorBuilder.
-                    processLifetimeTask.TrySetResult(new ProcessResult(outputBuilder.ToString(), errorBuilder.ToString(), process.ExitCode));
-                }
+                // NOTE: If WaitForExit() returns false, more output may be written,
+                //       so we must synchronize access to the output StringBuilders.
+
+                WithOutputLock(
+                    () =>
+                    {
+                        if (throwOnError && process.ExitCode != 0)
+                        {
+                            processLifetimeTask.TrySetException(new InvalidOperationException($"Command {filename} {arguments} returned exit code {process.ExitCode}. Standard error: \"{errorBuilder.ToString()}\""));
+                        }
+                        else
+                        {
+                            processLifetimeTask.TrySetResult(new ProcessResult(outputBuilder.ToString(), errorBuilder.ToString(), process.ExitCode));
+                        }
+                    });
             };
 
             // lock ensures we're reading output when WaitForExit is called in process.Exited event.
