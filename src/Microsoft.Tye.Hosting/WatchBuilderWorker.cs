@@ -8,45 +8,84 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Build.Construction;
+using System.Threading;
 
 namespace Microsoft.Tye.Hosting
 {
-    internal class WatchBuilderWorker
+    internal sealed class WatchBuilderWorker : IAsyncDisposable
     {
+        private CancellationTokenSource? _cancellationTokenSource;
         private readonly ILogger _logger;
-        private readonly Channel<BuildRequest> _queue;
-        private Task _processor;
-        private string? _solutionPath;
-
-        public string? SolutionPath { get => _solutionPath; set => _solutionPath = value; }
+        private Task? _processor;
+        private Channel<BuildRequest>? _queue;
 
         public WatchBuilderWorker(ILogger logger)
         {
             _logger = logger;
+        }
+
+        public async Task StartAsync(string? solutionPath)
+        {
+            await StopAsync();
+
             _queue = Channel.CreateUnbounded<BuildRequest>();
-            _processor = Task.Run(ProcessTaskQueueAsync);
+            _cancellationTokenSource = new CancellationTokenSource();
+            _processor = Task.Run(() => ProcessTaskQueueAsync(_logger, _queue.Reader, solutionPath, _cancellationTokenSource.Token));
         }
 
-        public Task<int> BuildProjectFileAsync(string projectFilePath, string workingDirectory) {
+        public async Task StopAsync()
+        {
+            _queue?.Writer.TryComplete();
+            _queue = null;
+
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
+
+            if (_processor != null)
+            {
+                await _processor;
+
+                _processor = null;
+            }
+        }
+
+        public async Task<int> BuildProjectFileAsync(string projectFilePath, string workingDirectory) {
+            if (_queue == null)
+            {
+                throw new InvalidOperationException("The worker is not running.");
+            }
+
             var buildRequest = new BuildRequest(projectFilePath, workingDirectory);
-            _queue.Writer.WriteAsync(buildRequest);
-            return buildRequest.Task;
+
+            await _queue.Writer.WriteAsync(buildRequest);
+
+            return await buildRequest.Task;
         }
 
-        private Task<int> BuildProjectFileAsyncImpl(string projectFilePath, string workingDirectory) {
-            _logger.LogInformation($"Building project ${projectFilePath}...");
+        #region IAsyncDisposable Members
+
+        public async ValueTask DisposeAsync()
+        {
+            await StopAsync();
+        }
+
+        #endregion
+
+        private static Task<int> BuildProjectFileAsyncImpl(ILogger logger, string projectFilePath, string workingDirectory) {
+            logger.LogInformation($"Building project ${projectFilePath}...");
             return ProcessUtil.RunAsync("dotnet", $"build \"{projectFilePath}\" /nologo", throwOnError: false, workingDirectory: workingDirectory)
                 .ContinueWith((processTask) => {
                     var buildResult = processTask.Result;
                     if (buildResult.ExitCode != 0)
                     {
-                        _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
+                        logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
                     }
                     return buildResult.ExitCode;
                 });
         }
 
-        private string GetProjectName(SolutionFile solution, string projectFile)
+        private static string GetProjectName(SolutionFile solution, string projectFile)
         {
             foreach(var project in solution.ProjectsInOrder) {
                 if(project.AbsolutePath == projectFile)
@@ -58,21 +97,27 @@ namespace Microsoft.Tye.Hosting
             return "";
         }
 
-        private async Task ProcessTaskQueueAsync()
+        private static async Task ProcessTaskQueueAsync(
+            ILogger logger,
+            ChannelReader<BuildRequest> requestReader,
+            string? solutionPath,
+            CancellationToken cancellationToken)
         {
+            logger.LogInformation("Build Watcher: Watching for builds...");
+
             try
             {
-                while (await _queue.Reader.WaitToReadAsync())
+                while (await requestReader.WaitToReadAsync(cancellationToken))
                 {
                     var solutionBatch = new Dictionary<string, List<BuildRequest>>(); //  store the list of promises
                     var projectBatch = new Dictionary<string, List<BuildRequest>>();
                     // TODO: quiet time... maybe wait both...?
                     await Task.Delay(100);
 
-                    var solution = (SolutionPath != null) ? SolutionFile.Parse(SolutionPath) : null;
+                    var solution = (solutionPath != null) ? SolutionFile.Parse(solutionPath) : null;
                     string targets = "";
                     string workingDirectory = ""; // FIXME: should be set in the worker constructor
-                    while (_queue.Reader.TryRead(out BuildRequest? item))
+                    while (requestReader.TryRead(out BuildRequest? item))
                     {
                         try {
                             if(workingDirectory.Length == 0)
@@ -112,14 +157,14 @@ namespace Microsoft.Tye.Hosting
                     if(solutionBatch.Count > 0)
                     {
                         tasks.Add(Task.Run(async () => {
-                            _logger.LogInformation("Building projects from solution: " + targets);
+                            logger.LogInformation("Building projects from solution: " + targets);
                             int exitCode = -1;
                             try
                             {
-                                var buildResult = await ProcessUtil.RunAsync("dotnet", $"msbuild {SolutionPath} -target:{targets}", throwOnError: false, workingDirectory: workingDirectory);
+                                var buildResult = await ProcessUtil.RunAsync("dotnet", $"msbuild {solutionPath} -target:{targets}", throwOnError: false, workingDirectory: workingDirectory);
                                 if (buildResult.ExitCode != 0)
                                 {
-                                    _logger.LogInformation("Building solution failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
+                                    logger.LogInformation("Building solution failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
                                 }
                                 exitCode = buildResult.ExitCode;
                             }
@@ -140,7 +185,7 @@ namespace Microsoft.Tye.Hosting
                         {
                             // FIXME: this is serial
                             tasks.Add(Task.Run(async () => {
-                                var exitCode = await BuildProjectFileAsyncImpl(project.Key, workingDirectory);
+                                var exitCode = await BuildProjectFileAsyncImpl(logger, project.Key, workingDirectory);
                                 foreach(var buildRequest in project.Value)
                                 {
                                     buildRequest.Complete(exitCode);
@@ -158,8 +203,10 @@ namespace Microsoft.Tye.Hosting
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred executing task work item.");
+                logger.LogError(ex, "Error occurred executing task work item.");
             }
+
+            logger.LogInformation("Build Watcher: Done watching.");
         }
 
         private class BuildRequest
