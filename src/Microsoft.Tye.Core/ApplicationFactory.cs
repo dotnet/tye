@@ -74,9 +74,30 @@ namespace Microsoft.Tye
                     root.Extensions.Add(extension);
                 }
 
+                bool IsAzureFunctionService(ConfigService service)
+                {
+                    return !string.IsNullOrEmpty(service.AzureFunction);
+                }
+
                 var services = filter?.ServicesFilter != null ?
                     config.Services.Where(filter.ServicesFilter).ToList() :
                     config.Services;
+
+                // Infer project file for Azure Function services so they will be evaluated.
+                foreach (var service in services.Where(IsAzureFunctionService))
+                {
+                    var azureFunctionDirectory = Path.Combine(config.Source.DirectoryName!, service.AzureFunction!);
+
+                    foreach (var proj in Directory.EnumerateFiles(azureFunctionDirectory))
+                    {
+                        var fileInfo = new FileInfo(proj);
+                        if (fileInfo.Extension == ".csproj" || fileInfo.Extension == ".fsproj")
+                        {
+                            service.Project = fileInfo.FullName;
+                            break;
+                        }
+                    }
+                }
 
                 var sw = Stopwatch.StartNew();
                 // Project services will be restored and evaluated before resolving all other services.
@@ -163,7 +184,31 @@ namespace Microsoft.Tye
                         continue;
                     }
 
-                    if (!string.IsNullOrEmpty(configService.Project))
+                    // NOTE: Evaluate Azure Function services before project services as both use Project.
+                    if (IsAzureFunctionService(configService))
+                    {
+                        var azureFunctionDirectory = Path.Combine(config.Source.DirectoryName!, configService.AzureFunction!);
+
+                        var functionBuilder = new AzureFunctionServiceBuilder(
+                            configService.Name,
+                            azureFunctionDirectory,
+                            ServiceSource.Configuration)
+                        {
+                            Args = configService.Args,
+                            Replicas = configService.Replicas ?? 1,
+                            FuncExecutablePath = configService.FuncExecutable,
+                            ProjectFile = configService.Project
+                        };
+
+                        if (functionBuilder.ProjectFile != null)
+                        {
+                            ProjectReader.ReadAzureFunctionProjectDetails(output, functionBuilder, projectMetadata[configService.Name]);
+                        }
+
+                        // TODO liveness?
+                        service = functionBuilder;
+                    }
+                    else if (!string.IsNullOrEmpty(configService.Project))
                     {
                         // TODO: Investigate possible null.
                         var project = new DotnetProjectServiceBuilder(configService.Name!, new FileInfo(configService.ProjectFullPath!), ServiceSource.Configuration);
@@ -306,33 +351,6 @@ namespace Microsoft.Tye
 
                         continue;
                     }
-                    else if (!string.IsNullOrEmpty(configService.AzureFunction))
-                    {
-                        var azureFunctionDirectory = Path.Combine(config.Source.DirectoryName!, configService.AzureFunction);
-
-                        var functionBuilder = new AzureFunctionServiceBuilder(
-                            configService.Name,
-                            azureFunctionDirectory,
-                            ServiceSource.Configuration)
-                        {
-                            Args = configService.Args,
-                            Replicas = configService.Replicas ?? 1,
-                            FuncExecutablePath = configService.FuncExecutable,
-                        };
-
-                        foreach (var proj in Directory.EnumerateFiles(azureFunctionDirectory))
-                        {
-                            var fileInfo = new FileInfo(proj);
-                            if (fileInfo.Extension == ".csproj" || fileInfo.Extension == ".fsproj")
-                            {
-                                functionBuilder.ProjectFile = fileInfo.FullName;
-                                break;
-                            }
-                        }
-
-                        // TODO liveness?
-                        service = functionBuilder;
-                    }
                     else if (configService.External)
                     {
                         var external = new ExternalServiceBuilder(configService.Name, ServiceSource.Configuration);
@@ -377,6 +395,7 @@ namespace Microsoft.Tye
                                 ContainerPort = configBinding.ContainerPort,
                                 Port = configBinding.Port,
                                 Protocol = configBinding.Protocol,
+                                Routes = configBinding.Routes
                             };
 
                             // Assume HTTP for projects only (containers may be different)

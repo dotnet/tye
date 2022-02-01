@@ -34,6 +34,7 @@
       <_MicrosoftTye_ProjectMetadata Include="MicrosoftNETPlatformLibrary: $(MicrosoftNETPlatformLibrary)" />
       <_MicrosoftTye_ProjectMetadata Include="_AspNetCoreAppSharedFxIsEnabled: $(_AspNetCoreAppSharedFxIsEnabled)" />
       <_MicrosoftTye_ProjectMetadata Include="UsingMicrosoftNETSdkWeb: $(UsingMicrosoftNETSdkWeb)" />
+      <_MicrosoftTye_ProjectMetadata Include="AzureFunctionsVersion: $(AzureFunctionsVersion)" />
     </ItemGroup>
 
     <WriteLinesToFile

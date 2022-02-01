@@ -185,7 +185,7 @@ namespace Microsoft.Tye.Hosting
             var path = service.Status.ExecutablePath!;
             var workingDirectory = service.Status.WorkingDirectory!;
 
-            async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol)> ports, string copiedArgs)
+            async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol, string? Host)> ports, string copiedArgs)
             {
                 // Make sure we yield before trying to start the process, this is important so we don't block startup
                 await Task.Yield();
@@ -225,7 +225,7 @@ namespace Microsoft.Tye.Hosting
 
                     // 1. Configure ASP.NET Core to bind to those same ports
                     var urlPorts = ports.Where(p => p.Protocol == null || p.Protocol == "http" || p.Protocol == "https");
-                    environment["ASPNETCORE_URLS"] = string.Join(";", urlPorts.Select(p => $"{p.Protocol ?? "http"}://{application.ContainerEngine.AspNetUrlsHost}:{p.Port}"));
+                    environment["ASPNETCORE_URLS"] = string.Join(";", urlPorts.Select(p => $"{p.Protocol ?? "http"}://{p.Host ?? application.ContainerEngine.AspNetUrlsHost}:{p.Port}"));
 
                     // Set the HTTPS port for the redirect middleware
                     foreach (var p in ports)
@@ -308,7 +308,8 @@ namespace Microsoft.Tye.Hosting
                             {
                                 if (hasPorts)
                                 {
-                                    _logger.LogInformation("{ServiceName} running on process id {PID} bound to {Address}", replica, pid, string.Join(", ", ports.Select(p => $"{p.Protocol ?? "http"}://localhost:{p.Port}")));
+                                    _logger.LogInformation("{ServiceName} running on process id {PID} bound to {Address}",
+                                        replica, pid, string.Join(", ", ports.Select(p => $"{p.Protocol ?? "http"}://{p.Host ?? application.ContainerEngine.AspNetUrlsHost}:{p.Port}")));
                                 }
                                 else
                                 {
@@ -430,7 +431,7 @@ namespace Microsoft.Tye.Hosting
                 // port
                 for (int i = 0; i < serviceDescription.Replicas; i++)
                 {
-                    var ports = new List<(int, int, string?)>();
+                    var ports = new List<(int, int, string?, string?)>();
                     foreach (var binding in serviceDescription.Bindings)
                     {
                         if (binding.Port == null)
@@ -438,7 +439,7 @@ namespace Microsoft.Tye.Hosting
                             continue;
                         }
 
-                        ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.Protocol));
+                        ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.Protocol, binding.Host));
                     }
 
                     processInfo.Tasks[i] = RunApplicationAsync(ports, args);
@@ -448,7 +449,7 @@ namespace Microsoft.Tye.Hosting
             {
                 for (int i = 0; i < service.Description.Replicas; i++)
                 {
-                    processInfo.Tasks[i] = RunApplicationAsync(Enumerable.Empty<(int, int, string?)>(), args);
+                    processInfo.Tasks[i] = RunApplicationAsync(Enumerable.Empty<(int, int, string?, string?)>(), args);
                 }
             }
 

@@ -94,7 +94,7 @@ namespace Microsoft.Tye.Hosting
                                                 return;
                                             }
 
-                                            using var _ = cts.Token.Register(() => notificationFeature.RequestClose());
+                                            using var _ = cts.Token.Register(() => notificationFeature?.RequestClose());
 
                                             NetworkStream? targetStream = null;
 
@@ -132,10 +132,10 @@ namespace Microsoft.Tye.Hosting
                                                 _logger.LogDebug("Proxying traffic to {ServiceName} {ExternalPort}:{InternalPort}", service.Description.Name, binding.Port, ports[next]);
 
                                                 // external -> internal
-                                                var reading = Task.Run(() => connection.Transport.Input.CopyToAsync(targetStream, notificationFeature.ConnectionClosedRequested));
+                                                var reading = Task.Run(() => connection.Transport.Input.CopyToAsync(targetStream, notificationFeature?.ConnectionClosedRequested ?? default));
 
                                                 // internal -> external
-                                                var writing = Task.Run(() => targetStream.CopyToAsync(connection.Transport.Output, notificationFeature.ConnectionClosedRequested));
+                                                var writing = Task.Run(() => targetStream.CopyToAsync(connection.Transport.Output, notificationFeature?.ConnectionClosedRequested ?? default));
 
                                                 await Task.WhenAll(reading, writing);
                                             }
@@ -149,7 +149,7 @@ namespace Microsoft.Tye.Hosting
                                             }
                                             catch (OperationCanceledException ex)
                                             {
-                                                if (!notificationFeature.ConnectionClosedRequested.IsCancellationRequested)
+                                                if (notificationFeature is null || !notificationFeature.ConnectionClosedRequested.IsCancellationRequested)
                                                 {
                                                     _logger.LogDebug(0, ex, "Proxy error for service {ServiceName}", service.Description.Name);
                                                 }

@@ -4,7 +4,10 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
 
 ## Installing Tye
 
-1. Install [.NET Core 3.1](<http://dot.net>).
+1. Install [.NET Core 3.1](<https://dot.net>).
+
+    > .NET Core 3.1 is required for the current release of Tye (`0.10.0`). Going forward, both recent CI builds as well as future releases of Tye will require .NET 6.
+
 1. Install tye via the following command:
 
     ```text
@@ -16,6 +19,14 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
     ```text
     dotnet tool update -g Microsoft.Tye --version "0.10.0-alpha.21420.1"
     ```
+
+    > If using Mac with both `arm64` and `x64` .NET SDKs, you may need to supply the `-a x64` parameter when installing Tye as it requires the x64 version of .NET Core 3.1.
+    >
+    > Example:
+    >
+    > ```
+    > dotnet tool install -a x64 -g Microsoft.Tye --version "0.10.0-alpha.21420.1"
+    > ```
 
     > If using Mac and, if getting "command not found" errors when running `tye`, you may need to ensure that the `$HOME/.dotnet/tools` directory has been added to `PATH`.
     >

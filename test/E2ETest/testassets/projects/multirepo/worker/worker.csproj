@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <UserSecretsId>dotnet-worker-A47A7C4B-4BF2-4243-9BBE-E6B3CB3E9C6F</UserSecretsId>
     <RootNamespace>Worker</RootNamespace>
   </PropertyGroup>
