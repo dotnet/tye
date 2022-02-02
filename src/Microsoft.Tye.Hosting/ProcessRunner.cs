@@ -26,7 +26,7 @@ namespace Microsoft.Tye.Hosting
         private readonly ProcessRunnerOptions _options;
         private readonly ReplicaRegistry _replicaRegistry;
 
-        private readonly WatchBuilderWorker _watchBuilderWorker;
+        private readonly BuildWatcher _watchBuilderWorker;
 
         public ProcessRunner(ILogger logger, ReplicaRegistry replicaRegistry, ProcessRunnerOptions options)
         {
@@ -34,7 +34,7 @@ namespace Microsoft.Tye.Hosting
             _replicaRegistry = replicaRegistry;
             _options = options;
 
-            _watchBuilderWorker = new WatchBuilderWorker(logger);
+            _watchBuilderWorker = new BuildWatcher(logger);
         }
 
         public async Task StartAsync(Application application)
