@@ -41,7 +41,7 @@ namespace Microsoft.Tye.Hosting
         {
             await PurgeFromPreviousRun();
 
-            await _watchBuilderWorker.StartAsync(application.BuildSolution);
+            await _watchBuilderWorker.StartAsync(application.BuildSolution, application.ContextDirectory);
 
             await BuildAndRunProjects(application);
         }
@@ -366,7 +366,7 @@ namespace Microsoft.Tye.Hosting
                             {
                                 if (service.Description.RunInfo is ProjectRunInfo)
                                 {
-                                    var exitCode = await _watchBuilderWorker!.BuildProjectFileAsync(service.Status.ProjectFilePath!, application.ContextDirectory);
+                                    var exitCode = await _watchBuilderWorker!.BuildProjectFileAsync(service.Status.ProjectFilePath!);
                                     _logger.LogInformation($"Built {service.Status.ProjectFilePath} with exit code {exitCode}");
                                     return exitCode;
                                 }

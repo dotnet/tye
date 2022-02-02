@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Build.Construction;
 using System.Threading;
+using System.Linq;
 
 namespace Microsoft.Tye.Hosting
 {
@@ -24,13 +25,13 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
         }
 
-        public async Task StartAsync(string? solutionPath)
+        public async Task StartAsync(string? solutionPath, string workingDirectory)
         {
             await StopAsync();
 
             _queue = Channel.CreateUnbounded<BuildRequest>();
             _cancellationTokenSource = new CancellationTokenSource();
-            _processor = Task.Run(() => ProcessTaskQueueAsync(_logger, _queue.Reader, solutionPath, _cancellationTokenSource.Token));
+            _processor = Task.Run(() => ProcessTaskQueueAsync(_logger, _queue.Reader, solutionPath, workingDirectory, _cancellationTokenSource.Token));
         }
 
         public async Task StopAsync()
@@ -50,13 +51,13 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        public async Task<int> BuildProjectFileAsync(string projectFilePath, string workingDirectory) {
+        public async Task<int> BuildProjectFileAsync(string projectFilePath) {
             if (_queue == null)
             {
                 throw new InvalidOperationException("The worker is not running.");
             }
 
-            var buildRequest = new BuildRequest(projectFilePath, workingDirectory);
+            var buildRequest = new BuildRequest(projectFilePath);
 
             await _queue.Writer.WriteAsync(buildRequest);
 
@@ -101,6 +102,7 @@ namespace Microsoft.Tye.Hosting
             ILogger logger,
             ChannelReader<BuildRequest> requestReader,
             string? solutionPath,
+            string workingDirectory,
             CancellationToken cancellationToken)
         {
             logger.LogInformation("Build Watcher: Watching for builds...");
@@ -126,8 +128,6 @@ namespace Microsoft.Tye.Hosting
                     logger.LogInformation("Build Watcher: Processing {0} requests...", requests.Count);
 
                     var solution = (solutionPath != null) ? SolutionFile.Parse(solutionPath) : null;
-                    string targets = "";
-                    string workingDirectory = ""; // FIXME: should be set in the worker constructor
 
                     var solutionBatch = new Dictionary<string, List<BuildRequest>>(); //  store the list of promises
                     var projectBatch = new Dictionary<string, List<BuildRequest>>();
@@ -136,31 +136,23 @@ namespace Microsoft.Tye.Hosting
                     {
                         try
                         {
-                            if (workingDirectory.Length == 0)
+                            if (solution?.ProjectShouldBuild(request.ProjectFilePath) == true)
                             {
-                                workingDirectory = request.WorkingDirectory;
-                            }
-
-                            if (solution != null && solution.ProjectShouldBuild(request.ProjectFilePath))
-                            {
-                                if(!solutionBatch.ContainsKey(request.ProjectFilePath))
+                                if (!solutionBatch.ContainsKey(request.ProjectFilePath))
                                 {
-                                    if(targets.Length > 0)
-                                    {
-                                        targets += ",";
-                                    }
-                                    targets += GetProjectName(solution, request.ProjectFilePath); // note, assuming the default target is Build
                                     solutionBatch.Add(request.ProjectFilePath, new List<BuildRequest>());
                                 }
+
                                 solutionBatch[request.ProjectFilePath].Add(request);
                             }
                             else
                             {
                                 // this will also prevent us building multiple times if a project is used by multiple services
-                                if(!projectBatch.ContainsKey(request.ProjectFilePath))
+                                if (!projectBatch.ContainsKey(request.ProjectFilePath))
                                 {
                                     projectBatch.Add(request.ProjectFilePath, new List<BuildRequest>());
                                 }
+
                                 projectBatch[request.ProjectFilePath].Add(request);
                             }
                         }
@@ -171,8 +163,11 @@ namespace Microsoft.Tye.Hosting
                     }
 
                     var tasks = new List<Task>();
-                    if(solutionBatch.Count > 0)
+
+                    if (solutionBatch.Any())
                     {
+                        var targets = String.Concat(",", solutionBatch.Keys.Select(key => GetProjectName(solution!, key)));
+
                         tasks.Add(Task.Run(async () => {
                             logger.LogInformation("Build Watcher: Building projects from solution: " + targets);
                             int exitCode = -1;
@@ -186,9 +181,9 @@ namespace Microsoft.Tye.Hosting
                                 exitCode = buildResult.ExitCode;
                             }
                             finally {
-                                foreach(var project in solutionBatch)
+                                foreach (var project in solutionBatch)
                                 {
-                                    foreach(var buildRequest in project.Value)
+                                    foreach (var buildRequest in project.Value)
                                     {
                                         buildRequest.Complete(exitCode);
                                     }
@@ -196,22 +191,24 @@ namespace Microsoft.Tye.Hosting
                             }
                         }));
                     }
-                    else
+
+                    foreach (var project in projectBatch)
                     {
-                        foreach(var project in projectBatch)
-                        {
-                            // FIXME: this is serial
-                            tasks.Add(Task.Run(async () => {
-                                var exitCode = await BuildProjectFileAsyncImpl(logger, project.Key, workingDirectory);
-                                foreach(var buildRequest in project.Value)
+                        // FIXME: this is serial
+                        tasks.Add(
+                            Task.Run(
+                                async () =>
                                 {
-                                    buildRequest.Complete(exitCode);
-                                }
-                            }));
-                        }
+                                    var exitCode = await BuildProjectFileAsyncImpl(logger, project.Key, workingDirectory);
+
+                                    foreach (var buildRequest in project.Value)
+                                    {
+                                        buildRequest.Complete(exitCode);
+                                    }
+                                }));
                     }
 
-                    Task.WaitAll(tasks.ToArray());
+                    await Task.WhenAll(tasks);
                 }
             }
             catch (OperationCanceledException)
@@ -230,15 +227,12 @@ namespace Microsoft.Tye.Hosting
         {
             private readonly TaskCompletionSource<int> _result = new TaskCompletionSource<int>();
 
-            public BuildRequest(string projectFilePath, string workingDirectory)
+            public BuildRequest(string projectFilePath)
             {
                 ProjectFilePath = projectFilePath;
-                WorkingDirectory = workingDirectory;
             }
 
             public string ProjectFilePath { get; }
-
-            public string WorkingDirectory { get; }
 
             public Task<int> Task => _result.Task;
 
