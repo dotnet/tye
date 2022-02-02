@@ -73,9 +73,9 @@ namespace Microsoft.Tye.Hosting
 
         #endregion
 
-        private static Task<int> BuildProjectFileAsyncImpl(ILogger logger, string projectFilePath, string workingDirectory) {
+        private static Task<int> BuildProjectFileAsyncImpl(ILogger logger, string projectFilePath, string workingDirectory, CancellationToken cancellationToken) {
             logger.LogInformation($"Building project ${projectFilePath}...");
-            return ProcessUtil.RunAsync("dotnet", $"build \"{projectFilePath}\" /nologo", throwOnError: false, workingDirectory: workingDirectory)
+            return ProcessUtil.RunAsync("dotnet", $"build \"{projectFilePath}\" /nologo", throwOnError: false, workingDirectory: workingDirectory, cancellationToken: cancellationToken)
                 .ContinueWith((processTask) => {
                     var buildResult = processTask.Result;
                     if (buildResult.ExitCode != 0)
@@ -111,10 +111,11 @@ namespace Microsoft.Tye.Hosting
             {
                 while (await requestReader.WaitToReadAsync(cancellationToken))
                 {
-                    logger.LogInformation("Build Watcher: Builds requested; waiting for more...");
+                    var delay = TimeSpan.FromMilliseconds(250);
 
-                    // TODO: Consider using a quiet time.
-                    await Task.Delay(TimeSpan.FromMilliseconds(250));
+                    logger.LogInformation("Build Watcher: Builds requested; waiting {DelayInMs}ms for more...", delay.TotalMilliseconds);
+
+                    await Task.Delay(delay);
 
                     logger.LogInformation("Build Watcher: Getting requests...");
 
@@ -125,7 +126,7 @@ namespace Microsoft.Tye.Hosting
                         requests.Add(request);
                     }
 
-                    logger.LogInformation("Build Watcher: Processing {0} requests...", requests.Count);
+                    logger.LogInformation("Build Watcher: Processing {Count} requests...", requests.Count);
 
                     var solution = (solutionPath != null) ? SolutionFile.Parse(solutionPath) : null;
 
@@ -134,31 +135,24 @@ namespace Microsoft.Tye.Hosting
 
                     foreach (var request in requests)
                     {
-                        try
+                        if (solution?.ProjectShouldBuild(request.ProjectFilePath) == true)
                         {
-                            if (solution?.ProjectShouldBuild(request.ProjectFilePath) == true)
+                            if (!solutionBatch.ContainsKey(request.ProjectFilePath))
                             {
-                                if (!solutionBatch.ContainsKey(request.ProjectFilePath))
-                                {
-                                    solutionBatch.Add(request.ProjectFilePath, new List<BuildRequest>());
-                                }
-
-                                solutionBatch[request.ProjectFilePath].Add(request);
+                                solutionBatch.Add(request.ProjectFilePath, new List<BuildRequest>());
                             }
-                            else
-                            {
-                                // this will also prevent us building multiple times if a project is used by multiple services
-                                if (!projectBatch.ContainsKey(request.ProjectFilePath))
-                                {
-                                    projectBatch.Add(request.ProjectFilePath, new List<BuildRequest>());
-                                }
 
-                                projectBatch[request.ProjectFilePath].Add(request);
-                            }
+                            solutionBatch[request.ProjectFilePath].Add(request);
                         }
-                        catch (Exception)
+                        else
                         {
-                            request.Complete(-1);
+                            // this will also prevent us building multiple times if a project is used by multiple services
+                            if (!projectBatch.ContainsKey(request.ProjectFilePath))
+                            {
+                                projectBatch.Add(request.ProjectFilePath, new List<BuildRequest>());
+                            }
+
+                            projectBatch[request.ProjectFilePath].Add(request);
                         }
                     }
 
@@ -186,20 +180,20 @@ namespace Microsoft.Tye.Hosting
 
                     if (solutionBatch.Any())
                     {
-                        var targets = String.Concat(",", solutionBatch.Keys.Select(key => GetProjectName(solution!, key)));
+                        var targets = String.Join(",", solutionBatch.Keys.Select(key => GetProjectName(solution!, key)));
 
                         tasks.Add(
                             WithRequestCompletion(
                                 solutionBatch.Values.SelectMany(x => x),
                                 async () => 
                                 {
-                                    logger.LogInformation("Build Watcher: Building projects from solution: " + targets);
+                                    logger.LogInformation("Build Watcher: Building {Targets} of solution {SolutionPath}...", targets, solutionPath);
                                         
-                                    var buildResult = await ProcessUtil.RunAsync("dotnet", $"msbuild {solutionPath} -target:{targets}", throwOnError: false, workingDirectory: workingDirectory);
+                                    var buildResult = await ProcessUtil.RunAsync("dotnet", $"msbuild {solutionPath} -target:{targets}", throwOnError: false, workingDirectory: workingDirectory, cancellationToken: cancellationToken);
 
                                     if (buildResult.ExitCode != 0)
                                     {
-                                        logger.LogInformation("Build Watcher: Building solution failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
+                                        logger.LogInformation("Build Watcher: Solution build failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
                                     }
 
                                     return buildResult.ExitCode;
@@ -208,19 +202,40 @@ namespace Microsoft.Tye.Hosting
 
                     foreach (var project in projectBatch)
                     {
-                        tasks.Add(WithRequestCompletion(project.Value, () => BuildProjectFileAsyncImpl(logger, project.Key, workingDirectory)));
+                        tasks.Add(
+                            WithRequestCompletion(
+                                project.Value,
+                                async () =>
+                                {
+                                    logger.LogInformation("Build Watcher: Building project {ProjectPath}...", project.Key);
+                                    
+                                    var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{project.Key}\" /nologo", throwOnError: false, workingDirectory: workingDirectory, cancellationToken: cancellationToken);
+
+                                    if (buildResult.ExitCode != 0)
+                                    {
+                                        logger.LogInformation("Build Watcher: Project build failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
+                                    }
+                                    
+                                    return buildResult.ExitCode;
+                                }));
                     }
 
+                    logger.LogInformation("Build Watcher: Waiting for builds to complete...");
+
+                    // NOTE: WithRequestCompletion() will trap exceptions so build errors should not bubble up from WhenAll().
+
                     await Task.WhenAll(tasks);
+
+                    logger.LogInformation("Build Watcher: Done with requests; waiting for more...");
                 }
             }
             catch (OperationCanceledException)
             {
-                // Prevent throwing if stoppingToken was signaled
+                // NO-OP: Trap exception due to cancellation.
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Build Watcher: Error occurred executing task work item.");
+                logger.LogError(ex, "Build Watcher: Error while processing builds.");
             }
 
             logger.LogInformation("Build Watcher: Done watching.");
