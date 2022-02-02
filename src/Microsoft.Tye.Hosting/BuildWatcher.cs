@@ -1,15 +1,15 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Microsoft.Build.Construction;
-using System.Threading;
-using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Tye.Hosting
 {
@@ -51,7 +51,8 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        public async Task<int> BuildProjectFileAsync(string projectFilePath) {
+        public async Task<int> BuildProjectFileAsync(string projectFilePath)
+        {
             if (_queue == null)
             {
                 throw new InvalidOperationException("The worker is not running.");
@@ -73,29 +74,17 @@ namespace Microsoft.Tye.Hosting
 
         #endregion
 
-        private static Task<int> BuildProjectFileAsyncImpl(ILogger logger, string projectFilePath, string workingDirectory, CancellationToken cancellationToken) {
-            logger.LogInformation($"Building project ${projectFilePath}...");
-            return ProcessUtil.RunAsync("dotnet", $"build \"{projectFilePath}\" /nologo", throwOnError: false, workingDirectory: workingDirectory, cancellationToken: cancellationToken)
-                .ContinueWith((processTask) => {
-                    var buildResult = processTask.Result;
-                    if (buildResult.ExitCode != 0)
-                    {
-                        logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
-                    }
-                    return buildResult.ExitCode;
-                });
-        }
-
         private static string GetProjectName(SolutionFile solution, string projectFile)
         {
-            foreach(var project in solution.ProjectsInOrder) {
-                if(project.AbsolutePath == projectFile)
+            foreach (var project in solution.ProjectsInOrder)
+            {
+                if (project.AbsolutePath == projectFile)
                 {
                     return project.ProjectName;
                 }
             }
-            // TODO: error
-            return "";
+
+            throw new InvalidOperationException($"Could not find project in solution: {projectFile}");
         }
 
         private static async Task ProcessTaskQueueAsync(
@@ -185,10 +174,10 @@ namespace Microsoft.Tye.Hosting
                         tasks.Add(
                             WithRequestCompletion(
                                 solutionBatch.Values.SelectMany(x => x),
-                                async () => 
+                                async () =>
                                 {
                                     logger.LogInformation("Build Watcher: Building {Targets} of solution {SolutionPath}...", targets, solutionPath);
-                                        
+
                                     var buildResult = await ProcessUtil.RunAsync("dotnet", $"msbuild {solutionPath} -target:{targets}", throwOnError: false, workingDirectory: workingDirectory, cancellationToken: cancellationToken);
 
                                     if (buildResult.ExitCode != 0)
@@ -208,14 +197,14 @@ namespace Microsoft.Tye.Hosting
                                 async () =>
                                 {
                                     logger.LogInformation("Build Watcher: Building project {ProjectPath}...", project.Key);
-                                    
+
                                     var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{project.Key}\" /nologo", throwOnError: false, workingDirectory: workingDirectory, cancellationToken: cancellationToken);
 
                                     if (buildResult.ExitCode != 0)
                                     {
                                         logger.LogInformation("Build Watcher: Project build failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
                                     }
-                                    
+
                                     return buildResult.ExitCode;
                                 }));
                     }
