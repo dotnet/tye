@@ -162,50 +162,53 @@ namespace Microsoft.Tye.Hosting
                         }
                     }
 
+                    async Task WithRequestCompletion(IEnumerable<BuildRequest> requests, Func<Task<int>> buildFunc)
+                    {
+                        try
+                        {
+                            int exitCode = await buildFunc();
+
+                            foreach (var request in requests)
+                            {
+                                request.Complete(exitCode);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            foreach (var request in requests)
+                            {
+                                request.Complete(ex);
+                            }
+                        }
+                    }
+
                     var tasks = new List<Task>();
 
                     if (solutionBatch.Any())
                     {
                         var targets = String.Concat(",", solutionBatch.Keys.Select(key => GetProjectName(solution!, key)));
 
-                        tasks.Add(Task.Run(async () => {
-                            logger.LogInformation("Build Watcher: Building projects from solution: " + targets);
-                            int exitCode = -1;
-                            try
-                            {
-                                var buildResult = await ProcessUtil.RunAsync("dotnet", $"msbuild {solutionPath} -target:{targets}", throwOnError: false, workingDirectory: workingDirectory);
-                                if (buildResult.ExitCode != 0)
+                        tasks.Add(
+                            WithRequestCompletion(
+                                solutionBatch.Values.SelectMany(x => x),
+                                async () => 
                                 {
-                                    logger.LogInformation("Build Watcher: Building solution failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
-                                }
-                                exitCode = buildResult.ExitCode;
-                            }
-                            finally {
-                                foreach (var project in solutionBatch)
-                                {
-                                    foreach (var buildRequest in project.Value)
+                                    logger.LogInformation("Build Watcher: Building projects from solution: " + targets);
+                                        
+                                    var buildResult = await ProcessUtil.RunAsync("dotnet", $"msbuild {solutionPath} -target:{targets}", throwOnError: false, workingDirectory: workingDirectory);
+
+                                    if (buildResult.ExitCode != 0)
                                     {
-                                        buildRequest.Complete(exitCode);
+                                        logger.LogInformation("Build Watcher: Building solution failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
                                     }
-                                }
-                            }
-                        }));
+
+                                    return buildResult.ExitCode;
+                                }));
                     }
 
                     foreach (var project in projectBatch)
                     {
-                        // FIXME: this is serial
-                        tasks.Add(
-                            Task.Run(
-                                async () =>
-                                {
-                                    var exitCode = await BuildProjectFileAsyncImpl(logger, project.Key, workingDirectory);
-
-                                    foreach (var buildRequest in project.Value)
-                                    {
-                                        buildRequest.Complete(exitCode);
-                                    }
-                                }));
+                        tasks.Add(WithRequestCompletion(project.Value, () => BuildProjectFileAsyncImpl(logger, project.Key, workingDirectory)));
                     }
 
                     await Task.WhenAll(tasks);
@@ -238,10 +241,12 @@ namespace Microsoft.Tye.Hosting
 
             public void Complete(int exitCode)
             {
-                if(!_result.TrySetResult(exitCode))
-                {
-                    throw new Exception("failed to set result");
-                }
+                _result.TrySetResult(exitCode);
+            }
+
+            public void Complete(Exception ex)
+            {
+                _result.TrySetException(ex);
             }
         }
     }
