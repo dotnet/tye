@@ -16,6 +16,7 @@ namespace Microsoft.Tye.Hosting
     internal sealed class BuildWatcher : IAsyncDisposable
     {
         private CancellationTokenSource? _cancellationTokenSource;
+        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
         private readonly ILogger _logger;
         private Task? _processor;
         private Channel<BuildRequest>? _queue;
@@ -25,16 +26,68 @@ namespace Microsoft.Tye.Hosting
             _logger = logger;
         }
 
-        public async Task StartAsync(string? solutionPath, string workingDirectory)
+        public Task StartAsync(string? solutionPath, string workingDirectory)
         {
-            await StopAsync();
+            return WithLockAsync(
+                async () =>
+                {
+                    await ResetAsync();
 
-            _queue = Channel.CreateUnbounded<BuildRequest>();
-            _cancellationTokenSource = new CancellationTokenSource();
-            _processor = Task.Run(() => ProcessTaskQueueAsync(_logger, _queue.Reader, solutionPath, workingDirectory, _cancellationTokenSource.Token));
+                    _queue = Channel.CreateUnbounded<BuildRequest>();
+                    _cancellationTokenSource = new CancellationTokenSource();
+                    _processor = Task.Run(() => ProcessTaskQueueAsync(_logger, _queue.Reader, solutionPath, workingDirectory, _cancellationTokenSource.Token));
+                });
         }
 
-        public async Task StopAsync()
+        public Task StopAsync()
+        {
+            return WithLockAsync(ResetAsync);
+        }
+
+        public async Task<int> BuildProjectFileAsync(string projectFilePath)
+        {
+            var request = new BuildRequest(projectFilePath);
+
+            await WithLockAsync(
+                async () =>
+                {
+                    if (_queue == null)
+                    {
+                        throw new InvalidOperationException("The worker is not running.");
+                    }
+
+                    await _queue.Writer.WriteAsync(request);
+                });
+
+            return await request.Task;
+        }
+
+        #region IAsyncDisposable Members
+
+        public async ValueTask DisposeAsync()
+        {
+            await WithLockAsync(ResetAsync);
+
+            _lock.Dispose();
+        }
+
+        #endregion
+
+        private async Task WithLockAsync(Func<Task> action)
+        {
+            await _lock.WaitAsync();
+            
+            try
+            {
+                await action();
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+
+        private async Task ResetAsync()
         {
             _queue?.Writer.TryComplete();
             _queue = null;
@@ -50,29 +103,6 @@ namespace Microsoft.Tye.Hosting
                 _processor = null;
             }
         }
-
-        public async Task<int> BuildProjectFileAsync(string projectFilePath)
-        {
-            if (_queue == null)
-            {
-                throw new InvalidOperationException("The worker is not running.");
-            }
-
-            var buildRequest = new BuildRequest(projectFilePath);
-
-            await _queue.Writer.WriteAsync(buildRequest);
-
-            return await buildRequest.Task;
-        }
-
-        #region IAsyncDisposable Members
-
-        public async ValueTask DisposeAsync()
-        {
-            await StopAsync();
-        }
-
-        #endregion
 
         private static string GetProjectName(SolutionFile solution, string projectFile)
         {
