@@ -76,7 +76,7 @@ namespace Microsoft.Tye.Hosting
         private async Task WithLockAsync(Func<Task> action)
         {
             await _lock.WaitAsync();
-            
+
             try
             {
                 await action();
