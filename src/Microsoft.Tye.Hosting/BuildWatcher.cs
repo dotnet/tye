@@ -89,12 +89,18 @@ namespace Microsoft.Tye.Hosting
 
         private async Task ResetAsync()
         {
-            _queue?.Writer.TryComplete();
-            _queue = null;
+            if (_queue != null)
+            {
+                _queue.Writer.TryComplete();
+                _queue = null;
+            }
 
-            _cancellationTokenSource?.Cancel();
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
+            if (_cancellationTokenSource != null)
+            {
+                _cancellationTokenSource.Cancel();
+                _cancellationTokenSource.Dispose();
+                _cancellationTokenSource = null;
+            }
 
             if (_processor != null)
             {
