@@ -103,7 +103,7 @@ Specifies the list of services. Applications must have at least one service.
 
 #### `solution` (string)
 
-Indicates the solution to use when building project-based services in watch mode. If omitted, those services will be built individually. Specifying the solution can help reduce repeated builds of shared libraries when in watch mode.
+Indicates the solution file (.sln) or filter (.slnf) to use when building project-based services in watch mode. If omitted, those services will be built individually. Specifying the solution [filter] can help reduce repeated builds of shared libraries when in watch mode.
 
 ## Service
 
