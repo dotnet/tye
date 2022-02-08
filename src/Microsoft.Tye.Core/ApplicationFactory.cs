@@ -360,6 +360,9 @@ namespace Microsoft.Tye
                         throw new CommandException("Unable to determine service type.");
                     }
 
+                    // Set namespace, service scoped
+                    service.Namespace = configService.Namespace;
+
                     // Add dependencies to ourself before adding ourself to avoid self reference
                     service.Dependencies.UnionWith(dependencies);
 
@@ -470,6 +473,7 @@ namespace Microsoft.Tye
                 {
                     var ingress = new IngressBuilder(configIngress.Name!);
                     ingress.Replicas = configIngress.Replicas ?? 1;
+                    ingress.Namespace = configIngress.Namespace;
 
                     root.Ingress.Add(ingress);
 

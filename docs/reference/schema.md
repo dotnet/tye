@@ -148,6 +148,10 @@ The service name. Each service must have a name, and it must be a legal DNS name
 - Start with an alphanumeric character
 - End with an alphanumeric character
 
+#### `namespace` (string)
+
+Allows configuring the Kubernetes namespace for this service. If unconfigured, Tye will use the application namespace.
+
 #### `project` (string)
 
 The relative path from `tye.yaml` to a `.csproj` or `.fsproj`. 

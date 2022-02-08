@@ -183,6 +183,10 @@
                     "description": "The service name. Must be unique per-application.",
                     "type": "string"
                 },
+                "namespace": {
+                    "description": "Allows configuring the Kubernetes namespace for this service. If unconfigured, Tye will use the application namespace.",
+                    "type": "string"
+                },
                 "azureFunction": {
                     "description": "The directory path to the azure function.",
                     "type": "string"
@@ -227,6 +231,10 @@
                     "description": "The service name. Must be unique per-application.",
                     "type": "string"
                 },
+                "namespace": {
+                    "description": "Allows configuring the Kubernetes namespace for this service. If unconfigured, Tye will use the application namespace.",
+                    "type": "string"
+                },
                 "executable": {
                     "description": "The file path (or file name if on the system path) of an executable.",
                     "type": "string"
@@ -269,6 +277,10 @@
                     "description": "The service name. Must be unique per-application.",
                     "type": "string"
                 },
+                "namespace": {
+                    "description": "Allows configuring the Kubernetes namespace for this service. If unconfigured, Tye will use the application namespace.",
+                    "type": "string"
+                },
                 "external": {
                     "description": "Designates as service as external. External services will not be launched and can only provide bindings.",
                     "type": "boolean",
@@ -288,6 +300,10 @@
             "properties": {
                 "name": {
                     "description": "The service name. Must be unique per-application.",
+                    "type": "string"
+                },
+                "namespace": {
+                    "description": "Allows configuring the Kubernetes namespace for this service. If unconfigured, Tye will use the application namespace.",
                     "type": "string"
                 },
                 "repository":
@@ -312,6 +328,10 @@
                     "description": "The service name. Must be unique per-application.",
                     "type": "string"
                 },
+                "namespace": {
+                    "description": "Allows configuring the Kubernetes namespace for this service. If unconfigured, Tye will use the application namespace.",
+                    "type": "string"
+                },
                 "include":
                 {
                     "description": "Path to tye.yaml file which will be used in the application.",
@@ -328,6 +348,10 @@
             "properties": {
                 "name": {
                     "description": "The service name. Must be unique per-application.",
+                    "type": "string"
+                },
+                "namespace": {
+                    "description": "Allows configuring the Kubernetes namespace for this service. If unconfigured, Tye will use the application namespace.",
                     "type": "string"
                 },
                 "volumes": {
@@ -374,6 +398,10 @@
             "properties": {
                 "name": {
                     "description": "The service name. Must be unique per-application.",
+                    "type": "string"
+                },
+                "namespace": {
+                    "description": "Allows configuring the Kubernetes namespace for this service. If unconfigured, Tye will use the application namespace.",
                     "type": "string"
                 },
                 "volumes": {
@@ -499,6 +527,10 @@
             "properties": {
                 "name": {
                     "description": "The service name. Must be unique per-application.",
+                    "type": "string"
+                },
+                "namespace": {
+                    "description": "Allows configuring the Kubernetes namespace for this service. If unconfigured, Tye will use the application namespace.",
                     "type": "string"
                 },
                 "project": {

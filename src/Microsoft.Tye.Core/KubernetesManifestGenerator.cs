@@ -36,7 +36,12 @@ namespace Microsoft.Tye
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
             metadata.Add("name", ingress.Name);
-            if (!string.IsNullOrEmpty(application.Namespace))
+
+            if (!string.IsNullOrWhiteSpace(ingress.Namespace))
+            {
+                metadata.Add("namespace", ingress.Namespace);
+            }
+            else if (!string.IsNullOrEmpty(application.Namespace))
             {
                 metadata.Add("namespace", application.Namespace);
             }
@@ -163,7 +168,11 @@ namespace Microsoft.Tye
             root.Add("metadata", metadata);
             metadata.Add("name", project.Name);
 
-            if (!string.IsNullOrEmpty(application.Namespace))
+            if (!string.IsNullOrWhiteSpace(project.Namespace))
+            {
+                metadata.Add("namespace", project.Namespace);
+            }
+            else if (!string.IsNullOrEmpty(application.Namespace))
             {
                 metadata.Add("namespace", application.Namespace);
             }
@@ -248,7 +257,12 @@ namespace Microsoft.Tye
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
             metadata.Add("name", project.Name);
-            if (!string.IsNullOrEmpty(application.Namespace))
+
+            if (!string.IsNullOrWhiteSpace(project.Namespace))
+            {
+                metadata.Add("namespace", project.Namespace);
+            }
+            else if (!string.IsNullOrEmpty(application.Namespace))
             {
                 metadata.Add("namespace", application.Namespace);
             }

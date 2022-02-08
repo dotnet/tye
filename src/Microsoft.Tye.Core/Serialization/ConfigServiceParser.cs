@@ -35,6 +35,9 @@ namespace Tye.Serialization
                     case "name":
                         service.Name = YamlParser.GetScalarValue(key, child.Value).ToLowerInvariant();
                         break;
+                    case "namespace":
+                        service.Namespace = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     case "external":
                         if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var external))
                         {
