@@ -178,6 +178,10 @@ Build arguments to use when building a Docker image. This is only used when `doc
 
 Path to the Dockerfile Context to run docker build against. This is only used when `dockerFile` is specified as well.
 
+#### `ignoreDockerFile` (bool)
+
+If `true`, the project related Dockerfile will be ignored. Default: `false`
+
 #### `executable` (string)
 
 The path (or filename) of an executable to launch.
