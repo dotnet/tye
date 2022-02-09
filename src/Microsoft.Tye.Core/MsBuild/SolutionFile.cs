@@ -239,7 +239,7 @@ namespace Microsoft.Build.Construction
 
         #region Methods
 
-        internal bool ProjectShouldBuild(string projectFile)
+        public bool ProjectShouldBuild(string projectFile)
         {
             return _solutionFilter?.Contains(FileUtilities.FixFilePath(projectFile)) != false;
         }

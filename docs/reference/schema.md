@@ -101,6 +101,10 @@ Specifies the list of ingresses.
 
 Specifies the list of services. Applications must have at least one service.
 
+#### `solution` (string)
+
+Indicates the solution file (.sln) or filter (.slnf) to use when building project-based services in watch mode. If omitted, those services will be built individually. Specifying the solution [filter] can help reduce repeated builds of shared libraries when in watch mode.
+
 ## Service
 
 `Service` elements appear in a list within the `services` root property.
