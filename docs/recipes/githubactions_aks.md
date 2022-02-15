@@ -61,7 +61,7 @@ Next, ensure that Tye and its dependent .NET runtime are installed.
 
 - name: 🛠 Install Tye tools
     run: |
-    dotnet tool install -g Microsoft.Tye --version "0.10.0-alpha.21420.1"
+    dotnet tool install -g Microsoft.Tye --version "0.11.0-alpha.22111.1"
 ```
 
 Using the name of the registry and the [Azure docker action](https://github.com/Azure/docker-login) to login to your registry. This step is needed prior to running the `deploy` command which will build and push the images to the registry. 
