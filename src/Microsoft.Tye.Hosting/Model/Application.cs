@@ -135,6 +135,13 @@ namespace Microsoft.Tye.Hosting.Model
 
                 set($"SERVICE__{configName}__HOST", binding.Host);
                 set($"{envName}_SERVICE_HOST", binding.Host);
+
+                if (!String.IsNullOrEmpty(binding.Protocol)
+                    && !String.IsNullOrEmpty(binding.Host)
+                    && binding.Port != null)
+                {
+                    set($"{envName}_SERVICE_ENDPOINT", $"{binding.Protocol}://{binding.Host}:{binding.Port}");
+                }
             }
         }
 
