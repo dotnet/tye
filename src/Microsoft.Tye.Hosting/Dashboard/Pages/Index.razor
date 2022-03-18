@@ -2,6 +2,12 @@
 @inject Application application
 @implements IDisposable
 
+<style>
+    .binding {
+        display: block;
+    }
+</style>
+
 <h1>Services</h1>
 <table class="table service-table">
     <thead>
@@ -54,16 +60,21 @@
                                 if (b.Protocol == "http" || b.Protocol == "https")
                                 {
                                     var url = GetUrl(b);
-                                    <span><a href="@url" target="_blank">@url</a></span>
+                                    <span class="binding"><a href="@url" target="_blank">@url</a></span>
+                                    foreach (var r in b.Routes)
+                                    {
+                                        var routeUrl = url + r;
+                                        <span class="binding"><a href="@routeUrl" target="_blank">@routeUrl</a></span>
+                                    }
                                 }
                                 else
                                 {
-                                    <span>@GetUrl(b)</span>
+                                    <span class="binding">@GetUrl(b)</span>
                                 }
                             }
                             else
                             {
-                                <span>@b.ConnectionString</span>
+                                <span class="binding">@b.ConnectionString</span>
                             }
                         }
                     }

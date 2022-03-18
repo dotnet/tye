@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Net;
 
 namespace Microsoft.Tye.Hosting.Model
 {
@@ -13,7 +14,9 @@ namespace Microsoft.Tye.Hosting.Model
         public int? Port { get; set; }
         public int? ContainerPort { get; set; }
         public string? Host { get; set; }
+        public string? IPAddress { get; set; }
         public string? Protocol { get; set; }
         public List<int> ReplicaPorts { get; } = new List<int>();
+        public List<string> Routes { get; } = new List<string>();
     }
 }

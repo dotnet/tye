@@ -21,7 +21,7 @@ namespace Microsoft.Tye.Extensions.Zipkin
             else
             {
                 context.Output.WriteDebugLine("Injecting zipkin service...");
-                var service = new ContainerServiceBuilder("zipkin", "openzipkin/zipkin")
+                var service = new ContainerServiceBuilder("zipkin", "openzipkin/zipkin", ServiceSource.Extension)
                 {
                     Bindings =
                     {

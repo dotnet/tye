@@ -87,10 +87,10 @@ namespace Microsoft.Tye.Hosting
             // This is .NET specific
             var userSecretStore = GetUserSecretsPathFromSecrets();
 
-            Directory.CreateDirectory(userSecretStore);
-
             if (!string.IsNullOrEmpty(userSecretStore))
             {
+                Directory.CreateDirectory(userSecretStore);
+
                 // Map the user secrets on this drive to user secrets
                 dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: userSecretStore, name: null, target: "/root/.microsoft/usersecrets", readOnly: true));
             }

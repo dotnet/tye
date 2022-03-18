@@ -23,6 +23,8 @@ namespace Microsoft.Tye
 
         private static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
+        private const int ProcessExitTimeoutMs = 30 * 1000; // 30 seconds timeout for the process to exit.
+
         public static Task<int> ExecuteAsync(
             string command,
             string args,
@@ -74,6 +76,27 @@ namespace Microsoft.Tye
                 }
             }
 
+            var outputLock = new SpinLock();
+
+            void WithOutputLock(Action action)
+            {
+                bool gotLock = false;
+
+                try
+                {
+                    outputLock.Enter(ref gotLock);
+
+                    action();
+                }
+                finally
+                {
+                    if (gotLock)
+                    {
+                        outputLock.Exit();
+                    }
+                }
+            }
+
             var outputBuilder = new StringBuilder();
             process.OutputDataReceived += (_, e) =>
             {
@@ -88,7 +111,7 @@ namespace Microsoft.Tye
                 }
                 else
                 {
-                    outputBuilder.AppendLine(e.Data);
+                    WithOutputLock(() => outputBuilder.AppendLine(e.Data));
                 }
             };
 
@@ -106,7 +129,7 @@ namespace Microsoft.Tye
                 }
                 else
                 {
-                    errorBuilder.AppendLine(e.Data);
+                    WithOutputLock(() => errorBuilder.AppendLine(e.Data));
                 }
             };
 
@@ -118,17 +141,30 @@ namespace Microsoft.Tye
                 {
                     // Even though the Exited event has been raised, WaitForExit() must still be called to ensure the output buffers
                     // have been flushed before the process is considered completely done.
-                    process.WaitForExit();
+                    // Because of the bug in the dotnet runtime https://github.com/dotnet/runtime/issues/29232, Process.WaitForExit()
+                    // hangs for processes that spawn another long-running processes.
+                    // Since these are expected to be long running processes and we're typically not concerned with capturing all of its output
+                    // i.e. it's probably ok for some output to be lost on shutdown, since Tye is shutting down anyway,
+                    // we call Process.WaitForProcessExit(ProcessExitTimeoutMs).
+                    // Also, since this is a process.Exited event, process.ExitCode is valid even if WaitForExit() times out.
+                    process.WaitForExit(ProcessExitTimeoutMs);
                 }
 
-                if (throwOnError && process.ExitCode != 0)
-                {
-                    processLifetimeTask.TrySetException(new InvalidOperationException($"Command {filename} {arguments} returned exit code {process.ExitCode}. Standard error: \"{errorBuilder.ToString()}\""));
-                }
-                else
-                {
-                    processLifetimeTask.TrySetResult(new ProcessResult(outputBuilder.ToString(), errorBuilder.ToString(), process.ExitCode));
-                }
+                // NOTE: If WaitForExit() returns false, more output may be written,
+                //       so we must synchronize access to the output StringBuilders.
+
+                WithOutputLock(
+                    () =>
+                    {
+                        if (throwOnError && process.ExitCode != 0)
+                        {
+                            processLifetimeTask.TrySetException(new InvalidOperationException($"Command {filename} {arguments} returned exit code {process.ExitCode}. Standard error: \"{errorBuilder.ToString()}\""));
+                        }
+                        else
+                        {
+                            processLifetimeTask.TrySetResult(new ProcessResult(outputBuilder.ToString(), errorBuilder.ToString(), process.ExitCode));
+                        }
+                    });
             };
 
             // lock ensures we're reading output when WaitForExit is called in process.Exited event.
@@ -156,7 +192,7 @@ namespace Microsoft.Tye
                 {
                     if (!process.CloseMainWindow())
                     {
-                        process.Kill();
+                        process.Kill(entireProcessTree: true);
                     }
                 }
 
@@ -168,7 +204,7 @@ namespace Microsoft.Tye
 
                     if (!process.HasExited)
                     {
-                        process.Kill();
+                        process.Kill(entireProcessTree: true);
                     }
                 }
             }
@@ -188,7 +224,7 @@ namespace Microsoft.Tye
             try
             {
                 using var process = Process.GetProcessById(pid);
-                process?.Kill();
+                process?.Kill(entireProcessTree: true);
             }
             catch (ArgumentException) { }
             catch (InvalidOperationException) { }

@@ -21,6 +21,9 @@ namespace Tye.Serialization
                     case "name":
                         app.Name = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "solution":
+                        app.BuildSolution = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     case "namespace":
                         app.Namespace = YamlParser.GetScalarValue(key, child.Value);
                         break;
@@ -43,6 +46,16 @@ namespace Tye.Serialization
                         else
                         {
                             throw new TyeYamlException($"Unknown container engine: \"{engine}\"");
+                        }
+                        break;
+                    case "dashboardPort":
+                        if (int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var dashboardPort))
+                        {
+                            app.DashboardPort = dashboardPort;
+                        }
+                        else
+                        {
+                            throw new TyeYamlException(child.Key.Start, CoreStrings.FormatMustBeAnInteger(key));
                         }
                         break;
                     case "ingress":

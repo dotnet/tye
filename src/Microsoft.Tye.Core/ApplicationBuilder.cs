@@ -9,16 +9,19 @@ namespace Microsoft.Tye
 {
     public sealed class ApplicationBuilder
     {
-        public ApplicationBuilder(FileInfo source, string name, ContainerEngine containerEngine)
+        public ApplicationBuilder(FileInfo source, string name, ContainerEngine containerEngine, int? dashboardPort)
         {
             Source = source;
             Name = name;
             ContainerEngine = containerEngine;
+            DashboardPort = dashboardPort;
         }
 
         public FileInfo Source { get; set; }
 
         public string Name { get; set; }
+
+        public int? DashboardPort { get; set; }
 
         public string? Namespace { get; set; }
 
@@ -33,5 +36,6 @@ namespace Microsoft.Tye
         public List<IngressBuilder> Ingress { get; } = new List<IngressBuilder>();
 
         public string? Network { get; set; }
+        public string? BuildSolution { get; internal set; }
     }
 }

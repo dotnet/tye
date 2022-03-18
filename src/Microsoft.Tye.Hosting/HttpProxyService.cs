@@ -76,7 +76,8 @@ namespace Microsoft.Tye.Hosting
 
                                     var port = binding.ReplicaPorts[i];
                                     ports.Add(port);
-                                    var url = $"{binding.Protocol}://localhost:{port}";
+
+                                    var url = $"{binding.Protocol}://{binding.IPAddress ?? "localhost"}:{port}";
                                     urls.Add(url);
                                 }
 
@@ -177,7 +178,7 @@ namespace Microsoft.Tye.Hosting
                                             }
                                             var uri = new UriBuilder(uris[next].Uri)
                                             {
-                                                Path = rule.PreservePath ? $"{context.Request.Path}" : (string)context.Request.RouteValues["path"] ?? "/",
+                                                Path = rule.PreservePath ? $"{context.Request.Path}" : (string?)context.Request.RouteValues["path"] ?? "/",
                                                 Query = context.Request.QueryString.Value
                                             };
 

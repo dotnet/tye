@@ -31,6 +31,7 @@ namespace Microsoft.Tye
 
         public string AspNetUrlsHost => _aspnetUrlsHost;
         public string? ContainerHost => _containerHost;
+        public bool IsPodman => _isPodman;
 
         public Task<int> ExecuteAsync(
             string args,

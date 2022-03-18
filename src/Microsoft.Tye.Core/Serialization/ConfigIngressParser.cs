@@ -2,7 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
+using System.Net;
 using Microsoft.Tye.ConfigModel;
 using YamlDotNet.RepresentationModel;
 
@@ -143,6 +145,17 @@ namespace Tye.Serialization
                         }
 
                         binding.Port = port;
+                        break;
+                    case "ip":
+                        if (YamlParser.GetScalarValue(key, child.Value) is string ipString
+                            && (IPAddress.TryParse(ipString, out var ip) || ipString == "*" || ipString.Equals("localhost", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            binding.IPAddress = ipString;
+                        }
+                        else
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeAnIPAddress(key));
+                        }
                         break;
                     case "protocol":
                         binding.Protocol = YamlParser.GetScalarValue(key, child.Value);

@@ -26,6 +26,10 @@
             "description": "The Docker network to use.",
             "type": "string"
         },
+        "dashboardPort": {
+            "description": "Configure the dashboard port used for `tye run`. Can be overridden using the `--port` CLI argument, and falls back to port 8000 if free, or a random port if 8000 is in use.",
+            "type": "integer"
+        },
         "ingress": {
             "description": "The application's ingresses.",
             "type": "array",
@@ -40,6 +44,10 @@
             "items": {
                 "$ref": "#/definitions/extension"
             }
+        },
+        "solution": {
+            "description": "Indicates the solution file (.sln) or filter (.slnf) to use when building project-based services in watch mode. If omitted, those services will be built individually. Specifying the solution [filter] can help reduce repeated builds of shared libraries when in watch mode.",
+            "type": "string"
         },
         "services": {
             "description": "The application's services.",
@@ -383,6 +391,13 @@
                     "description": "The Dockerfile to use.",
                     "type": "string"
                 },
+                "dockerFileArgs": {
+                    "description": "Build arguments to use when building the image.",
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                },
                 "dockerFileContext": {
                     "description": "The Dockerfile context to run docker build on.",
                     "type": "string"
@@ -451,6 +466,10 @@
                 },
                 "protocol": {
                     "description": "The protocol used by the binding",
+                    "type": "string"
+                },
+                "ip": {
+                    "description": "The ip address the ingress listens on.",
                     "type": "string"
                 }
             }

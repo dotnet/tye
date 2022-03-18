@@ -39,7 +39,7 @@ namespace Test.Infrastructure
                     $"Actual: {node.NodeType} at ({otherNode.Start.Line}, {otherNode.Start.Column}).");
             }
 
-            if (node.Tag?.Equals(otherNode.Tag) == false)
+            if (node.Tag.Equals(otherNode.Tag) == false)
             {
                 throw new TyeYamlException($"Expected tags to be equal. " +
                     $"Expected: ({node.Start.Line}, {node.Start.Column}). Actual: ({otherNode.Start.Line}, {otherNode.Start.Column}).");

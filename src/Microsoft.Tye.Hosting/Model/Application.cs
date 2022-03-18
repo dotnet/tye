@@ -12,13 +12,19 @@ namespace Microsoft.Tye.Hosting.Model
 {
     public class Application
     {
-        public Application(FileInfo source, Dictionary<string, Service> services, ContainerEngine containerEngine)
+        public Application(string name, FileInfo source, int? dashboardPort, Dictionary<string, Service> services, ContainerEngine containerEngine)
         {
+            Name = name;
             Source = source.FullName;
             ContextDirectory = source.DirectoryName!;
             Services = services;
             ContainerEngine = containerEngine;
+            DashboardPort = dashboardPort;
         }
+
+        public string Id { get; } = Guid.NewGuid().ToString();
+
+        public string Name { get; }
 
         public string Source { get; }
 
@@ -26,11 +32,14 @@ namespace Microsoft.Tye.Hosting.Model
 
         public ContainerEngine ContainerEngine { get; set; }
 
+        public int? DashboardPort { get; set; }
+
         public Dictionary<string, Service> Services { get; }
 
         public Dictionary<object, object> Items { get; } = new Dictionary<object, object>();
 
         public string? Network { get; set; }
+        public string? BuildSolution { get; set; }
 
         public void PopulateEnvironment(Service service, Action<string, string> set, string defaultHost = "localhost")
         {
@@ -126,6 +135,13 @@ namespace Microsoft.Tye.Hosting.Model
 
                 set($"SERVICE__{configName}__HOST", binding.Host);
                 set($"{envName}_SERVICE_HOST", binding.Host);
+
+                if (!String.IsNullOrEmpty(binding.Protocol)
+                    && !String.IsNullOrEmpty(binding.Host)
+                    && binding.Port != null)
+                {
+                    set($"{envName}_SERVICE_ENDPOINT", $"{binding.Protocol}://{binding.Host}:{binding.Port}");
+                }
             }
         }
 
