@@ -98,6 +98,30 @@ extensions:
 - name: dapr
 ```
 
+Additional [Dapr command arguments](https://docs.dapr.io/reference/arguments-annotations-overview/) 
+can be specified for all services or for individual services.
+
+```yaml
+# Configure --app-max-concurrency for all services
+extensions:
+- name: dapr
+  app-max-concurrency: 1
+...
+```
+
+```yaml
+# Configure --app-max-concurrency for the orders service
+extensions:
+- name: dapr
+  services:
+    orders:
+      app-max-concurrency: 1
+services:
+- name: orders
+  ...
+```
+
+
 ## Deploying the sample to Kubernetes
 
 **:warning: The current Dapr dotnet-sdk release has an issue where its default settings don't work when deployed with mTLS enabled. This will be resolved as part of the upcoming 0.6.0 release. For now you can work around this by disabling mTLS as part of Dapr installation.**
