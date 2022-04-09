@@ -139,7 +139,7 @@ Now that we have two applications running, let's make them communicate. By defau
         /** Add the following to wire the client to the backend **/
        services.AddHttpClient<WeatherClient>(client =>
        {
-            client.BaseAddress = Configuration.GetServiceUri("backend");
+            client.BaseAddress = TyeConfigurationExtensions.GetServiceUri("backend");
        });
        /** End added code **/
    }
