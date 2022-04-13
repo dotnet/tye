@@ -125,7 +125,7 @@ services:
 
         [ConditionalTheory]
         [SkipIfDockerNotRunning]
-        [InlineData("single-project", "mcr.microsoft.com/dotnet/core/aspnet:3.1")]
+        [InlineData("single-project", "mcr.microsoft.com/dotnet/aspnet:6.0")]
         [InlineData("single-project-5.0", "mcr.microsoft.com/dotnet/aspnet:5.0")]
         public async Task SingleProjectWithDocker_UsesCorrectBaseImage(string projectName, string baseImage)
         {
@@ -251,7 +251,7 @@ services:
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
-            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}", ServiceSource.Configuration)
+            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/aspnet:{project.TargetFrameworkVersion}", ServiceSource.Configuration)
             {
                 IsAspNet = true
             };
@@ -298,7 +298,7 @@ services:
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
-            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}", ServiceSource.Configuration)
+            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/aspnet:{project.TargetFrameworkVersion}", ServiceSource.Configuration)
             {
                 IsAspNet = true
             };
@@ -445,8 +445,8 @@ services:
             var project = (DotnetProjectServiceBuilder)application.Services.First(s => s.Name == "backend-baseimage");
 
             // check ContainerInfo values
-            Assert.True(string.Equals(project.ContainerInfo!.BaseImageName, "mcr.microsoft.com/dotnet/core/sdk"));
-            Assert.True(string.Equals(project.ContainerInfo!.BaseImageTag, "3.1-buster"));
+            Assert.True(string.Equals(project.ContainerInfo!.BaseImageName, "mcr.microsoft.com/dotnet/sdk"));
+            Assert.True(string.Equals(project.ContainerInfo!.BaseImageTag, "6.0-focal"));
 
             // check projectInfo values
             var projectRunInfo = new ProjectRunInfo(project);
@@ -1194,7 +1194,7 @@ services:
 
         [ConditionalTheory]
         [SkipIfDockerNotRunning]
-        [InlineData("non-standard-dashboard-port", "mcr.microsoft.com/dotnet/core/aspnet:3.1", 8005)]
+        [InlineData("non-standard-dashboard-port", "mcr.microsoft.com/dotnet/aspnet:6.0", 8005)]
         [InlineData("non-standard-dashboard-port-5.0", "mcr.microsoft.com/dotnet/aspnet:5.0", 8006)]
         public async Task RunUsesYamlDashboardPort(string projectName, string baseImage, int expectedDashboardPort)
         {
@@ -1236,7 +1236,7 @@ services:
 
         [ConditionalTheory]
         [SkipIfDockerNotRunning]
-        [InlineData("non-standard-dashboard-port", "mcr.microsoft.com/dotnet/core/aspnet:3.1", 8005)]
+        [InlineData("non-standard-dashboard-port", "mcr.microsoft.com/dotnet/aspnet:6.0", 8005)]
         [InlineData("non-standard-dashboard-port-5.0", "mcr.microsoft.com/dotnet/aspnet:5.0", 8006)]
         public async Task RunCliPortOverridesYamlDashboardPort(string projectName, string baseImage, int tyeYamlDashboardPort)
         {
