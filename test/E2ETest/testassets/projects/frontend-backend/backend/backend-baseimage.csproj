@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ContainerBaseImage>mcr.microsoft.com/dotnet/core/sdk</ContainerBaseImage>
-    <ContainerBaseTag>3.1-buster</ContainerBaseTag>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/sdk</ContainerBaseImage>
+    <ContainerBaseTag>6.0-focal</ContainerBaseTag>
   </PropertyGroup>
 
   <ItemGroup>
