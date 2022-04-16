@@ -1018,10 +1018,10 @@ services:
             using var projectDirectory = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
 
             var content = @"
-name: companion-solution
+name: tye-docker-sample
 services:
-- name: companion-source-api
-  repository: https://github.com/coherentsolutionsinc/dotnet-fwdays-2021-project-tye-to-tie-dotnet-microservices-companion";
+- name: minapp
+  repository: https://github.com/OlegKarasik/tye-docker-sample";
 
             var yamlFile = Path.Combine(projectDirectory.DirectoryPath, "tye.yaml");
             var projectFile = new FileInfo(yamlFile);
@@ -1041,11 +1041,11 @@ services:
 
             await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
             {
-                var votingUri = await GetServiceUrl(client, uri, "companion-source-api");
+                var appUri = await GetServiceUrl(client, uri, "minapp");
 
-                var votingResponse = await client.GetAsync($"{votingUri}/weatherforecast");
+                var appResponse = await client.GetAsync(appUri);
 
-                Assert.True(votingResponse.IsSuccessStatusCode);
+                Assert.True(appResponse.IsSuccessStatusCode);
             });
         }
 
