@@ -1013,6 +1013,44 @@ services:
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        public async Task MultiRepo_WorksWithCloningAndDockerfile()
+        {
+            using var projectDirectory = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
+
+            var content = @"
+name: companion-solution
+services:
+- name: companion-source-api
+  repository: https://github.com/coherentsolutionsinc/dotnet-fwdays-2021-project-tye-to-tie-dotnet-microservices-companion";
+
+            var yamlFile = Path.Combine(projectDirectory.DirectoryPath, "tye.yaml");
+            var projectFile = new FileInfo(yamlFile);
+            await File.WriteAllTextAsync(yamlFile, content);
+
+            // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var votingUri = await GetServiceUrl(client, uri, "companion-source-api");
+
+                var votingResponse = await client.GetAsync($"{votingUri}/weatherforecast");
+
+                Assert.True(votingResponse.IsSuccessStatusCode);
+            });
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
         public async Task DockerFileTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("dockerfile");
