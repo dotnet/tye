@@ -121,6 +121,35 @@ services:
   ...
 ```
 
+The following Dapr arguments can be specified at the extension level (all
+services) or the service level:
+
+| Yaml Key              | Dapr Argument
+| --------------------- | -------------
+| app-max-concurrency   | app-max-concurrency
+| app-protocol          | app-protocol
+| app-ssl               | app-ssl
+| components-path       | components-path
+| config                | config
+| enable-profiling      | enable-profiling
+| http-max-request-size | dapr-http-max-request-size
+| log-level             | log-level
+| placement-port        | placement-host-address*
+
+\*  When specifying `placement-port`, the placement host address will become `localhost:<placement-port>`.
+
+The following Dapr arguments can be specified only at the service level:
+
+| Yaml Key     | Dapr Argument
+| ------------ | -------------
+| app-id       | app-id
+| grpc-port    | dapr-grpc-port
+| http-port    | dapr-http-port
+| metrics-port | metrics-port
+| profile-port | profile-port
+
+In addition, the key `enabled` can be specified (with `true` or `false`) to
+enable or disable the related service.
 
 ## Deploying the sample to Kubernetes
 
