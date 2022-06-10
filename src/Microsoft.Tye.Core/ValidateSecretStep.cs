@@ -56,6 +56,11 @@ namespace Microsoft.Tye
 
                 var config = KubernetesClientConfiguration.BuildDefaultConfig();
 
+                if (!string.IsNullOrEmpty(application.Namespace))
+                {
+                    config.Namespace = application.Namespace;
+                }
+
                 // If namespace is null, set it to default
                 config.Namespace ??= "default";
 
