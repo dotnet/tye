@@ -11,13 +11,13 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
 1. Install tye via the following command:
 
     ```text
-    dotnet tool install -g Microsoft.Tye --version "0.11.0-alpha.22111.1"
+    dotnet tool install -g Microsoft.Tye --version "0.12.0-alpha.22302.1"
     ```
 
     OR if you already have Tye installed and want to update:
 
     ```text
-    dotnet tool update -g Microsoft.Tye --version "0.11.0-alpha.22111.1"
+    dotnet tool update -g Microsoft.Tye --version "0.12.0-alpha.22302.1"
     ```
 
     > If using earlier versions of Tye on Mac with both `arm64` and `x64` .NET SDKs, you may need to supply the `-a x64` parameter when installing Tye as those versions require the x64 version of .NET Core 3.1.
