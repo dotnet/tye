@@ -19,6 +19,7 @@ namespace Microsoft.Tye.ConfigModel
         [RegularExpression("[a-z]([-a-z0-9]*[a-z0-9])?", ErrorMessage = ErrorMessage)]
         [MaxLength(63, ErrorMessage = MaxLengthErrorMessage)]
         public string Name { get; set; } = default!;
+        public string? Namespace { get; set; }
         public bool External { get; set; }
         public string? Image { get; set; }
         public string? DockerFile { get; set; }

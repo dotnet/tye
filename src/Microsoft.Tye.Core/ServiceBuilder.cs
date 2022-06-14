@@ -12,6 +12,8 @@ namespace Microsoft.Tye
 
         public string Name { get; }
 
+        public string? Namespace { get; set; }
+
         public List<BindingBuilder> Bindings { get; } = new List<BindingBuilder>();
 
         // TODO: this is temporary while refactoring

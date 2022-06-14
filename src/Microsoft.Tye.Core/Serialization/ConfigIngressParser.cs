@@ -34,6 +34,9 @@ namespace Tye.Serialization
                     case "name":
                         configIngress.Name = YamlParser.GetScalarValue(key, child.Value).ToLowerInvariant();
                         break;
+                    case "namespace":
+                        configIngress.Namespace = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     case "replicas":
                         if (!int.TryParse(YamlParser.GetScalarValue(key, child.Value), out var replicas))
                         {

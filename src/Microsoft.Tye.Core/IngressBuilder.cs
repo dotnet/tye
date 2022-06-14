@@ -15,6 +15,8 @@ namespace Microsoft.Tye
 
         public string Name { get; set; }
 
+        public string? Namespace { get; set; }
+
         public int Replicas { get; set; } = 1;
 
         public List<IngressBindingBuilder> Bindings { get; set; } = new List<IngressBindingBuilder>();

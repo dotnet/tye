@@ -11,6 +11,7 @@ namespace Microsoft.Tye.ConfigModel
     {
         [Required]
         public string Name { get; set; } = default!;
+        public string? Namespace { get; set; }
         public int? Replicas { get; set; }
         public List<ConfigIngressRule> Rules { get; set; } = new List<ConfigIngressRule>();
         public List<ConfigIngressBinding> Bindings { get; set; } = new List<ConfigIngressBinding>();
