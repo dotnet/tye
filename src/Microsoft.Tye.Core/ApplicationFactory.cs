@@ -239,6 +239,9 @@ namespace Microsoft.Tye
 
                         // Do k8s by default.
                         project.ManifestInfo = new KubernetesManifestInfo();
+
+                        // Ignore DockerFile, if exists
+                        project.IgnoreDockerfile = configService.IgnoreDockerFile;
                     }
                     else if (!string.IsNullOrEmpty(configService.Image))
                     {

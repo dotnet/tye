@@ -99,7 +99,7 @@ namespace Microsoft.Tye
                     // For a multi-phase Docker build, the context is always the project directory.
                     contextDirectory = ".";
 
-                    if (File.Exists(dockerFilePath))
+                    if (!project.IgnoreDockerfile && File.Exists(dockerFilePath))
                     {
                         output.WriteDebugLine($"Using existing Dockerfile '{dockerFilePath}'.");
                     }
@@ -130,7 +130,7 @@ namespace Microsoft.Tye
                     // Clean up directory when done building image
                     tempDirectory = new TempDirectory(publishOutput.Directory);
 
-                    if (File.Exists(dockerFilePath))
+                    if (!project.IgnoreDockerfile && File.Exists(dockerFilePath))
                     {
                         output.WriteDebugLine($"Using existing Dockerfile '{dockerFilePath}'.");
                         File.Copy(dockerFilePath, Path.Combine(contextDirectory, "Dockerfile"));
