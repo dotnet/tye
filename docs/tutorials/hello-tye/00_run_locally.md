@@ -92,9 +92,7 @@ Now that we have two applications running, let's make them communicate. By defau
 3. Add a file `WeatherClient.cs` to the `frontend` project with the following contents:
 
    ```C#
-   using System.Net.Http;
    using System.Text.Json;
-   using System.Threading.Tasks;
 
    namespace frontend
    {
