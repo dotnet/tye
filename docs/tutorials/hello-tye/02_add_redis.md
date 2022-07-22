@@ -185,3 +185,10 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 4. Clean-up
 
     At this point, you may want to undeploy the application by running `tye undeploy`.
+    
+    Also clean up the Redis deployment and service by running
+    
+    ```text
+    kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/main/docs/tutorials/hello-tye/redis.yaml
+    ```
+    
