@@ -86,7 +86,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
      image: redis
      bindings:
      - port: 6379
-       connectionString: "${host}:${port}" 
+       connectionString: "${host}:${port}"
    - name: redis-cli
      image: redis
      args: "redis-cli -h redis MONITOR"
