@@ -52,9 +52,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 2. Add a package reference to `Microsoft.Extensions.Caching.StackExchangeRedis` in the backend project:
 
    ```
-   cd backend/
-   dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis
-   cd ..
+   dotnet add backend/backend.csproj package Microsoft.Extensions.Caching.StackExchangeRedis
    ```
 
 3. Modify `Startup.ConfigureServices` in the `backend` project to add the redis `IDistributedCache` implementation.
