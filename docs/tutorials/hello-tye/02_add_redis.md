@@ -96,7 +96,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
     > :bulb: The `"${host}:${port}"` format in the `connectionString` property will substitute the values of the host and port number to produce a connection string that can be used with StackExchange.Redis.
 
-5. Run the `tye` command
+5. Run the `tye run` command
 
    ```
    tye run
