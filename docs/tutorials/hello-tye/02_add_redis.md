@@ -56,6 +56,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
    ```
 
 3. Modify `Startup.ConfigureServices` in the `backend` project to add the redis `IDistributedCache` implementation.
+
    ```C#
    public void ConfigureServices(IServiceCollection services)
    {
@@ -64,7 +65,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
        services.AddStackExchangeRedisCache(o =>
        {
             o.Configuration = Configuration.GetConnectionString("redis");
-        });
+       });
    }
    ```
    The above configures redis to the configuration string for the `redis` service injected by the `tye` host.
