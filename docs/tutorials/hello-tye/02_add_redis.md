@@ -187,6 +187,6 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
     Also clean up the Redis deployment and service by running
     
     ```text
-    kubectl apply -f https://raw.githubusercontent.com/dotnet/tye/main/docs/tutorials/hello-tye/redis.yaml
+    kubectl delete -f https://raw.githubusercontent.com/dotnet/tye/main/docs/tutorials/hello-tye/redis.yaml
     ```
     
