@@ -110,13 +110,13 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        private static string GetProjectName(SolutionFile solution, string projectFile)
+        private static string GetUniqueProjectName(SolutionFile solution, string projectFile)
         {
             foreach (var project in solution.ProjectsInOrder)
             {
                 if (project.AbsolutePath == projectFile)
                 {
-                    return project.ProjectName;
+                    return project.GetUniqueProjectName();
                 }
             }
 
@@ -205,7 +205,7 @@ namespace Microsoft.Tye.Hosting
 
                     if (solutionBatch.Any())
                     {
-                        var targets = String.Join(",", solutionBatch.Keys.Select(key => GetProjectName(solution!, key)));
+                        var targets = String.Join(",", solutionBatch.Keys.Select(key => GetUniqueProjectName(solution!, key)));
 
                         tasks.Add(
                             WithRequestCompletion(
