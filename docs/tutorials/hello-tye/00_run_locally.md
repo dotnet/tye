@@ -92,9 +92,7 @@ Now that we have two applications running, let's make them communicate. By defau
 3. Add a file `WeatherClient.cs` to the `frontend` project with the following contents:
 
    ```C#
-    using System.Net.Http;
     using System.Text.Json;
-    using System.Threading.Tasks;
 
     namespace frontend
     {
@@ -129,20 +127,18 @@ Now that we have two applications running, let's make them communicate. By defau
     dotnet add frontend/frontend.csproj package Microsoft.Tye.Extensions.Configuration  --version "0.4.0-*"
     ```
 
-5. Now register this client in `frontend` by adding the following to the existing `ConfigureServices` method to the existing `Startup.cs` file:
+5. Now register this client in `frontend` by adding the following to the existing code in the `Program.cs` file:
 
    ```C#
    ...
-   public void ConfigureServices(IServiceCollection services)
+   
+   services.AddRazorPages();
+   /** Add the following to wire the client to the backend **/
+   services.AddHttpClient<WeatherClient>(client =>
    {
-       services.AddRazorPages();
-        /** Add the following to wire the client to the backend **/
-       services.AddHttpClient<WeatherClient>(client =>
-       {
-            client.BaseAddress = Configuration.GetServiceUri("backend");
-       });
-       /** End added code **/
-   }
+            client.BaseAddress = builder.Configuration.GetServiceUri("backend");
+   });
+   /** End added code **/
    ...
    ```
 
