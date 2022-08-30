@@ -9,6 +9,14 @@
     <TestRunnerName>XUnit</TestRunnerName>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>10.0</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>10.0</LangVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="1.0.1" />
     <PackageReference Include="coverlet.collector" Version="1.0.1" />

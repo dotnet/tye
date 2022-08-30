@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Subjects;
 
 namespace Microsoft.Tye.Hosting.Model
@@ -83,5 +84,55 @@ namespace Microsoft.Tye.Hosting.Model
         public Subject<string> Logs { get; } = new Subject<string>();
 
         public Subject<ReplicaEvent> ReplicaEvents { get; } = new Subject<ReplicaEvent>();
+
+        public ServiceState State
+        {
+            get
+            {
+                var replicaStates = Replicas.Values.Select(r => r.State);
+                int replicaCount = replicaStates.Count();
+
+
+                if (replicaCount == 0)
+                    return ServiceState.Unknown;
+
+                if (replicaStates.Any(r => r == ReplicaState.Added))
+                    return ServiceState.Starting;
+
+                if (replicaStates.All(r => r == ReplicaState.Started || r == ReplicaState.Ready || r == ReplicaState.Healthy))
+                    return ServiceState.Started;
+
+                if (replicaCount == 1)
+                {
+                    ReplicaState? replicaState = replicaStates.Single();
+
+                    if (replicaState == ReplicaState.Removed)
+                        return ServiceState.Failed;
+
+                    if (replicaState == ReplicaState.Stopped)
+                        return ServiceState.Stopped;
+                }
+                else
+                {
+                    if (replicaStates.All(r => r == ReplicaState.Stopped))
+                        return ServiceState.Stopped;
+
+                    if (replicaStates.Any(r => r == ReplicaState.Removed || r == ReplicaState.Stopped))
+                        return ServiceState.Degraded;
+                }
+
+                return ServiceState.Unknown;
+            }
+        }
+    }
+
+    public enum ServiceState
+    {
+        Unknown,
+        Starting,
+        Started,
+        Degraded,
+        Failed,
+        Stopped
     }
 }
