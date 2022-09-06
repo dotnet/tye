@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.Tye.ConfigModel;
 using YamlDotNet.RepresentationModel;
 
@@ -346,7 +345,7 @@ namespace Tye.Serialization
                         prober.Port = port;
                         break;
                     case "protocol":
-                        prober.Path = YamlParser.GetScalarValue("protocol", child.Value);
+                        prober.Protocol = YamlParser.GetScalarValue("protocol", child.Value);
                         break;
                     case "headers":
                         prober.Headers = new List<KeyValuePair<string, object>>();
