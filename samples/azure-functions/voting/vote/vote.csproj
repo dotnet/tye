@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Storage.Queues" Version="12.3.2" />
+    <PackageReference Include="Azure.Storage.Queues" Version="12.11.0" />
   </ItemGroup>
 
 </Project>
