@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="KubernetesClient" Version="6.0.25" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <PackageReference Include="semver" Version="2.0.6" />
