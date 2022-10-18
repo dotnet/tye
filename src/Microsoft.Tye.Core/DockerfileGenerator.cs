@@ -4,7 +4,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -46,16 +45,16 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"Writing Dockerfile to '{filePath}'.");
             if (container.UseMultiphaseDockerfile ?? true)
             {
-                await WriteMultiphaseDockerfileAsync(writer, entryPoint, container);
+                await WriteMultiphaseDockerfileAsync(writer, entryPoint, project, container);
             }
             else
             {
-                await WriteLocalPublishDockerfileAsync(writer, entryPoint, container);
+                await WriteLocalPublishDockerfileAsync(writer, entryPoint, project, container);
             }
             output.WriteDebugLine("Done writing Dockerfile.");
         }
 
-        private static async Task WriteMultiphaseDockerfileAsync(StreamWriter writer, string applicationEntryPoint, ContainerInfo container)
+        private static async Task WriteMultiphaseDockerfileAsync(StreamWriter writer, string applicationEntryPoint, DotnetProjectServiceBuilder project, ContainerInfo container)
         {
             await writer.WriteLineAsync($"FROM {container.BuildImageName}:{container.BuildImageTag} as SDK");
             await writer.WriteLineAsync($"WORKDIR /src");
@@ -65,14 +64,18 @@ namespace Microsoft.Tye
             await writer.WriteLineAsync($"WORKDIR /app");
             await writer.WriteLineAsync($"COPY --from=SDK /out .");
             await writer.WriteLineAsync($"ENTRYPOINT [\"dotnet\", \"{applicationEntryPoint}.dll\"]");
+            if (!string.IsNullOrWhiteSpace(project.Args))
+                await writer.WriteLineAsync($"CMD [\"{project.Args}\"]");
         }
 
-        private static async Task WriteLocalPublishDockerfileAsync(StreamWriter writer, string applicationEntryPoint, ContainerInfo container)
+        private static async Task WriteLocalPublishDockerfileAsync(StreamWriter writer, string applicationEntryPoint, DotnetProjectServiceBuilder project, ContainerInfo container)
         {
             await writer.WriteLineAsync($"FROM {container.BaseImageName}:{container.BaseImageTag}");
             await writer.WriteLineAsync($"WORKDIR /app");
             await writer.WriteLineAsync($"COPY . /app");
             await writer.WriteLineAsync($"ENTRYPOINT [\"dotnet\", \"{applicationEntryPoint}.dll\"]");
+            if (!string.IsNullOrWhiteSpace(project.Args))
+                await writer.WriteLineAsync($"CMD [\"{project.Args}\"]");
         }
 
         public static void ApplyContainerDefaults(ApplicationBuilder application, DotnetProjectServiceBuilder project, ContainerInfo container)
