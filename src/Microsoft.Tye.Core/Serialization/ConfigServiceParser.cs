@@ -59,6 +59,9 @@ namespace Tye.Serialization
                     case "dockerFileContext":
                         service.DockerFileContext = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "dockerImageVersion":
+                        service.DockerImageVersion = YamlParser.GetScalarValue(key, child.Value);
+                        break;
                     case "project":
                         service.Project = YamlParser.GetScalarValue(key, child.Value);
                         break;

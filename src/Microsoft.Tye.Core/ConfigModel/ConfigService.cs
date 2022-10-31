@@ -24,6 +24,7 @@ namespace Microsoft.Tye.ConfigModel
         public string? DockerFile { get; set; }
         public Dictionary<string, string> DockerFileArgs { get; set; } = new Dictionary<string, string>();
         public string? DockerFileContext { get; set; }
+        public string? DockerImageVersion { get; set; }
         public string? Project { get; set; }
         public string? ProjectFullPath { get; set; }
         public string? Include { get; set; }
