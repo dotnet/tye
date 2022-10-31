@@ -17,7 +17,7 @@ namespace Microsoft.Tye
 {
     public static class ApplicationFactory
     {
-        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, string? framework = null, ApplicationFactoryFilter? filter = null)
+        public static async Task<ApplicationBuilder> CreateAsync(OutputContext output, FileInfo source, string? framework = null, ApplicationFactoryFilter? filter = null, string? environment = null)
         {
             if (source is null)
             {
@@ -227,7 +227,9 @@ namespace Microsoft.Tye
 
                         // We don't apply more container defaults here because we might need
                         // to prompt for the registry name.
-                        project.ContainerInfo = new ContainerInfo() { UseMultiphaseDockerfile = false, };
+                        var imageVersion = configService.DockerImageVersion ?? DateTime.UtcNow.ToString("MM\\.dd\\.yyyyHH\\.mm\\.ss\\.fff");
+                        var imageTag = $"{environment}-{imageVersion}";
+                        project.ContainerInfo = new ContainerInfo() { UseMultiphaseDockerfile = false, ImageTag = imageTag };
 
                         // If project evaluation is successful this should not happen, therefore an exception will be thrown.
                         if (!projectMetadata.ContainsKey(configService.Name))

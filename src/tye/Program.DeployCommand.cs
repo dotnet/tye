@@ -3,14 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Tye.ConfigModel;
 
 namespace Microsoft.Tye
 {
@@ -26,11 +23,21 @@ namespace Microsoft.Tye
                 StandardOptions.Namespace,
                 StandardOptions.Framework,
                 StandardOptions.Tags,
+                StandardOptions.Environment,
+                StandardOptions.Debug,
                 StandardOptions.CreateForce("Override validation and force deployment.")
             };
 
             command.Handler = CommandHandler.Create<DeployCommandArguments>(async args =>
             {
+                if (args.Debug)
+                {
+                    Console.WriteLine("Debug mode is on. Waiting for debugger to attach");
+                    while (!Debugger.IsAttached)
+                        await Task.Delay(100);
+                    Console.WriteLine("Debugger attached");
+                }
+
                 // Workaround for https://github.com/dotnet/command-line-api/issues/723#issuecomment-593062654
                 if (args.Path is null)
                 {
@@ -42,7 +49,7 @@ namespace Microsoft.Tye
 
                 var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(args.Tags);
 
-                var application = await ApplicationFactory.CreateAsync(output, args.Path, args.Framework, filter);
+                var application = await ApplicationFactory.CreateAsync(output, args.Path, args.Framework, filter, args.Environment);
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
@@ -54,7 +61,7 @@ namespace Microsoft.Tye
                 }
 
                 var executeOutput = new OutputContext(args.Console, args.Verbosity);
-                await ExecuteDeployAsync(executeOutput, application, environment: "production", args.Interactive, args.Force);
+                await ExecuteDeployAsync(executeOutput, application, environment: args.Environment, args.Interactive, args.Force);
             });
 
             return command;
@@ -148,6 +155,10 @@ namespace Microsoft.Tye
             public bool Force { get; set; } = false;
 
             public string[] Tags { get; set; } = Array.Empty<string>();
+
+            public string Environment { get; set; } = default!;
+
+            public bool Debug { get; set; } = false;
         }
     }
 }

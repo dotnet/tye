@@ -21,7 +21,7 @@ namespace Microsoft.Tye
             {
                 return new Option(new[] { "-e", "--environment" }, "Environment")
                 {
-                    Argument = new Argument<string>("environment", () => "production")
+                    Argument = new Argument<string>("environment", () => "development")
                     {
                         Arity = ArgumentArity.ExactlyOne,
                     },
@@ -66,6 +66,17 @@ namespace Microsoft.Tye
                 return new Option(new[] { "-i", "--interactive", }, "Interactive mode")
                 {
                     Argument = new Argument<bool>(),
+                };
+            }
+        }
+
+        public static Option Debug
+        {
+            get
+            {
+                return new Option(new[] { "-d", "--debug", }, "Debug mode")
+                {
+                    Argument = new Argument<bool>(() => false),
                 };
             }
         }
@@ -221,7 +232,7 @@ namespace Microsoft.Tye
                 {
                     Description = "Specify the namespace for the deployment",
                     Required = false,
-                    Argument = new Argument<string>(),
+                    Argument = new Argument<string>(() => "default"),
                 };
             }
         }
