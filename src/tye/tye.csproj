@@ -5,9 +5,11 @@
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Microsoft.Tye</RootNamespace>
     <AssemblyName>tye</AssemblyName>
-    <PackageId>Microsoft.Tye</PackageId>
-    <ToolCommandName>tye</ToolCommandName>
+    <PackageId>PenLink.Tye</PackageId>
+    <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
+    <ToolCommandName>ptye</ToolCommandName>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
