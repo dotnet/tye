@@ -6,10 +6,8 @@
     <RootNamespace>Microsoft.Tye</RootNamespace>
     <AssemblyName>tye</AssemblyName>
     <PackageId>PenLink.Tye</PackageId>
-    <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>ptye</ToolCommandName>
-    <PackageOutputPath>./nupkg</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
