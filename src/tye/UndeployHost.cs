@@ -4,14 +4,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using k8s;
 using k8s.Models;
 using Microsoft.Rest;
-using Microsoft.Tye.ConfigModel;
 
 namespace Microsoft.Tye
 {
@@ -44,7 +42,7 @@ namespace Microsoft.Tye
             var kubernetes = new Kubernetes(config);
 
             // If namespace is null, set it to default
-            config.Namespace ??= "default";
+            config.Namespace ??= @namespace ?? "default";
 
             // Due to some limitations in the k8s SDK we currently have a hardcoded list of resource
             // types that we handle deletes for. If we start adding extensibility for the *kinds* of
