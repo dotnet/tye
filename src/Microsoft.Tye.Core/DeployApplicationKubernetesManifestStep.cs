@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.CommandLine.Invocation;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -79,11 +78,12 @@ namespace Microsoft.Tye
                     };
 
                     var retries = 0;
+                    var namespaceArg = string.IsNullOrEmpty(application.Namespace) ? string.Empty : $"-n {application.Namespace}";
                     while (!done && retries < 60)
                     {
                         var ingressExitCode = await ProcessUtil.ExecuteAsync(
                             "kubectl",
-                            $"get ingress {ingress.Name} -o jsonpath='{{..ip}}'",
+                            $"get ingress {ingress.Name} {namespaceArg} -o jsonpath='{{..ip}}'",
                             Environment.CurrentDirectory,
                             complete,
                             capture.StdErr);
