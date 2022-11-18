@@ -25,7 +25,6 @@ namespace Microsoft.Tye
                 StandardOptions.Framework,
                 StandardOptions.Tags,
                 StandardOptions.Environment,
-                StandardOptions.IncludeLatestTag,
                 StandardOptions.Debug,
                 StandardOptions.CreateForce("Override validation and force deployment.")
             };
@@ -63,13 +62,13 @@ namespace Microsoft.Tye
                 }
 
                 var executeOutput = new OutputContext(args.Console, args.Verbosity);
-                await ExecuteDeployAsync(executeOutput, application, environment: args.Environment, args.Interactive, args.Force, args.IncludeLatestTag);
+                await ExecuteDeployAsync(executeOutput, application, environment: args.Environment, args.Interactive, args.Force);
             });
 
             return command;
         }
 
-        private static async Task ExecuteDeployAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive, bool force, bool includeLatestTag)
+        private static async Task ExecuteDeployAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive, bool force)
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -157,8 +156,6 @@ namespace Microsoft.Tye
             public string[] Tags { get; set; } = Array.Empty<string>();
 
             public string Environment { get; set; } = default!;
-
-            public bool IncludeLatestTag { get; set; } = true;
 
             public bool Debug { get; set; } = false;
         }
