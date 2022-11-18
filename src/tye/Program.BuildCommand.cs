@@ -3,13 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Tye.ConfigModel;
 
 namespace Microsoft.Tye
 {
@@ -24,6 +20,7 @@ namespace Microsoft.Tye
                 StandardOptions.Tags,
                 StandardOptions.Verbosity,
                 StandardOptions.Framework,
+                StandardOptions.Environment,
             };
 
             command.Handler = CommandHandler.Create<BuildCommandArguments>(args =>
@@ -39,7 +36,7 @@ namespace Microsoft.Tye
 
                 var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(args.Tags);
 
-                return BuildHost.BuildAsync(output, args.Path, args.Interactive, args.Framework, filter);
+                return BuildHost.BuildAsync(output, args.Path, args.Interactive, args.Environment,args.Framework, filter);
             });
 
             return command;
@@ -58,6 +55,8 @@ namespace Microsoft.Tye
             public bool Interactive { get; set; } = false;
 
             public string[] Tags { get; set; } = Array.Empty<string>();
+
+            public string Environment { get; set; } = default!;
         }
     }
 }

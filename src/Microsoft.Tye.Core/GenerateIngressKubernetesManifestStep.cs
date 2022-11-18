@@ -14,7 +14,7 @@ namespace Microsoft.Tye
 
         public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, IngressBuilder ingress)
         {
-            ingress.Outputs.Add(await KubernetesManifestGenerator.CreateIngress(output, application, ingress));
+            ingress.Outputs.Add(await KubernetesManifestGenerator.CreateIngress(output, application, ingress, Environment));
         }
     }
 }

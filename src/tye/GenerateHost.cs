@@ -2,18 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.CommandLine;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye
 {
     public static class GenerateHost
     {
-        public static async Task GenerateAsync(OutputContext output, FileInfo path, bool interactive, string ns, string? framework = null, ApplicationFactoryFilter? filter = null)
+        public static async Task GenerateAsync(OutputContext output, FileInfo path, bool interactive, string ns, string environment, string? framework = null, ApplicationFactoryFilter? filter = null)
         {
             var application = await ApplicationFactory.CreateAsync(output, path, framework, filter);
 
@@ -25,7 +21,7 @@ namespace Microsoft.Tye
             {
                 application.Namespace = ns;
             }
-            await ExecuteGenerateAsync(output, application, environment: "production", interactive);
+            await ExecuteGenerateAsync(output, application, environment, interactive);
         }
 
         public static async Task ExecuteGenerateAsync(OutputContext output, ApplicationBuilder application, string environment, bool interactive)
@@ -46,7 +42,7 @@ namespace Microsoft.Tye
 
                 IngressSteps =
                 {
-                    new GenerateIngressKubernetesManifestStep(),
+                    new GenerateIngressKubernetesManifestStep { Environment = environment, },
                 },
 
                 ApplicationSteps =

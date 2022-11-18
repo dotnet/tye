@@ -227,8 +227,8 @@ namespace Microsoft.Tye
 
                         // We don't apply more container defaults here because we might need
                         // to prompt for the registry name.
-                        var imageVersion = configService.DockerImageVersion ?? DateTime.UtcNow.ToString("MM\\.dd\\.yyyyHH\\.mm\\.ss\\.fff");
-                        var imageTag = $"{environment}-{imageVersion}";
+                        var imageVersion = configService.DockerImageVersion ?? DateTime.UtcNow.ToString("MM\\.dd\\.yyyy\\.HH\\.mm\\.ss");
+                        var imageTag = string.IsNullOrWhiteSpace(environment) ? imageVersion : $"{environment}-{imageVersion}";
                         project.ContainerInfo = new ContainerInfo() { UseMultiphaseDockerfile = false, ImageTag = imageTag };
 
                         // If project evaluation is successful this should not happen, therefore an exception will be thrown.

@@ -13,6 +13,8 @@ namespace Microsoft.Tye
 
         public string Environment { get; set; } = "production";
 
+        public bool IncludeLatestTag { get; set; } = true;
+
         public override async Task ExecuteAsync(OutputContext output, ApplicationBuilder application, ServiceBuilder service)
         {
             if (SkipWithoutProject(output, service, out var _))
@@ -27,7 +29,7 @@ namespace Microsoft.Tye
 
             foreach (var image in service.Outputs.OfType<DockerImageOutput>())
             {
-                await DockerPush.ExecuteAsync(output, application.ContainerEngine, image.ImageName, image.ImageTag);
+                await DockerPush.ExecuteAsync(output, application.ContainerEngine, image.ImageName, image.ImageTag, IncludeLatestTag);
                 output.WriteInfoLine($"Pushed docker image: '{image.ImageName}:{image.ImageTag}'");
             }
         }
