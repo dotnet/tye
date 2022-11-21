@@ -1,23 +1,25 @@
-# tye deploy
+# tye build-push-deploy
 
 ## Name
 
-`tye deploy` - Deploys the application to Kubernetes.
+`tye build-push-deploy` - Deploys the application to Kubernetes.
 
 ## Synopsis
 
 ```text
-tye deploy [-?|-h|--help] [-i|--interactive] [-v|--verbosity <Debug|Info|Quiet>] [-n|--namespace <n>] [-f|--framework <framework>] [--tags <tags>] [--force] [<PATH>]
+tye build-push-deploy [-?|-h|--help] [-i|--interactive] [-v|--verbosity <Debug|Info|Quiet>] [-n|--namespace <n>] [-f|--framework <framework>] [--tags <tags>] [--force] [<PATH>]
 ```
 
 ## Description
 
-The `tye deploy` command will deploy an application to Kubernetes. `tye deploy` by default will:
+The `tye build-push-deploy` command will deploy an application to Kubernetes. `tye build-push-deploy` by default will:
 
+- Create a docker image for each project in your application.
+- Push each docker image to your container registry.
 - Generate a Kubernetes Deployment and Service for each project.
 - Apply the generated Deployment and Service to your current Kubernetes context.
 
-`tye deploy` chooses the Kubernetes namespace to operate in according to the following priority:
+`tye build-push-deploy` chooses the Kubernetes namespace to operate in according to the following priority:
 
 - The value of `--namespace` passed at the command line
 - The value of `namespace` configured in `tye.yaml` (if present)
@@ -25,17 +27,19 @@ The `tye deploy` command will deploy an application to Kubernetes. `tye deploy` 
 
 > :bulb: Use `kubectl config view --minify --output 'jsonpath={..namespace}'` to view the current namespace.
 
-> :warning: The `tye deploy` command assumes that the configured image name and tag have already been pushed to the registry. Make sure the image used already exists.
+> :warning: The `tye build-push-deploy` command requires access to a remote container registry. Images will be tagged using the registry configured in `tye.yaml` (if present), or using a registry supplied interactively at the command line.
 
-> :bulb: The `tye deploy` command uses your local Kubernetes context to access the Kubernetes cluster. Make sure `kubectl` is configured to manage your cluster before running `tye deploy`.
+> :bulb: The `tye build-push-deploy` command uses Docker's credentials for pushing to the remote container registry. Make sure Docker is configured to push to your registry before running `tye build-push-deploy`.
+
+> :bulb: The `tye build-push-deploy` command uses your local Kubernetes context to access the Kubernetes cluster. Make sure `kubectl` is configured to manage your cluster before running `tye build-push-deploy`.
 
 ## Arguments
 
 `PATH`
 
-The path to either a file or directory to execute `tye deploy` on. Can either be a yaml, sln, or project file, however it is recommend to have a tye.yaml file for `tye deploy`.
+The path to either a file or directory to execute `tye build-push-deploy` on. Can either be a yaml, sln, or project file, however it is recommend to have a tye.yaml file for `tye build-push-deploy`.
 
-If a directory path is specified, `tye deploy` will default to using these files, in the following order:
+If a directory path is specified, `tye build-push-deploy` will default to using these files, in the following order:
 
 - `tye.yaml`
 - `*.sln`
@@ -49,7 +53,7 @@ If a directory path is specified, `tye deploy` will default to using these files
 
 - `-v|--verbosity <Debug|Info|Quiet>`
 
-    The verbosity of logs emitted by `tye deploy`. Defaults to Info.
+    The verbosity of logs emitted by `tye build-push-deploy`. Defaults to Info.
 
 - `-n|--namespace`
 
@@ -80,17 +84,17 @@ If a directory path is specified, `tye deploy` will default to using these files
 - Deploy an application from the current directory:
 
     ```text
-    tye deploy
+    tye build-push-deploy
     ```
 
 - Deploy an application with interactive input:
 
     ```text
-    tye deploy --interactive
+    tye build-push-deploy --interactive
     ```
 
 - Deploy an application, increasing log verbosity to Debug.
 
     ```text
-    tye deploy --verbosity Debug
+    tye build-push-deploy --verbosity Debug
     ```

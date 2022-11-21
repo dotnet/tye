@@ -142,7 +142,7 @@ These steps should still function if you have already deployed the NGINX Ingress
 To deploy the application - do an interactive deployment from the terminal:
 
 ```
-tye deploy --interactive
+tye build-push-deploy --interactive
 ```
 
 We're using an interactive deployment because Tye will need to prompt for:

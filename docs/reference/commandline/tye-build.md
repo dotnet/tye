@@ -46,6 +46,9 @@ If a directory path is specified, `tye build` will default to using these files,
 
     The target framework hint to use for all cross-targeting projects with multiple TFMs. This value must be a valid target framework for each individual cross-targeting project. Non-crosstargeting projects will ignore this hint and the value TFM configured in tye.yaml will override this hint.
 
+  `-e|--environment <environment>`
+
+    The environment to be used for deployment. Defaults to development if not specified.
 
 ## Examples
 

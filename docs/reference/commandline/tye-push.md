@@ -40,7 +40,7 @@ If a directory path is specified, `tye push` will default to using these files, 
 
 - `-v|--verbosity <Debug|Info|Quiet>`
 
-    The verbosity of logs emitted by `tye deploy`. Defaults to Info.
+    The verbosity of logs emitted by `tye build-push-deploy`. Defaults to Info.
 
 - `--tags <tags>`
 
@@ -49,6 +49,14 @@ If a directory path is specified, `tye push` will default to using these files, 
 - `-f|--framework <framework>`
 
     The target framework hint to use for all cross-targeting projects with multiple TFMs. This value must be a valid target framework for each individual cross-targeting project. Non-crosstargeting projects will ignore this hint and the value TFM configured in tye.yaml will override this hint.
+
+  `-e|--environment <environment>`
+
+    The environment to be used for deployment. Defaults to development if not specified.
+
+  `--include-latest-tag`
+
+    Push a docker image with 'latest' tag as well as versioned tag.
 
 - `--force`
 
@@ -71,5 +79,5 @@ If a directory path is specified, `tye push` will default to using these files, 
 - Push an application, increasing log verbosity to Debug.
 
     ```text
-    tye deploy --verbosity Debug
+    tye build-push-deploy --verbosity Debug
     ```

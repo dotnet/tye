@@ -182,6 +182,10 @@ Build arguments to use when building a Docker image. This is only used when `doc
 
 Path to the Dockerfile Context to run docker build against. This is only used when `dockerFile` is specified as well.
 
+#### `dockerImageVersion` (string)
+
+Version of the docker image to be built. Defaults to the current timestamp if not specified.
+
 #### `executable` (string)
 
 The path (or filename) of an executable to launch.

@@ -64,7 +64,7 @@ Next, ensure that Tye and its dependent .NET runtime are installed.
     dotnet tool install -g Microsoft.Tye --version "0.11.0-alpha.22111.1"
 ```
 
-Using the name of the registry and the [Azure docker action](https://github.com/Azure/docker-login) to login to your registry. This step is needed prior to running the `deploy` command which will build and push the images to the registry. 
+Using the name of the registry and the [Azure docker action](https://github.com/Azure/docker-login) to login to your registry. This step is needed prior to running the `build-push-deploy` command which will build and push the images to the registry. 
 
 >:bulb: The username and password for authentication is stored in [secrets](https://help.github.com/en/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets) within the GitHub repository.
 
@@ -105,9 +105,9 @@ Finally, deploy the application!
 >:bulb: adding the `-v Debug` for verbose logging
 
 ```yaml
-- name: ☸ tye deploy
+- name: ☸ tye build-push-deploy
     run: |
-    tye deploy -v Debug
+    tye build-push-deploy -v Debug
 ```
 
 ### Complete GitHub Action
@@ -125,7 +125,7 @@ env:
 jobs:
   build:
     if: github.event_name == 'push' && contains(toJson(github.event.commits), '***NO_CI***') == false && contains(toJson(github.event.commits), '[ci skip]') == false && contains(toJson(github.event.commits), '[skip ci]') == false
-    name: tye deploy
+    name: build-push-deploy
     runs-on: ubuntu-latest
     steps:
     - name: ✔ Checkout
@@ -158,9 +158,9 @@ jobs:
       run: |
         kubectl apply -f https://aka.ms/tye/ingress/deploy
 
-    - name: ☸ tye deploy
+    - name: ☸ tye build-push-deploy
       run: |
-        tye deploy -v Debug
+        tye build-push-deploy -v Debug
 ```
 
 ## Viewing the deployed application

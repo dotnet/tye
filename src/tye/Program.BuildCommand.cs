@@ -36,7 +36,7 @@ namespace Microsoft.Tye
 
                 var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(args.Tags);
 
-                return BuildHost.BuildAsync(output, args.Path, args.Interactive, args.Environment,args.Framework, filter);
+                return BuildHost.BuildAsync(output, args.Path, args.Interactive, args.Environment, args.Framework, filter);
             });
 
             return command;

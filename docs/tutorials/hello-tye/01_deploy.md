@@ -2,7 +2,7 @@
 
 This tutorial assumes that you have completed the [first step (run locally)](00_run_locally.md)
 
-> :bulb: `tye` will use your current credentials for pushing Docker images and accessing kubernetes clusters. If you have configured kubectl with a context already, that's what [`tye deploy`](/docs/reference/commandline/tye-deploy.md) is going to use!
+> :bulb: `tye` will use your current credentials for pushing Docker images and accessing kubernetes clusters. If you have configured kubectl with a context already, that's what [`tye build-push-deploy`](/docs/reference/commandline/tye-build-push-deploy.md) is going to use!
 
 Before we deploy, make sure you have the following ready...
 
@@ -21,24 +21,24 @@ Before we deploy, make sure you have the following ready...
 
 ## Deploying the application
 
-Now that we have our application running locally, let's deploy the application. In this example, we will deploy to Kubernetes by using `tye deploy`.
+Now that we have our application running locally, let's deploy the application. In this example, we will deploy to Kubernetes by using `tye build-push-deploy`.
 
 1. Deploy to Kubernetes
 
     Deploy the application by running:
 
     ```text
-    tye deploy --interactive
+    tye build-push-deploy --interactive
     ```
     > Enter the Container Registry (ex: 'example.azurecr.io' for Azure or 'example' for dockerhub):
 
     You will be prompted to enter your container registry. This is needed to tag images, and to push them to a location accessible by kubernetes.
 
-    > :bulb: Under the hood `tye` uses `kubectl` to execute deployments. In cases where you don't have `kubectl` installed or it's current context is invalid `tye deploy` will fail with the following error: "Drats! 'deploy' failed: Cannot apply manifests because kubectl is not installed." 
+    > :bulb: Under the hood `tye` uses `kubectl` to execute deployments. In cases where you don't have `kubectl` installed or it's current context is invalid `tye build-push-deploy` will fail with the following error: "Drats! 'build-push-deploy' failed: Cannot apply manifests because kubectl is not installed." 
 
     If you are using dockerhub, the registry name will be your dockerhub username. If you use a standalone container registry (for instance from your cloud provider), the registry name will look like a hostname, eg: `example.azurecr.io`.
 
-    `tye deploy` does many different things to deploy an application to Kubernetes. It will:
+    `tye build-push-deploy` does many different things to deploy an application to Kubernetes. It will:
     - Create a docker image for each project in your application.
     - Push each docker image to your container registry.
     - Generate a Kubernetes `Deployment` and `Service` for each project.
@@ -85,7 +85,7 @@ Now that we have our application running locally, let's deploy the application. 
 
 ## Exploring tye.yaml
 
-Tye has a optional configuration file (`tye.yaml`) to allow customizing settings. If you want to use `tye deploy` as part of a CI/CD system, it's expected that you'll have a `tye.yaml`.
+Tye has a optional configuration file (`tye.yaml`) to allow customizing settings. If you want to use `tye build-push-deploy` as part of a CI/CD system, it's expected that you'll have a `tye.yaml`.
 
 1. Scaffolding `tye.yaml`
 
@@ -130,7 +130,7 @@ Tye has a optional configuration file (`tye.yaml`) to allow customizing settings
 
     If you are using dockerhub, the registry_name will your dockerhub username. If you use a standalone container registry (for instance from your cloud provider), the registry_name will look like a hostname, eg: `example.azurecr.io`.
 
-    Now it's possible to use `tye deploy` without `--interactive` since the registry is stored as part of configuration.
+    Now it's possible to use `tye build-push-deploy` without `--interactive` since the registry is stored as part of configuration.
 
     > :question: This step may not make much sense if you're using `tye.yaml` to store a personal Dockerhub username. A more typical use case would be storing the name of a private registry for use in a CI/CD system.
 
