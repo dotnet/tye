@@ -9,7 +9,7 @@ namespace Microsoft.Tye
 {
     internal static class DockerPush
     {
-        public static async Task ExecuteAsync(OutputContext output, ContainerEngine containerEngine, string imageName, string imageTag, bool includeLatestTag)
+        public static async Task ExecuteAsync(OutputContext output, ContainerEngine containerEngine, string imageName, string imageTag, bool includeLatestTag, string environment)
         {
             if (output is null)
             {
@@ -27,7 +27,7 @@ namespace Microsoft.Tye
             }
 
             var buildImage = $"{imageName}:{imageTag}";
-            var latestImage = includeLatestTag ? $"{imageName}:latest" : string.Empty;
+            var latestImage = includeLatestTag ? $"{imageName}:{environment}-latest" : string.Empty;
 
             if (includeLatestTag)
             {
