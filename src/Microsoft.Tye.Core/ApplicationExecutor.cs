@@ -27,37 +27,41 @@ namespace Microsoft.Tye
 
         public async Task ExecuteAsync(ApplicationBuilder application)
         {
-            foreach (var service in application.Services)
+            if (ServiceSteps.Count > 0)
             {
-                using var tracker = output.BeginStep($"Processing Service '{service.Name}'...");
-                foreach (var step in ServiceSteps)
+                foreach (var service in application.Services)
                 {
-                    using var stepTracker = output.BeginStep(step.DisplayText);
-                    await step.ExecuteAsync(output, application, service);
-                    stepTracker.MarkComplete();
+                    using var tracker = output.BeginStep($"Processing Service '{service.Name}'...");
+                    foreach (var step in ServiceSteps)
+                    {
+                        using var stepTracker = output.BeginStep(step.DisplayText);
+                        await step.ExecuteAsync(output, application, service);
+                        stepTracker.MarkComplete();
+                    }
+                    tracker.MarkComplete();
                 }
-                tracker.MarkComplete();
             }
 
-            foreach (var ingress in application.Ingress)
+            if (IngressSteps.Count > 0)
             {
-                using var tracker = output.BeginStep($"Processing Ingress '{ingress.Name}'...");
-                foreach (var step in IngressSteps)
+                foreach (var ingress in application.Ingress)
                 {
-                    using var stepTracker = output.BeginStep(step.DisplayText);
-                    await step.ExecuteAsync(output, application, ingress);
-                    stepTracker.MarkComplete();
+                    using var tracker = output.BeginStep($"Processing Ingress '{ingress.Name}'...");
+                    foreach (var step in IngressSteps)
+                    {
+                        using var stepTracker = output.BeginStep(step.DisplayText);
+                        await step.ExecuteAsync(output, application, ingress);
+                        stepTracker.MarkComplete();
+                    }
+                    tracker.MarkComplete();
                 }
-                tracker.MarkComplete();
             }
 
+            foreach (var step in ApplicationSteps)
             {
-                foreach (var step in ApplicationSteps)
-                {
-                    using var stepTracker = output.BeginStep(step.DisplayText);
-                    await step.ExecuteAsync(output, application);
-                    stepTracker.MarkComplete();
-                }
+                using var stepTracker = output.BeginStep(step.DisplayText);
+                await step.ExecuteAsync(output, application);
+                stepTracker.MarkComplete();
             }
         }
 

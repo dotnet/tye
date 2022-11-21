@@ -3,13 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Tye.ConfigModel;
 
 namespace Microsoft.Tye
 {
@@ -25,6 +21,7 @@ namespace Microsoft.Tye
                 StandardOptions.Namespace,
                 StandardOptions.Tags,
                 StandardOptions.Framework,
+                StandardOptions.Environment,
             };
 
             // This is a super-secret VIP-only command! It's useful for testing, but we're 
@@ -44,7 +41,7 @@ namespace Microsoft.Tye
 
                 var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(args.Tags);
 
-                return GenerateHost.GenerateAsync(output, args.Path, args.Interactive, args.Namespace, args.Framework, filter);
+                return GenerateHost.GenerateAsync(output, args.Path, args.Interactive, args.Namespace, args.Environment, args.Framework, filter);
             });
 
             return command;
@@ -63,6 +60,8 @@ namespace Microsoft.Tye
             public string Namespace { get; set; } = default!;
 
             public string Framework { get; set; } = default!;
+
+            public string Environment { get; set; } = default!;
 
             public string[] Tags { get; set; } = Array.Empty<string>();
         }

@@ -18,7 +18,8 @@ namespace Microsoft.Tye
         public static async Task<KubernetesIngressOutput> CreateIngress(
             OutputContext output,
             ApplicationBuilder application,
-            IngressBuilder ingress)
+            IngressBuilder ingress,
+            string environment)
         {
             var root = new YamlMappingNode();
             var k8sVersion = await KubectlDetector.GetKubernetesServerVersion(output);
@@ -125,17 +126,18 @@ namespace Microsoft.Tye
                     // two capture groups.
                     if (string.IsNullOrEmpty(ingressRule.Path) || ingressRule.Path == "/")
                     {
-                        path.Add("path", "/()(.*)"); // () is an empty capture group.
+                        path.Add("path", $"/()({environment}.*)"); // () is an empty capture group.
                     }
                     else
                     {
+                        var pathRoute = ingressRule.Path.StartsWith('/') ? $"/{environment}{ingressRule.Path}" : $"/{environment}/{ingressRule.Path}";
                         if (ingressRule.PreservePath)
                         {
-                            path.Add("path", $"/()({ingressRule.Path.Trim('/')}.*)");
+                            path.Add("path", $"/()({pathRoute.Trim('/')}.*)");
                         }
                         else
                         {
-                            var regex = $"{ingressRule.Path.TrimEnd('/')}(/|$)(.*)";
+                            var regex = $"{pathRoute.TrimEnd('/')}(/|$)(.*)";
                             path.Add("path", regex);
                         }
                     }

@@ -81,6 +81,17 @@ namespace Microsoft.Tye
             }
         }
 
+        public static Option IncludeLatestTag
+        {
+            get
+            {
+                return new Option(new[] { "--include-latest-tag", }, "Push a docker image with 'latest' tag as well as versioned tag")
+                {
+                    Argument = new Argument<bool>(() => true),
+                };
+            }
+        }
+
         public static Option Outputs
         {
             get

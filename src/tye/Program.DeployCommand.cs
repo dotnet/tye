@@ -8,6 +8,7 @@ using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using Tye;
 
 namespace Microsoft.Tye
 {
@@ -90,9 +91,7 @@ namespace Microsoft.Tye
                 {
                     new ApplyContainerDefaultsStep(),
                     new CombineStep() { Environment = environment, },
-                    new PublishProjectStep(),
-                    new BuildDockerImageStep() { Environment = environment, },
-                    new PushDockerImageStep() { Environment = environment, },
+                    new ConfigureDockerImageStep(),
                     new ValidateSecretStep() { Environment = environment, Interactive = interactive, Force = force, },
                     new GenerateServiceKubernetesManifestStep() { Environment = environment, },
                 },
@@ -100,7 +99,7 @@ namespace Microsoft.Tye
                 IngressSteps =
                 {
                     new ValidateIngressStep() { Environment = environment, Interactive = interactive, Force = force, },
-                    new GenerateIngressKubernetesManifestStep(),
+                    new GenerateIngressKubernetesManifestStep { Environment = environment, },
                 },
 
                 ApplicationSteps =
