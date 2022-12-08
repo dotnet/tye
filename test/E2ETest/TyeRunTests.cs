@@ -19,13 +19,10 @@ using Microsoft.Tye;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
 using Microsoft.Tye.Hosting.Model.V1;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
-using Newtonsoft.Json;
 using Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
 using static Test.Infrastructure.TestHelpers;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace E2ETest
 {
@@ -1307,7 +1304,7 @@ services:
                 Assert.True(backendResponse.IsSuccessStatusCode);
 
                 var response = await backendResponse.Content.ReadAsStringAsync();
-                var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(response);
+                var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(response);
                 
                 Assert.Contains(new KeyValuePair<string, string>("DOTNET_ENVIRONMENT", "dev"), dict);
                 Assert.Contains(new KeyValuePair<string, string>("ASPNETCORE_ENVIRONMENT", "dev"), dict);
