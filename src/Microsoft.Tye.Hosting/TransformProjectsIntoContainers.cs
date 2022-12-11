@@ -16,13 +16,13 @@ namespace Microsoft.Tye.Hosting
     {
         private readonly ILogger _logger;
         private Lazy<TempDirectory> _certificateDirectory;
-        
+
         private Dictionary<string, string> _defaultDotnetEnvVars = new Dictionary<string, string>
         {
             { "DOTNET_ENVIRONMENT", "Development" },
             { "DOTNET_LOGGING__CONSOLE__DISABLECOLORS", "true" }
         };
-        
+
         private Dictionary<string, string> _defaultAspnetEnvVars = new Dictionary<string, string>
         {
             { "ASPNETCORE_ENVIRONMENT", "Development" },
@@ -140,7 +140,7 @@ namespace Microsoft.Tye.Hosting
             {
                 return;
             }
-            
+
             foreach (var aspnetEnvVar in _defaultAspnetEnvVars)
             {
                 if (!serviceDescription.Configuration.Exists(x => x.Name.Equals(aspnetEnvVar.Key)))

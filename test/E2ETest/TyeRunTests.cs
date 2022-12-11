@@ -1277,7 +1277,7 @@ services:
                 Assert.True(response.IsSuccessStatusCode);
             });
         }
-        
+
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task RunWithDotnetEnvVarsDoesNotGetOverriddenByDefaultDotnetEnvVars()
@@ -1296,7 +1296,7 @@ services:
 
             var client = new HttpClient(new RetryHandler(handler));
 
-            await RunHostingApplication(application, new HostOptions{ Docker = true }, async (app, uri) =>
+            await RunHostingApplication(application, new HostOptions { Docker = true }, async (app, uri) =>
             {
                 var backendUri = await GetServiceUrl(client, uri, "test-project");
 
@@ -1305,7 +1305,7 @@ services:
 
                 var response = await backendResponse.Content.ReadAsStringAsync();
                 var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(response);
-                
+
                 Assert.Contains(new KeyValuePair<string, string>("DOTNET_ENVIRONMENT", "dev"), dict);
                 Assert.Contains(new KeyValuePair<string, string>("ASPNETCORE_ENVIRONMENT", "dev"), dict);
             });
