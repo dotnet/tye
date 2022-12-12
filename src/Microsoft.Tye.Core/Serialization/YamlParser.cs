@@ -115,7 +115,7 @@ namespace Tye.Serialization
         {
             if (node.NodeType != YamlNodeType.Mapping)
             {
-                if (fileInfo!= null)
+                if (fileInfo != null)
                 {
                     throw new TyeYamlException(node.Start,
                         CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), node.NodeType.ToString()), null, fileInfo);
