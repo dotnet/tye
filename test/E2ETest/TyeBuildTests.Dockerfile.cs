@@ -34,7 +34,7 @@ namespace E2ETest
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            application.Registry = new ContainerRegistry("test");
+            application.Registry = new ContainerRegistry("test", null);
 
             try
             {
@@ -70,7 +70,7 @@ namespace E2ETest
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            application.Registry = new ContainerRegistry("test");
+            application.Registry = new ContainerRegistry("test", null);
 
             try
             {
@@ -105,7 +105,7 @@ namespace E2ETest
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            application.Registry = new ContainerRegistry("test");
+            application.Registry = new ContainerRegistry("test", null);
 
             try
             {
@@ -143,7 +143,7 @@ namespace E2ETest
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            application.Registry = new ContainerRegistry("test");
+            application.Registry = new ContainerRegistry("test", null);
 
             try
             {
@@ -181,7 +181,7 @@ namespace E2ETest
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
 
-            application.Registry = new ContainerRegistry("test");
+            application.Registry = new ContainerRegistry("test", null);
 
             try
             {
@@ -228,7 +228,7 @@ namespace E2ETest
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
 
-            application.Registry = new ContainerRegistry("test");
+            application.Registry = new ContainerRegistry("test", null);
 
             try
             {
@@ -262,7 +262,7 @@ namespace E2ETest
             var outputContext = new OutputContext(sink, Verbosity.Debug);
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile, "netcoreapp3.1");
 
-            application.Registry = new ContainerRegistry("test");
+            application.Registry = new ContainerRegistry("test", null);
 
             try
             {
