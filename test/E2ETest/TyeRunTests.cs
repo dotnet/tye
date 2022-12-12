@@ -11,10 +11,14 @@ using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Net.WebSockets;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Tye;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
@@ -670,6 +674,7 @@ services:
             };
 
             var client = new HttpClient(new RetryHandler(handler));
+            var wsClient = new ClientWebSocket();
 
             await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
             {
@@ -703,6 +708,34 @@ services:
                 // checking preservePath behavior
                 var responsePreservePath = await client.GetAsync(ingressUri + "/C/test");
                 Assert.Contains("Hit path /C/test", await responsePreservePath.Content.ReadAsStringAsync());
+
+                string GetWebSocketUri(string uri)
+                {
+                    if (uri.StartsWith("http"))
+                    {
+                        return "ws" + uri.Substring(4);
+                    }
+                    else if (uri.StartsWith("https"))
+                    {
+                        return "wss" + uri.Substring(5);
+                    }
+
+                    throw new NotSupportedException();
+                }
+
+                // Check the websocket endpoint
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                var wsUri = GetWebSocketUri(ingressUri);
+                await wsClient.ConnectAsync(new Uri(wsUri + "/A/ws"), cts.Token);
+                var data = Encoding.UTF8.GetBytes("Hello World");
+                await wsClient.SendAsync(data, WebSocketMessageType.Text, endOfMessage: true, cts.Token);
+                var receiveBuffer = new byte[4096];
+                var result = await wsClient.ReceiveAsync(receiveBuffer.AsMemory(), cts.Token);
+                Assert.True(result.EndOfMessage);
+                Assert.Equal(WebSocketMessageType.Text, result.MessageType);
+                Assert.Equal(data.Length, result.Count);
+                Assert.Equal(data, receiveBuffer.AsMemory(0, result.Count).ToArray());
+                await wsClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "", cts.Token);
             });
         }
 
