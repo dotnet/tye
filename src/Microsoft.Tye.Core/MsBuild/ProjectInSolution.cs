@@ -375,7 +375,7 @@ namespace Microsoft.Build.Construction
         /// <summary>
         /// Find the unique name for this project, e.g. SolutionFolder\SubSolutionFolder\Project_Name
         /// </summary>
-        internal string GetUniqueProjectName()
+        public string GetUniqueProjectName()
         {
             if (_uniqueProjectName == null)
             {
