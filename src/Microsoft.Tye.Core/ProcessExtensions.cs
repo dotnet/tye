@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.Tye
 {
-    internal static class ProcessExtensions
+    public static class ProcessExtensions
     {
         private static readonly bool _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         private static readonly TimeSpan _defaultTimeout = TimeSpan.FromSeconds(30);
@@ -97,7 +97,7 @@ namespace Microsoft.Tye
             }
         }
 
-        private static void RunProcessAndWaitForExit(string fileName, string arguments, TimeSpan timeout, out string? stdout)
+        public static void RunProcessAndWaitForExit(string fileName, string arguments, TimeSpan timeout, out string? stdout)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -117,7 +117,7 @@ namespace Microsoft.Tye
             }
             else
             {
-                process?.Kill();
+                process?.Kill(entireProcessTree: true);
             }
         }
     }

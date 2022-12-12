@@ -6,7 +6,7 @@ Tye can push logs to Seq easily without the need for any SDKs or code changes in
 
 ## Getting started: running locally with Seq
 
-> :bulb: If you want an existing sample to run, the [sample here](https://github.com/dotnet/tye/tree/master/samples/frontend-backend) will do. This recipe will show examples of UI and data based on that sample. You own application will work fine, but the data and examples will look different.
+> :bulb: If you want an existing sample to run, the [sample here](https://github.com/dotnet/tye/tree/main/samples/frontend-backend) will do. This recipe will show examples of UI and data based on that sample. You own application will work fine, but the data and examples will look different.
 
 The first step is to add the `seq` extension to your `tye.yaml`. Add the `extensions` node and its children from the example below.
 

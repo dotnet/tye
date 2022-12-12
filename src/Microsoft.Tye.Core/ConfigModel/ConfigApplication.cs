@@ -24,9 +24,15 @@ namespace Microsoft.Tye.ConfigModel
 
         public string? Name { get; set; }
 
+        public int? DashboardPort { get; set; }
+
+        public string? BuildSolution { get; set; }
+
         public string? Namespace { get; set; }
 
         public ConfigRegistry? Registry { get; set; }
+
+        public ContainerEngineType? ContainerEngineType { get; set; }
 
         public string? Network { get; set; }
 
@@ -126,8 +132,8 @@ namespace Microsoft.Tye.ConfigModel
 
                 foreach (var envVar in service.Configuration)
                 {
-                    context = new ValidationContext(service);
-                    if (!Validator.TryValidateObject(service, context, results, validateAllProperties: true))
+                    context = new ValidationContext(envVar);
+                    if (!Validator.TryValidateObject(envVar, context, results, validateAllProperties: true))
                     {
                         throw new TyeYamlException(
                             $"Environment variable '{envVar.Name}' of service '{service.Name}' validation failed." + Environment.NewLine +
@@ -137,8 +143,8 @@ namespace Microsoft.Tye.ConfigModel
 
                 foreach (var volume in service.Volumes)
                 {
-                    context = new ValidationContext(service);
-                    if (!Validator.TryValidateObject(service, context, results, validateAllProperties: true))
+                    context = new ValidationContext(volume);
+                    if (!Validator.TryValidateObject(volume, context, results, validateAllProperties: true))
                     {
                         throw new TyeYamlException(
                             $"Volume '{volume.Source}' of service '{service.Name}' validation failed." + Environment.NewLine +
@@ -150,7 +156,7 @@ namespace Microsoft.Tye.ConfigModel
                 foreach (var probe in probes)
                 {
                     context = new ValidationContext(probe.Probe!);
-                    if (!Validator.TryValidateObject(probe.Probe, context, results, validateAllProperties: true))
+                    if (!Validator.TryValidateObject(probe.Probe!, context, results, validateAllProperties: true))
                     {
                         throw new TyeYamlException(
                             $"Probe '{probe.Name}' in service '{service.Name}' validation failed." + Environment.NewLine +

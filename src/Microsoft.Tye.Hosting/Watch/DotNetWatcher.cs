@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Watcher
                     {
                         // Only show this error message if the process exited non-zero due to a normal process exit.
                         // Don't show this if dotnet-watch killed the inner process due to file change or CTRL+C by the user
-                        _logger.LogError($"watch: Exited with error code {processTask.Result}");
+                        _logger.LogError("watch: {Replica} process exited with exit code {ExitCode}", replica, processTask.Result.ExitCode);
                     }
                     else
                     {
@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Watcher
                             if (exitCode == 0)
                             {
                                 break;
-                                // Build failed, keep retrying builds until successful build. 
+                                // Build failed, keep retrying builds until successful build.
                             }
 
                             await fileSetWatcher.GetChangedFileAsync(cancellationToken, () => _logger.LogWarning("Waiting for a file to change before restarting dotnet..."));

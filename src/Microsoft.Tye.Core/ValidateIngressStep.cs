@@ -43,7 +43,7 @@ namespace Microsoft.Tye
                 return;
             }
 
-            if (!await KubectlDetector.IsKubectlInstalledAsync(output))
+            if (await KubectlDetector.GetKubernetesServerVersion(output) == null)
             {
                 throw new CommandException($"Cannot validate ingress because kubectl is not installed.");
             }
@@ -122,7 +122,7 @@ namespace Microsoft.Tye
                 output.WriteDebugLine($"Running 'minikube addons enable ingress'");
                 output.WriteCommandLine("minikube", "addon enable ingress");
                 var capture = output.Capture();
-                var exitCode = await Process.ExecuteAsync(
+                var exitCode = await ProcessUtil.ExecuteAsync(
                     $"minikube",
                     $"addons enable ingress",
                     System.Environment.CurrentDirectory,
@@ -140,21 +140,21 @@ namespace Microsoft.Tye
             else
             {
                 // If we get here then we should deploy the ingress controller.
+
+                // The first time we apply the ingress controller, the validating webhook will not have started.
+                // This causes an error to be returned from the process. As this always happens, we are going to
+                // not check the error returned and assume the kubectl command worked. This is double checked in
+                // the future as well when we try to create the ingress resource.
+
                 output.WriteDebugLine($"Running 'kubectl apply'");
                 output.WriteCommandLine("kubectl", $"apply -f \"https://aka.ms/tye/ingress/deploy\"");
                 var capture = output.Capture();
-                var exitCode = await Process.ExecuteAsync(
+                var exitCode = await ProcessUtil.ExecuteAsync(
                     $"kubectl",
                     $"apply -f \"https://aka.ms/tye/ingress/deploy\"",
-                    System.Environment.CurrentDirectory,
-                    stdOut: capture.StdOut,
-                    stdErr: capture.StdErr);
+                    System.Environment.CurrentDirectory);
 
                 output.WriteDebugLine($"Done running 'kubectl apply' exit code: {exitCode}");
-                if (exitCode != 0)
-                {
-                    throw new CommandException("'kubectl apply' failed.");
-                }
 
                 output.WriteInfoLine($"Waiting for ingress-nginx controller to start.");
 
@@ -162,7 +162,7 @@ namespace Microsoft.Tye
                 // after creating the controller will fail if the webhook isn't ready.
                 //
                 // Internal error occurred: failed calling webhook "validate.nginx.ingress.kubernetes.io": 
-                // Post https://ingress-nginx-controller-admission.ingress-nginx.svc:443/extensions/v1beta1/ingresses?timeout=30s:
+                // Post https://ingress-nginx-controller-admission.ingress-nginx.svc:443/networking.k8s.io/v1/ingresses?timeout=30s:
                 // dial tcp 10.0.31.130:443: connect: connection refused
                 //
                 // Unfortunately this is the likely case for us.

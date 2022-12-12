@@ -89,5 +89,20 @@ namespace E2ETest
 
             YamlAssert.Equals(expectedContent, content);
         }
+
+        [Fact]
+        public void Tye_Init_Force_Works()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("single-project");
+            var tyePath = Path.Combine(projectDirectory.DirectoryPath, "tye.yaml");
+            var text = File.ReadAllText(tyePath);
+            File.WriteAllText(tyePath, text + "thisisatest");
+
+            var projectFile = new FileInfo(tyePath);
+
+            var (content, _) = InitHost.CreateTyeFileContent(projectFile, force: true);
+
+            Assert.DoesNotContain("thisisatest", content);
+        }
     }
 }

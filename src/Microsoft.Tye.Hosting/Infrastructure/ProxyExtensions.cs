@@ -8,12 +8,13 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 
 namespace Microsoft.AspNetCore.Proxy
 {
     internal static class ProxyAdvancedExtensions
     {
-        private static readonly string[] NotForwardedWebSocketHeaders = new[] { "Connection", "Host", "Upgrade", "Sec-WebSocket-Accept", "Sec-WebSocket-Protocol", "Sec-WebSocket-Key", "Sec-WebSocket-Version", "Sec-WebSocket-Extensions" };
+        private static readonly string[] NotForwardedWebSocketHeaders = new[] { "Connection", "Host", "Upgrade", "Sec-WebSocket-Accept", "Sec-WebSocket-Protocol", "Sec-WebSocket-Key", "Sec-WebSocket-Version", "Sec-WebSocket-Extensions", "Via", "X-Forwarded-For", "X-Forwarded-Proto", "X-Forwarded-Host" };
         private const int DefaultWebSocketBufferSize = 4096;
         private const int StreamCopyBufferSize = 81920;
 
@@ -85,6 +86,16 @@ namespace Microsoft.AspNetCore.Proxy
                 }
             }
 
+            // Append request forwarding headers
+            requestMessage.Headers.TryAddWithoutValidation("Via", $"{context.Request.Protocol} Tye");
+            requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-Proto", request.Scheme);
+            requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-Host", request.Host.ToUriComponent());
+
+            if (context.Connection.RemoteIpAddress != null)
+            {
+                requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-For", context.Connection.RemoteIpAddress.ToString());
+            }
+
             requestMessage.Headers.Host = uri.Authority;
             requestMessage.RequestUri = uri;
             requestMessage.Method = new HttpMethod(request.Method);
@@ -121,6 +132,15 @@ namespace Microsoft.AspNetCore.Proxy
                 }
             }
 
+            AppendHeaderValue(client.Options, context.Request.Headers, "Via", context.Request.Protocol);
+            AppendHeaderValue(client.Options, context.Request.Headers, "X-Forwarded-Proto", context.Request.Scheme);
+            AppendHeaderValue(client.Options, context.Request.Headers, "X-Forwarded-Host", context.Request.Host.ToUriComponent());
+
+            if (context.Connection.RemoteIpAddress != null)
+            {
+                AppendHeaderValue(client.Options, context.Request.Headers, "X-Forwarded-For", context.Connection.RemoteIpAddress.ToString());
+            }
+
             try
             {
                 await client.ConnectAsync(destinationUri, context.RequestAborted);
@@ -137,6 +157,12 @@ namespace Microsoft.AspNetCore.Proxy
             await Task.WhenAll(PumpWebSocket(client, server, bufferSize, context.RequestAborted), PumpWebSocket(server, client, bufferSize, context.RequestAborted));
 
             return true;
+
+            static void AppendHeaderValue(ClientWebSocketOptions options, IHeaderDictionary headers, string key, string value)
+            {
+                var newValue = new StringValues(headers[key].Append(value).ToArray());
+                options.SetRequestHeader(key, newValue);
+            }
         }
 
         private static async Task PumpWebSocket(WebSocket source, WebSocket destination, int bufferSize, CancellationToken cancellationToken)

@@ -61,7 +61,7 @@ namespace E2ETest
                 var replicasToRestart = new[] { replicaToStop.Key };
                 var restOfReplicas = host.Application.Services.SelectMany(s => s.Value.Replicas).Select(r => r.Value.Name).Where(r => r != replicaToStop.Key).ToArray();
 
-                Assert.True(await DoOperationAndWaitForReplicasToRestart(host, replicasToRestart.ToHashSet(), restOfReplicas.ToHashSet(), TimeSpan.FromSeconds(1), _ =>
+                Assert.True(await DoOperationAndWaitForReplicasToRestart(host, replicasToRestart.ToHashSet(), restOfReplicas.ToHashSet(), TimeSpan.FromSeconds(30), _ =>
                 {
                     replicaToStop.Value.StoppingTokenSource!.Cancel();
                     return Task.CompletedTask;
@@ -112,7 +112,7 @@ namespace E2ETest
             {
                 await StartHostAndWaitForReplicasToStart(host);
 
-                var uri = new Uri(host.DashboardWebApplication!.Addresses.First());
+                var uri = new Uri(host.Addresses!.First());
 
                 await execute(host, uri!);
             }
@@ -120,7 +120,7 @@ namespace E2ETest
             {
                 if (host.DashboardWebApplication != null)
                 {
-                    var uri = new Uri(host.DashboardWebApplication!.Addresses.First());
+                    var uri = new Uri(host.Addresses!.First());
 
                     using var client = new HttpClient();
 

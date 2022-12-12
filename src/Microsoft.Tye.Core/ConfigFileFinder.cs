@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace Microsoft.Tye
@@ -10,9 +11,10 @@ namespace Microsoft.Tye
     {
         private static readonly string[] FileFormats = { "tye.yaml", "tye.yml", "docker-compose.yaml", "docker-compose.yml", "*.csproj", "*.fsproj", "*.sln" };
 
-        public static bool TryFindSupportedFile(string directoryPath, out string? filePath, out string? errorMessage)
+        public static bool TryFindSupportedFile(string directoryPath, [NotNullWhen(true)] out string? filePath, [MaybeNullWhen(true)] out string? errorMessage, string[]? fileFormats = null)
         {
-            foreach (var format in FileFormats)
+            fileFormats ??= FileFormats;
+            foreach (var format in fileFormats)
             {
                 var files = Directory.GetFiles(directoryPath, format);
 

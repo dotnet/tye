@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
+
 namespace Microsoft.Tye
 {
     public sealed class BindingBuilder
@@ -12,5 +14,6 @@ namespace Microsoft.Tye
         public int? ContainerPort { get; set; }
         public string? Host { get; set; }
         public string? Protocol { get; set; }
+        public List<string> Routes { get; set; } = new List<string>();
     }
 }

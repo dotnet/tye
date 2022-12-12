@@ -64,7 +64,7 @@ namespace Microsoft.Tye
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
-            if (!await KubectlDetector.IsKubectlInstalledAsync(output))
+            if (await KubectlDetector.GetKubernetesServerVersion(output) == null)
             {
                 throw new CommandException($"Cannot apply manifests because kubectl is not installed.");
             }

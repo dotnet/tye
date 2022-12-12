@@ -19,10 +19,10 @@ namespace Microsoft.DotNet.Watcher.Internal
     {
         private const string TargetName = "GenerateWatchList";
         private const string WatchTargetsFileName = "DotNetWatch.targets";
+        private readonly bool _waitOnError;
         private readonly ILogger _logger;
         private readonly string _projectFile;
-        private readonly bool _waitOnError;
-        private readonly IReadOnlyList<string> _buildFlags;
+        private readonly bool _trace;
 
         public MsBuildFileSetFactory(ILogger reporter,
             string projectFile,
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Watcher.Internal
         {
             _logger = logger;
             _projectFile = projectFile;
-            _buildFlags = InitializeArgs(FindTargetsFile(), trace);
+            _trace = trace;
         }
 
         public async Task<IFileSet> CreateAsync(CancellationToken cancellationToken)
@@ -53,19 +53,11 @@ namespace Microsoft.DotNet.Watcher.Internal
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    var args = new StringBuilder();
-                    args.Append($"msbuild \"{_projectFile}\" /p:_DotNetWatchListFile={watchList}");
-                    foreach (var flag in _buildFlags)
-                    {
-                        args.Append(" ");
-                        args.Append(flag);
-                    }
-
                     var processSpec = new ProcessSpec
                     {
                         Executable = "dotnet",
-                        WorkingDirectory = projectDir!,
-                        Arguments = args.ToString()
+                        Arguments = GetArgs(watchList!),
+                        WorkingDirectory = projectDir!
                     };
 
                     _logger.LogDebug($"Running MSBuild target '{TargetName}' on '{_projectFile}'");
@@ -128,26 +120,30 @@ namespace Microsoft.DotNet.Watcher.Internal
             }
         }
 
-        private IReadOnlyList<string> InitializeArgs(string watchTargetsFile, bool trace)
+        private string GetArgs(string watchList)
         {
+            var watchTargetsFile = FindTargetsFile();
+
             var args = new List<string>
             {
+                $"msbuild \"{_projectFile}\"",
+                $"/p:_DotNetWatchListFile=\"{watchList}\"",
                 "/nologo",
                 "/v:n",
-                "/t:" + TargetName,
+                $"/t:{TargetName}",
                 "/p:DotNetWatchBuild=true", // extensibility point for users
                 "/p:DesignTimeBuild=true", // don't do expensive things
-                "/p:CustomAfterMicrosoftCommonTargets=" + watchTargetsFile,
-                "/p:CustomAfterMicrosoftCommonCrossTargetingTargets=" + watchTargetsFile,
+                $"/p:CustomAfterMicrosoftCommonTargets=\"{watchTargetsFile}\"",
+                $"/p:CustomAfterMicrosoftCommonCrossTargetingTargets=\"{watchTargetsFile}\"",
             };
 
-            if (trace)
+            if (_trace)
             {
                 // enables capturing markers to know which projects have been visited
                 args.Add("/p:_DotNetWatchTraceOutput=true");
             }
 
-            return args;
+            return string.Join(" ", args);
         }
 
         private string FindTargetsFile()
@@ -164,9 +160,10 @@ namespace Microsoft.DotNet.Watcher.Internal
             var targetPath = searchPaths.Select(p => Path.Combine(p, WatchTargetsFileName)).FirstOrDefault(File.Exists);
             if (targetPath == null)
             {
-                _logger.LogError("Fatal error: could not find DotNetWatch.targets");
+                _logger.LogError($"Fatal error: could not find {WatchTargetsFileName}");
                 return null!;
             }
+
             return targetPath;
         }
     }

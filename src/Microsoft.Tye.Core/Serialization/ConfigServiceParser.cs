@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.Tye.ConfigModel;
 using YamlDotNet.RepresentationModel;
 
@@ -218,6 +217,14 @@ namespace Tye.Serialization
                     case "protocol":
                         binding.Protocol = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "routes":
+                        if (child.Value.NodeType != YamlNodeType.Sequence)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
+                        }
+
+                        HandleServiceBindingRoutes((child.Value as YamlSequenceNode)!, binding.Routes);
+                        break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
@@ -338,7 +345,7 @@ namespace Tye.Serialization
                         prober.Port = port;
                         break;
                     case "protocol":
-                        prober.Path = YamlParser.GetScalarValue("protocol", child.Value);
+                        prober.Protocol = YamlParser.GetScalarValue("protocol", child.Value);
                         break;
                     case "headers":
                         prober.Headers = new List<KeyValuePair<string, object>>();
@@ -571,6 +578,16 @@ namespace Tye.Serialization
                 tags.Add(tag);
             }
         }
+
+        private static void HandleServiceBindingRoutes(YamlSequenceNode yamlSequenceNode, List<string> routes)
+        {
+            foreach (var child in yamlSequenceNode!.Children)
+            {
+                var route = YamlParser.GetScalarValue(child);
+                routes.Add(route);
+            }
+        }
+
         private static void HandleServiceDockerArgsNameMapping(YamlMappingNode yamlMappingNode, IDictionary<string, string> dockerArguments)
         {
             foreach (var child in yamlMappingNode!.Children)

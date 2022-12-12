@@ -5,6 +5,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
@@ -12,15 +13,25 @@ namespace Microsoft.Tye
 {
     internal static class KubernetesManifestGenerator
     {
-        public static KubernetesIngressOutput CreateIngress(
+        private static System.Version MinIngressVersion = new System.Version(1, 19);
+
+        public static async Task<KubernetesIngressOutput> CreateIngress(
             OutputContext output,
             ApplicationBuilder application,
             IngressBuilder ingress)
         {
             var root = new YamlMappingNode();
+            var k8sVersion = await KubectlDetector.GetKubernetesServerVersion(output);
 
             root.Add("kind", "Ingress");
-            root.Add("apiVersion", "extensions/v1beta1");
+            if (k8sVersion >= MinIngressVersion)
+            {
+                root.Add("apiVersion", "networking.k8s.io/v1");
+            }
+            else
+            {
+                root.Add("apiVersion", "extensions/v1beta1");
+            }
 
             var metadata = new YamlMappingNode();
             root.Add("metadata", metadata);
@@ -74,7 +85,6 @@ namespace Microsoft.Tye
 
                     var backend = new YamlMappingNode();
                     path.Add("backend", backend);
-                    backend.Add("serviceName", ingressRule.Service);
 
                     var service = application.Services.FirstOrDefault(s => s.Name == ingressRule.Service);
                     if (service is null)
@@ -88,7 +98,25 @@ namespace Microsoft.Tye
                         throw new InvalidOperationException($"Could not resolve an http binding for service '{service.Name}'.");
                     }
 
-                    backend.Add("servicePort", (binding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
+                    if (k8sVersion >= MinIngressVersion)
+                    {
+                        var backendService = new YamlMappingNode();
+                        backend.Add("service", backendService);
+
+                        backendService.Add("name", ingressRule.Service);
+
+                        var backendPort = new YamlMappingNode();
+
+                        backendService.Add("port", backendPort);
+
+                        backendPort.Add("number", (binding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
+                        path.Add("pathType", "Prefix");
+                    }
+                    else
+                    {
+                        backend.Add("serviceName", ingressRule.Service);
+                        backend.Add("servicePort", (binding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
+                    }
 
                     // Tye implements path matching similar to this example:
                     // https://kubernetes.github.io/ingress-nginx/examples/rewrite/
@@ -111,6 +139,8 @@ namespace Microsoft.Tye
                             path.Add("path", regex);
                         }
                     }
+
+                    // Only support prefix matching for now
                 }
             }
 

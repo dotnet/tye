@@ -63,6 +63,11 @@ namespace Microsoft.Tye.Hosting
                                         continue;
                                     }
 
+                                    if (string.Equals(binding.Protocol, "udp", StringComparison.InvariantCultureIgnoreCase))
+                                    {
+                                        throw new CommandException("Proxy does not support the udp protocol yet.");
+                                    }
+
                                     var ports = binding.ReplicaPorts;
 
                                     // We need to bind to all interfaces on linux since the container -> host communication won't work
@@ -89,7 +94,7 @@ namespace Microsoft.Tye.Hosting
                                                 return;
                                             }
 
-                                            using var _ = cts.Token.Register(() => notificationFeature.RequestClose());
+                                            using var _ = cts.Token.Register(() => notificationFeature?.RequestClose());
 
                                             NetworkStream? targetStream = null;
 
@@ -127,10 +132,10 @@ namespace Microsoft.Tye.Hosting
                                                 _logger.LogDebug("Proxying traffic to {ServiceName} {ExternalPort}:{InternalPort}", service.Description.Name, binding.Port, ports[next]);
 
                                                 // external -> internal
-                                                var reading = Task.Run(() => connection.Transport.Input.CopyToAsync(targetStream, notificationFeature.ConnectionClosedRequested));
+                                                var reading = Task.Run(() => connection.Transport.Input.CopyToAsync(targetStream, notificationFeature?.ConnectionClosedRequested ?? default));
 
                                                 // internal -> external
-                                                var writing = Task.Run(() => targetStream.CopyToAsync(connection.Transport.Output, notificationFeature.ConnectionClosedRequested));
+                                                var writing = Task.Run(() => targetStream.CopyToAsync(connection.Transport.Output, notificationFeature?.ConnectionClosedRequested ?? default));
 
                                                 await Task.WhenAll(reading, writing);
                                             }
@@ -144,7 +149,7 @@ namespace Microsoft.Tye.Hosting
                                             }
                                             catch (OperationCanceledException ex)
                                             {
-                                                if (!notificationFeature.ConnectionClosedRequested.IsCancellationRequested)
+                                                if (notificationFeature is null || !notificationFeature.ConnectionClosedRequested.IsCancellationRequested)
                                                 {
                                                     _logger.LogDebug(0, ex, "Proxy error for service {ServiceName}", service.Description.Name);
                                                 }
@@ -185,7 +190,18 @@ namespace Microsoft.Tye.Hosting
 
             if (_host != null)
             {
-                await _host.StopAsync();
+                try
+                {
+                    await _host.StopAsync();
+                }
+                catch (AggregateException)
+                {
+                }
+                catch (ObjectDisposedException)
+                {
+                    // System.ObjectDisposedException: Cannot access a disposed object.
+                    // From Bedrock.Framework. As we plan on removing this long term, not going to directly fix in bedrock.
+                }
 
                 if (_host is IAsyncDisposable disposable)
                 {

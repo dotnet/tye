@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Microsoft.Extensions.Configuration
 {
@@ -19,6 +21,11 @@ namespace Microsoft.Extensions.Configuration
             if (string.IsNullOrEmpty(host) || port == null)
             {
                 return null;
+            }
+
+            if (IPAddress.TryParse(host, out IPAddress address) && address.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                host = "[" + host + "]";
             }
 
             return new Uri(protocol + "://" + host + ":" + port + "/");

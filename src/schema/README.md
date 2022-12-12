@@ -9,7 +9,7 @@ Configuring a schema for tye.yaml
 ```js
 {
   "yaml.schemas": {
-    "https://raw.githubusercontent.com/dotnet/tye/master/src/schema/tye-schema.json": [
+    "https://raw.githubusercontent.com/dotnet/tye/main/src/schema/tye-schema.json": [
       "tye.yaml"
     ]
   }

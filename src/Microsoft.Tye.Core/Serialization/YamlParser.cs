@@ -42,7 +42,12 @@ namespace Tye.Serialization
             }
             catch (YamlException ex)
             {
-                throw new TyeYamlException(ex.Start, "Unable to parse tye.yaml. See inner exception.", ex);
+                if (_fileInfo != null)
+                {
+                    throw new TyeYamlException(ex.Start, $"Unable to parse '{_fileInfo.Name}'. See inner exception.", ex, _fileInfo);
+                }
+
+                throw new TyeYamlException(ex.Start, $"Unable to parse YAML.  See inner exception.", ex);
             }
 
             var app = new ConfigApplication();
@@ -50,7 +55,7 @@ namespace Tye.Serialization
             // TODO assuming first document.
             var document = _yamlStream.Documents[0];
             var node = document.RootNode;
-            ThrowIfNotYamlMapping(node);
+            ThrowIfNotYamlMapping(node, _fileInfo);
 
             app.Source = _fileInfo!;
 
@@ -75,6 +80,32 @@ namespace Tye.Serialization
             }
 
             return app;
+        }
+
+        public static Dictionary<string, object> GetDictionary(YamlNode node)
+        {
+            if (node.NodeType != YamlNodeType.Mapping)
+            {
+                throw new TyeYamlException(node.Start,
+                    CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), node.NodeType.ToString()));
+            }
+
+            var dictionary = new Dictionary<string, object>();
+
+            foreach (var mapping in (YamlMappingNode)node)
+            {
+                var key = YamlParser.GetScalarValue(mapping.Key);
+
+                dictionary[key] = mapping.Value.NodeType switch
+                {
+                    YamlNodeType.Scalar => YamlParser.GetScalarValue(key, mapping.Value)!,
+                    YamlNodeType.Mapping => YamlParser.GetDictionary(mapping.Value),
+                    _ => throw new TyeYamlException(mapping.Value.Start,
+                            CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), mapping.Value.NodeType.ToString()))
+                };
+            }
+
+            return dictionary;
         }
 
         public static string GetScalarValue(YamlNode node)
@@ -106,10 +137,15 @@ namespace Tye.Serialization
             }
         }
 
-        public static void ThrowIfNotYamlMapping(YamlNode node)
+        public static void ThrowIfNotYamlMapping(YamlNode node, FileInfo? fileInfo = null)
         {
             if (node.NodeType != YamlNodeType.Mapping)
             {
+                if (fileInfo != null)
+                {
+                    throw new TyeYamlException(node.Start,
+                        CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), node.NodeType.ToString()), null, fileInfo);
+                }
                 throw new TyeYamlException(node.Start,
                     CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), node.NodeType.ToString()));
             }

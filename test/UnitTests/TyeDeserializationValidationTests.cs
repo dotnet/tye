@@ -1,4 +1,6 @@
-﻿using Tye;
+﻿using System;
+using System.IO;
+using Tye;
 using Tye.Serialization;
 using Xunit;
 
@@ -272,6 +274,24 @@ services:
             var app = parser.ParseConfigApplication();
             var exception = Assert.Throws<TyeYamlException>(() => app.Validate());
             Assert.Contains(errorMessage, exception.Message);
+        }
+
+        [Fact]
+        public void BadYmlFileWithArgs_ThrowsExceptionWithUsefulFilePath()
+        {
+            var input = @"
+flimflam";
+
+            using var parser = new YamlParser(input, new FileInfo("foobar.yml"));
+            try
+            {
+                parser.ParseConfigApplication();
+                Assert.False(true, "YML parsing exception expected with supplied input");
+            }
+            catch (TyeYamlException e)
+            {
+                Assert.StartsWith("Error parsing 'foobar.yml': (2, 1): Unexpected node type in the tye configuration file.", e.Message);
+            }
         }
 
         [Fact]

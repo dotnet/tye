@@ -12,7 +12,7 @@ Getting started documentation for Dapr can be found [here](https://docs.dapr.io/
 
 ## Sample Code
 
-There are two sample projects for the Dapr recipe [here](https://github.com/dotnet/tye/tree/master/samples/dapr).
+There are two sample projects for the Dapr recipe [here](https://github.com/dotnet/tye/tree/main/samples/dapr).
 
 They demonstrate
 
@@ -31,7 +31,7 @@ These services use a variety of Dapr's features:
 - Invoke (`store`, `products`)
 - Pub/Sub (`store`, `orders`)
 
-You can find the Dapr component files for the sample project [here](https://github.com/dotnet/tye/tree/master/samples/dapr/pub-sub/components).
+You can find the Dapr component files for the sample project [here](https://github.com/dotnet/tye/tree/main/samples/dapr/pub-sub/components).
 
 ## Running the sample locally
 
@@ -88,7 +88,7 @@ services:
 - name: redis
   image: redis
   bindings:
-    - port: 6973
+    - port: 6379
 ``` 
 
 All that's needed to enable Dapr integration for an application is:
@@ -97,6 +97,59 @@ All that's needed to enable Dapr integration for an application is:
 extensions:
 - name: dapr
 ```
+
+Additional [Dapr command arguments](https://docs.dapr.io/reference/arguments-annotations-overview/) 
+can be specified for all services or for individual services.
+
+```yaml
+# Configure --app-max-concurrency for all services
+extensions:
+- name: dapr
+  app-max-concurrency: 1
+...
+```
+
+```yaml
+# Configure --app-max-concurrency for the orders service
+extensions:
+- name: dapr
+  services:
+    orders:
+      app-max-concurrency: 1
+services:
+- name: orders
+  ...
+```
+
+The following Dapr arguments can be specified at the extension level (all
+services) or the service level:
+
+| Yaml Key              | Dapr Argument
+| --------------------- | -------------
+| app-max-concurrency   | app-max-concurrency
+| app-protocol          | app-protocol
+| app-ssl               | app-ssl
+| components-path       | components-path
+| config                | config
+| enable-profiling      | enable-profiling
+| http-max-request-size | dapr-http-max-request-size
+| log-level             | log-level
+| placement-port        | placement-host-address*
+
+\*  When specifying `placement-port`, the placement host address will become `localhost:<placement-port>`.
+
+The following Dapr arguments can be specified only at the service level:
+
+| Yaml Key     | Dapr Argument
+| ------------ | -------------
+| app-id       | app-id
+| grpc-port    | dapr-grpc-port
+| http-port    | dapr-http-port
+| metrics-port | metrics-port
+| profile-port | profile-port
+
+In addition, the key `enabled` can be specified (with `true` or `false`) to
+enable or disable the related service.
 
 ## Deploying the sample to Kubernetes
 

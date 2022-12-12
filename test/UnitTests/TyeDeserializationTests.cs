@@ -82,6 +82,9 @@ services:
       containerPort: 80
       host: localhost
       protocol: http
+      routes:
+      - /swagger
+      - /graphql
   - name: appB
     project: ApplicationB/ApplicationB.csproj
     replicas: 2
@@ -155,6 +158,9 @@ services:
       containerPort: 80
       host: localhost
       protocol: http
+      routes:
+      - /swagger
+      - /graphql
   - name: appB
     project: ApplicationB/ApplicationB.csproj
     replicas: 2

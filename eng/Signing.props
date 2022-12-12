@@ -5,6 +5,7 @@
     are already signed. However, they must be signed with a 3rd party certificate.
   -->
   <ItemGroup>
+    <FileSignInfo Include="AutoMapper.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Bedrock.Framework.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Elasticsearch.Net.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="FeatherHttp.dll" CertificateName="3PartySHA2" />
@@ -13,6 +14,8 @@
     <FileSignInfo Include="OpenTelemetry.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="OpenTelemetry.Api.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="OpenTelemetry.Exporter.Zipkin.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Prometheus.NetCore.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Prometheus.NetStandard.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Semver.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Serilog.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Serilog.Extensions.Hosting.dll" CertificateName="3PartySHA2" />
@@ -26,6 +29,7 @@
     <FileSignInfo Include="Serilog.Sinks.Seq.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Sln.dll" CertificateName="3PartySHA2" />
     <!-- Despite the System. nomenclature, this is a non-MSFT .NET foundation project.-->
+    <FileSignInfo Include="System.IO.Abstractions.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="System.Reactive.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="YamlDotNet.dll" CertificateName="3PartySHA2" />
   </ItemGroup>

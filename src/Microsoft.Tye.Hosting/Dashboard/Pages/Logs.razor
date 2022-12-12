@@ -1,6 +1,19 @@
 ﻿@page "/logs/{ServiceName}"
+@inject IJSRuntime JS
 @inject Application application
 @implements IDisposable
+
+<style>
+    #logview {
+        overflow-y: scroll;
+        position: absolute;
+        height: 70vh;
+        width: 75%;
+        color: white;
+        background-color: black;
+        padding: 10px;
+    }
+</style>
 
 <h3>Logs for @ServiceName</h3>
 
@@ -12,11 +25,15 @@ else
 {
     <div style="padding:10px">
         <button type="button" class="btn btn-primary" @onclick=ClearLogs>Clear Log</button>
+        <button type="button" class="btn btn-primary @(@_autoScroll ? "active" : "")" 
+                @onclick=ToggleAutoScroll>
+            Follow Logs [@(_autoScroll ? "ON" : "OFF")]
+        </button>
     </div>
-    <div style="overflow-y: scroll;position: absolute;height: 84%; width:75%; color:white;background-color:black;padding:10px">
+    <div id="logview" class="autoscroll" @onmousedown=DisableAutoScroll>
         @foreach (var log in ApplicationLogs)
         {
-            <div style="width:100%">@log.Text</div>
+            <div>@log.Text</div>
         }
     </div>
 }
@@ -29,6 +46,8 @@ else
 
     private IDisposable? _subscription;
 
+    private bool _autoScroll = true;
+
     protected override void OnInitialized()
     {
         // TODO: handle this returning false
@@ -36,6 +55,7 @@ else
         {
             ApplicationLogs = service.CachedLogs.Select((item, index) => (item, index)).ToList();
             var count = ApplicationLogs.Count;
+            StateHasChanged();
 
             _subscription = service.Logs.Subscribe(log =>
             {
@@ -51,13 +71,32 @@ else
         base.OnInitialized();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_autoScroll)
+        {
+            await ScrollToBottom();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }    
+
     private void ClearLogs()
     {
         ApplicationLogs?.Clear();
     }
+    
+    private void ToggleAutoScroll() => _autoScroll = !_autoScroll;
+
+    private void DisableAutoScroll() => _autoScroll = false;
 
     void IDisposable.Dispose()
     {
         _subscription?.Dispose();
+    }
+
+    ValueTask ScrollToBottom()
+    {
+        return JS.InvokeVoidAsync("scrollToBottom", "logview");
     }
 }

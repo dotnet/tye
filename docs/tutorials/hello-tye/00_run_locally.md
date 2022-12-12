@@ -1,6 +1,6 @@
 # Frontend Backend sample with tye run
 
-This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandline/tye-run.md) to run a multi-project application. If you haven't so already, follow the [Getting Started Instructions](/docs/getting_started.md) to install tye.
+This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandline/tye-run.md) to run a multi-project application. If you haven't done so already, follow the [Getting Started Instructions](/docs/getting_started.md) to install tye.
 
 ## Running a single application with tye run
 
@@ -28,7 +28,7 @@ This tutorial will demonstrate how to use [`tye run`](/docs/reference/commandlin
     The dashboard should show the `frontend` application running.
 
     - The `Logs` column has a link to view the streaming logs for the service.
-    - the `Bindings` column has links to the listening URLs of the service.
+    - The `Bindings` column has links to the listening URLs of the service.
     
     Navigate to the `frontend` service using one of the urls on the dashboard in the *Bindings* column. It should be in the form of <http://localhost:[port]> or <https://localhost:[port]>.
 
@@ -92,35 +92,32 @@ Now that we have two applications running, let's make them communicate. By defau
 3. Add a file `WeatherClient.cs` to the `frontend` project with the following contents:
 
    ```C#
-    using System.Net.Http;
-    using System.Text.Json;
-    using System.Threading.Tasks;
+   using System.Text.Json;
+   using System.Net.Http.Json;
 
-    namespace frontend
-    {
-        public class WeatherClient
-        {
-            private readonly JsonSerializerOptions options = new JsonSerializerOptions()
-            {
-                PropertyNameCaseInsensitive = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            };
-    
-            private readonly HttpClient client;
-    
-            public WeatherClient(HttpClient client)
-            {
-                this.client = client;
-            }
-    
-            public async Task<WeatherForecast[]> GetWeatherAsync()
-            {
-                var responseMessage = await this.client.GetAsync("/weatherforecast");
-                var stream = await responseMessage.Content.ReadAsStreamAsync();
-                return await JsonSerializer.DeserializeAsync<WeatherForecast[]>(stream, options);
-            }
-        }
-    }
+   namespace frontend
+   {
+       public class WeatherClient
+       {
+           private readonly JsonSerializerOptions options = new JsonSerializerOptions()
+           {
+               PropertyNameCaseInsensitive = true,
+               PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+           };
+   
+           private readonly HttpClient client;
+   
+           public WeatherClient(HttpClient client)
+           {
+               this.client = client;
+           }
+   
+           public async Task<WeatherForecast[]> GetWeatherAsync()
+           {
+               return await this.client.GetFromJsonAsync<WeatherForecast[]>("/weatherforecast");
+           }
+       }
+   }
    ```
 
 4. Add a reference to the `Microsoft.Tye.Extensions.Configuration` package to the frontend project
@@ -129,20 +126,18 @@ Now that we have two applications running, let's make them communicate. By defau
     dotnet add frontend/frontend.csproj package Microsoft.Tye.Extensions.Configuration  --version "0.4.0-*"
     ```
 
-5. Now register this client in `frontend` by adding the following to the existing `ConfigureServices` method to the existing `Startup.cs` file:
+5. Now register this client in `frontend` by adding the following to the existing code in the `Program.cs` file:
 
    ```C#
    ...
-   public void ConfigureServices(IServiceCollection services)
+   
+   services.AddRazorPages();
+   /** Add the following to wire the client to the backend **/
+   services.AddHttpClient<WeatherClient>(client =>
    {
-       services.AddRazorPages();
-        /** Add the following to wire the client to the backend **/
-       services.AddHttpClient<WeatherClient>(client =>
-       {
-            client.BaseAddress = Configuration.GetServiceUri("backend");
-       });
-       /** End added code **/
-   }
+            client.BaseAddress = builder.Configuration.GetServiceUri("backend");
+   });
+   /** End added code **/
    ...
    ```
 

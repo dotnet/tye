@@ -14,6 +14,9 @@ ingress:
         service: appA
       - path: /B
         service: appB
+      - path: /C
+        service: appA
+        preservePath: true
       - host: a.example.com
         service: appA
       - host: b.example.com

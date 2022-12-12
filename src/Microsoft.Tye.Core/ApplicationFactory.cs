@@ -30,9 +30,10 @@ namespace Microsoft.Tye
             var rootConfig = ConfigFactory.FromFile(source);
             rootConfig.Validate();
 
-            var root = new ApplicationBuilder(source, rootConfig.Name!)
+            var root = new ApplicationBuilder(source, rootConfig.Name!, new ContainerEngine(rootConfig.ContainerEngineType), rootConfig.DashboardPort)
             {
-                Namespace = rootConfig.Namespace
+                Namespace = rootConfig.Namespace,
+                BuildSolution = rootConfig.BuildSolution,
             };
 
             queue.Enqueue((rootConfig, new HashSet<string>()));
@@ -73,9 +74,30 @@ namespace Microsoft.Tye
                     root.Extensions.Add(extension);
                 }
 
+                bool IsAzureFunctionService(ConfigService service)
+                {
+                    return !string.IsNullOrEmpty(service.AzureFunction);
+                }
+
                 var services = filter?.ServicesFilter != null ?
                     config.Services.Where(filter.ServicesFilter).ToList() :
                     config.Services;
+
+                // Infer project file for Azure Function services so they will be evaluated.
+                foreach (var service in services.Where(IsAzureFunctionService))
+                {
+                    var azureFunctionDirectory = Path.Combine(config.Source.DirectoryName!, service.AzureFunction!);
+
+                    foreach (var proj in Directory.EnumerateFiles(azureFunctionDirectory))
+                    {
+                        var fileInfo = new FileInfo(proj);
+                        if (fileInfo.Extension == ".csproj" || fileInfo.Extension == ".fsproj")
+                        {
+                            service.Project = fileInfo.FullName;
+                            break;
+                        }
+                    }
+                }
 
                 var sw = Stopwatch.StartNew();
                 // Project services will be restored and evaluated before resolving all other services.
@@ -162,9 +184,34 @@ namespace Microsoft.Tye
                         continue;
                     }
 
-                    if (!string.IsNullOrEmpty(configService.Project))
+                    // NOTE: Evaluate Azure Function services before project services as both use Project.
+                    if (IsAzureFunctionService(configService))
                     {
-                        var project = new DotnetProjectServiceBuilder(configService.Name!, new FileInfo(configService.ProjectFullPath));
+                        var azureFunctionDirectory = Path.Combine(config.Source.DirectoryName!, configService.AzureFunction!);
+
+                        var functionBuilder = new AzureFunctionServiceBuilder(
+                            configService.Name,
+                            azureFunctionDirectory,
+                            ServiceSource.Configuration)
+                        {
+                            Args = configService.Args,
+                            Replicas = configService.Replicas ?? 1,
+                            FuncExecutablePath = configService.FuncExecutable,
+                            ProjectFile = configService.Project
+                        };
+
+                        if (functionBuilder.ProjectFile != null)
+                        {
+                            ProjectReader.ReadAzureFunctionProjectDetails(output, functionBuilder, projectMetadata[configService.Name]);
+                        }
+
+                        // TODO liveness?
+                        service = functionBuilder;
+                    }
+                    else if (!string.IsNullOrEmpty(configService.Project))
+                    {
+                        // TODO: Investigate possible null.
+                        var project = new DotnetProjectServiceBuilder(configService.Name!, new FileInfo(configService.ProjectFullPath!), ServiceSource.Configuration);
                         service = project;
 
                         project.Build = configService.Build ?? true;
@@ -195,7 +242,7 @@ namespace Microsoft.Tye
                     }
                     else if (!string.IsNullOrEmpty(configService.Image))
                     {
-                        var container = new ContainerServiceBuilder(configService.Name!, configService.Image!)
+                        var container = new ContainerServiceBuilder(configService.Name!, configService.Image!, ServiceSource.Configuration)
                         {
                             Args = configService.Args,
                             Replicas = configService.Replicas ?? 1
@@ -207,7 +254,7 @@ namespace Microsoft.Tye
                     }
                     else if (!string.IsNullOrEmpty(configService.DockerFile))
                     {
-                        var dockerFile = new DockerFileServiceBuilder(configService.Name!, configService.Image!)
+                        var dockerFile = new DockerFileServiceBuilder(configService.Name!, configService.Image!, ServiceSource.Configuration)
                         {
                             Args = configService.Args,
                             Build = configService.Build ?? true,
@@ -241,7 +288,7 @@ namespace Microsoft.Tye
                             workingDirectory = Path.GetDirectoryName(expandedExecutable)!;
                         }
 
-                        var executable = new ExecutableServiceBuilder(configService.Name!, expandedExecutable)
+                        var executable = new ExecutableServiceBuilder(configService.Name!, expandedExecutable, ServiceSource.Configuration)
                         {
                             Args = configService.Args,
                             WorkingDirectory = configService.WorkingDirectory != null ?
@@ -267,13 +314,13 @@ namespace Microsoft.Tye
                     else if (!string.IsNullOrEmpty(configService.Repository))
                     {
                         // clone to .tye folder
-                        var path = configService.CloneDirectory ?? Path.Join(rootConfig.Source.DirectoryName, ".tye", "deps");
+                        var path = configService.CloneDirectory ?? Path.Join(".tye", "deps");
                         if (!Directory.Exists(path))
                         {
                             Directory.CreateDirectory(path);
                         }
 
-                        var clonePath = Path.Combine(path, configService.Name);
+                        var clonePath = Path.Combine(rootConfig.Source.DirectoryName!, path, configService.Name);
 
                         if (!Directory.Exists(clonePath))
                         {
@@ -282,7 +329,7 @@ namespace Microsoft.Tye
                                 throw new CommandException($"Cannot clone repository {configService.Repository} because git is not installed. Please install git if you'd like to use \"repository\" in tye.yaml.");
                             }
 
-                            var result = await ProcessUtil.RunAsync("git", $"clone {configService.Repository} \"{clonePath}\"", workingDirectory: path, throwOnError: false);
+                            var result = await ProcessUtil.RunAsync("git", $"clone {configService.Repository} \"{clonePath}\"", workingDirectory: rootConfig.Source.DirectoryName, throwOnError: false);
 
                             if (result.ExitCode != 0)
                             {
@@ -304,35 +351,9 @@ namespace Microsoft.Tye
 
                         continue;
                     }
-                    else if (!string.IsNullOrEmpty(configService.AzureFunction))
-                    {
-                        var azureFunctionDirectory = Path.Combine(config.Source.DirectoryName!, configService.AzureFunction);
-
-                        var functionBuilder = new AzureFunctionServiceBuilder(
-                            configService.Name,
-                            azureFunctionDirectory)
-                        {
-                            Args = configService.Args,
-                            Replicas = configService.Replicas ?? 1,
-                            FuncExecutablePath = configService.FuncExecutable,
-                        };
-
-                        foreach (var proj in Directory.EnumerateFiles(azureFunctionDirectory))
-                        {
-                            var fileInfo = new FileInfo(proj);
-                            if (fileInfo.Extension == ".csproj" || fileInfo.Extension == ".fsproj")
-                            {
-                                functionBuilder.ProjectFile = fileInfo.FullName;
-                                break;
-                            }
-                        }
-
-                        // TODO liveness?
-                        service = functionBuilder;
-                    }
                     else if (configService.External)
                     {
-                        var external = new ExternalServiceBuilder(configService.Name);
+                        var external = new ExternalServiceBuilder(configService.Name, ServiceSource.Configuration);
                         service = external;
                     }
                     else
@@ -374,6 +395,7 @@ namespace Microsoft.Tye
                                 ContainerPort = configBinding.ContainerPort,
                                 Port = configBinding.Port,
                                 Protocol = configBinding.Protocol,
+                                Routes = configBinding.Routes
                             };
 
                             // Assume HTTP for projects only (containers may be different)
@@ -400,6 +422,10 @@ namespace Microsoft.Tye
                         else if (service is ExecutableServiceBuilder executable)
                         {
                             executable.EnvironmentVariables.Add(envVar);
+                        }
+                        else if (service is AzureFunctionServiceBuilder azureFunction)
+                        {
+                            azureFunction.EnvironmentVariables.Add(envVar);
                         }
                         else if (service is ExternalServiceBuilder)
                         {
@@ -455,6 +481,7 @@ namespace Microsoft.Tye
                             Name = configBinding.Name,
                             Port = configBinding.Port,
                             Protocol = configBinding.Protocol ?? "http",
+                            IPAddress = configBinding.IPAddress,
                         };
                         ingress.Bindings.Add(binding);
                     }
@@ -516,16 +543,17 @@ namespace Microsoft.Tye
 
             output.WriteDebugLine("Restoring and evaluating projects");
 
+            var projectEvaluationTargets = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets");
             var msbuildEvaluationResult = await ProcessUtil.RunAsync(
                 "dotnet",
-                $"build " +
+                $"build  --no-restore " +
                     $"\"{projectPath}\" " +
                     // CustomAfterMicrosoftCommonTargets is imported by non-crosstargeting (single TFM) projects
-                    $"/p:CustomAfterMicrosoftCommonTargets={Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")} " +
+                    @$"/p:CustomAfterMicrosoftCommonTargets=""{projectEvaluationTargets}"" " +
                     // CustomAfterMicrosoftCommonCrossTargetingTargets is imported by crosstargeting (multi-TFM) projects
                     // This ensures projects properties are evaluated correctly. However, multi-TFM projects must specify
                     // a specific TFM to build/run/publish and will otherwise throw an exception.
-                    $"/p:CustomAfterMicrosoftCommonCrossTargetingTargets={Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ProjectEvaluation.targets")} " +
+                    @$"/p:CustomAfterMicrosoftCommonCrossTargetingTargets=""{projectEvaluationTargets}"" " +
                     $"/nologo",
                 throwOnError: false,
                 workingDirectory: directory.DirectoryPath);
@@ -535,9 +563,9 @@ namespace Microsoft.Tye
             // running these targets we don't really care as long as we get the data.
             if (msbuildEvaluationResult.ExitCode != 0)
             {
-                output.WriteDebugLine($"Evaluating project failed with exit code {msbuildEvaluationResult.ExitCode}:" +
-                    $"{Environment.NewLine}Ouptut: {msbuildEvaluationResult.StandardOutput}" +
-                    $"{Environment.NewLine}Error: {msbuildEvaluationResult.StandardError}");
+                output.WriteInfoLine($"Evaluating project failed with exit code {msbuildEvaluationResult.ExitCode}");
+                output.WriteDebugLine($"Output: {msbuildEvaluationResult.StandardOutput}");
+                output.WriteDebugLine($"Error: {msbuildEvaluationResult.StandardError}");
             }
 
             return msbuildEvaluationResult;
