@@ -39,7 +39,7 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
 
 ## Tye VSCode extension
 
-Install the [Tye VSCode extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-tye).
+Install the [Tye Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-tye).
 
 ## Next steps
 
