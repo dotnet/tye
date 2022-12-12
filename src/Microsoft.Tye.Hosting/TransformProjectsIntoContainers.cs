@@ -17,13 +17,13 @@ namespace Microsoft.Tye.Hosting
         private readonly ILogger _logger;
         private Lazy<TempDirectory> _certificateDirectory;
 
-        private Dictionary<string, string> _defaultDotnetEnvVars = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> _defaultDotnetEnvVars = new Dictionary<string, string>
         {
             { "DOTNET_ENVIRONMENT", "Development" },
             { "DOTNET_LOGGING__CONSOLE__DISABLECOLORS", "true" }
         };
 
-        private Dictionary<string, string> _defaultAspnetEnvVars = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> _defaultAspnetEnvVars = new Dictionary<string, string>
         {
             { "ASPNETCORE_ENVIRONMENT", "Development" },
             { "ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS", "true" }
