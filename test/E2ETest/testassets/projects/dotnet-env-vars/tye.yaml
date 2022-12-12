@@ -1,0 +1,12 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: dotnet-env-vars
+dashboardPort: 8005
+services:
+- name: test-project
+  project: test-project/test-project.csproj
+  env:
+    - name: DOTNET_ENVIRONMENT
+      value: "dev"
+    - name: ASPNETCORE_ENVIRONMENT
+      value: "dev"
