@@ -290,7 +290,7 @@ flimflam";
             }
             catch (TyeYamlException e)
             {
-                Assert.StartsWith("Error parsing 'foobar.yml': (2, 1): Unexpected node type in YAML file.", e.Message);
+                Assert.StartsWith("Error parsing 'foobar.yml': (2, 1): Unexpected node type in the tye configuration file.", e.Message);
             }
         }
 
