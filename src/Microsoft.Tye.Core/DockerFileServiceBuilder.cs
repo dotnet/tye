@@ -13,7 +13,7 @@ namespace Microsoft.Tye
         {
             Image = image;
         }
-        public string Image { get; set; }
+        public string Image { get; }
 
         public string? DockerFile { get; set; }
         public Dictionary<string, string> BuildArgs { get; set; } = new Dictionary<string, string>();
