@@ -93,6 +93,7 @@ Now that we have two applications running, let's make them communicate. By defau
 
    ```C#
    using System.Text.Json;
+   using System.Net.Http.Json;
 
    namespace frontend
    {
@@ -113,9 +114,7 @@ Now that we have two applications running, let's make them communicate. By defau
    
            public async Task<WeatherForecast[]> GetWeatherAsync()
            {
-               var responseMessage = await this.client.GetAsync("/weatherforecast");
-               var stream = await responseMessage.Content.ReadAsStreamAsync();
-               return await JsonSerializer.DeserializeAsync<WeatherForecast[]>(stream, options);
+               return await this.client.GetFromJsonAsync<WeatherForecast[]>("/weatherforecast");
            }
        }
    }
