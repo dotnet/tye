@@ -17,6 +17,18 @@ namespace Microsoft.Tye.Hosting
         private readonly ILogger _logger;
         private Lazy<TempDirectory> _certificateDirectory;
 
+        private static readonly Dictionary<string, string> _defaultDotnetEnvVars = new Dictionary<string, string>
+        {
+            { "DOTNET_ENVIRONMENT", "Development" },
+            { "DOTNET_LOGGING__CONSOLE__DISABLECOLORS", "true" }
+        };
+
+        private static readonly Dictionary<string, string> _defaultAspnetEnvVars = new Dictionary<string, string>
+        {
+            { "ASPNETCORE_ENVIRONMENT", "Development" },
+            { "ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS", "true" }
+        };
+
         public TransformProjectsIntoContainers(ILogger logger)
         {
             _logger = logger;
@@ -41,7 +53,6 @@ namespace Microsoft.Tye.Hosting
         private async Task TransformProjectToContainer(Service service, ProjectRunInfo project)
         {
             var serviceDescription = service.Description;
-            var serviceName = serviceDescription.Name;
 
             service.Status.ProjectFilePath = project.ProjectFile.FullName;
             var targetFramework = project.TargetFramework;
@@ -95,17 +106,7 @@ namespace Microsoft.Tye.Hosting
                 dockerRunInfo.VolumeMappings.Add(new DockerVolume(source: userSecretStore, name: null, target: "/root/.microsoft/usersecrets", readOnly: true));
             }
 
-            // Default to development environment
-            serviceDescription.Configuration.Add(new EnvironmentVariable("DOTNET_ENVIRONMENT", "Development"));
-
-            // Remove the color codes from the console output
-            serviceDescription.Configuration.Add(new EnvironmentVariable("DOTNET_LOGGING__CONSOLE__DISABLECOLORS", "true"));
-
-            if (project.IsAspNet)
-            {
-                serviceDescription.Configuration.Add(new EnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development"));
-                serviceDescription.Configuration.Add(new EnvironmentVariable("ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS", "true"));
-            }
+            SetDefaultEnvVars(project, serviceDescription);
 
             // If we have an https binding then export the dev cert and mount the volume into the container
             if (serviceDescription.Bindings.Any(b => string.Equals(b.Protocol, "https", StringComparison.OrdinalIgnoreCase)))
@@ -123,6 +124,30 @@ namespace Microsoft.Tye.Hosting
 
             // Change the project into a container info
             serviceDescription.RunInfo = dockerRunInfo;
+        }
+
+        private void SetDefaultEnvVars(ProjectRunInfo project, ServiceDescription serviceDescription)
+        {
+            foreach (var dotnetEnvVar in _defaultDotnetEnvVars)
+            {
+                if (!serviceDescription.Configuration.Exists(x => x.Name.Equals(dotnetEnvVar.Key)))
+                {
+                    serviceDescription.Configuration.Add(new EnvironmentVariable(dotnetEnvVar.Key, dotnetEnvVar.Value));
+                }
+            }
+
+            if (!project.IsAspNet)
+            {
+                return;
+            }
+
+            foreach (var aspnetEnvVar in _defaultAspnetEnvVars)
+            {
+                if (!serviceDescription.Configuration.Exists(x => x.Name.Equals(aspnetEnvVar.Key)))
+                {
+                    serviceDescription.Configuration.Add(new EnvironmentVariable(aspnetEnvVar.Key, aspnetEnvVar.Value));
+                }
+            }
         }
 
         private static string DetermineContainerImage(ProjectRunInfo project)

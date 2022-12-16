@@ -113,6 +113,8 @@ namespace Microsoft.Tye.Hosting
 
                             builder.Configure(app =>
                             {
+                                app.UseWebSockets();
+
                                 app.UseRouting();
 
                                 app.UseEndpoints(endpointBuilder =>

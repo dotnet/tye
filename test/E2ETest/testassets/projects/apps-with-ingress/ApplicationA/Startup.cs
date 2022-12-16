@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Net.WebSockets;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -24,6 +26,8 @@ namespace ApplicationA
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseWebSockets();
 
             app.UseRouting();
 
@@ -53,6 +57,31 @@ namespace ApplicationA
                         query
                     }));
                 });
+
+                endpoints.MapGet("/ws", async context =>
+                {
+                    if (!context.WebSockets.IsWebSocketRequest)
+                    {
+                        context.Response.StatusCode = 400;
+                    }
+                    else
+                    {
+                        using var ws = await context.WebSockets.AcceptWebSocketAsync();
+                        await Echo(ws);
+                    }
+                });
+
+                async Task Echo(WebSocket webSocket)
+                {
+                    var buffer = new byte[1024 * 4];
+                    var result = await webSocket.ReceiveAsync(buffer.AsMemory(), default);
+                    while (result.MessageType != WebSocketMessageType.Close)
+                    {
+                        await webSocket.SendAsync(buffer.AsMemory(..result.Count), result.MessageType, result.EndOfMessage, default);
+                        result = await webSocket.ReceiveAsync(buffer.AsMemory(), default);
+                    }
+                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", default);
+                }
             });
         }
     }

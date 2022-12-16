@@ -37,11 +37,14 @@ Tye is a tool that makes developing, testing, and deploying microservices and di
     > export PATH=$HOME/.dotnet/tools:$PATH
     > ```
 
+## Tye VSCode extension
+
+Install the [Tye Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-tye).
+
 ## Next steps
 
 1. Once tye is installed, continue to the [Basic Tutorial](/docs/tutorials/hello-tye/00_run_locally.md).
 1. Check out additional samples for more advanced concepts, such as using redis, rabbitmq, and service discovery.
-
 
 ## Working with CI builds
 

@@ -98,6 +98,59 @@ extensions:
 - name: dapr
 ```
 
+Additional [Dapr command arguments](https://docs.dapr.io/reference/arguments-annotations-overview/) 
+can be specified for all services or for individual services.
+
+```yaml
+# Configure --app-max-concurrency for all services
+extensions:
+- name: dapr
+  app-max-concurrency: 1
+...
+```
+
+```yaml
+# Configure --app-max-concurrency for the orders service
+extensions:
+- name: dapr
+  services:
+    orders:
+      app-max-concurrency: 1
+services:
+- name: orders
+  ...
+```
+
+The following Dapr arguments can be specified at the extension level (all
+services) or the service level:
+
+| Yaml Key              | Dapr Argument
+| --------------------- | -------------
+| app-max-concurrency   | app-max-concurrency
+| app-protocol          | app-protocol
+| app-ssl               | app-ssl
+| components-path       | components-path
+| config                | config
+| enable-profiling      | enable-profiling
+| http-max-request-size | dapr-http-max-request-size
+| log-level             | log-level
+| placement-port        | placement-host-address*
+
+\*  When specifying `placement-port`, the placement host address will become `localhost:<placement-port>`.
+
+The following Dapr arguments can be specified only at the service level:
+
+| Yaml Key     | Dapr Argument
+| ------------ | -------------
+| app-id       | app-id
+| grpc-port    | dapr-grpc-port
+| http-port    | dapr-http-port
+| metrics-port | metrics-port
+| profile-port | profile-port
+
+In addition, the key `enabled` can be specified (with `true` or `false`) to
+enable or disable the related service.
+
 ## Deploying the sample to Kubernetes
 
 **:warning: The current Dapr dotnet-sdk release has an issue where its default settings don't work when deployed with mTLS enabled. This will be resolved as part of the upcoming 0.6.0 release. For now you can work around this by disabling mTLS as part of Dapr installation.**

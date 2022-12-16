@@ -11,15 +11,18 @@ using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Net.WebSockets;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Tye;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
 using Microsoft.Tye.Hosting.Model.V1;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
@@ -670,6 +673,7 @@ services:
             };
 
             var client = new HttpClient(new RetryHandler(handler));
+            var wsClient = new ClientWebSocket();
 
             await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
             {
@@ -703,6 +707,34 @@ services:
                 // checking preservePath behavior
                 var responsePreservePath = await client.GetAsync(ingressUri + "/C/test");
                 Assert.Contains("Hit path /C/test", await responsePreservePath.Content.ReadAsStringAsync());
+
+                string GetWebSocketUri(string uri)
+                {
+                    if (uri.StartsWith("http"))
+                    {
+                        return "ws" + uri.Substring(4);
+                    }
+                    else if (uri.StartsWith("https"))
+                    {
+                        return "wss" + uri.Substring(5);
+                    }
+
+                    throw new NotSupportedException();
+                }
+
+                // Check the websocket endpoint
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                var wsUri = GetWebSocketUri(ingressUri);
+                await wsClient.ConnectAsync(new Uri(wsUri + "/A/ws"), cts.Token);
+                var data = Encoding.UTF8.GetBytes("Hello World");
+                await wsClient.SendAsync(data, WebSocketMessageType.Text, endOfMessage: true, cts.Token);
+                var receiveBuffer = new byte[4096];
+                var result = await wsClient.ReceiveAsync(receiveBuffer.AsMemory(), cts.Token);
+                Assert.True(result.EndOfMessage);
+                Assert.Equal(WebSocketMessageType.Text, result.MessageType);
+                Assert.Equal(data.Length, result.Count);
+                Assert.Equal(data, receiveBuffer.AsMemory(0, result.Count).ToArray());
+                await wsClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "", cts.Token);
             });
         }
 
@@ -1276,6 +1308,39 @@ services:
                 var response = await client.GetAsync(testProjectUri);
 
                 Assert.True(response.IsSuccessStatusCode);
+            });
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task RunWithDotnetEnvVarsDoesNotGetOverriddenByDefaultDotnetEnvVars()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("dotnet-env-vars");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions { Docker = true }, async (app, uri) =>
+            {
+                var backendUri = await GetServiceUrl(client, uri, "test-project");
+
+                var backendResponse = await client.GetAsync(backendUri);
+                Assert.True(backendResponse.IsSuccessStatusCode);
+
+                var response = await backendResponse.Content.ReadAsStringAsync();
+                var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(response);
+
+                Assert.Contains(new KeyValuePair<string, string>("DOTNET_ENVIRONMENT", "dev"), dict);
+                Assert.Contains(new KeyValuePair<string, string>("ASPNETCORE_ENVIRONMENT", "dev"), dict);
             });
         }
 

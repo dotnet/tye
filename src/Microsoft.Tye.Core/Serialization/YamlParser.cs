@@ -42,7 +42,12 @@ namespace Tye.Serialization
             }
             catch (YamlException ex)
             {
-                throw new TyeYamlException(ex.Start, "Unable to parse tye.yaml. See inner exception.", ex);
+                if (_fileInfo != null)
+                {
+                    throw new TyeYamlException(ex.Start, $"Unable to parse '{_fileInfo.Name}'. See inner exception.", ex, _fileInfo);
+                }
+
+                throw new TyeYamlException(ex.Start, $"Unable to parse YAML.  See inner exception.", ex);
             }
 
             var app = new ConfigApplication();
@@ -50,7 +55,7 @@ namespace Tye.Serialization
             // TODO assuming first document.
             var document = _yamlStream.Documents[0];
             var node = document.RootNode;
-            ThrowIfNotYamlMapping(node);
+            ThrowIfNotYamlMapping(node, _fileInfo);
 
             app.Source = _fileInfo!;
 
@@ -132,10 +137,15 @@ namespace Tye.Serialization
             }
         }
 
-        public static void ThrowIfNotYamlMapping(YamlNode node)
+        public static void ThrowIfNotYamlMapping(YamlNode node, FileInfo? fileInfo = null)
         {
             if (node.NodeType != YamlNodeType.Mapping)
             {
+                if (fileInfo != null)
+                {
+                    throw new TyeYamlException(node.Start,
+                        CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), node.NodeType.ToString()), null, fileInfo);
+                }
                 throw new TyeYamlException(node.Start,
                     CoreStrings.FormatUnexpectedType(YamlNodeType.Mapping.ToString(), node.NodeType.ToString()));
             }
