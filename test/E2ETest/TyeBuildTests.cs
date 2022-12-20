@@ -147,5 +147,35 @@ namespace E2ETest
                 await DockerAssert.DeleteDockerImagesAsync(output, "test-project");
             }
         }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task ProjectWithArgsBuildTest()
+        {
+            await DockerAssert.DeleteDockerImagesAsync(output, "test/test-project-with-args");
+
+            var projectName = "single-project-with-args";
+            var environment = "production";
+
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+
+            var outputContext = new OutputContext(sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            application.Registry = new ContainerRegistry("test");
+
+            try
+            {
+                await BuildHost.ExecuteBuildAsync(outputContext, application, environment, interactive: false);
+
+                await DockerAssert.AssertImageExistsAsync(output, "test/test-project-with-args");
+            }
+            finally
+            {
+                await DockerAssert.DeleteDockerImagesAsync(output, "test/test-project-with-args");
+            }
+        }
     }
 }
