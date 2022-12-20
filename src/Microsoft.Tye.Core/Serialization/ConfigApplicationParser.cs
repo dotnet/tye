@@ -31,7 +31,7 @@ namespace Tye.Serialization
                         app.Network = YamlParser.GetScalarValue(key, child.Value);
                         break;
                     case "registry":
-                        app.Registry = YamlParser.GetScalarValue(key, child.Value);
+                        app.Registry = ConfigRegistryParser.HandleRegistry(key, child.Value);
                         break;
                     case "containerEngine":
                         string engine = YamlParser.GetScalarValue(key, child.Value);

@@ -17,9 +17,9 @@ namespace Microsoft.Tye
             DashboardPort = dashboardPort;
         }
 
-        public FileInfo Source { get; set; }
+        public FileInfo Source { get; }
 
-        public string Name { get; set; }
+        public string Name { get; }
 
         public int? DashboardPort { get; set; }
 

@@ -169,13 +169,13 @@
     <value>Services must have unique names.</value>
   </data>
   <data name="UnexpectedType" xml:space="preserve">
-    <value>Unexpected node type in tye.yaml. Expected "{expected}" but got "{actual}".</value>
+    <value>Unexpected node type in the tye configuration file. Expected "{expected}" but got "{actual}".</value>
   </data>
   <data name="UnrecognizedKey" xml:space="preserve">
-    <value>Unexpected key "{key}" in tye.yaml.</value>
+    <value>Unexpected key "{key}" in the tye configuration file.</value>
   </data>
   <data name="UnexpectedTypes" xml:space="preserve">
-    <value>Unexpected node type in tye.yaml. Expected one of ({expected}) but got "{actual}".</value>
+    <value>Unexpected node type in the tye configuration file. Expected one of ({expected}) but got "{actual}".</value>
   </data>
   <data name="PathNotFound" xml:space="preserve">
     <value>Path "{path}" was not found.</value>

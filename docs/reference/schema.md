@@ -45,7 +45,7 @@ services:
 
 ```yaml
 name: myapplication
-registry: exampleuser
+registry: ...
 namespace: examplenamespace
 network: examplenetwork
 ingress: ...
@@ -60,16 +60,9 @@ Configures the name of the application. This will appear in some Kubernetes labe
 
 If the name name is not specified, then the lowercased directory name containing the `tye.yaml` file will be used as the default.
 
-#### `registry` (string)
+#### `registry` (`Registry`)
 
-Allows storing the name of the container registry in configuration. This is used when building and deploying images for two purposes:
-
-- Determining how to tag the images
-- Determining where to push the images
-
-The registry could be a DockerHub username (`exampleuser`) or the hostname of a container registry (`example.azurecr.io`).
-
-If this is not specified in configuration, interactive deployments will prompt for it.
+Allows storing the name of the container registry and optional credentials secret in configuration.
 
 #### `namespace` (string)
 
@@ -104,6 +97,33 @@ Specifies the list of services. Applications must have at least one service.
 #### `solution` (string)
 
 Indicates the solution file (.sln) or filter (.slnf) to use when building project-based services in watch mode. If omitted, those services will be built individually. Specifying the solution [filter] can help reduce repeated builds of shared libraries when in watch mode.
+
+## Registry
+
+Allows storing the name of the container registry in configuration. This is used when building and deploying images for two purposes:
+
+- Determining how to tag the images
+- Determining where to push the images
+
+If this is not specified in configuration, interactive deployments will prompt for it.
+
+### Registry Example
+
+```yaml
+registry:
+  name: example.azurecr.io
+  pullSecret: acr-secret
+```
+
+### Registry Properties
+
+#### `name` (string) *required*
+
+The `name` could be a DockerHub username (`exampleuser`) or the hostname of a container registry (`example.azurecr.io`).
+
+#### `pullSecret` (string)
+
+Specifies the optional secret, that Kubernetes should get the credentials from to pull the image from a private registry.
 
 ## Service
 

@@ -8,11 +8,13 @@ namespace Microsoft.Tye
 {
     public sealed class ContainerRegistry
     {
-        public ContainerRegistry(string hostname)
+        public ContainerRegistry(string hostname, string? pullSecret)
         {
             Hostname = hostname ?? throw new ArgumentNullException(nameof(hostname));
+            PullSecret = pullSecret;
         }
 
         public string Hostname { get; }
+        public string? PullSecret { get; }
     }
 }
