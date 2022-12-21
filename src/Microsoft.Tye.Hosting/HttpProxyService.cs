@@ -43,7 +43,8 @@ namespace Microsoft.Tye.Hosting
             {
                 AllowAutoRedirect = false,
                 AutomaticDecompression = DecompressionMethods.None,
-                UseProxy = false
+                UseProxy = false,
+                UseCookies = false,
             }));
 
             foreach (var service in application.Services.Values)
