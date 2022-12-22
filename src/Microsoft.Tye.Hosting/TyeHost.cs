@@ -318,7 +318,7 @@ namespace Microsoft.Tye.Hosting
                 new DockerImagePuller(logger),
                 new FuncFinder(logger),
                 new ReplicaMonitor(logger),
-                new DockerRunner(logger, replicaRegistry),
+                new DockerRunner(logger, replicaRegistry, DockerRunnerOptions.FromHostOptions(options)),
                 new ProcessRunner(logger, replicaRegistry, ProcessRunnerOptions.FromHostOptions(options))
             };
 

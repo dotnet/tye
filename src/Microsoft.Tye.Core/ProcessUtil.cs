@@ -170,7 +170,7 @@ namespace Microsoft.Tye
             // lock ensures we're reading output when WaitForExit is called in process.Exited event.
             lock (process)
             {
-                process.Start();
+                process.Start();    
                 onStart?.Invoke(process.Id);
 
                 process.BeginOutputReadLine();

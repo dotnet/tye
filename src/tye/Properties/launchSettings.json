@@ -2,8 +2,9 @@
   "profiles": {
     "tye": {
       "commandName": "Project",
-      "commandLineArgs": "run",
-      "workingDirectory": "..\\..\\samples\\frontend-backend\\"
+      "commandLineArgs": "run --no-start fhir --no-start ncarelegacy",
+      "workingDirectory": "C:\\Projects\\NcareAll\\.ncare",
+      "hotReloadEnabled": false
     }
   }
 }

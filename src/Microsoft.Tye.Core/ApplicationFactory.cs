@@ -292,8 +292,8 @@ namespace Microsoft.Tye
                         {
                             Args = configService.Args,
                             WorkingDirectory = configService.WorkingDirectory != null ?
-                            Path.GetFullPath(Path.Combine(config.Source.Directory!.FullName, Environment.ExpandEnvironmentVariables(configService.WorkingDirectory))) :
-                            workingDirectory,
+                                Path.GetFullPath(Path.Combine(config.Source.Directory!.FullName, Environment.ExpandEnvironmentVariables(configService.WorkingDirectory)))
+                                : workingDirectory,
                             Replicas = configService.Replicas ?? 1
                         };
                         service = executable;

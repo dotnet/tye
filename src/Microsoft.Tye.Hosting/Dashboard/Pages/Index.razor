@@ -19,6 +19,7 @@
             <th>Replicas</th>
             <th>Restarts</th>
             <th>Logs</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -79,6 +80,20 @@
                     <td>@service.Replicas.Count/@service.Description.Replicas</td>
                     <td>@service.Restarts</td>
                     <td><NavLink href="@logsPath">View</NavLink></td>
+                    <td>
+                    @if (service.ServiceType == ServiceType.Container || service.ServiceType == ServiceType.Executable || service.ServiceType == ServiceType.Project || service.ServiceType == ServiceType.Function)
+                    {
+                        if (service.Replicas.Count == 0) {
+                                <button @onclick="async () => await StartServiceAsync(service)" class="btn btn-default btn-xs">
+                                    <span class="oi oi-media-play"></span>
+                                </button>
+                        } else {
+                                <button @onclick="async () => await StopServiceAsync(service)" class="btn btn-default btn-xs">
+                                    <span class="oi oi-media-stop"></span>
+                                </button>
+                        }
+                    }
+                    </td>
                 }
             </tr>
         }
@@ -156,6 +171,30 @@
             {
                 _ingressDescriptions.Add(a.Description);
             }
+        }
+    }
+
+    private async Task StartServiceAsync(Service service)
+    {
+        if (service.ServiceType == ServiceType.Container)
+        {
+            await DockerRunner.RestartContainerAsync(service);
+        }
+        else
+        {
+            await ProcessRunner.RestartService(service);
+        }
+    }
+
+    private async Task StopServiceAsync(Service service)
+    {
+        if (service.ServiceType == ServiceType.Container)
+        {
+            await DockerRunner.StopContainerAsync(service);
+        }
+        else
+        {
+            await ProcessRunner.KillProcessAsync(service);
         }
     }
 
