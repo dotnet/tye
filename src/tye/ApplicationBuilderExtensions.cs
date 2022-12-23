@@ -197,34 +197,39 @@ namespace Microsoft.Tye
                 var description = service?.Description ?? new ServiceDescription(ingress.Name, new IngressRunInfo(new List<IngressRule>()));
                 if (!(description.RunInfo is IngressRunInfo runinfo))
                 {
-                    throw new InvalidOperationException($"Service '{ingress.Name}' was already added but not as an ingress service.");
+                    throw new CommandException($"Service '{ingress.Name}' was already added but not as an ingress service.");
                 }
 
                 description.Replicas = Math.Max(ingress.Replicas, description.Replicas);
 
                 foreach (var rule in ingress.Rules)
                 {
+                    if (runinfo.Rules.FirstOrDefault(r => (r.Host ?? String.Empty).Equals(rule.Host ?? String.Empty, StringComparison.InvariantCultureIgnoreCase)
+                                                && (r.Path ?? String.Empty).Equals(rule.Path ?? String.Empty, StringComparison.InvariantCultureIgnoreCase))
+                        is IngressRule existing)
+                    {
+                        throw new CommandException($"Cannot add rule for service {rule.Service} to ingress '{ingress.Name}', it already has a rule for service {existing.Service} with Host {rule.Host} and Path {rule.Path}.");
+                    }
                     runinfo.Rules.Add(new IngressRule(rule.Host, rule.Path, rule.Service!, rule.PreservePath));
                 }
 
                 foreach (var binding in ingress.Bindings)
                 {
-                    //Match on name or all other properties to combind bindings to 1 instance so we can have http://*.80 listen to more then 1 service from different include files
                     var existing = description.Bindings.FirstOrDefault(b => !string.IsNullOrEmpty(b.Name) && b.Name == binding.Name);
                     if (existing != null)
                     {
                         //if we're using an existing binding based on name, the other properties should match
                         if (existing.Port != binding.Port || existing.Protocol != binding.Protocol || existing.IPAddress != binding.IPAddress)
                         {
-                            throw new InvalidOperationException($"Ingress {ingress.Name} already has a binding with name {binding.Name} but with different settings.");
+                            throw new CommandException($"Ingress {ingress.Name} already has a binding with name {binding.Name} but with different settings.");
                         }
                     } 
                     else
                     {
-                        existing = description.Bindings.FirstOrDefault(b => b.Port == binding.Port && b.Protocol == binding.Protocol && b.IPAddress == binding.IPAddress);
-                        if (existing != null && existing.Name != binding.Name)
+                        existing = description.Bindings.FirstOrDefault(b => b.Port == binding.Port && (b.Protocol ?? "http") == binding.Protocol && b.IPAddress == binding.IPAddress);
+                        if (existing != null && !(existing.Name ?? string.Empty).Equals(binding.Name ?? string.Empty, StringComparison.InvariantCultureIgnoreCase))
                         {
-                            throw new InvalidOperationException($"Ingress {ingress.Name} already has a binding for {binding.Protocol}://{binding.IPAddress}:{binding.Port} but with a different name.");
+                            throw new CommandException($"Ingress {ingress.Name} already has a binding with the same ipaddress and/or port, {binding} cannot be added.");
                         }
                     }
                     if (existing == null)
