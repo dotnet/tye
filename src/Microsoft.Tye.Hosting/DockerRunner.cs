@@ -631,7 +631,7 @@ namespace Microsoft.Tye.Hosting
                 _buildAndRunAsync = func;
             }
 
-            public async void BuildAndRun()
+            public void BuildAndRun()
             {
                 Task = _buildAndRunAsync?.Invoke(StoppingTokenSource.Token) ?? Task.CompletedTask;
             }
