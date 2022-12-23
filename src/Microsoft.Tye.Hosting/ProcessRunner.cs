@@ -181,9 +181,8 @@ namespace Microsoft.Tye.Hosting
         private void LaunchService(Application application, Service service)
 
         {
-            ProcessInfo processInfo = (service.Items.ContainsKey(typeof(ProcessInfo)) 
-                                ? (ProcessInfo)service.Items[typeof(ProcessInfo)]
-                                : null) ?? new ProcessInfo(new Task[service.Description.Replicas]);
+            var processInfo = (service.Items.ContainsKey(typeof(ProcessInfo)) ? (ProcessInfo?)service.Items[typeof(ProcessInfo)] : null)
+                                      ?? new ProcessInfo(new Task[service.Description.Replicas]);
             var serviceName = service.Description.Name;
 
             // Set by BuildAndRunService
@@ -260,7 +259,7 @@ namespace Microsoft.Tye.Hosting
 
                 var backOff = TimeSpan.FromSeconds(5);
 
-                while (!processInfo.StoppedTokenSource.IsCancellationRequested)
+                while (!processInfo!.StoppedTokenSource.IsCancellationRequested)
                 {
                     var replica = serviceName + "_" + Guid.NewGuid().ToString().Substring(0, 10).ToLower();
                     var status = new ProcessStatus(service, replica);
@@ -379,8 +378,6 @@ namespace Microsoft.Tye.Hosting
                             }
                         };
 
-                        
-
                         if (_options.Watch && (service.Description.RunInfo is ProjectRunInfo runInfo))
                         {
                             var projectFile = runInfo.ProjectFile.FullName;
@@ -468,14 +465,13 @@ namespace Microsoft.Tye.Hosting
 
             processInfo.Start = Start;
             service.Items[typeof(ProcessInfo)] = processInfo;
-            if (!_options.ManualStartServices &&
-                !(_options.ServicesNotToStart?.Contains(serviceName, StringComparer.OrdinalIgnoreCase) ?? false))
+            if (!_options.ManualStartServices && !(_options.ServicesNotToStart?.Contains(serviceName, StringComparer.OrdinalIgnoreCase) ?? false))
             {
                 processInfo.Start();
             }
             else
             {
-                for (var i=0;i<processInfo.Tasks.Length;i++)
+                for (var i=0; i<processInfo.Tasks.Length; i++)
                 {
                     processInfo.Tasks[i] = Task.CompletedTask;
                 }
