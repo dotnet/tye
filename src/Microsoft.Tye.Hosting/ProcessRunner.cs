@@ -181,9 +181,9 @@ namespace Microsoft.Tye.Hosting
         private void LaunchService(Application application, Service service)
 
         {
-            var processInfo = service.Items.ContainsKey(typeof(ProcessInfo)) 
+            ProcessInfo processInfo = (service.Items.ContainsKey(typeof(ProcessInfo)) 
                                 ? (ProcessInfo)service.Items[typeof(ProcessInfo)]
-                                : new ProcessInfo(new Task[service.Description.Replicas]);
+                                : null) ?? new ProcessInfo(new Task[service.Description.Replicas]);
             var serviceName = service.Description.Name;
 
             // Set by BuildAndRunService
@@ -488,7 +488,7 @@ namespace Microsoft.Tye.Hosting
             {
                 await KillProcessAsync(service);
                 service.Restarts++;
-                state.Start();
+                state.Start?.Invoke();
                 await Task.WhenAll(state.Tasks);
             }
         }
@@ -576,7 +576,7 @@ namespace Microsoft.Tye.Hosting
             public Task[] Tasks { get; }
 
             public CancellationTokenSource StoppedTokenSource { get; private set; } = new CancellationTokenSource();
-            public Action Start { get; internal set; }
+            public Action? Start { get; internal set; }
             internal void ResetStoppedTokenSource()
             {
                 StoppedTokenSource.Dispose();
