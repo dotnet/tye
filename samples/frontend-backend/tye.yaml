@@ -6,3 +6,4 @@ services:
   project: backend/backend.csproj
 - name: frontend
   project: frontend/frontend.csproj
+  hotReload: true

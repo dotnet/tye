@@ -33,6 +33,7 @@ namespace Microsoft.Tye.ConfigModel
         public string? WorkingDirectory { get; set; }
         public string? Args { get; set; }
         public int? Replicas { get; set; }
+        public bool? HotReload { get; set; }
         public List<ConfigServiceBinding> Bindings { get; set; } = new List<ConfigServiceBinding>();
         public List<ConfigVolume> Volumes { get; set; } = new List<ConfigVolume>();
         [YamlMember(Alias = "env")]

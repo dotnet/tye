@@ -220,7 +220,7 @@ namespace Microsoft.Tye
                         {
                             project.BuildProperties.Add(buildProperty.Name, buildProperty.Value);
                         }
-
+                        project.HotReload = configService.HotReload ?? false;
                         project.Replicas = configService.Replicas ?? 1;
                         project.Liveness = configService.Liveness != null ? GetProbeBuilder(configService.Liveness) : null;
                         project.Readiness = configService.Readiness != null ? GetProbeBuilder(configService.Readiness) : null;

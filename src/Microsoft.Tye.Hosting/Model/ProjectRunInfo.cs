@@ -14,6 +14,7 @@ namespace Microsoft.Tye.Hosting.Model
             ProjectFile = project.ProjectFile;
             Args = project.Args;
             Build = project.Build;
+            HotReload = project.HotReload;
             BuildProperties = project.BuildProperties;
             TargetFramework = project.TargetFramework;
             TargetFrameworkName = project.TargetFrameworkName;
@@ -32,7 +33,8 @@ namespace Microsoft.Tye.Hosting.Model
         public Dictionary<string, string> BuildProperties { get; } = new Dictionary<string, string>();
 
         public string? Args { get; }
-        public bool Build { get; }
+        public bool Build { get; set; }
+        public bool HotReload { get; set; }
         public FileInfo ProjectFile { get; }
         public string TargetFrameworkName { get; set; } = default!;
         public string TargetFrameworkVersion { get; set; } = default!;

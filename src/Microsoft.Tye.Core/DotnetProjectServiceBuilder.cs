@@ -31,5 +31,6 @@ namespace Microsoft.Tye
         public string PublishDir { get; set; } = default!;
         public string IntermediateOutputPath { get; set; } = default!;
         public Dictionary<string, string> BuildProperties { get; } = new Dictionary<string, string>();
+        public bool HotReload { get; set; }
     }
 }

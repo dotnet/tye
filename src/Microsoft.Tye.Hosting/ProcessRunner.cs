@@ -55,10 +55,27 @@ namespace Microsoft.Tye.Hosting
 
         private async Task BuildAndRunProjects(Application application)
         {
+            await BuildProjects(application.Services.Values, application.ContextDirectory);
+
+            foreach (var s in application.Services)
+            {
+                switch (s.Value.ServiceType)
+                {
+                    case ServiceType.Executable:
+                    case ServiceType.Project:
+                    case ServiceType.Function:
+                        LaunchService(application, s.Value);
+                        break;
+                };
+            }
+        }
+
+        private async Task BuildProjects(IEnumerable<Service> services, string buildWorkingDirectory)
+        {
             var projectGroups = new Dictionary<string, ProjectGroup>();
             var groupCount = 0;
 
-            foreach (var service in application.Services.Values)
+            foreach (var service in services)
             {
                 var serviceDescription = service.Description;
 
@@ -109,7 +126,8 @@ namespace Microsoft.Tye.Hosting
                 if (service.Status.ProjectFilePath != null &&
                     service.Description.RunInfo is ProjectRunInfo project2 &&
                     project2.Build &&
-                    _options.BuildProjects)
+                    _options.BuildProjects &&
+                    !(project2.HotReload && _options.Watch))
                 {
                     if (!projectGroups.TryGetValue(buildProperties, out var projectGroup))
                     {
@@ -153,28 +171,12 @@ namespace Microsoft.Tye.Hosting
 
                 _logger.LogInformation("Building projects");
 
-                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build --no-restore \"{projectPath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
+                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build --no-restore \"{projectPath}\" /nologo", throwOnError: false, workingDirectory: buildWorkingDirectory);
 
                 if (buildResult.ExitCode != 0)
                 {
                     throw new TyeBuildException($"Building projects failed with exit code {buildResult.ExitCode}: \r\n{buildResult.StandardOutput}");
                 }
-            }
-
-            foreach (var s in application.Services)
-            {
-                switch (s.Value.ServiceType)
-                {
-                    case ServiceType.Executable:
-                        LaunchService(application, s.Value);
-                        break;
-                    case ServiceType.Project:
-                        LaunchService(application, s.Value);
-                        break;
-                    case ServiceType.Function:
-                        LaunchService(application, s.Value);
-                        break;
-                };
             }
         }
 
@@ -184,12 +186,7 @@ namespace Microsoft.Tye.Hosting
             var processInfo = new ProcessInfo(new Task[service.Description.Replicas]);
             var serviceName = serviceDescription.Name;
 
-            // Set by BuildAndRunService
-            var args = service.Status.Args!;
-            var path = service.Status.ExecutablePath!;
-            var workingDirectory = service.Status.WorkingDirectory!;
-
-            async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol, string? Host)> ports, string copiedArgs)
+            async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol, string? Host)> ports)
             {
                 // Make sure we yield before trying to start the process, this is important so we don't block startup
                 await Task.Yield();
@@ -203,7 +200,9 @@ namespace Microsoft.Tye.Hosting
                     ["ASPNETCORE_ENVIRONMENT"] = "Development",
                     // Remove the color codes from the console output
                     ["DOTNET_LOGGING__CONSOLE__DISABLECOLORS"] = "true",
-                    ["ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS"] = "true"
+                    ["ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS"] = "true",
+                    // disable browser start if hot reload is used
+                    ["DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER"] = "true"
                 };
 
                 // Set up environment variables to use the version of dotnet we're using to run
@@ -243,17 +242,6 @@ namespace Microsoft.Tye.Hosting
 
                     // 3. For non-ASP.NET Core apps, pass the same information in the PORT env variable as a semicolon separated list.
                     environment["PORT"] = string.Join(";", ports.Select(p => $"{p.Port}"));
-
-                    if (service.ServiceType == ServiceType.Function)
-                    {
-                        // Need to inject port and UseHttps as an argument to func.exe rather than environment variables.
-                        var binding = ports.First();
-                        copiedArgs += $" --port {binding.Port}";
-                        if (binding.Protocol == "https")
-                        {
-                            copiedArgs += " --useHttps";
-                        }
-                    }
                 }
 
                 var backOff = TimeSpan.FromSeconds(5);
@@ -286,17 +274,41 @@ namespace Microsoft.Tye.Hosting
                         status.Bindings = ports.Select(p => new ReplicaBinding() { Port = p.Port, ExternalPort = p.ExternalPort, Protocol = p.Protocol }).ToList();
                     }
 
+                    // Set by BuildAndRunService
+                    var path = service.Status.ExecutablePath!;
+                    var workingDirectory = service.Status.WorkingDirectory!;
+                    var copiedArgs = service.Status.Args!;
                     // TODO clean this up.
                     foreach (var env in environment)
                     {
                         copiedArgs = copiedArgs.Replace($"%{env.Key}%", env.Value);
                     }
 
-                    _logger.LogInformation("Launching service {ServiceName}: {ExePath} {args}", replica, path, copiedArgs);
-
                     try
                     {
                         service.Logs.OnNext($"[{replica}]:{path} {copiedArgs}");
+
+                        var project = service.Description.RunInfo as ProjectRunInfo;
+                        var hotreload = _options.Watch && project != null && project.HotReload;
+
+                        if (hotreload)
+                        {
+                            path = "dotnet";
+                            copiedArgs = $"watch run --non-interactive --no-launch-profile --project {project!.ProjectFile.FullName} -- {copiedArgs}";
+                        }
+                        else if (service.ServiceType == ServiceType.Function)
+                        {
+                            // Need to inject port and UseHttps as an argument to func.exe rather than environment variables.
+                            var binding = ports.First();
+                            copiedArgs += $" --port {binding.Port}";
+                            if (binding.Protocol == "https")
+                            {
+                                copiedArgs += " --useHttps";
+                            }
+                        }                        
+
+                        _logger.LogInformation("Launching service {ServiceName}: {ExePath} {args}", replica, path, copiedArgs);
+
                         var processInfo = new ProcessSpec
                         {
                             Executable = path,
@@ -306,6 +318,21 @@ namespace Microsoft.Tye.Hosting
                             OutputData = data =>
                             {
                                 service.Logs.OnNext($"[{replica}]: {data}");
+                                if (hotreload && data.StartsWith("dotnet watch"))
+                                {
+                                    _logger.LogInformation("[{replica}] {data}", replica, data);
+                                    if (service.Items.ContainsKey("_hotreload_exited_once"))
+                                    {
+                                        if (data.EndsWith("Started"))
+                                        {
+                                            service.Restarts++;
+                                        }
+                                    }
+                                    else if (data.EndsWith("Exited"))
+                                    {
+                                        service.Items["_hotreload_exited_once"] = true;
+                                    }
+                                }
                             },
                             ErrorData = data => service.Logs.OnNext($"[{replica}]: {data}"),
                             OnStart = pid =>
@@ -375,9 +402,9 @@ namespace Microsoft.Tye.Hosting
                             }
                         };
 
-                        if (_options.Watch && (service.Description.RunInfo is ProjectRunInfo runInfo))
+                        if (!hotreload && _options.Watch && project != null)
                         {
-                            var projectFile = runInfo.ProjectFile.FullName;
+                            var projectFile = project.ProjectFile.FullName;
                             var fileSetFactory = new MsBuildFileSetFactory(_logger,
                                 projectFile,
                                 waitOnError: true,
@@ -446,14 +473,14 @@ namespace Microsoft.Tye.Hosting
                         ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.Protocol, binding.Host));
                     }
 
-                    processInfo.Tasks[i] = RunApplicationAsync(ports, args);
+                    processInfo.Tasks[i] = RunApplicationAsync(ports);
                 }
             }
             else
             {
                 for (int i = 0; i < service.Description.Replicas; i++)
                 {
-                    processInfo.Tasks[i] = RunApplicationAsync(Enumerable.Empty<(int, int, string?, string?)>(), args);
+                    processInfo.Tasks[i] = RunApplicationAsync(Enumerable.Empty<(int, int, string?, string?)>());
                 }
             }
 

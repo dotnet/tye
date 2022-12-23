@@ -84,6 +84,14 @@ namespace Tye.Serialization
 
                         service.Build = build;
                         break;
+                    case "hotReload":
+                        if (!bool.TryParse(YamlParser.GetScalarValue(key, child.Value), out var hotReload))
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatMustBeABoolean(key));
+                        }
+
+                        service.HotReload = hotReload;
+                        break;
                     case "executable":
                         service.Executable = YamlParser.GetScalarValue(key, child.Value);
                         break;
