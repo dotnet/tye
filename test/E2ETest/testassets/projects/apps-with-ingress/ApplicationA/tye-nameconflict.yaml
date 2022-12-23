@@ -1,0 +1,26 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
+#
+name: apps-with-ingress
+ingress:
+  - name: ingress
+    bindings:
+      - port: 8080
+        name: example
+        ip: 192.168.1.1
+    rules:
+      - path: /A
+        service: appA
+      - path: /C
+        service: appA
+        preservePath: true
+      - host: a.example.com
+        service: appA
+
+services:
+- name: appA
+  project: ./ApplicationA.csproj
+  replicas: 2
