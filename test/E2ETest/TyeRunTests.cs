@@ -772,6 +772,120 @@ services:
         }
 
         [Fact]
+        public async Task MergedIngressRunTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-mergeingress.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+            var wsClient = new ClientWebSocket();
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var ingressUri = await GetServiceUrl(client, uri, "ingress");
+                var appAUri = await GetServiceUrl(client, uri, "appa");
+                var appBUri = await GetServiceUrl(client, uri, "appb");
+
+                var appAResponse = await client.GetAsync(appAUri);
+                var appBResponse = await client.GetAsync(appBUri);
+
+                Assert.True(appAResponse.IsSuccessStatusCode);
+                Assert.True(appBResponse.IsSuccessStatusCode);
+
+                var responseA = await client.GetAsync(ingressUri + "/A");
+                var responseB = await client.GetAsync(ingressUri + "/B");
+
+                Assert.StartsWith("Hello from Application A", await responseA.Content.ReadAsStringAsync());
+                Assert.StartsWith("Hello from Application B", await responseB.Content.ReadAsStringAsync());
+
+                var requestA = new HttpRequestMessage(HttpMethod.Get, ingressUri);
+                requestA.Headers.Host = "a.example.com";
+                var requestB = new HttpRequestMessage(HttpMethod.Get, ingressUri);
+                requestB.Headers.Host = "b.example.com";
+
+                responseA = await client.SendAsync(requestA);
+                responseB = await client.SendAsync(requestB);
+
+                Assert.StartsWith("Hello from Application A", await responseA.Content.ReadAsStringAsync());
+                Assert.StartsWith("Hello from Application B", await responseB.Content.ReadAsStringAsync());
+
+                // checking preservePath behavior
+                var responsePreservePath = await client.GetAsync(ingressUri + "/C/test");
+                Assert.Contains("Hit path /C/test", await responsePreservePath.Content.ReadAsStringAsync());
+
+                string GetWebSocketUri(string uri)
+                {
+                    if (uri.StartsWith("http"))
+                    {
+                        return "ws" + uri.Substring(4);
+                    }
+                    else if (uri.StartsWith("https"))
+                    {
+                        return "wss" + uri.Substring(5);
+                    }
+
+                    throw new NotSupportedException();
+                }
+
+                // Check the websocket endpoint
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                var wsUri = GetWebSocketUri(ingressUri);
+                await wsClient.ConnectAsync(new Uri(wsUri + "/A/ws"), cts.Token);
+                var data = Encoding.UTF8.GetBytes("Hello World");
+                await wsClient.SendAsync(data, WebSocketMessageType.Text, endOfMessage: true, cts.Token);
+                var receiveBuffer = new byte[4096];
+                var result = await wsClient.ReceiveAsync(receiveBuffer.AsMemory(), cts.Token);
+                Assert.True(result.EndOfMessage);
+                Assert.Equal(WebSocketMessageType.Text, result.MessageType);
+                Assert.Equal(data.Length, result.Count);
+                Assert.Equal(data, receiveBuffer.AsMemory(0, result.Count).ToArray());
+                await wsClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "", cts.Token);
+            });
+        }
+
+        [Fact]
+        public async Task MergedIngressQueryAndContentProxyingTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-mergeingress.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var ingressUri = await GetServiceUrl(client, uri, "ingress");
+
+                var request = new HttpRequestMessage(HttpMethod.Post, ingressUri + "/A/data?key1=value1&key2=value2");
+                request.Content = new StringContent("some content");
+
+                var response = await client.SendAsync(request);
+                var responseContent =
+                    JsonSerializer.Deserialize<Dictionary<string, string>>(await response.Content.ReadAsStringAsync());
+
+                Assert.Equal("some content", responseContent!["content"]);
+                Assert.Equal("?key1=value1&key2=value2", responseContent["query"]);
+            });
+        }
+
+        [Fact]
         public async Task IngressStaticFilesTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
