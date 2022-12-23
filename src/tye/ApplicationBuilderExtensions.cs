@@ -210,8 +210,24 @@ namespace Microsoft.Tye
                 foreach (var binding in ingress.Bindings)
                 {
                     //Match on name or all other properties to combind bindings to 1 instance so we can have http://*.80 listen to more then 1 service from different include files
-                    if (!description.Bindings.Any(b => (!string.IsNullOrEmpty(b.Name) && b.Name == binding.Name) ||
-                                                       (b.Port == binding.Port && b.Protocol == binding.Protocol && b.IPAddress == binding.IPAddress)))
+                    var existing = description.Bindings.FirstOrDefault(b => !string.IsNullOrEmpty(b.Name) && b.Name == binding.Name);
+                    if (existing != null)
+                    {
+                        //if we're using an existing binding based on name, the other properties should match
+                        if (existing.Port != binding.Port || existing.Protocol != binding.Protocol || existing.IPAddress != binding.IPAddress)
+                        {
+                            throw new InvalidOperationException($"Ingress {ingress.Name} already has a binding with name {binding.Name} but with different settings.");
+                        }
+                    } 
+                    else
+                    {
+                        existing = description.Bindings.FirstOrDefault(b => b.Port == binding.Port && b.Protocol == binding.Protocol && b.IPAddress == binding.IPAddress);
+                        if (existing != null && existing.Name != binding.Name)
+                        {
+                            throw new InvalidOperationException($"Ingress {ingress.Name} already has a binding for {binding.Protocol}://{binding.IPAddress}:{binding.Port} but with a different name.");
+                        }
+                    }
+                    if (existing == null)
                     {
                         description.Bindings.Add(new ServiceBinding()
                         {
