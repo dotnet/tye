@@ -16,7 +16,7 @@ namespace Microsoft.Tye.Hosting
         {
             return new DockerRunnerOptions
             {
-                ManualStartServices  = options.NoStart?.Contains("*", StringComparer.OrdinalIgnoreCase) ?? false,
+                ManualStartServices = options.NoStart?.Contains("*", StringComparer.OrdinalIgnoreCase) ?? false,
                 ServicesNotToStart = options.NoStart?.ToArray()
             };
         }

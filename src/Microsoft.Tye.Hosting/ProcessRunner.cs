@@ -471,7 +471,7 @@ namespace Microsoft.Tye.Hosting
             }
             else
             {
-                for (var i=0; i<processInfo.Tasks.Length; i++)
+                for (int i = 0; i < processInfo.Tasks.Length; i++)
                 {
                     processInfo.Tasks[i] = Task.CompletedTask;
                 }

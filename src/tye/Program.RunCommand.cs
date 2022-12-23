@@ -102,7 +102,7 @@ namespace Microsoft.Tye
 
                 var filter = ApplicationFactoryFilter.GetApplicationFactoryFilter(args.Tags);
 
-                 var application = await ApplicationFactory.CreateAsync(output, args.Path, args.Framework, filter);
+                var application = await ApplicationFactory.CreateAsync(output, args.Path, args.Framework, filter);
                 if (application.Services.Count == 0)
                 {
                     throw new CommandException($"No services found in \"{application.Source.Name}\"");
@@ -163,7 +163,7 @@ namespace Microsoft.Tye
             public bool Dashboard { get; set; }
 
             public string[] Debug { get; set; } = Array.Empty<string>();
-            
+
             public string[] NoStart { get; set; } = Array.Empty<string>();
 
             public string Dtrace { get; set; } = default!;

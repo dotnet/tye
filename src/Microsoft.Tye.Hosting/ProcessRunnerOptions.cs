@@ -25,7 +25,7 @@ namespace Microsoft.Tye.Hosting
                 DebugMode = options.Debug.Any(),
                 ServicesToDebug = options.Debug.ToArray(),
                 DebugAllServices = options.Debug?.Contains("*", StringComparer.OrdinalIgnoreCase) ?? false,
-                ManualStartServices  = options.NoStart?.Contains("*", StringComparer.OrdinalIgnoreCase) ?? false,
+                ManualStartServices = options.NoStart?.Contains("*", StringComparer.OrdinalIgnoreCase) ?? false,
                 ServicesNotToStart = options.NoStart?.ToArray(),
                 Watch = options.Watch
             };

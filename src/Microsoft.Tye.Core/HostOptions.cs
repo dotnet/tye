@@ -11,7 +11,7 @@ namespace Microsoft.Tye
         public bool Dashboard { get; set; }
 
         public List<string> Debug { get; } = new List<string>();
-        
+
         public List<string> NoStart { get; } = new List<string>();
 
         public string? DistributedTraceProvider { get; set; }
