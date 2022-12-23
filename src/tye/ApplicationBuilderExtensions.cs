@@ -223,7 +223,7 @@ namespace Microsoft.Tye
                         {
                             throw new CommandException($"Ingress {ingress.Name} already has a binding with name {binding.Name} but with different settings.");
                         }
-                    } 
+                    }
                     else
                     {
                         existing = description.Bindings.FirstOrDefault(b => b.Port == binding.Port && (b.Protocol ?? "http") == binding.Protocol && b.IPAddress == binding.IPAddress);

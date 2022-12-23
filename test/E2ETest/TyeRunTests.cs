@@ -1468,7 +1468,7 @@ services:
 
             var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
             var exception = Assert.Throws<CommandException>(() => application.ToHostingApplication());
-                
+
             var ingressName = "ingress";
             var bindingName = "example";
             Assert.Equal($"Ingress {ingressName} already has a binding with name {bindingName} but with different settings.", exception.Message);
