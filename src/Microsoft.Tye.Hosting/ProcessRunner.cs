@@ -305,7 +305,7 @@ namespace Microsoft.Tye.Hosting
                             {
                                 copiedArgs += " --useHttps";
                             }
-                        }                        
+                        }
 
                         _logger.LogInformation("Launching service {ServiceName}: {ExePath} {args}", replica, path, copiedArgs);
 
