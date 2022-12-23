@@ -117,12 +117,12 @@
 </table>
 
 @code {
-    static readonly ServiceType stopables = ServiceType.Container | ServiceType.Executable | ServiceType.Project | ServiceType.Function;
+    static readonly ServiceType[] stopables = new[] { ServiceType.Container, ServiceType.Executable, ServiceType.Project, ServiceType.Function };
     private List<IDisposable> _subscriptions = new List<IDisposable>();
 
     bool CanStartStop(Service? service)
     {
-        return service != null && ((stopables & service.ServiceType) == service.ServiceType);
+        return service != null && stopables.Contains(service.ServiceType);
     }
 
     string GetUrl(ServiceBinding b)
