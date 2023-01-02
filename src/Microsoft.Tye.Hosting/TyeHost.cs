@@ -208,7 +208,7 @@ namespace Microsoft.Tye.Hosting
                     {
                         var server = sp.GetRequiredService<AspNetCore.Hosting.Server.IServer>();
                         var addressFeature = server.Features.Get<AspNetCore.Hosting.Server.Features.IServerAddressesFeature>();
-                        string baseAddress = addressFeature.Addresses.First();
+                        var baseAddress = addressFeature?.Addresses.FirstOrDefault() ?? string.Empty;
                         return new System.Net.Http.HttpClient { BaseAddress = new Uri(baseAddress) };
                     });
                 })
