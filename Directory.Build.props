@@ -12,6 +12,10 @@
     <StrongNameKeyId>Microsoft</StrongNameKeyId>
   </PropertyGroup>
   
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)LICENSE.txt" Pack="true" PackagePath="" />
+  </ItemGroup>
+
   <PropertyGroup>
     <!-- Lots of our dependencies are not strong-named -->
     <NoWarn>$(NoWarn);8002</NoWarn>

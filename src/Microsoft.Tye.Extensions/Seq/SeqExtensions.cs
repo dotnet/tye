@@ -20,7 +20,7 @@ namespace Microsoft.Tye.Extensions.Seq
             {
                 context.Output.WriteDebugLine("Injecting seq service...");
 
-                var seq = new ContainerServiceBuilder("seq", "datalust/seq")
+                var seq = new ContainerServiceBuilder("seq", "datalust/seq", ServiceSource.Extension)
                 {
                     EnvironmentVariables =
                     {

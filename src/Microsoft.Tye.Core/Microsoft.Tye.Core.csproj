@@ -1,30 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Tye</RootNamespace>
     <AssemblyName>Microsoft.Tye.Core</AssemblyName>
     <PackageId>Microsoft.Tye.Core</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="KubernetesClient" Version="4.0.10" />
-    <!--
-      The Microsoft.Build.Locator package takes care of dynamically loading these assemblies
-      at runtime. We don't need/want to ship them, just to have them as references.
-    -->
-    <PackageReference Include="Microsoft.Build" Version="16.6.0" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Build.Locator" Version="1.2.6" />
-    <!-- Hoisted to avoid a conflict with Microsoft.Build -->
+    <PackageReference Include="KubernetesClient" Version="6.0.25" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <PackageReference Include="semver" Version="2.0.6" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20071.2" />
     <PackageReference Include="System.Commandline.Rendering" Version="0.3.0-alpha.20070.2" />
-    <PackageReference Include="System.Security.Cryptography.Cng" Version="4.7.0" />
+    <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
     <!-- Hoisted to avoid a conflict with Microsoft.Build -->
-    <PackageReference Include="System.Security.Principal.Windows" Version="4.7.0" />
-    <PackageReference Include="YamlDotNet" Version="8.1.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.5" />
+    <PackageReference Include="System.Security.Principal.Windows" Version="5.0.0" />
+    <PackageReference Include="YamlDotNet" Version="11.2.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -26,23 +26,31 @@ namespace Microsoft.Tye.Hosting
         private readonly ProcessRunnerOptions _options;
         private readonly ReplicaRegistry _replicaRegistry;
 
+        private readonly BuildWatcher _watchBuilderWorker;
+
         public ProcessRunner(ILogger logger, ReplicaRegistry replicaRegistry, ProcessRunnerOptions options)
         {
             _logger = logger;
             _replicaRegistry = replicaRegistry;
             _options = options;
+
+            _watchBuilderWorker = new BuildWatcher(logger);
         }
 
         public async Task StartAsync(Application application)
         {
             await PurgeFromPreviousRun();
 
+            await _watchBuilderWorker.StartAsync(application.BuildSolution, application.ContextDirectory);
+
             await BuildAndRunProjects(application);
         }
 
-        public Task StopAsync(Application application)
+        public async Task StopAsync(Application application)
         {
-            return KillRunningProcesses(application.Services);
+            await _watchBuilderWorker.StopAsync();
+
+            await KillRunningProcesses(application.Services);
         }
 
         private async Task BuildAndRunProjects(Application application)
@@ -145,7 +153,7 @@ namespace Microsoft.Tye.Hosting
 
                 _logger.LogInformation("Building projects");
 
-                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{projectPath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
+                var buildResult = await ProcessUtil.RunAsync("dotnet", $"build --no-restore \"{projectPath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
 
                 if (buildResult.ExitCode != 0)
                 {
@@ -181,7 +189,7 @@ namespace Microsoft.Tye.Hosting
             var path = service.Status.ExecutablePath!;
             var workingDirectory = service.Status.WorkingDirectory!;
 
-            async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol)> ports, string copiedArgs)
+            async Task RunApplicationAsync(IEnumerable<(int ExternalPort, int Port, string? Protocol, string? Host)> ports, string copiedArgs)
             {
                 // Make sure we yield before trying to start the process, this is important so we don't block startup
                 await Task.Yield();
@@ -217,15 +225,11 @@ namespace Microsoft.Tye.Hosting
 
                 if (hasPorts)
                 {
-                    // We need to bind to all interfaces on linux since the container -> host communication won't work
-                    // if we use the IP address to reach out of the host. This works fine on osx and windows
-                    // but doesn't work on linux.
-                    var host = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "*" : "localhost";
-
                     // These are the ports that the application should use for binding
 
                     // 1. Configure ASP.NET Core to bind to those same ports
-                    environment["ASPNETCORE_URLS"] = string.Join(";", ports.Select(p => $"{p.Protocol ?? "http"}://{host}:{p.Port}"));
+                    var urlPorts = ports.Where(p => p.Protocol == null || p.Protocol == "http" || p.Protocol == "https");
+                    environment["ASPNETCORE_URLS"] = string.Join(";", urlPorts.Select(p => $"{p.Protocol ?? "http"}://{p.Host ?? application.ContainerEngine.AspNetUrlsHost}:{p.Port}"));
 
                     // Set the HTTPS port for the redirect middleware
                     foreach (var p in ports)
@@ -308,7 +312,8 @@ namespace Microsoft.Tye.Hosting
                             {
                                 if (hasPorts)
                                 {
-                                    _logger.LogInformation("{ServiceName} running on process id {PID} bound to {Address}", replica, pid, string.Join(", ", ports.Select(p => $"{p.Protocol ?? "http"}://localhost:{p.Port}")));
+                                    _logger.LogInformation("{ServiceName} running on process id {PID} bound to {Address}",
+                                        replica, pid, string.Join(", ", ports.Select(p => $"{p.Protocol ?? "http"}://{p.Host ?? application.ContainerEngine.AspNetUrlsHost}:{p.Port}")));
                                 }
                                 else
                                 {
@@ -361,12 +366,9 @@ namespace Microsoft.Tye.Hosting
                             {
                                 if (service.Description.RunInfo is ProjectRunInfo)
                                 {
-                                    var buildResult = await ProcessUtil.RunAsync("dotnet", $"build \"{service.Status.ProjectFilePath}\" /nologo", throwOnError: false, workingDirectory: application.ContextDirectory);
-                                    if (buildResult.ExitCode != 0)
-                                    {
-                                        _logger.LogInformation("Building projects failed with exit code {ExitCode}: \r\n" + buildResult.StandardOutput, buildResult.ExitCode);
-                                    }
-                                    return buildResult.ExitCode;
+                                    var exitCode = await _watchBuilderWorker!.BuildProjectFileAsync(service.Status.ProjectFilePath!);
+                                    _logger.LogInformation($"Built {service.Status.ProjectFilePath} with exit code {exitCode}");
+                                    return exitCode;
                                 }
 
                                 return 0;
@@ -433,7 +435,7 @@ namespace Microsoft.Tye.Hosting
                 // port
                 for (int i = 0; i < serviceDescription.Replicas; i++)
                 {
-                    var ports = new List<(int, int, string?)>();
+                    var ports = new List<(int, int, string?, string?)>();
                     foreach (var binding in serviceDescription.Bindings)
                     {
                         if (binding.Port == null)
@@ -441,7 +443,7 @@ namespace Microsoft.Tye.Hosting
                             continue;
                         }
 
-                        ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.Protocol));
+                        ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.Protocol, binding.Host));
                     }
 
                     processInfo.Tasks[i] = RunApplicationAsync(ports, args);
@@ -451,7 +453,7 @@ namespace Microsoft.Tye.Hosting
             {
                 for (int i = 0; i < service.Description.Replicas; i++)
                 {
-                    processInfo.Tasks[i] = RunApplicationAsync(Enumerable.Empty<(int, int, string?)>(), args);
+                    processInfo.Tasks[i] = RunApplicationAsync(Enumerable.Empty<(int, int, string?, string?)>(), args);
                 }
             }
 

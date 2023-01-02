@@ -8,13 +8,13 @@ namespace Microsoft.Tye
 {
     public sealed class ContainerServiceBuilder : ServiceBuilder
     {
-        public ContainerServiceBuilder(string name, string image)
-            : base(name)
+        public ContainerServiceBuilder(string name, string image, ServiceSource source)
+            : base(name, source)
         {
             Image = image;
         }
 
-        public string Image { get; set; }
+        public string Image { get; }
 
         public bool IsAspNet { get; set; }
 

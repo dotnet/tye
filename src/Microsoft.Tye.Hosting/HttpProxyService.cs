@@ -43,7 +43,8 @@ namespace Microsoft.Tye.Hosting
             {
                 AllowAutoRedirect = false,
                 AutomaticDecompression = DecompressionMethods.None,
-                UseProxy = false
+                UseProxy = false,
+                UseCookies = false,
             }));
 
             foreach (var service in application.Services.Values)
@@ -76,7 +77,8 @@ namespace Microsoft.Tye.Hosting
 
                                     var port = binding.ReplicaPorts[i];
                                     ports.Add(port);
-                                    var url = $"{binding.Protocol}://localhost:{port}";
+
+                                    var url = $"{binding.Protocol}://{binding.IPAddress ?? "localhost"}:{port}";
                                     urls.Add(url);
                                 }
 
@@ -112,6 +114,8 @@ namespace Microsoft.Tye.Hosting
 
                             builder.Configure(app =>
                             {
+                                app.UseWebSockets();
+
                                 app.UseRouting();
 
                                 app.UseEndpoints(endpointBuilder =>
@@ -177,7 +181,7 @@ namespace Microsoft.Tye.Hosting
                                             }
                                             var uri = new UriBuilder(uris[next].Uri)
                                             {
-                                                Path = rule.PreservePath ? $"{context.Request.Path}" : (string)context.Request.RouteValues["path"] ?? "/",
+                                                Path = rule.PreservePath ? $"{context.Request.Path}" : (string?)context.Request.RouteValues["path"] ?? "/",
                                                 Query = context.Request.QueryString.Value
                                             };
 

@@ -12,20 +12,15 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Build.Construction;
-using Microsoft.Build.Locator;
 using Semver;
 
 namespace Microsoft.Tye
 {
     public static class ProjectReader
     {
-        private static object @lock = new object();
-
-        private static bool registered;
 
         public static IEnumerable<FileInfo> EnumerateProjects(FileInfo solutionFile)
         {
-            EnsureMSBuildRegistered(null, solutionFile);
             return EnumerateProjectsCore(solutionFile);
         }
 
@@ -67,7 +62,7 @@ namespace Microsoft.Tye
                 throw new ArgumentNullException(nameof(project));
             }
 
-            if (project is null)
+            if (metadataFile is null)
             {
                 throw new ArgumentNullException(nameof(metadataFile));
             }
@@ -82,56 +77,24 @@ namespace Microsoft.Tye
             }
         }
 
-        private static void EnsureMSBuildRegistered(OutputContext? output, FileInfo projectFile)
+        public static void ReadAzureFunctionProjectDetails(OutputContext output, AzureFunctionServiceBuilder project, string metadataFile)
         {
-            if (!registered)
+            if (output is null)
             {
-                lock (@lock)
-                {
-                    output?.WriteDebugLine("Locating .NET SDK...");
-
-                    // It says VisualStudio - but on .NET Core, it defaults to just DotNetSdk.
-                    // https://github.com/microsoft/MSBuildLocator/blob/v1.2.6/src/MSBuildLocator/VisualStudioInstanceQueryOptions.cs#L23
-                    // 
-                    // Resolve the SDK from the project directory and fall back to the global SDK.
-                    // We're making the assumption that all of the projects want to use the same
-                    // SDK version. This library is going load a single version of the SDK's
-                    // assemblies into our process, so we can't use support SDKs at once without
-                    // getting really tricky.
-                    //
-                    // The .NET SDK-based discovery uses `dotnet --info` and returns the SDK
-                    // in use for the directory.
-                    //
-                    // https://github.com/microsoft/MSBuildLocator/blob/v1.2.6/src/MSBuildLocator/DotNetSdkLocationHelper.cs#L68
-                    var instance = MSBuildLocator
-                        .QueryVisualStudioInstances(new VisualStudioInstanceQueryOptions { WorkingDirectory = projectFile.DirectoryName })
-                        .FirstOrDefault();
-
-                    if (instance == null)
-                    {
-                        instance = MSBuildLocator
-                            .QueryVisualStudioInstances()
-                            .FirstOrDefault();
-                    }
-
-                    if (instance == null)
-                    {
-                        throw new CommandException($"Failed to resolve dotnet in {projectFile.Directory} or the PATH. Make sure the .NET SDK is installed and is on the PATH.");
-                    }
-
-                    output?.WriteDebugLine("Found .NET SDK at: " + instance.MSBuildPath);
-
-                    try
-                    {
-                        MSBuildLocator.RegisterInstance(instance);
-                        output?.WriteDebugLine("Registered .NET SDK.");
-                    }
-                    finally
-                    {
-                        registered = true;
-                    }
-                }
+                throw new ArgumentNullException(nameof(output));
             }
+
+            if (project is null)
+            {
+                throw new ArgumentNullException(nameof(project));
+            }
+
+            if (metadataFile is null)
+            {
+                throw new ArgumentNullException(nameof(metadataFile));
+            }
+
+            EvaluateAzureFunctionProject(output, project, metadataFile);
         }
 
         // Do not load MSBuild types before using EnsureMSBuildRegistered.
@@ -214,6 +177,31 @@ namespace Microsoft.Tye
             string? GetMetadataValueOrNull(string key) => metadata!.TryGetValue(key, out var value) ? value : null;
             string GetMetadataValueOrEmpty(string key) => metadata!.TryGetValue(key, out var value) ? value : string.Empty;
             bool MetadataIsTrue(string key) => metadata!.TryGetValue(key, out var value) && bool.Parse(value);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void EvaluateAzureFunctionProject(OutputContext output, AzureFunctionServiceBuilder project, string metadataFile)
+        {
+            var sw = Stopwatch.StartNew();
+
+            var metadata = new Dictionary<string, string>();
+            var metadataKVPs = File.ReadLines(metadataFile).Select(l => l.Split(new[] { ':' }, 2));
+
+            foreach (var metadataKVP in metadataKVPs)
+            {
+                if (!string.IsNullOrEmpty(metadataKVP[1]))
+                {
+                    metadata.Add(metadataKVP[0], metadataKVP[1].Trim());
+                }
+            }
+
+            project.AzureFunctionsVersion = GetMetadataValueOrNull("AzureFunctionsVersion");
+
+            output.WriteDebugLine($"AzureFunctionsVersion={project.AzureFunctionsVersion}");
+
+            output.WriteDebugLine($"Evaluation Took: {sw.Elapsed.TotalMilliseconds}ms");
+
+            string? GetMetadataValueOrNull(string key) => metadata!.TryGetValue(key, out var value) ? value : null;
         }
 
         private static string NormalizePath(string path)

@@ -6,15 +6,13 @@ using System.Collections.Generic;
 
 namespace Microsoft.Tye
 {
-    public class ProjectServiceBuilder : ServiceBuilder
+    public class ProjectServiceBuilder : LaunchedServiceBuilder
     {
-        public ProjectServiceBuilder(string name)
-            : base(name)
+        public ProjectServiceBuilder(string name, ServiceSource source)
+            : base(name, source)
         {
         }
         public bool IsAspNet { get; set; }
-
-        public int Replicas { get; set; } = 1;
 
         public bool Build { get; set; }
 
@@ -25,8 +23,6 @@ namespace Microsoft.Tye
 
         // Data used for building Kubernetes manifests
         public KubernetesManifestInfo? ManifestInfo { get; set; }
-
-        public List<EnvironmentVariableBuilder> EnvironmentVariables { get; } = new List<EnvironmentVariableBuilder>();
 
         // Used when running in a container locally.
         public List<VolumeBuilder> Volumes { get; } = new List<VolumeBuilder>();

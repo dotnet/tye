@@ -1,6 +1,7 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -9,14 +10,20 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Net.WebSockets;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Tye;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
 using Microsoft.Tye.Hosting.Model.V1;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.ObjectModel;
 using Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
@@ -24,7 +31,6 @@ using static Test.Infrastructure.TestHelpers;
 
 namespace E2ETest
 {
-
     public class TyeRunTests
     {
         private readonly ITestOutputHelper _output;
@@ -123,7 +129,7 @@ services:
 
         [ConditionalTheory]
         [SkipIfDockerNotRunning]
-        [InlineData("single-project", "mcr.microsoft.com/dotnet/core/aspnet:3.1")]
+        [InlineData("single-project", "mcr.microsoft.com/dotnet/aspnet:6.0")]
         [InlineData("single-project-5.0", "mcr.microsoft.com/dotnet/aspnet:5.0")]
         public async Task SingleProjectWithDocker_UsesCorrectBaseImage(string projectName, string baseImage)
         {
@@ -249,7 +255,7 @@ services:
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
-            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}")
+            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/aspnet:{project.TargetFrameworkVersion}", ServiceSource.Configuration)
             {
                 IsAspNet = true
             };
@@ -296,7 +302,7 @@ services:
             application.Services.Remove(project);
 
             var outputFileName = project.AssemblyName + ".dll";
-            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/core/aspnet:{project.TargetFrameworkVersion}")
+            var container = new ContainerServiceBuilder(project.Name, $"mcr.microsoft.com/dotnet/aspnet:{project.TargetFrameworkVersion}", ServiceSource.Configuration)
             {
                 IsAspNet = true
             };
@@ -443,8 +449,8 @@ services:
             var project = (DotnetProjectServiceBuilder)application.Services.First(s => s.Name == "backend-baseimage");
 
             // check ContainerInfo values
-            Assert.True(string.Equals(project.ContainerInfo!.BaseImageName, "mcr.microsoft.com/dotnet/core/sdk"));
-            Assert.True(string.Equals(project.ContainerInfo!.BaseImageTag, "3.1-buster"));
+            Assert.True(string.Equals(project.ContainerInfo!.BaseImageName, "mcr.microsoft.com/dotnet/sdk"));
+            Assert.True(string.Equals(project.ContainerInfo!.BaseImageTag, "6.0-focal"));
 
             // check projectInfo values
             var projectRunInfo = new ProjectRunInfo(project);
@@ -504,7 +510,7 @@ services:
             });
 
             // Delete the volume
-            await ProcessUtil.RunAsync("docker", $"volume rm {volumeName}");
+            await ContainerEngine.Default.RunAsync($"volume rm {volumeName}");
         }
 
         [ConditionalFact]
@@ -521,7 +527,7 @@ services:
             application.Network = dockerNetwork;
 
             // Create the existing network
-            await ProcessUtil.RunAsync("docker", $"network create {dockerNetwork}");
+            await ContainerEngine.Default.RunAsync($"network create {dockerNetwork}");
 
             var handler = new HttpClientHandler
             {
@@ -560,7 +566,7 @@ services:
             finally
             {
                 // Delete the network
-                await ProcessUtil.RunAsync("docker", $"network rm {dockerNetwork}");
+                await ContainerEngine.Default.RunAsync($"network rm {dockerNetwork}");
             }
         }
 
@@ -668,6 +674,7 @@ services:
             };
 
             var client = new HttpClient(new RetryHandler(handler));
+            var wsClient = new ClientWebSocket();
 
             await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
             {
@@ -701,6 +708,34 @@ services:
                 // checking preservePath behavior
                 var responsePreservePath = await client.GetAsync(ingressUri + "/C/test");
                 Assert.Contains("Hit path /C/test", await responsePreservePath.Content.ReadAsStringAsync());
+
+                string GetWebSocketUri(string uri)
+                {
+                    if (uri.StartsWith("http"))
+                    {
+                        return "ws" + uri.Substring(4);
+                    }
+                    else if (uri.StartsWith("https"))
+                    {
+                        return "wss" + uri.Substring(5);
+                    }
+
+                    throw new NotSupportedException();
+                }
+
+                // Check the websocket endpoint
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                var wsUri = GetWebSocketUri(ingressUri);
+                await wsClient.ConnectAsync(new Uri(wsUri + "/A/ws"), cts.Token);
+                var data = Encoding.UTF8.GetBytes("Hello World");
+                await wsClient.SendAsync(data, WebSocketMessageType.Text, endOfMessage: true, cts.Token);
+                var receiveBuffer = new byte[4096];
+                var result = await wsClient.ReceiveAsync(receiveBuffer.AsMemory(), cts.Token);
+                Assert.True(result.EndOfMessage);
+                Assert.Equal(WebSocketMessageType.Text, result.MessageType);
+                Assert.Equal(data.Length, result.Count);
+                Assert.Equal(data, receiveBuffer.AsMemory(0, result.Count).ToArray());
+                await wsClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "", cts.Token);
             });
         }
 
@@ -767,10 +802,114 @@ services:
             });
         }
 
+        [Fact]
+        public async Task IngressSpecificIPTest()
+        {
+            var allIps = GetLiveIPAddresses().ToList();
+            var testIp = allIps[new Random().Next(allIps.Count)];
+            await TestIngressIP($"'{testIp}'", new[] { testIp }, allIps.Where(ip => ip != testIp).Take(1));
+        }
+
+
+        [Fact]
+        public async Task IngressAllIPv6Test()
+        {
+            var ipV6 = GetLiveIPAddresses(AddressFamily.InterNetworkV6).FirstOrDefault();
+            if (ipV6 == null) return;
+            await TestIngressIP($"'{IPAddress.IPv6Any}'", ipV6);
+        }
+
+        [Fact]
+        public async Task IngressAllIPv4Test()
+        {
+            var ipV4 = GetLiveIPAddresses(AddressFamily.InterNetwork).FirstOrDefault();
+            if (ipV4 == null) return;
+            var ipV6 = GetLiveIPAddresses(AddressFamily.InterNetworkV6).FirstOrDefault();
+            var failIp = ipV6 == null ? Enumerable.Empty<IPAddress>() : new[] { ipV6 };
+            await TestIngressIP($"'{IPAddress.Any}'", new[] { ipV4 }, failIp);
+        }
+
+        [Fact]
+        public async Task IngressAllIPTest()
+        {
+            var address = GetLiveIPAddresses().FirstOrDefault();
+            await TestIngressIP($"'*'", address == null ? Array.Empty<IPAddress>() : new[] { address });
+        }
+
+
+        private static IEnumerable<IPAddress> GetLiveIPAddresses(AddressFamily? family = null)
+        {
+            return from ni in NetworkInterface.GetAllNetworkInterfaces()
+                   where ni.OperationalStatus == OperationalStatus.Up
+                   let prop = ni.GetIPProperties()
+                   from unicast in prop.UnicastAddresses
+                   let addr = unicast.Address
+                   where addr != IPAddress.IPv6Loopback && (family == null || addr.AddressFamily == family)
+                   select addr;
+        }
+
+        private Task TestIngressIP(string ipSetting, params IPAddress[] mustAnswer) => TestIngressIP(ipSetting, mustAnswer, Enumerable.Empty<IPAddress>());
+        private async Task TestIngressIP(string ipSetting, IEnumerable<IPAddress> mustAnswer, IEnumerable<IPAddress> mustFail)
+        {
+#if !DEBUG
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return; //disables running this test on windows as it stucks the test runner on the firewall open prompt
+#endif
+            if (!mustAnswer.Any() && !mustFail.Any())
+                return; // no IP to test against
+
+            using var projectDirectory = CopyTestProjectDirectory("apps-with-ingress");
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye-ip_test.yaml"));
+            File.WriteAllText(projectFile.FullName, File.ReadAllText(projectFile.FullName).Replace("__TEST_IP_STRING__", ipSetting));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = true
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                foreach (var ip in mustAnswer.Concat(mustFail))
+                {
+                    try
+                    {
+                        var ingressUri = await GetServiceUrl(client, uri, "ingress");
+                        var reqUri = new UriBuilder(ingressUri + "/index.html")
+                        {
+                            Host = ip.ToString()
+                        };
+
+                        var htmlRequest = new HttpRequestMessage(HttpMethod.Get, reqUri.Uri);
+                        htmlRequest.Headers.Host = "ui.example.com";
+
+                        var htmlResponse = await client.SendAsync(htmlRequest);
+                        htmlResponse.EnsureSuccessStatusCode();
+                    }
+                    catch (Exception) when (mustFail.Contains(ip))
+                    {
+                        // this is an expected failure
+                    }
+                }
+            });
+        }
+
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task NginxIngressTest()
         {
+            // https://github.com/dotnet/tye/issues/428
+            // nginx container fails to start succesfully on non-Windows because it
+            // can't resolve the upstream hosts.
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return;
+            }
+
             using var projectDirectory = CopyTestProjectDirectory("nginx-ingress");
 
             var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
@@ -1083,6 +1222,126 @@ services:
 
                 var responseContent = await backendResponse.Content.ReadAsStringAsync();
                 Assert.Contains(".NET Core 3.1", responseContent);
+            });
+        }
+
+        [ConditionalTheory]
+        [SkipIfDockerNotRunning]
+        [InlineData("non-standard-dashboard-port", "mcr.microsoft.com/dotnet/aspnet:6.0", 8005)]
+        [InlineData("non-standard-dashboard-port-5.0", "mcr.microsoft.com/dotnet/aspnet:5.0", 8006)]
+        public async Task RunUsesYamlDashboardPort(string projectName, string baseImage, int expectedDashboardPort)
+        {
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            Assert.Equal(expectedDashboardPort, application.DashboardPort);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions() { Docker = true, }, async (app, uri) =>
+            {
+                // Make sure the dashboard is running on the expected port
+                Assert.Equal(expectedDashboardPort, uri.Port);
+
+                // Make sure we're running containers
+                Assert.True(app.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
+
+                // Ensure correct image used
+                var dockerRunInfo = app.Services.Single().Value.Description.RunInfo as DockerRunInfo;
+                Assert.Equal(baseImage, dockerRunInfo?.Image);
+
+                // Ensure app runs
+                var testProjectUri = await GetServiceUrl(client, uri, "test-project");
+                var response = await client.GetAsync(testProjectUri);
+
+                Assert.True(response.IsSuccessStatusCode);
+            });
+        }
+
+        [ConditionalTheory]
+        [SkipIfDockerNotRunning]
+        [InlineData("non-standard-dashboard-port", "mcr.microsoft.com/dotnet/aspnet:6.0", 8005)]
+        [InlineData("non-standard-dashboard-port-5.0", "mcr.microsoft.com/dotnet/aspnet:5.0", 8006)]
+        public async Task RunCliPortOverridesYamlDashboardPort(string projectName, string baseImage, int tyeYamlDashboardPort)
+        {
+            var cliDashboardPort = 8008;
+
+            using var projectDirectory = CopyTestProjectDirectory(projectName);
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            Assert.Equal(tyeYamlDashboardPort, application.DashboardPort);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions() { Docker = true, Port = cliDashboardPort }, async (app, uri) =>
+            {
+                // Make sure the dashboard is running on the expected port passed from the CLI, not the value from tye.yaml
+                Assert.Equal(cliDashboardPort, uri.Port);
+                Assert.NotEqual(tyeYamlDashboardPort, uri.Port);
+
+                // Make sure we're running containers
+                Assert.True(app.Services.All(s => s.Value.Description.RunInfo is DockerRunInfo));
+
+                // Ensure correct image used
+                var dockerRunInfo = app.Services.Single().Value.Description.RunInfo as DockerRunInfo;
+                Assert.Equal(baseImage, dockerRunInfo?.Image);
+
+                // Ensure app runs
+                var testProjectUri = await GetServiceUrl(client, uri, "test-project");
+                var response = await client.GetAsync(testProjectUri);
+
+                Assert.True(response.IsSuccessStatusCode);
+            });
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task RunWithDotnetEnvVarsDoesNotGetOverriddenByDefaultDotnetEnvVars()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("dotnet-env-vars");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions { Docker = true }, async (app, uri) =>
+            {
+                var backendUri = await GetServiceUrl(client, uri, "test-project");
+
+                var backendResponse = await client.GetAsync(backendUri);
+                Assert.True(backendResponse.IsSuccessStatusCode);
+
+                var response = await backendResponse.Content.ReadAsStringAsync();
+                var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(response);
+
+                Assert.Contains(new KeyValuePair<string, string>("DOTNET_ENVIRONMENT", "dev"), dict);
+                Assert.Contains(new KeyValuePair<string, string>("ASPNETCORE_ENVIRONMENT", "dev"), dict);
             });
         }
 

@@ -7,83 +7,52 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Microsoft.Tye.Extensions.Dapr
 {
     internal sealed class DaprExtension : Extension
     {
-        public override Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
+        public override async Task ProcessAsync(ExtensionContext context, ExtensionConfiguration config)
         {
             // If we're getting called then the user configured dapr in their tye.yaml.
             // We don't have any of our own config.
 
+            var extensionConfiguration = DaprExtensionConfigurationReader.ReadConfiguration(config.Data);
+
             if (context.Operation == ExtensionContext.OperationKind.LocalRun)
             {
-                // default placement port number
-                var daprPlacementImage = "daprio/dapr";
-                var daprPlacementContainerPort = 50005;
-                var daprPlacementPort = NextPortFinder.GetNextPort();
-                var isCustomPlacementPortDefined = false;
-
-                // see if a placement port number has been defined
-                if (config.Data.TryGetValue("placement-port", out var obj) && obj?.ToString() is string && int.TryParse(obj.ToString(), out var customPlacementPort))
-                {
-                    context.Output.WriteDebugLine($"Using Dapr placement service host port {customPlacementPort} from 'placement-port'");
-                    daprPlacementPort = customPlacementPort;
-                    isCustomPlacementPortDefined = true;
-                }
-
-                // see if a placement image has been defined
-                if (config.Data.TryGetValue("placement-image", out obj) && obj?.ToString() is string customPlacementImage)
-                {
-                    context.Output.WriteDebugLine($"Using Dapr placement service image {customPlacementImage} from 'placement-image'");
-                    daprPlacementImage = customPlacementImage;
-                }
-
-                // see if a placement container port has been defined
-                if (config.Data.TryGetValue("placement-container-port", out obj) && obj?.ToString() is string && int.TryParse(obj.ToString(), out var customPlacementContainerPort))
-                {
-                    context.Output.WriteDebugLine($"Using Dapr placement service container port {customPlacementContainerPort} from 'placement-container-port'");
-                    daprPlacementContainerPort = customPlacementContainerPort;
-                }
-
-                // We can only skip injecting a Dapr placement container if a 'placement-port' has been defined and 'exclude-placement-container=true'
-                if (!(isCustomPlacementPortDefined && config.Data.TryGetValue("exclude-placement-container", out obj) &&
-                      obj?.ToString() is string excludePlacementContainer && excludePlacementContainer == "true"))
-                {
-                    if (!isCustomPlacementPortDefined)
-                    {
-                        context.Output.WriteDebugLine("A 'placement-port' has not been defined. So the 'exclude-placement-container' will default to 'false'.");
-                    }
-
-                    context.Output.WriteDebugLine("Injecting Dapr placement service...");
-                    var daprPlacement = new ContainerServiceBuilder("placement", daprPlacementImage)
-                    {
-                        Args = "./placement",
-                        Bindings = {
-                            new BindingBuilder() {
-                                Port = daprPlacementPort,
-                                ContainerPort = daprPlacementContainerPort,
-                                Protocol = "http"
-                            }
-                        }
-                    };
-                    context.Application.Services.Add(daprPlacement);
-                }
-                else
-                {
-                    context.Output.WriteDebugLine("Skipping injecting Dapr placement service because 'exclude-placement-container=true'.");
-                }
+                await VerifyDaprInitialized(context);
 
                 // For local run, enumerate all projects, and add services for each dapr proxy.
-                var projects = context.Application.Services.OfType<ProjectServiceBuilder>().ToList();
-                foreach (var project in projects)
+                var projects = context.Application.Services.OfType<ProjectServiceBuilder>().Cast<LaunchedServiceBuilder>();
+                var executables = context.Application.Services.OfType<ExecutableServiceBuilder>().Cast<LaunchedServiceBuilder>();
+                var services = projects.Concat(executables).ToList();
+
+                foreach (var project in services)
                 {
-                    // Dapr requires http. If this project isn't listening to HTTP then it's not daprized.
-                    var httpBinding = project.Bindings.FirstOrDefault(b => b.Protocol == "http");
-                    if (httpBinding == null)
+                    DaprExtensionServiceConfiguration? serviceConfiguration = null;
+
+                    extensionConfiguration?.Services.TryGetValue(project.Name, out serviceConfiguration);
+
+                    if (serviceConfiguration?.Enabled != null && serviceConfiguration.Enabled.Value == false)
                     {
+                        context.Output.WriteDebugLine($"Dapr has been disabled for service {project.Name}.");
+                        continue;
+                    }
+
+                    var httpBinding = project.Bindings.FirstOrDefault(b => b.Protocol == "http");
+
+                    if (httpBinding == null && project.Bindings.Count == 1 && project.Bindings[0].Protocol == null)
+                    {
+                        // Assume the only untyped binding is HTTP...
+                        httpBinding = project.Bindings[0];
+                    }
+
+                    if (httpBinding == null && (serviceConfiguration?.Enabled == null || !serviceConfiguration.Enabled.Value))
+                    {
+                        context.Output.WriteDebugLine($"Dapr has been disabled for unbound service {project.Name}.");
                         continue;
                     }
 
@@ -101,20 +70,66 @@ namespace Microsoft.Tye.Extensions.Dapr
 
                     var daprExecutablePath = GetDaprExecutablePath();
 
-                    var proxy = new ExecutableServiceBuilder($"{project.Name}-dapr", daprExecutablePath)
+                    string appId = serviceConfiguration?.AppId ?? project.Name;
+
+                    var proxy = new ExecutableServiceBuilder($"{project.Name}-dapr", daprExecutablePath, ServiceSource.Extension)
                     {
                         WorkingDirectory = context.Application.Source.DirectoryName,
 
                         // These environment variables are replaced with environment variables
                         // defined for this service.
-                        Args = $"run --app-id {project.Name} --app-port %APP_PORT% --dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT% --placement-host-address localhost:{daprPlacementPort}",
+                        Args = $"run --app-id {appId} --dapr-grpc-port %DAPR_GRPC_PORT% --dapr-http-port %DAPR_HTTP_PORT% --metrics-port %METRICS_PORT%",
                     };
+
+                    if (httpBinding != null)
+                    {
+                        proxy.Args += $" --app-port %APP_PORT%";
+                    }
+
+                    var appMaxConcurrency = serviceConfiguration?.AppMaxConcurrency ?? extensionConfiguration?.AppMaxConcurrency;
+
+                    if (appMaxConcurrency != null)
+                    {
+                        proxy.Args += $" --app-max-concurrency {appMaxConcurrency}";
+                    }
+
+                    var appProtocol = serviceConfiguration?.AppProtocol ?? extensionConfiguration?.AppProtocol;
+
+                    if (appProtocol != null)
+                    {
+                        proxy.Args += $" --app-protocol {appProtocol}";
+                    }
+
+                    var appSsl = serviceConfiguration?.AppSsl ?? extensionConfiguration?.AppSsl;
+
+                    if (appSsl == true)
+                    {
+                        proxy.Args += " --app-ssl";
+                    }
+
+                    var daprPlacementPort = serviceConfiguration?.PlacementPort ?? extensionConfiguration?.PlacementPort;
+
+                    if (daprPlacementPort.HasValue)
+                    {
+                        context.Output.WriteDebugLine($"Using Dapr placement service host port {daprPlacementPort.Value} from 'placement-port' for service {project.Name}.");
+                        proxy.Args += $" --placement-host-address localhost:{daprPlacementPort.Value}";
+                    }
+
+                    string? componentsPath = serviceConfiguration?.ComponentsPath ?? extensionConfiguration?.ComponentsPath;
+
+                    if (componentsPath != null)
+                    {
+                        proxy.Args += $" --components-path {componentsPath}";
+                    }
+
+                    string? daprConfig = serviceConfiguration?.Config ?? extensionConfiguration?.Config;
 
                     // When running locally `-config` specifies a filename, not a configuration name. By convention
                     // we'll assume the filename and config name are the same.
-                    if (config.Data.TryGetValue("config", out obj) && obj?.ToString() is string daprConfig)
+                    if (daprConfig != null)
                     {
-                        var configFile = Path.Combine(context.Application.Source.DirectoryName!, "components", $"{daprConfig}.yaml");
+                        string configDirectory = componentsPath ?? Path.Combine(context.Application.Source.DirectoryName!, "components");
+                        var configFile = Path.Combine(configDirectory, $"{daprConfig}.yaml");
                         if (File.Exists(configFile))
                         {
                             proxy.Args += $" --config \"{configFile}\"";
@@ -125,15 +140,25 @@ namespace Microsoft.Tye.Extensions.Dapr
                         }
                     }
 
-                    if (config.Data.TryGetValue("log-level", out obj) && obj?.ToString() is string logLevel)
+                    int? httpMaxRequestSize = serviceConfiguration?.HttpMaxRequestSize ?? extensionConfiguration?.HttpMaxRequestSize;
+
+                    if (httpMaxRequestSize != null)
+                    {
+                        proxy.Args += $" --dapr-http-max-request-size {httpMaxRequestSize}";
+                    }
+
+                    if ((serviceConfiguration?.EnableProfiling ?? extensionConfiguration?.EnableProfiling) == true)
+                    {
+                        proxy.Args += "  --enable-profiling";
+                    }
+
+                    string? logLevel = serviceConfiguration?.LogLevel ?? extensionConfiguration?.LogLevel;
+
+                    if (logLevel != null)
                     {
                         proxy.Args += $" --log-level {logLevel}";
                     }
 
-                    if (config.Data.TryGetValue("components-path", out obj) && obj?.ToString() is string componentsPath)
-                    {
-                        proxy.Args += $" --components-path {componentsPath}";
-                    }
                     // Add dapr proxy as a service available to everyone.
                     proxy.Dependencies.UnionWith(context.Application.Services.Select(s => s.Name));
 
@@ -149,6 +174,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                     {
                         Name = "grpc",
                         Protocol = "https",
+                        Port = serviceConfiguration?.GrpcPort
                     };
                     proxy.Bindings.Add(grpc);
 
@@ -157,6 +183,7 @@ namespace Microsoft.Tye.Extensions.Dapr
                     {
                         Name = "http",
                         Protocol = "http",
+                        Port = serviceConfiguration?.HttpPort
                     };
                     proxy.Bindings.Add(http);
 
@@ -165,18 +192,22 @@ namespace Microsoft.Tye.Extensions.Dapr
                     {
                         Name = "metrics",
                         Protocol = "http",
+                        Port = serviceConfiguration?.MetricsPort
                     };
                     proxy.Bindings.Add(metrics);
 
-                    // Set APP_PORT based on the project's assigned port for http
-                    var appPort = new EnvironmentVariableBuilder("APP_PORT")
+                    if (httpBinding != null)
                     {
-                        Source = new EnvironmentVariableSourceBuilder(project.Name, binding: httpBinding.Name)
+                        // Set APP_PORT based on the project's assigned port for http
+                        var appPort = new EnvironmentVariableBuilder("APP_PORT")
                         {
-                            Kind = EnvironmentVariableSourceBuilder.SourceKind.Port,
-                        },
-                    };
-                    proxy.EnvironmentVariables.Add(appPort);
+                            Source = new EnvironmentVariableSourceBuilder(project.Name, binding: httpBinding.Name)
+                            {
+                                Kind = EnvironmentVariableSourceBuilder.SourceKind.Port,
+                            },
+                        };
+                        proxy.EnvironmentVariables.Add(appPort);
+                    }
 
                     // Set DAPR_GRPC_PORT based on this service's assigned port
                     var daprGrpcPort = new EnvironmentVariableBuilder("DAPR_GRPC_PORT")
@@ -227,6 +258,29 @@ namespace Microsoft.Tye.Extensions.Dapr
                         },
                     };
                     proxy.EnvironmentVariables.Add(metricsPort);
+
+                    // TODO: Do we add a means of dynamically using the profile port?
+                    if (serviceConfiguration?.ProfilePort != null)
+                    {
+                        proxy.Args += $" --profile-port %PROFILE_PORT%";
+
+                        var profile = new BindingBuilder()
+                        {
+                            Name = "profile",
+                            Protocol = "http",
+                            Port = serviceConfiguration.ProfilePort
+                        };
+                        proxy.Bindings.Add(profile);
+
+                        var profilePort = new EnvironmentVariableBuilder("PROFILE_PORT")
+                        {
+                            Source = new EnvironmentVariableSourceBuilder(proxy.Name, binding: "profile")
+                            {
+                                Kind = EnvironmentVariableSourceBuilder.SourceKind.Port,
+                            },
+                        };
+                        proxy.EnvironmentVariables.Add(profilePort);
+                    }
                 }
             }
             else
@@ -235,6 +289,10 @@ namespace Microsoft.Tye.Extensions.Dapr
                 var projects = context.Application.Services.OfType<ProjectServiceBuilder>();
                 foreach (var project in projects)
                 {
+                    DaprExtensionServiceConfiguration? serviceConfiguration = null;
+
+                    extensionConfiguration?.Services.TryGetValue(project.Name, out serviceConfiguration);
+
                     // Dapr requires http. If this project isn't listening to HTTP then it's not daprized.
                     var httpBinding = project.Bindings.FirstOrDefault(b => b.Protocol == "http");
                     if (httpBinding == null)
@@ -247,31 +305,72 @@ namespace Microsoft.Tye.Extensions.Dapr
                         continue;
                     }
 
+                    string appId = serviceConfiguration?.AppId ?? project.Name;
+
                     deployment.Annotations.Add("dapr.io/enabled", "true");
-                    deployment.Annotations.Add("dapr.io/app-id", project.Name);
+                    deployment.Annotations.Add("dapr.io/app-id", appId);
                     deployment.Annotations.Add("dapr.io/app-port", (httpBinding.Port ?? 80).ToString(CultureInfo.InvariantCulture));
 
-                    if (config.Data.TryGetValue("config", out var obj) && obj?.ToString() is string daprConfig)
+                    string? daprConfig = serviceConfiguration?.Config ?? extensionConfiguration?.Config;
+
+                    if (daprConfig != null)
                     {
                         deployment.Annotations.TryAdd("dapr.io/config", daprConfig);
                     }
 
-                    if (config.Data.TryGetValue("log-level", out obj) && obj?.ToString() is string logLevel)
+                    string? logLevel = serviceConfiguration?.LogLevel ?? extensionConfiguration?.LogLevel;
+
+                    if (logLevel != null)
                     {
                         deployment.Annotations.TryAdd("dapr.io/log-level", logLevel);
                     }
                 }
             }
+        }
 
-            return Task.CompletedTask;
+        private static Task VerifyDaprInitialized(ExtensionContext context)
+        {
+            return Task.Run(
+                () =>
+                {
+                    string? stdout = null;
+
+                    try
+                    {
+                        ProcessExtensions.RunProcessAndWaitForExit("dapr", "--version", TimeSpan.FromSeconds(10), out stdout);
+                    }
+                    catch
+                    {
+                    }
+
+                    if (stdout != null)
+                    {
+                        var match = Regex.Match(stdout, "^Runtime version: (?<version>.+)$", RegexOptions.Multiline);
+
+                        if (match.Success)
+                        {
+                            if (match.Groups["version"].Value == "n/a")
+                            {
+                                throw new CommandException("Dapr has not been initialized (e.g. via `dapr init`).");
+                            }
+                            else
+                            {
+                                // Some version of Dapr has been initialized...
+                                return;
+                            }
+                        }
+                    }
+
+                    context.Output.WriteAlwaysLine($"Unable to determine whether Dapr has been installed and initialized (e.g. via `dapr init`).");
+                });
         }
 
         private string GetDaprExecutablePath()
         {
-            // Starting with dapr version 11, dapr is installed in user profile/home.
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var windowsPath = Environment.ExpandEnvironmentVariables("%HOMEDRIVE%/dapr/dapr.exe");
+                // The Dapr Windows installation script defaults to "C:\dapr".
+                var windowsPath = Environment.ExpandEnvironmentVariables("C:/dapr/dapr.exe");
                 if (File.Exists(windowsPath))
                 {
                     return windowsPath;
@@ -279,14 +378,14 @@ namespace Microsoft.Tye.Extensions.Dapr
             }
             else
             {
-                var nixpath = "/usr/local/bin/dapr";
+                var nixpath = Environment.ExpandEnvironmentVariables("/usr/local/bin/dapr");
                 if (File.Exists(nixpath))
                 {
                     return nixpath;
                 }
             }
 
-            // Older version of dapr don't have dapr in the bin directory, but it is usually on the path.
+            // Dapr is usually on the path.
             return "dapr";
         }
     }

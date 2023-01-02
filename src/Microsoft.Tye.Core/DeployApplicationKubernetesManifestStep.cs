@@ -46,7 +46,7 @@ namespace Microsoft.Tye
             output.WriteDebugLine($"Running 'kubectl apply' in ${ns}");
             output.WriteCommandLine("kubectl", $"apply -f \"{tempFile.FilePath}\"");
             var capture = output.Capture();
-            var exitCode = await Process.ExecuteAsync(
+            var exitCode = await ProcessUtil.ExecuteAsync(
                 $"kubectl",
                 $"apply -f \"{tempFile.FilePath}\"",
                 System.Environment.CurrentDirectory,
@@ -79,11 +79,14 @@ namespace Microsoft.Tye
                     };
 
                     var retries = 0;
+                    var namespaceParameter = !string.IsNullOrEmpty(application.Namespace)
+                        ? $"--namespace \"{application.Namespace}\""
+                        : "";
                     while (!done && retries < 60)
                     {
-                        var ingressExitCode = await Process.ExecuteAsync(
+                        var ingressExitCode = await ProcessUtil.ExecuteAsync(
                             "kubectl",
-                            $"get ingress {ingress.Name} -o jsonpath='{{..ip}}'",
+                            $"get ingress {ingress.Name} {namespaceParameter} -o jsonpath='{{..ip}}'",
                             Environment.CurrentDirectory,
                             complete,
                             capture.StdErr);

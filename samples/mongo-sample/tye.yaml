@@ -3,9 +3,9 @@ services:
 - name: mongo
   image: mongo
   env:
-    - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+    - name: MONGO_INITDB_ROOT_USERNAME
       value: root
-    - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+    - name: MONGO_INITDB_ROOT_PASSWORD
       value: example
   bindings:
     - port: 27017

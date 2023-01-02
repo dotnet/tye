@@ -1,0 +1,66 @@
+{
+  "version": "1.0",
+  "tasks": [
+    {
+      "taskType": "trigger",
+      "capabilityId": "IssueResponder",
+      "subCapability": "PullRequestResponder",
+      "version": "1.0",
+      "config": {
+        "conditions": {
+          "operator": "and",
+          "operands": [
+            {
+              "name": "isAction",
+              "parameters": {
+                "action": "opened"
+              }
+            },
+            {
+              "name": "isActivitySender",
+              "parameters": {
+                "user": "dotnet-maestro[bot]",
+                "association": "CONTRIBUTOR"
+              }
+            },
+            {
+              "name": "titleContains",
+              "parameters": {
+                "titlePattern": "Update dependencies"
+              }
+            }
+          ]
+        },
+        "eventType": "pull_request",
+        "eventNames": [
+          "pull_request",
+          "issues",
+          "project_card"
+        ],
+        "taskName": "[Infrastructure PRs] Add area-infrastructure label to dependency update Pull Requests",
+        "actions": [
+          {
+            "name": "addLabel",
+            "parameters": {
+              "label": "area infrastructure"
+            }
+          },
+          {
+            "name": "addLabel",
+            "parameters": {
+              "label": "type dependency update :arrow_up_small:"
+            }
+          },
+          {
+            "name": "approvePullRequest",
+            "parameters": {
+              "comment": "Auto-approving dependency update."
+            }
+          }
+        ]
+      },
+      "id": "1nLbqIfVUhMWfhzLxKgeT"
+    }
+  ],
+  "userGroups": []
+}

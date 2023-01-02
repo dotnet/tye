@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Backend</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup>
-    <ContainerBaseImage>mcr.microsoft.com/dotnet/core/sdk</ContainerBaseImage>
-    <ContainerBaseTag>3.1-buster</ContainerBaseTag>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/sdk</ContainerBaseImage>
+    <ContainerBaseTag>6.0-focal</ContainerBaseTag>
   </PropertyGroup>
 
   <ItemGroup>

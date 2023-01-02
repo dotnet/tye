@@ -11,7 +11,7 @@ namespace Microsoft.Tye.Hosting.Model
 {
     public class Service
     {
-        public Service(ServiceDescription description)
+        public Service(ServiceDescription description, ServiceSource source)
         {
             Description = description;
 
@@ -29,11 +29,15 @@ namespace Microsoft.Tye.Hosting.Model
             {
                 entry.Replica.State = entry.State;
             });
+
+            ServiceSource = source;
         }
 
         public ServiceDescription Description { get; }
 
         public int Restarts { get; set; }
+
+        public ServiceSource ServiceSource { get; }
 
         public ServiceType ServiceType
         {

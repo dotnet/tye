@@ -13,8 +13,8 @@ namespace Microsoft.Tye
             Service = new ServiceManifestInfo();
         }
 
-        public DeploymentManifestInfo? Deployment { get; set; }
+        public DeploymentManifestInfo? Deployment { get; }
 
-        public ServiceManifestInfo Service { get; set; }
+        public ServiceManifestInfo Service { get; }
     }
 }

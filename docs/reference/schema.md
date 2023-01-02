@@ -45,7 +45,7 @@ services:
 
 ```yaml
 name: myapplication
-registry: exampleuser
+registry: ...
 namespace: examplenamespace
 network: examplenetwork
 ingress: ...
@@ -60,16 +60,9 @@ Configures the name of the application. This will appear in some Kubernetes labe
 
 If the name name is not specified, then the lowercased directory name containing the `tye.yaml` file will be used as the default.
 
-#### `registry` (string)
+#### `registry` (`Registry`)
 
-Allows storing the name of the container registry in configuration. This is used when building and deploying images for two purposes:
-
-- Determining how to tag the images
-- Determining where to push the images
-
-The registry could be a DockerHub username (`exampleuser`) or the hostname of a container registry (`example.azurecr.io`).
-
-If this is not specified in configuration, interactive deployments will prompt for it.
+Allows storing the name of the container registry and optional credentials secret in configuration.
 
 #### `namespace` (string)
 
@@ -85,6 +78,14 @@ Allows configuring the Docker network used for `tye run`.
 
 If a network is configured, then all services running in containers will connect to the specified network. Otherwise a Docker network will be created with a generated name, and used to connect all containers.
 
+#### `dashboardPort` (int)
+
+Allows configuring the dashboard port used for `tye run`.
+
+If a `--port` is provided via the CLI, it will be used instead.
+
+If no `--port` argument or `dashboardPort` value is specified, Tye will use the default port (8000), or a random port if the default port is in use.
+
 #### `ingress` (`Ingress[]`)
 
 Specifies the list of ingresses.
@@ -92,6 +93,37 @@ Specifies the list of ingresses.
 #### `services` (`Service[]`) *required*
 
 Specifies the list of services. Applications must have at least one service.
+
+#### `solution` (string)
+
+Indicates the solution file (.sln) or filter (.slnf) to use when building project-based services in watch mode. If omitted, those services will be built individually. Specifying the solution [filter] can help reduce repeated builds of shared libraries when in watch mode.
+
+## Registry
+
+Allows storing the name of the container registry in configuration. This is used when building and deploying images for two purposes:
+
+- Determining how to tag the images
+- Determining where to push the images
+
+If this is not specified in configuration, interactive deployments will prompt for it.
+
+### Registry Example
+
+```yaml
+registry:
+  name: example.azurecr.io
+  pullSecret: acr-secret
+```
+
+### Registry Properties
+
+#### `name` (string) *required*
+
+The `name` could be a DockerHub username (`exampleuser`) or the hostname of a container registry (`example.azurecr.io`).
+
+#### `pullSecret` (string)
+
+Specifies the optional secret, that Kubernetes should get the credentials from to pull the image from a private registry.
 
 ## Service
 
@@ -161,6 +193,10 @@ Including `image` marks the service as a *container*:
 #### `dockerFile` (string)
 
 The Dockerfile to build from. Uses the name of the service as the name of the image. Only supported for `tye run` currently.
+
+#### `dockerFileArgs` (`string[]`)
+
+Build arguments to use when building a Docker image. This is only used when `dockerFile` is specified.
 
 #### `dockerFileContext` (string)
 
@@ -390,6 +426,10 @@ Specifies the protocol used by the binding. The protocol is used in [service dis
 
 Specifies the hostname used by the binding. The protocol is used in [service discovery](/docs/reference/service_discovery.md) to construct a URL. It's safe to omit the `host` when localhost should be used for local development.
 
+#### `routes` (`string[]`)
+
+Specifies the list of additional routes to show in Bindings on the Dashboard for easy access. Example route value: /swagger.
+
 #### `port` (string)
 
 Specifies the port used by the binding. The port is used in [service discovery](/docs/reference/service_discovery.md) to construct a URL.
@@ -513,6 +553,11 @@ The port of the binding.
 #### `protocol` (`string`)
 
 The protocol (`http` or `https`).
+
+#### `ip` (`string`)
+
+The optional IP adress to bind to. Can be '*' for all addresses.
+Default is localhost.
 
 ## IngressRule
 
@@ -690,3 +735,98 @@ If both `port` and `protocol` are provided, Tye selects the first biding with th
 #### `headers` (`(name, value)[]`)  
 
 Array of headers that are sent as part of the HTTP request that probes the replicas of the service.  
+
+## Extensions
+
+Each of the Tye extensions have their own custom configuration schema.
+
+### Dapr
+
+For the Dapr extension, the available properties closely follow those found on the [`dapr run` command line](https://docs.dapr.io/reference/cli/dapr-run/).  The Dapr extension allows many properties to be set and/or overridden on a service-by-service basis using the `services` dictionary.
+
+```yaml
+extensions:
+- name: dapr
+  config: common
+  enable-profiling: true
+  services:
+    frontend:
+      components-path: "./frontend/components"
+    backend:
+      components-path: "./backend/components"
+
+services:
+- name: frontend
+- name: backend
+```
+
+The following properties are annotated as follows:
+
+ - *extension-level*: Can only be set at the root of the extension configuration.
+ - *service-level*: Can only be set for a specific service within the `services` dictionary.
+ - *overridable*: Can be set at both the root of the extension configuration or be overridden for a specific service within the `services` dictionary.
+
+#### `app-id` (`string`) *service-level*
+
+The ID for your application, used for service discovery.
+
+#### `app-max-concurrency` (`integer`) *overridable*
+
+The concurrency level of the 
+application (otherwise unlimited).
+
+#### `app-protocol` (`string`) *overridable*
+
+The protocol (gRPC or HTTP) Dapr uses to talk to the application (with HTTP being the default).
+
+#### `app-ssl` (`boolean`) *overridable*
+
+Enable HTTPS when Dapr invokes the application.
+
+#### `components-path` (`string`) *overridable*
+
+The path of the components directory. If relative, is relative to the root directory of the application (i.e. of the `tye.yaml`).
+
+#### `config` (`string`) *overridable*
+
+The name of the Dapr configuration file (without extension). Assumed to be relative to the `components-path` directory, if specified, else the `components` folder in the root directory of the application (i.e. of the `tye.yaml`).
+
+#### `enabled` (`boolean`) *service-level*
+
+Whether a Dapr sidecar is created for the service. If `true`, a sidecar is created even if the default for the service type would be not to create one.  If `false`, a sidecar is *not* created even if the default for the service type would be to create one.
+
+#### `enable-profiling` (`boolean`) *overridable*
+
+Enable `pprof` profiling via an HTTP endpoint.
+
+#### `grpc-port` (`integer`) *service-level*
+
+The gRPC port for Dapr to listen on.
+
+#### `http-max-request-size` (`integer`) *overridable*
+
+The maximum size of an HTTP request body in MB.
+
+#### `http-port` (`integer`) *service-level*
+
+The HTTP port for Dapr to listen on.
+
+#### `log-level` (`string`) *overridable*
+
+The log verbosity. Valid values are: `debug`, `info`, `warn`, `error`, `fatal`, and `panic`.
+
+#### `metrics-port` (`integer`) *service-level*
+
+The port used to collect Dapr metrics.
+
+#### `placement-port` (`integer`) *service-level*
+
+The port of the Dapr placement service.
+
+#### `profile-port` (`integer`) *service-level*
+
+The port for the Dapr profile servicer to listen on.
+
+#### `services` (`(string, object)[]`) *extension-level*
+
+The dictionary in which service-level configuration can be set.

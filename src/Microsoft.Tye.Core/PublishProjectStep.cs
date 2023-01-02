@@ -37,8 +37,8 @@ namespace Microsoft.Tye
 
             output.WriteDebugLine("Running 'dotnet publish'.");
             var dotnetPublishArguments = project.BuildProperties.TryGetValue("TargetFramework", out var framework)
-                ? $"publish \"{project.ProjectFile.FullName}\" -c Release -f {framework} -o \"{outputDirectory.DirectoryPath}\""
-                : $"publish \"{project.ProjectFile.FullName}\" -c Release -o \"{outputDirectory.DirectoryPath}\"";
+                ? $"publish \"{project.ProjectFile.FullName}\" -c Release -f {framework} -o \"{outputDirectory.DirectoryPath}\" /nologo"
+                : $"publish \"{project.ProjectFile.FullName}\" -c Release -o \"{outputDirectory.DirectoryPath}\" /nologo";
 
             output.WriteCommandLine("dotnet", dotnetPublishArguments);
 

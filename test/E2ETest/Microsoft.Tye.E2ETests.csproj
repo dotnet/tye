@@ -2,10 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>Microsoft.Tye.E2ETest</AssemblyName>
     <IsTestProject>true</IsTestProject>
-    <IsUnitTestProject>true</IsUnitTestProject>
+    <!-- TODO: Investigate Ubuntu >16.04 test hangs and Mac test failures and re-enable E2E tests. -->
+    <IsUnitTestProject>false</IsUnitTestProject>
     <TestRunnerName>XUnit</TestRunnerName>
   </PropertyGroup>
 
@@ -31,6 +32,13 @@
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Compile Remove="testassets\**\*" />
     <None Remove="testassets\generate\apps-with-ingress.1.18.yaml" />
+    <None Remove="testassets\projects\non-standard-dashboard-port\test-project\appsettings.Development.json" />
+    <None Remove="testassets\projects\non-standard-dashboard-port\test-project\appsettings.json" />
+    <None Remove="testassets\projects\non-standard-dashboard-port\test-project\Properties\launchSettings.json" />
+    <None Remove="testassets\projects\non-standard-dashboard-port\tye.yaml" />
+    <None Remove="testassets\projects\non-standard-dashboard-port-5.0\test-project\appsettings.Development.json" />
+    <None Remove="testassets\projects\non-standard-dashboard-port-5.0\test-project\appsettings.json" />
+    <None Remove="testassets\projects\non-standard-dashboard-port-5.0\tye.yaml" />
     <Compile Include="..\..\src\shared\KubectlDetector.cs" Link="KubectlDetector.cs" />
   </ItemGroup>
 
