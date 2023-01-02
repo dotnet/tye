@@ -193,40 +193,32 @@ namespace Microsoft.Tye
             // Ingress get turned into services for hosting
             foreach (var ingress in application.Ingress)
             {
-                services.TryGetValue(ingress.Name, out Service? service);
-                var description = service?.Description ?? new ServiceDescription(ingress.Name, new IngressRunInfo(new List<IngressRule>()));
-                if (!(description.RunInfo is IngressRunInfo runinfo))
-                {
-                    throw new InvalidOperationException($"Service '{ingress.Name}' was already added but not as an ingress service.");
-                }
-
-                description.Replicas = Math.Max(ingress.Replicas, description.Replicas);
+                var rules = new List<IngressRule>();
 
                 foreach (var rule in ingress.Rules)
                 {
-                    runinfo.Rules.Add(new IngressRule(rule.Host, rule.Path, rule.Service!, rule.PreservePath));
+                    rules.Add(new IngressRule(rule.Host, rule.Path, rule.Service!, rule.PreservePath));
                 }
+
+                var runInfo = new IngressRunInfo(rules);
+
+                var description = new ServiceDescription(ingress.Name, runInfo)
+                {
+                    Replicas = ingress.Replicas,
+                };
 
                 foreach (var binding in ingress.Bindings)
                 {
-                    //Match on name or all other properties to combind bindings to 1 instance so we can have http://*.80 listen to more then 1 service from different include files
-                    if (!description.Bindings.Any(b => (!string.IsNullOrEmpty(b.Name) && b.Name == binding.Name) ||
-                                                       (b.Port == binding.Port && b.Protocol == binding.Protocol && b.IPAddress == binding.IPAddress)))
+                    description.Bindings.Add(new ServiceBinding()
                     {
-                        description.Bindings.Add(new ServiceBinding()
-                        {
-                            Name = binding.Name,
-                            Port = binding.Port,
-                            Protocol = binding.Protocol,
-                            IPAddress = binding.IPAddress,
-                        });
-                    }
+                        Name = binding.Name,
+                        Port = binding.Port,
+                        Protocol = binding.Protocol,
+                        IPAddress = binding.IPAddress,
+                    });
                 }
 
-                if (service == null)
-                {
-                    services.Add(ingress.Name, new Service(description, ServiceSource.Host));
-                }
+                services.Add(ingress.Name, new Service(description, ServiceSource.Host));
             }
 
             return new Application(application.Name, application.Source, application.DashboardPort, services, application.ContainerEngine)
