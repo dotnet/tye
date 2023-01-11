@@ -17,7 +17,7 @@ namespace Microsoft.Tye.Extensions.Dapr
 
             if (rawConfiguration.TryGetValue("services", out var servicesObject) && servicesObject is Dictionary<string, object> rawServicesConfiguration)
             {
-                var services = new Dictionary<string, DaprExtensionServiceConfiguration>();
+                var services = new Dictionary<string, DaprExtensionServiceConfiguration>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var kvp in rawServicesConfiguration)
                 {
