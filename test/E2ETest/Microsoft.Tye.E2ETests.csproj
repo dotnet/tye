@@ -1,4 +1,4 @@
-
+﻿
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -15,9 +15,9 @@
       The Microsoft.Build.Locator package takes care of dynamically loading these assemblies
       at runtime. We don't need/want to ship them, just to have them as references.
     -->
-    <PackageReference Include="Microsoft.Build" Version="16.6.0" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="16.6.0" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.Build.Locator" Version="1.2.6" />
+    <PackageReference Include="Microsoft.Build" Version="17.3.2" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="17.3.2" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.5.5" />
   </ItemGroup>
 
   <ItemGroup>
