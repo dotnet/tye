@@ -491,6 +491,16 @@ namespace Microsoft.Tye
                 volumeMount.Add("mountPath", "/var/tye/diagnostics");
             }
 
+            if (!string.IsNullOrWhiteSpace(application.Registry?.PullSecret))
+            {
+                var imagePullSecrets = new YamlSequenceNode();
+                spec.Add("imagePullSecrets", imagePullSecrets);
+
+                var secretNode = new YamlMappingNode();
+                imagePullSecrets.Add(secretNode);
+                secretNode.Add("name", application.Registry.PullSecret);
+            }
+
             if (!project.RelocateDiagnosticsDomainSockets)
             {
                 return new KubernetesDeploymentOutput(project.Name, new YamlDocument(root));

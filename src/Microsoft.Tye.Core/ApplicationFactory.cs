@@ -48,9 +48,9 @@ namespace Microsoft.Tye
                     continue;
                 }
 
-                if (config == rootConfig && !string.IsNullOrEmpty(config.Registry))
+                if (config == rootConfig && config.Registry != null)
                 {
-                    root.Registry = new ContainerRegistry(config.Registry);
+                    root.Registry = new ContainerRegistry(config.Registry.Hostname, config.Registry.PullSecret);
                 }
 
                 if (config == rootConfig)

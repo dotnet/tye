@@ -92,33 +92,32 @@ Now that we have two applications running, let's make them communicate. By defau
 3. Add a file `WeatherClient.cs` to the `frontend` project with the following contents:
 
    ```C#
-    using System.Text.Json;
+   using System.Text.Json;
+   using System.Net.Http.Json;
 
-    namespace frontend
-    {
-        public class WeatherClient
-        {
-            private readonly JsonSerializerOptions options = new JsonSerializerOptions()
-            {
-                PropertyNameCaseInsensitive = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            };
-    
-            private readonly HttpClient client;
-    
-            public WeatherClient(HttpClient client)
-            {
-                this.client = client;
-            }
-    
-            public async Task<WeatherForecast[]> GetWeatherAsync()
-            {
-                var responseMessage = await this.client.GetAsync("/weatherforecast");
-                var stream = await responseMessage.Content.ReadAsStreamAsync();
-                return await JsonSerializer.DeserializeAsync<WeatherForecast[]>(stream, options);
-            }
-        }
-    }
+   namespace frontend
+   {
+       public class WeatherClient
+       {
+           private readonly JsonSerializerOptions options = new JsonSerializerOptions()
+           {
+               PropertyNameCaseInsensitive = true,
+               PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+           };
+   
+           private readonly HttpClient client;
+   
+           public WeatherClient(HttpClient client)
+           {
+               this.client = client;
+           }
+   
+           public async Task<WeatherForecast[]> GetWeatherAsync()
+           {
+               return await this.client.GetFromJsonAsync<WeatherForecast[]>("/weatherforecast");
+           }
+       }
+   }
    ```
 
 4. Add a reference to the `Microsoft.Tye.Extensions.Configuration` package to the frontend project

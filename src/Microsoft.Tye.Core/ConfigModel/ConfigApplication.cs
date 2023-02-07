@@ -30,7 +30,7 @@ namespace Microsoft.Tye.ConfigModel
 
         public string? Namespace { get; set; }
 
-        public string? Registry { get; set; }
+        public ConfigRegistry? Registry { get; set; }
 
         public ContainerEngineType? ContainerEngineType { get; set; }
 
@@ -61,6 +61,16 @@ namespace Microsoft.Tye.ConfigModel
                 if (!extension.TryGetValue("name", out var name) || string.IsNullOrWhiteSpace(name as string))
                 {
                     throw new TyeYamlException(CoreStrings.ExtensionMustProvideAName);
+                }
+            }
+
+            if (config.Registry != null)
+            {
+                if (!Validator.TryValidateObject(config.Registry, new ValidationContext(config.Registry), results, validateAllProperties: true))
+                {
+                    throw new TyeYamlException(
+                        "Registry validation failed." + Environment.NewLine +
+                        string.Join(Environment.NewLine, results.Select(r => r.ErrorMessage)));
                 }
             }
 

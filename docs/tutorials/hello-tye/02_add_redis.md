@@ -52,12 +52,11 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 2. Add a package reference to `Microsoft.Extensions.Caching.StackExchangeRedis` in the backend project:
 
    ```
-   cd backend/
-   dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis
-   cd ..
+   dotnet add backend/backend.csproj package Microsoft.Extensions.Caching.StackExchangeRedis
    ```
 
 3. Modify `Startup.ConfigureServices` in the `backend` project to add the redis `IDistributedCache` implementation.
+
    ```C#
    public void ConfigureServices(IServiceCollection services)
    {
@@ -66,7 +65,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
        services.AddStackExchangeRedisCache(o =>
        {
             o.Configuration = Configuration.GetConnectionString("redis");
-        });
+       });
    }
    ```
    The above configures redis to the configuration string for the `redis` service injected by the `tye` host.
@@ -87,7 +86,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
      image: redis
      bindings:
      - port: 6379
-       connectionString: "${host}:${port}" 
+       connectionString: "${host}:${port}"
    - name: redis-cli
      image: redis
      args: "redis-cli -h redis MONITOR"
@@ -97,9 +96,7 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 
     > :bulb: The `"${host}:${port}"` format in the `connectionString` property will substitute the values of the host and port number to produce a connection string that can be used with StackExchange.Redis.
 
-5. Run the `tye` command line in the solution root
-
-   > :bulb: Make sure your command-line is in the `microservice/` directory. One of the previous steps had you change directories to edit a specific project.
+5. Run the `tye run` command
 
    ```
    tye run
@@ -186,3 +183,10 @@ We just showed how `tye` makes it easier to communicate between 2 applications r
 4. Clean-up
 
     At this point, you may want to undeploy the application by running `tye undeploy`.
+    
+    Also clean up the Redis deployment and service by running
+    
+    ```text
+    kubectl delete -f https://raw.githubusercontent.com/dotnet/tye/main/docs/tutorials/hello-tye/redis.yaml
+    ```
+    
