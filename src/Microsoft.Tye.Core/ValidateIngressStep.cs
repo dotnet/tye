@@ -36,6 +36,12 @@ namespace Microsoft.Tye
             //
             // For instance we don't support k8s 1.18.X IngressClass resources because that version
             // isn't broadly available yet. 
+            if (Force)
+            {
+                output.WriteDebugLine("Skipping ingress validation because force was specified.");
+                return;
+            }
+
             var ingressClass = "nginx";
             if (!IngressClasses.Add(ingressClass))
             {
@@ -87,12 +93,6 @@ namespace Microsoft.Tye
                 output.WriteDebugLine("Failed to query secret.");
                 output.WriteDebugLine(ex.ToString());
                 throw new CommandException("Unable connect to kubernetes.", ex);
-            }
-
-            if (Force)
-            {
-                output.WriteDebugLine("Skipping because force was specified.");
-                return;
             }
 
             if (!Interactive)
