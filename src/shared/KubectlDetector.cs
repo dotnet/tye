@@ -12,6 +12,7 @@ namespace Microsoft.Tye
     {
         private static Lazy<Task<Version?>> _kubectlInstalled = new Lazy<Task<Version?>>(GetKubectlVersion);
         private static Lazy<Task<bool>> _kubectlConnectedToCluster = new Lazy<Task<bool>>(DetectKubectlConnectedToCluster);
+        private static string? _namespace = null;
 
         public static Task<Version?> GetKubernetesServerVersion(OutputContext output)
         {
@@ -22,10 +23,11 @@ namespace Microsoft.Tye
             return _kubectlInstalled.Value;
         }
 
-        public static Task<bool> IsKubectlConnectedToClusterAsync(OutputContext output)
+        public static Task<bool> IsKubectlConnectedToClusterAsync(OutputContext output, string? @namespace = null)
         {
             if (!_kubectlConnectedToCluster.IsValueCreated)
             {
+                _namespace = @namespace;
                 output.WriteInfoLine("Verifying kubectl connection to cluster...");
             }
             return _kubectlConnectedToCluster.Value;
@@ -72,7 +74,12 @@ namespace Microsoft.Tye
         {
             try
             {
-                var result = await ProcessUtil.RunAsync("kubectl", "cluster-info", throwOnError: false);
+                String args = "cluster-info";
+                if (_namespace != null) {
+                    args += $" --namespace {_namespace}";
+                }
+
+                var result = await ProcessUtil.RunAsync("kubectl", args, throwOnError: false);
                 return result.ExitCode == 0;
             }
             catch (Exception)

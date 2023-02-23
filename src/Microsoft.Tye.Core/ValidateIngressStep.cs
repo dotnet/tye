@@ -54,16 +54,16 @@ namespace Microsoft.Tye
                 throw new CommandException($"Cannot validate ingress because kubectl is not installed.");
             }
 
-            if (!await KubectlDetector.IsKubectlConnectedToClusterAsync(output))
+            output.WriteDebugLine($"Validating ingress class '{ingressClass}'.");
+            var config = KubernetesClientConfiguration.BuildDefaultConfig();
+            
+            // If namespace is null, set it to default
+            config.Namespace ??= "default";
+
+            if (!await KubectlDetector.IsKubectlConnectedToClusterAsync(output, config.Namespace))
             {
                 throw new CommandException($"Cannot validate ingress because kubectl is not connected to a cluster.");
             }
-
-            output.WriteDebugLine($"Validating ingress class '{ingressClass}'.");
-            var config = KubernetesClientConfiguration.BuildDefaultConfig();
-
-            // If namespace is null, set it to default
-            config.Namespace ??= "default";
 
             var kubernetes = new Kubernetes(config);
 
