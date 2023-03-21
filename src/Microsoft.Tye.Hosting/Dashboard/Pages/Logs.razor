@@ -1,6 +1,8 @@
 ﻿@page "/logs/{ServiceName}"
+@using Microsoft.Tye.Hosting.Ansi2Html;
 @inject IJSRuntime JS
 @inject Application application
+@inject Converter ansi2HtmlParser
 @implements IDisposable
 
 <style>
@@ -42,7 +44,7 @@ else
     [Parameter]
     public string ServiceName { get; set; } = default!;
 
-    public List<(string Text, int Id)>? ApplicationLogs { get; set; } 
+    public List<(MarkupString Text, int Id)>? ApplicationLogs { get; set; }
 
     private IDisposable? _subscription;
 
@@ -53,7 +55,7 @@ else
         // TODO: handle this returning false
         if (application.Services.TryGetValue(ServiceName, out var service))
         {
-            ApplicationLogs = service.CachedLogs.Select((item, index) => (item, index)).ToList();
+            ApplicationLogs = service.CachedLogs.Select((item, index) => ((MarkupString)item, index)).ToList();
             var count = ApplicationLogs.Count;
             StateHasChanged();
 
@@ -62,7 +64,8 @@ else
                 count++;
                 InvokeAsync(() =>
                 {
-                    ApplicationLogs.Add((log, count));
+                    string htmlLog = ansi2HtmlParser.Parse(log);
+                    ApplicationLogs.Add(((MarkupString)htmlLog, count));
                     StateHasChanged();
                 });
             });
