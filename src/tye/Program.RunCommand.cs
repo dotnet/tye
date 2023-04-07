@@ -111,9 +111,9 @@ namespace Microsoft.Tye
                     LoggingProvider = args.Logs,
                     MetricsProvider = args.Metrics,
                     LogVerbosity = args.Verbosity,
-                    Watch = args.Watch
                 };
                 options.Debug.AddRange(args.Debug);
+                options.Watch.AddRange(args.Watch);
 
                 await application.ProcessExtensionsAsync(options, output, ExtensionContext.OperationKind.LocalRun);
 
@@ -170,7 +170,7 @@ namespace Microsoft.Tye
 
             public Verbosity Verbosity { get; set; }
 
-            public bool Watch { get; set; }
+            public string[] Watch { get; set; } = Array.Empty<string>();
 
             public string Framework { get; set; } = default!;
 

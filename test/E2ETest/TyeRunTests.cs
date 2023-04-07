@@ -19,7 +19,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Primitives;
 using Microsoft.Tye;
 using Microsoft.Tye.Hosting;
 using Microsoft.Tye.Hosting.Model;
@@ -353,7 +352,10 @@ services:
 
             var client = new HttpClient(new RetryHandler(handler));
 
-            await RunHostingApplication(application, new HostOptions() { Watch = true }, async (app, uri) =>
+            var hostOptions = new HostOptions();
+            hostOptions.Watch.Add(ProcessRunnerOptions.AllServices);
+
+            await RunHostingApplication(application, hostOptions, async (app, uri) =>
             {
                 // make sure both are running
                 var frontendUri = await GetServiceUrl(client, uri, "frontend");
@@ -404,7 +406,10 @@ services:
 
             var client = new HttpClient(new RetryHandler(handler));
 
-            await RunHostingApplication(application, new HostOptions() { Watch = true }, async (app, uri) =>
+            var hostOptions = new HostOptions();
+            hostOptions.Watch.Add(ProcessRunnerOptions.AllServices);
+
+            await RunHostingApplication(application, hostOptions, async (app, uri) =>
             {
                 // make sure app is running
                 var appUri = await GetServiceUrl(client, uri, "web-app");
