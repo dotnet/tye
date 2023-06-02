@@ -69,7 +69,7 @@ namespace Microsoft.Tye
                 throw new CommandException($"Cannot apply manifests because kubectl is not installed.");
             }
 
-            if (!await KubectlDetector.IsKubectlConnectedToClusterAsync(output))
+            if (!await KubectlDetector.IsKubectlConnectedToClusterAsync(output, application.Namespace))
             {
                 throw new CommandException($"Cannot apply manifests because kubectl is not connected to a cluster.");
             }

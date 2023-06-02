@@ -36,6 +36,12 @@ namespace Microsoft.Tye
             //
             // For instance we don't support k8s 1.18.X IngressClass resources because that version
             // isn't broadly available yet. 
+            if (Force)
+            {
+                output.WriteDebugLine("Skipping ingress validation because force was specified.");
+                return;
+            }
+
             var ingressClass = "nginx";
             if (!IngressClasses.Add(ingressClass))
             {
@@ -48,16 +54,16 @@ namespace Microsoft.Tye
                 throw new CommandException($"Cannot validate ingress because kubectl is not installed.");
             }
 
-            if (!await KubectlDetector.IsKubectlConnectedToClusterAsync(output))
+            output.WriteDebugLine($"Validating ingress class '{ingressClass}'.");
+            var config = KubernetesClientConfiguration.BuildDefaultConfig();
+            
+            // If namespace is null, set it to default
+            config.Namespace ??= "default";
+
+            if (!await KubectlDetector.IsKubectlConnectedToClusterAsync(output, config.Namespace))
             {
                 throw new CommandException($"Cannot validate ingress because kubectl is not connected to a cluster.");
             }
-
-            output.WriteDebugLine($"Validating ingress class '{ingressClass}'.");
-            var config = KubernetesClientConfiguration.BuildDefaultConfig();
-
-            // If namespace is null, set it to default
-            config.Namespace ??= "default";
 
             var kubernetes = new Kubernetes(config);
 
@@ -87,12 +93,6 @@ namespace Microsoft.Tye
                 output.WriteDebugLine("Failed to query secret.");
                 output.WriteDebugLine(ex.ToString());
                 throw new CommandException("Unable connect to kubernetes.", ex);
-            }
-
-            if (Force)
-            {
-                output.WriteDebugLine("Skipping because force was specified.");
-                return;
             }
 
             if (!Interactive)
