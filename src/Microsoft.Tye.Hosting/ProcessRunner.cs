@@ -178,7 +178,7 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        private void LaunchService(Application application, Service service)
+        public void LaunchService(Application application, Service service)
         {
             var serviceDescription = service.Description;
             var processInfo = new ProcessInfo(new Task[service.Description.Replicas]);
@@ -460,7 +460,7 @@ namespace Microsoft.Tye.Hosting
             service.Items[typeof(ProcessInfo)] = processInfo;
         }
 
-        private Task KillRunningProcesses(IDictionary<string, Service> services)
+        public Task KillRunningProcesses(IDictionary<string, Service> services)
         {
             static Task KillProcessAsync(Service service)
             {
