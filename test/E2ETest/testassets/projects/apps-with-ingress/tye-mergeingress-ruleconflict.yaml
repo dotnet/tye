@@ -1,0 +1,13 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+#
+# when you've given us a try, we'd love to know what you think:
+#    https://aka.ms/AA7q20u
+#
+name: apps-with-ingress
+
+services:
+- name: appA
+  include: ApplicationA/tye-ruleconflict.yaml
+- name: appB
+  include: ApplicationB/tye-ruleconflict.yaml

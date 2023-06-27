@@ -10,5 +10,13 @@ namespace Microsoft.Tye
         public int? Port { get; set; }
         public string? Protocol { get; set; } // HTTP or HTTPS
         public string? IPAddress { get; set; }
+
+        public override string ToString()
+        {
+            return (string.IsNullOrEmpty(Name) ? "" : "[" + Name + "] -> ") +
+                   (string.IsNullOrEmpty(Protocol) ? "" : Protocol + "://")
+                   + (string.IsNullOrEmpty(IPAddress) ? "*" : IPAddress)
+                   + (Port == null || Port == 0 ? "" : ":" + Port);
+        }
     }
 }

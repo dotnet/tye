@@ -32,6 +32,16 @@
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Compile Remove="testassets\**\*" />
     <None Remove="testassets\generate\apps-with-ingress.1.18.yaml" />
+    <None Remove="testassets\projects\apps-with-ingress\ApplicationA\tye-bindingconflict.yaml" />
+    <None Remove="testassets\projects\apps-with-ingress\ApplicationA\tye-nameconflict.yaml" />
+    <None Remove="testassets\projects\apps-with-ingress\ApplicationA\tye-ruleconflict.yaml" />
+    <None Remove="testassets\projects\apps-with-ingress\ApplicationB\tye-bindingconflict.yaml" />
+    <None Remove="testassets\projects\apps-with-ingress\ApplicationB\tye-nameconflict.yaml" />
+    <None Remove="testassets\projects\apps-with-ingress\ApplicationB\tye-ruleconflict.yaml" />
+    <None Remove="testassets\projects\apps-with-ingress\ApplicationB\tye.yaml" />
+    <None Remove="testassets\projects\apps-with-ingress\tye-mergeingress-bindingconflict.yaml" />
+    <None Remove="testassets\projects\apps-with-ingress\tye-mergeingress-nameconflict.yaml" />
+    <None Remove="testassets\projects\apps-with-ingress\tye-mergeingress-ruleconflict.yaml" />
     <None Remove="testassets\projects\non-standard-dashboard-port\test-project\appsettings.Development.json" />
     <None Remove="testassets\projects\non-standard-dashboard-port\test-project\appsettings.json" />
     <None Remove="testassets\projects\non-standard-dashboard-port\test-project\Properties\launchSettings.json" />

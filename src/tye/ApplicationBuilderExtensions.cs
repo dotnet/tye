@@ -193,32 +193,61 @@ namespace Microsoft.Tye
             // Ingress get turned into services for hosting
             foreach (var ingress in application.Ingress)
             {
-                var rules = new List<IngressRule>();
+                services.TryGetValue(ingress.Name, out Service? service);
+                var description = service?.Description ?? new ServiceDescription(ingress.Name, new IngressRunInfo(new List<IngressRule>()));
+                if (!(description.RunInfo is IngressRunInfo runinfo))
+                {
+                    throw new CommandException($"Service '{ingress.Name}' was already added but not as an ingress service.");
+                }
+
+                description.Replicas = Math.Max(ingress.Replicas, description.Replicas);
 
                 foreach (var rule in ingress.Rules)
                 {
-                    rules.Add(new IngressRule(rule.Host, rule.Path, rule.Service!, rule.PreservePath));
+                    if (runinfo.Rules.FirstOrDefault(r => (r.Host ?? String.Empty).Equals(rule.Host ?? String.Empty, StringComparison.InvariantCultureIgnoreCase)
+                                                && (r.Path ?? String.Empty).Equals(rule.Path ?? String.Empty, StringComparison.InvariantCultureIgnoreCase))
+                        is IngressRule existing)
+                    {
+                        throw new CommandException($"Cannot add rule for service {rule.Service} to ingress '{ingress.Name}', it already has a rule for service {existing.Service} with Host {rule.Host} and Path {rule.Path}.");
+                    }
+                    runinfo.Rules.Add(new IngressRule(rule.Host, rule.Path, rule.Service!, rule.PreservePath));
                 }
-
-                var runInfo = new IngressRunInfo(rules);
-
-                var description = new ServiceDescription(ingress.Name, runInfo)
-                {
-                    Replicas = ingress.Replicas,
-                };
 
                 foreach (var binding in ingress.Bindings)
                 {
-                    description.Bindings.Add(new ServiceBinding()
+                    var existing = description.Bindings.FirstOrDefault(b => !string.IsNullOrEmpty(b.Name) && b.Name == binding.Name);
+                    if (existing != null)
                     {
-                        Name = binding.Name,
-                        Port = binding.Port,
-                        Protocol = binding.Protocol,
-                        IPAddress = binding.IPAddress,
-                    });
+                        //if we're using an existing binding based on name, the other properties should match
+                        if (existing.Port != binding.Port || existing.Protocol != binding.Protocol || existing.IPAddress != binding.IPAddress)
+                        {
+                            throw new CommandException($"Ingress {ingress.Name} already has a binding with name {binding.Name} but with different settings.");
+                        }
+                    }
+                    else
+                    {
+                        existing = description.Bindings.FirstOrDefault(b => b.Port == binding.Port && (b.Protocol ?? "http") == binding.Protocol && b.IPAddress == binding.IPAddress);
+                        if (existing != null && !(existing.Name ?? string.Empty).Equals(binding.Name ?? string.Empty, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            throw new CommandException($"Ingress {ingress.Name} already has a binding with the same ipaddress and/or port, {binding} cannot be added.");
+                        }
+                    }
+                    if (existing == null)
+                    {
+                        description.Bindings.Add(new ServiceBinding()
+                        {
+                            Name = binding.Name,
+                            Port = binding.Port,
+                            Protocol = binding.Protocol,
+                            IPAddress = binding.IPAddress,
+                        });
+                    }
                 }
 
-                services.Add(ingress.Name, new Service(description, ServiceSource.Host));
+                if (service == null)
+                {
+                    services.Add(ingress.Name, new Service(description, ServiceSource.Host));
+                }
             }
 
             return new Application(application.Name, application.Source, application.DashboardPort, services, application.ContainerEngine)

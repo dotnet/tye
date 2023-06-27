@@ -51,30 +51,17 @@
                     }
                 </td>
                 <td>
-                    @if (service.Description.Bindings.Any())
+                    @if (GetUrls(service) is IEnumerable<string> urls && urls.Any())
                     {
-                        foreach (var b in service.Description.Bindings)
+                        foreach (var url in urls)
                         {
-                            if (b.Port != null)
+                            if (url.StartsWith("http://") || url.StartsWith("https://"))
                             {
-                                if (b.Protocol == "http" || b.Protocol == "https")
-                                {
-                                    var url = GetUrl(b);
-                                    <span class="binding"><a href="@url" target="_blank">@url</a></span>
-                                    foreach (var r in b.Routes)
-                                    {
-                                        var routeUrl = url + r;
-                                        <span class="binding"><a href="@routeUrl" target="_blank">@routeUrl</a></span>
-                                    }
-                                }
-                                else
-                                {
-                                    <span class="binding">@GetUrl(b)</span>
-                                }
+                                <span class="binding"><a href="@url" target="_blank">@url</a></span>
                             }
                             else
                             {
-                                <span class="binding">@b.ConnectionString</span>
+                                <span class="binding">@url</span>
                             }
                         }
                     }
@@ -101,10 +88,63 @@
 @code {
 
     private List<IDisposable> _subscriptions = new List<IDisposable>();
+    private List<ServiceDescription> _ingressDescriptions = new List<ServiceDescription>();
+    private const string INGRESS_NAME = "INGRESS";
 
     string GetUrl(ServiceBinding b)
     {
         return $"{(b.Protocol ?? "tcp")}://{b.Host ?? "localhost"}:{b.Port}";
+    }
+
+    IEnumerable<string> GetUrls(Service service)
+    {
+        foreach (var binding in service.Description.Bindings)
+        {
+            if (binding.Port != null)
+            {
+                var url = GetUrl(binding);
+                yield return url;
+                foreach (var r in binding.Routes)
+                {
+                    yield return url + r;
+                }
+            }
+            else if (!string.IsNullOrEmpty(binding.ConnectionString))
+            {
+                yield return binding.ConnectionString;
+            }
+        }
+
+        foreach (ServiceDescription description in _ingressDescriptions)
+        {
+            foreach (IngressRule rule in (description?.RunInfo as IngressRunInfo)?.Rules ?? Enumerable.Empty<IngressRule>())
+            {
+                if (rule.Service == service.Description.Name)
+                {
+                    ServiceBinding? mainBinding = description?.Bindings.FirstOrDefault(b => b.Protocol == "http") ??
+                                      description?.Bindings.FirstOrDefault(b => b.Protocol == "https");
+
+                    string? host = rule.Host;
+                    if (string.IsNullOrEmpty(host))
+                    {
+                        host = mainBinding?.Host ?? mainBinding?.IPAddress ?? "localhost";
+                    }
+                    int port = mainBinding?.Port ?? 80;
+
+                    string url = GetUrl(new ServiceBinding
+                    {
+                        Port = port,
+                        Host = host,
+                        Protocol = mainBinding?.Protocol ?? "http"
+                    });
+                    if (!string.IsNullOrEmpty(rule.Path))
+                    {
+                        url += rule.Path;
+                    }
+                    yield return url;
+                }
+            }
+        }
     }
 
     protected override void OnInitialized()
@@ -112,6 +152,10 @@
         foreach (var a in application.Services.Values)
         {
             _subscriptions.Add(a.ReplicaEvents.Subscribe(OnReplicaChanged));
+            if (a.Description.RunInfo is IngressRunInfo)
+            {
+                _ingressDescriptions.Add(a.Description);
+            }
         }
     }
 
