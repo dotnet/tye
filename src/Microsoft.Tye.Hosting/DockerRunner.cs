@@ -24,11 +24,13 @@ namespace Microsoft.Tye.Hosting
         private readonly ILogger _logger;
 
         private readonly ReplicaRegistry _replicaRegistry;
+        private readonly DockerRunnerOptions _options;
 
-        public DockerRunner(ILogger logger, ReplicaRegistry replicaRegistry)
+        public DockerRunner(ILogger logger, ReplicaRegistry replicaRegistry, DockerRunnerOptions options)
         {
             _logger = logger;
             _replicaRegistry = replicaRegistry;
+            _options = options;
         }
 
         public async Task StartAsync(Application application)
@@ -537,6 +539,7 @@ namespace Microsoft.Tye.Hosting
                 return Task.WhenAll(tasks);
             }
 
+            var dockerInfo = new DockerInformation();
             async Task BuildAndRunAsync(CancellationToken cancellationToken)
             {
                 await DockerBuildAsync(cancellationToken);
@@ -544,8 +547,13 @@ namespace Microsoft.Tye.Hosting
                 await DockerRunAsync(cancellationToken);
             }
 
-            var dockerInfo = new DockerInformation();
-            dockerInfo.Task = BuildAndRunAsync(dockerInfo.StoppingTokenSource.Token);
+            dockerInfo.SetBuildAndRunTask(BuildAndRunAsync);
+
+            if (!_options.ManualStartServices &&
+                !(_options.ServicesNotToStart?.Contains(service.Description.Name, StringComparer.OrdinalIgnoreCase) ?? false))
+            {
+                dockerInfo.BuildAndRun();
+            }
 
             service.Items[typeof(DockerInformation)] = dockerInfo;
         }
@@ -587,13 +595,25 @@ namespace Microsoft.Tye.Hosting
             }
         }
 
-        private Task StopContainerAsync(Service service)
+        public static async Task RestartContainerAsync(Service service)
         {
             if (service.Items.TryGetValue(typeof(DockerInformation), out var value) && value is DockerInformation di)
             {
-                di.StoppingTokenSource.Cancel();
+                await StopContainerAsync(service);
 
-                return di.Task;
+                di.BuildAndRun();
+                service.Restarts++;
+                await di.Task;
+            }
+        }
+
+        public static Task StopContainerAsync(Service service)
+        {
+            if (service.Items.TryGetValue(typeof(DockerInformation), out var value) && value is DockerInformation di)
+            {
+                di.CancelAndResetStoppingTokenSource();
+                return di.Task ?? Task.CompletedTask;
+
             }
 
             return Task.CompletedTask;
@@ -601,8 +621,27 @@ namespace Microsoft.Tye.Hosting
 
         private class DockerInformation
         {
-            public Task Task { get; set; } = default!;
-            public CancellationTokenSource StoppingTokenSource { get; } = new CancellationTokenSource();
+            private Func<CancellationToken, Task>? _buildAndRunAsync;
+
+            public Task Task { get; private set; } = default!;
+            public CancellationTokenSource StoppingTokenSource { get; private set; } = new CancellationTokenSource();
+
+            public void SetBuildAndRunTask(Func<CancellationToken, Task> func)
+            {
+                _buildAndRunAsync = func;
+            }
+
+            public void BuildAndRun()
+            {
+                Task = _buildAndRunAsync?.Invoke(StoppingTokenSource.Token) ?? Task.CompletedTask;
+            }
+
+            internal void CancelAndResetStoppingTokenSource()
+            {
+                StoppingTokenSource.Cancel();
+                StoppingTokenSource.Dispose();
+                StoppingTokenSource = new CancellationTokenSource();
+            }
         }
 
         private class DockerApplicationInformation

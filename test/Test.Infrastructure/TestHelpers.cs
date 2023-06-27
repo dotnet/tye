@@ -249,7 +249,7 @@ namespace Test.Infrastructure
                 var logger = host.Logger;
                 var replicaRegistry = new ReplicaRegistry(host.Application.ContextDirectory, logger);
                 var processRunner = new ProcessRunner(logger, replicaRegistry, new ProcessRunnerOptions());
-                var dockerRunner = new DockerRunner(logger, replicaRegistry);
+                var dockerRunner = new DockerRunner(logger, replicaRegistry, new DockerRunnerOptions());
 
                 await processRunner.StartAsync(new Application(host.Application.Name, new FileInfo(host.Application.Source), null, new Dictionary<string, Service>(), ContainerEngine.Default));
                 await dockerRunner.StartAsync(new Application(host.Application.Name, new FileInfo(host.Application.Source), null, new Dictionary<string, Service>(), ContainerEngine.Default));

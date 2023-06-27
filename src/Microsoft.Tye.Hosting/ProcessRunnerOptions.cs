@@ -14,6 +14,8 @@ namespace Microsoft.Tye.Hosting
         public string[]? ServicesToDebug { get; set; }
         public bool DebugAllServices { get; set; }
         public bool Watch { get; set; }
+        public bool ManualStartServices { get; set; }
+        public string[]? ServicesNotToStart { get; set; }
 
         public static ProcessRunnerOptions FromHostOptions(HostOptions options)
         {
@@ -23,6 +25,8 @@ namespace Microsoft.Tye.Hosting
                 DebugMode = options.Debug.Any(),
                 ServicesToDebug = options.Debug.ToArray(),
                 DebugAllServices = options.Debug?.Contains("*", StringComparer.OrdinalIgnoreCase) ?? false,
+                ManualStartServices = options.NoStart?.Contains("*", StringComparer.OrdinalIgnoreCase) ?? false,
+                ServicesNotToStart = options.NoStart?.ToArray(),
                 Watch = options.Watch
             };
         }

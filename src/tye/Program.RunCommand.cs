@@ -74,6 +74,15 @@ namespace Microsoft.Tye
                     Description = "Watches for code changes for all dotnet projects.",
                     Required = false
                 },
+                new Option("--no-start")
+                {
+                    Argument = new Argument<string[]>("service")
+                    {
+                        Arity = ArgumentArity.ZeroOrMore,
+                    },
+                    Description = "Skip automatic start for specific service(s). Specify \"*\" to skip start for all services.",
+                    Required = false
+                },
                 StandardOptions.Framework,
                 StandardOptions.Tags,
                 StandardOptions.Verbosity,
@@ -111,9 +120,10 @@ namespace Microsoft.Tye
                     LoggingProvider = args.Logs,
                     MetricsProvider = args.Metrics,
                     LogVerbosity = args.Verbosity,
-                    Watch = args.Watch
+                    Watch = args.Watch,
                 };
                 options.Debug.AddRange(args.Debug);
+                options.NoStart.AddRange(args.NoStart);
 
                 await application.ProcessExtensionsAsync(options, output, ExtensionContext.OperationKind.LocalRun);
 
@@ -153,6 +163,8 @@ namespace Microsoft.Tye
             public bool Dashboard { get; set; }
 
             public string[] Debug { get; set; } = Array.Empty<string>();
+
+            public string[] NoStart { get; set; } = Array.Empty<string>();
 
             public string Dtrace { get; set; } = default!;
 

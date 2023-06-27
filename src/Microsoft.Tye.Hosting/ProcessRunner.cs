@@ -179,10 +179,11 @@ namespace Microsoft.Tye.Hosting
         }
 
         private void LaunchService(Application application, Service service)
+
         {
-            var serviceDescription = service.Description;
-            var processInfo = new ProcessInfo(new Task[service.Description.Replicas]);
-            var serviceName = serviceDescription.Name;
+            var processInfo = (service.Items.ContainsKey(typeof(ProcessInfo)) ? (ProcessInfo?)service.Items[typeof(ProcessInfo)] : null)
+                                      ?? new ProcessInfo(new Task[service.Description.Replicas]);
+            var serviceName = service.Description.Name;
 
             // Set by BuildAndRunService
             var args = service.Status.Args!;
@@ -258,7 +259,7 @@ namespace Microsoft.Tye.Hosting
 
                 var backOff = TimeSpan.FromSeconds(5);
 
-                while (!processInfo.StoppedTokenSource.IsCancellationRequested)
+                while (!processInfo!.StoppedTokenSource.IsCancellationRequested)
                 {
                     var replica = serviceName + "_" + Guid.NewGuid().ToString().Substring(0, 10).ToLower();
                     var status = new ProcessStatus(service, replica);
@@ -297,7 +298,7 @@ namespace Microsoft.Tye.Hosting
                     try
                     {
                         service.Logs.OnNext($"[{replica}]:{path} {copiedArgs}");
-                        var processInfo = new ProcessSpec
+                        var processSpec = new ProcessSpec
                         {
                             Executable = path,
                             WorkingDirectory = workingDirectory,
@@ -351,8 +352,10 @@ namespace Microsoft.Tye.Hosting
                                     // Only increase backoff when not watching project as watch will wait for file changes before rebuild.
                                     backOff *= 2;
                                 }
-
-                                service.Restarts++;
+                                if (!processInfo.StoppedTokenSource.IsCancellationRequested)
+                                {
+                                    service.Restarts++;
+                                }
 
                                 service.Replicas.TryRemove(replica, out var _);
                                 service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Removed, status));
@@ -385,7 +388,7 @@ namespace Microsoft.Tye.Hosting
                             environment["DOTNET_WATCH"] = "1";
 
                             await new DotNetWatcher(_logger)
-                                .WatchAsync(processInfo, fileSetFactory, replica, status.StoppingTokenSource.Token);
+                                .WatchAsync(processSpec, fileSetFactory, replica, status.StoppingTokenSource.Token);
                         }
                         else if (_options.Watch && (service.Description.RunInfo is AzureFunctionRunInfo azureFunctionRunInfo) && !string.IsNullOrEmpty(azureFunctionRunInfo.ProjectFile))
                         {
@@ -397,11 +400,11 @@ namespace Microsoft.Tye.Hosting
                             environment["DOTNET_WATCH"] = "1";
 
                             await new DotNetWatcher(_logger)
-                                .WatchAsync(processInfo, fileSetFactory, replica, status.StoppingTokenSource.Token);
+                                .WatchAsync(processSpec, fileSetFactory, replica, status.StoppingTokenSource.Token);
                         }
                         else
                         {
-                            await ProcessUtil.RunAsync(processInfo, status.StoppingTokenSource.Token, throwOnError: false);
+                            await ProcessUtil.RunAsync(processSpec, status.StoppingTokenSource.Token, throwOnError: false);
                         }
                     }
                     catch (Exception ex)
@@ -429,50 +432,77 @@ namespace Microsoft.Tye.Hosting
                 }
             }
 
-            if (serviceDescription.Bindings.Count > 0)
+            void Start()
             {
-                // Each replica is assigned a list of internal ports, one mapped to each external
-                // port
-                for (int i = 0; i < serviceDescription.Replicas; i++)
+                if (service.Description!.Bindings.Count > 0)
                 {
-                    var ports = new List<(int, int, string?, string?)>();
-                    foreach (var binding in serviceDescription.Bindings)
+                    // Each replica is assigned a list of internal ports, one mapped to each external
+                    // port
+                    for (int i = 0; i < service.Description.Replicas; i++)
                     {
-                        if (binding.Port == null)
+                        var ports = new List<(int, int, string?, string?)>();
+                        foreach (var binding in service.Description.Bindings)
                         {
-                            continue;
+                            if (binding.Port == null)
+                            {
+                                continue;
+                            }
+
+                            ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.Protocol, binding.Host));
                         }
 
-                        ports.Add((binding.Port.Value, binding.ReplicaPorts[i], binding.Protocol, binding.Host));
+                        processInfo!.Tasks[i] = RunApplicationAsync(ports, args);
                     }
-
-                    processInfo.Tasks[i] = RunApplicationAsync(ports, args);
                 }
+                else
+                {
+                    for (int i = 0; i < service.Description.Replicas; i++)
+                    {
+                        processInfo!.Tasks[i] = RunApplicationAsync(Enumerable.Empty<(int, int, string?, string?)>(), args);
+                    }
+                }
+            }
+
+            processInfo.Start = Start;
+            service.Items[typeof(ProcessInfo)] = processInfo;
+            if (!_options.ManualStartServices && !(_options.ServicesNotToStart?.Contains(serviceName, StringComparer.OrdinalIgnoreCase) ?? false))
+            {
+                processInfo.Start();
             }
             else
             {
-                for (int i = 0; i < service.Description.Replicas; i++)
+                for (int i = 0; i < processInfo.Tasks.Length; i++)
                 {
-                    processInfo.Tasks[i] = RunApplicationAsync(Enumerable.Empty<(int, int, string?, string?)>(), args);
+                    processInfo.Tasks[i] = Task.CompletedTask;
                 }
             }
+        }
 
-            service.Items[typeof(ProcessInfo)] = processInfo;
+        public static async Task RestartService(Service service)
+        {
+            if (service.Items.TryGetValue(typeof(ProcessInfo), out var stateObj) && stateObj is ProcessInfo state)
+            {
+                await KillProcessAsync(service);
+                service.Restarts++;
+                state.Start?.Invoke();
+                await Task.WhenAll(state.Tasks);
+            }
+        }
+
+        public static async Task KillProcessAsync(Service service)
+        {
+            if (service.Items.TryGetValue(typeof(ProcessInfo), out var stateObj) && stateObj is ProcessInfo state)
+            {
+                // Cancel the token before stopping the process
+                state.StoppedTokenSource?.Cancel();
+
+                await Task.WhenAll(state.Tasks);
+                state.ResetStoppedTokenSource();
+            }
         }
 
         private Task KillRunningProcesses(IDictionary<string, Service> services)
         {
-            static Task KillProcessAsync(Service service)
-            {
-                if (service.Items.TryGetValue(typeof(ProcessInfo), out var stateObj) && stateObj is ProcessInfo state)
-                {
-                    // Cancel the token before stopping the process
-                    state.StoppedTokenSource.Cancel();
-
-                    return Task.WhenAll(state.Tasks);
-                }
-                return Task.CompletedTask;
-            }
 
             var index = 0;
             var tasks = new Task[services.Count];
@@ -541,7 +571,13 @@ namespace Microsoft.Tye.Hosting
 
             public Task[] Tasks { get; }
 
-            public CancellationTokenSource StoppedTokenSource { get; } = new CancellationTokenSource();
+            public CancellationTokenSource StoppedTokenSource { get; private set; } = new CancellationTokenSource();
+            public Action? Start { get; internal set; }
+            internal void ResetStoppedTokenSource()
+            {
+                StoppedTokenSource.Dispose();
+                StoppedTokenSource = new CancellationTokenSource();
+            }
         }
 
         private class ProjectGroup

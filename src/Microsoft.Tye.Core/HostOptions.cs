@@ -12,6 +12,8 @@ namespace Microsoft.Tye
 
         public List<string> Debug { get; } = new List<string>();
 
+        public List<string> NoStart { get; } = new List<string>();
+
         public string? DistributedTraceProvider { get; set; }
 
         public bool Docker { get; set; }
