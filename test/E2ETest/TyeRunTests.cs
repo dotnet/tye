@@ -1046,6 +1046,44 @@ services:
 
         [ConditionalFact]
         [SkipIfDockerNotRunning]
+        public async Task MultiRepo_WorksWithCloningAndDockerfile()
+        {
+            using var projectDirectory = TempDirectory.Create(preferUserDirectoryOnMacOS: true);
+
+            var content = @"
+name: tye-docker-sample
+services:
+- name: minapp
+  repository: https://github.com/OlegKarasik/tye-docker-sample";
+
+            var yamlFile = Path.Combine(projectDirectory.DirectoryPath, "tye.yaml");
+            var projectFile = new FileInfo(yamlFile);
+            await File.WriteAllTextAsync(yamlFile, content);
+
+            // Debug targets can be null if not specified, so make sure calling host.Start does not throw.
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                var appUri = await GetServiceUrl(client, uri, "minapp");
+
+                var appResponse = await client.GetAsync(appUri);
+
+                Assert.True(appResponse.IsSuccessStatusCode);
+            });
+        }
+
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
         public async Task DockerFileTest()
         {
             using var projectDirectory = CopyTestProjectDirectory("dockerfile");
