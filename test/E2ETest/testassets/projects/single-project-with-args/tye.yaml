@@ -1,0 +1,7 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: single-project-with-args
+services:
+- name: test-project-with-args
+  project: test-project-with-args/test-project-with-args.csproj
+  args: Argument1 Argument2
