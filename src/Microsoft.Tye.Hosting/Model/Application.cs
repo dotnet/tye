@@ -50,9 +50,10 @@ namespace Microsoft.Tye.Hosting.Model
                 // Inject normal configuration
                 foreach (var pair in service.Description.Configuration)
                 {
+                   
                     if (pair.Value is object)
                     {
-                        set(pair.Name, pair.Value);
+                        set(pair.Name, TokenReplacement.ReplaceEnvironmentValues(pair.Value, bindings));
                     }
                     else if (pair.Source is object)
                     {

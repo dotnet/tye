@@ -1345,6 +1345,41 @@ services:
             });
         }
 
+        [ConditionalFact]
+        [SkipIfDockerNotRunning]
+        public async Task RunWithDotnetEnvVarsSelectorForAnotherServiceReplacement()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("environment-variable-replacement");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions { Docker = true }, async (app, uri) =>
+            {
+                var backendUri = await GetServiceUrl(client, uri, "test-project");
+
+                var backendResponse = await client.GetAsync(backendUri);
+                Assert.True(backendResponse.IsSuccessStatusCode);
+
+                var response = await backendResponse.Content.ReadAsStringAsync();
+                var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(response);
+               
+                Assert.Contains(new KeyValuePair<string, string>("REDIS_CONNECTIONSTRING", "host.docker.internal:6379:mysupersecureP@ssword"), dict);
+                Assert.Contains(new KeyValuePair<string, string>("DOTNET_ENVIRONMENT", "dev"), dict);
+                Assert.Contains(new KeyValuePair<string, string>("ASPNETCORE_ENVIRONMENT", "dev"), dict);
+            });
+        }
+
+        
         private async Task<string> GetServiceUrl(HttpClient client, Uri uri, string serviceName)
         {
             var serviceResult = await client.GetStringAsync($"{uri}api/v1/services/{serviceName}");
