@@ -1,0 +1,23 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+name: dotnet-env-replacement
+dashboardPort: 8090
+services:
+- name: test-project
+  project: test-project/test-project.csproj
+  env:
+    - name: DOTNET_ENVIRONMENT
+      value: "dev"
+    - name: ASPNETCORE_ENVIRONMENT
+      value: "dev"
+    - name: REDIS_CONNECTIONSTRING
+      value: "${service:redis:connectionString}"
+- name: redis
+  image: redis
+  env:
+    - name: RANDOMPASSWORD
+      value: "mysupersecureP@ssword"
+  bindings:
+    - port: 6379
+      connectionString: ${host}:${port}:${env:RANDOMPASSWORD} #I know not a real password, but I just want to prove the relacement
+  
