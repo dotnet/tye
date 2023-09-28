@@ -15,6 +15,7 @@
       The Microsoft.Build.Locator package takes care of dynamically loading these assemblies
       at runtime. We don't need/want to ship them, just to have them as references.
     -->
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.0.12" />
     <PackageReference Include="Microsoft.Build" Version="17.3.2" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Framework" Version="17.3.2" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.5.5" />
@@ -29,6 +30,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="testassets\projects\dapr-function-app\function\HttpTrigger.cs" />
+    <Compile Include="testassets\projects\dapr-function-app\HttpTrigger.cs" />
+    <Compile Include="testassets\projects\dapr-function-app\Properties\HttpTrigger.cs" />
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Compile Remove="testassets\**\*" />
     <None Remove="testassets\generate\apps-with-ingress.1.18.yaml" />

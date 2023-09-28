@@ -1,0 +1,8 @@
+name: dapr_test_application
+extensions:
+- name: dapr
+  config: tracing
+  log-level: debug
+services:
+- name: dapr-test-project
+  azureFunction: function/

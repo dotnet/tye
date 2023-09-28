@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.Tye
 {
-    public class AzureFunctionServiceBuilder : ServiceBuilder
+    public class AzureFunctionServiceBuilder : LaunchedServiceBuilder
     {
         public AzureFunctionServiceBuilder(string name, string path, ServiceSource source)
             : base(name, source)

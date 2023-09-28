@@ -28,7 +28,8 @@ namespace Microsoft.Tye.Extensions.Dapr
                 // For local run, enumerate all projects, and add services for each dapr proxy.
                 var projects = context.Application.Services.OfType<ProjectServiceBuilder>().Cast<LaunchedServiceBuilder>();
                 var executables = context.Application.Services.OfType<ExecutableServiceBuilder>().Cast<LaunchedServiceBuilder>();
-                var services = projects.Concat(executables).ToList();
+                var functions = context.Application.Services.OfType<AzureFunctionServiceBuilder>().Cast<LaunchedServiceBuilder>();
+                var services = projects.Concat(executables).Concat(functions).ToList();
 
                 foreach (var project in services)
                 {
