@@ -1,10 +1,6 @@
 # tye application configuration file
 # read all about it at https://github.com/dotnet/tye
 name: dotnet-env-vars
-extensions:
-  - name: dapr
-    config: tracing
-    log-level: debug
 dashboardPort: 8005
 services:
 - name: test-project
