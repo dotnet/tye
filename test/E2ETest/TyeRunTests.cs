@@ -82,12 +82,13 @@ namespace E2ETest
             });
         }
 
-        [Fact(Skip = "Need to figure out how to install func before running")]
+        //[Fact(Skip = "Need to figure out how to install func before running")]
+        [Fact]
         public async Task FrontendBackendAzureFunctionTest()
         {
             // Install to directory
             using var tmp = TempDirectory.Create();
-            await ProcessUtil.RunAsync("npm", "install azure-functions-core-tools@3`", workingDirectory: tmp.DirectoryPath);
+            //await ProcessUtil.RunAsync("npm", "install azure-functions-core-tools@3`", workingDirectory: tmp.DirectoryPath);
             using var projectDirectory = CopyTestProjectDirectory("azure-functions");
 
             var content = @$"
@@ -97,7 +98,6 @@ name: frontend-backend
 services:
 - name: backend
   azureFunction: backend/
-  pathToFunc: {tmp.DirectoryPath}/node_modules/azure-functions-core-tools/bin/func.dll
 - name: frontend
   project: frontend/frontend.csproj";
 
@@ -124,6 +124,40 @@ services:
 
                 Assert.True(backendResponse.IsSuccessStatusCode);
                 Assert.True(frontendResponse.IsSuccessStatusCode);
+            });
+        }
+        [Fact]
+        public async Task DaprAzureFunctionTest()
+        {
+            using var projectDirectory = CopyTestProjectDirectory("dapr-function-app");
+
+            var projectFile = new FileInfo(Path.Combine(projectDirectory.DirectoryPath, "tye.yaml"));
+            var outputContext = new OutputContext(_sink, Verbosity.Debug);
+            var application = await ApplicationFactory.CreateAsync(outputContext, projectFile);
+            
+            await application.ProcessExtensionsAsync(new HostOptions(), outputContext, ExtensionContext.OperationKind.LocalRun);
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (a, b, c, d) => true,
+                AllowAutoRedirect = false
+            };
+
+            var client = new HttpClient(new RetryHandler(handler));
+
+            await RunHostingApplication(application, new HostOptions(), async (app, uri) =>
+            {
+                //The backend calls the Function app via Dapr InvokeMethod. So test that that func has a sidecar, and being proxied.
+                var backendUri = await GetServiceUrl(client, uri, "dapr-test-project");
+                
+                //Wait for the services to start
+                await Task.Delay(10000);
+                
+                var backendResponse = await client.GetAsync(backendUri);
+                
+                Assert.True(backendResponse.IsSuccessStatusCode);
+                
+                var responseContent = await backendResponse.Content.ReadAsStringAsync();
+                Assert.Contains("Welcome to Azure Functions!", responseContent);
             });
         }
 

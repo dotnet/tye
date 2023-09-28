@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.Tye
 {
-    public class AzureFunctionServiceBuilder : ServiceBuilder
+    public class AzureFunctionServiceBuilder : LaunchedServiceBuilder
     {
         public AzureFunctionServiceBuilder(string name, string path, ServiceSource source)
             : base(name, source)
@@ -14,12 +14,10 @@ namespace Microsoft.Tye
             FunctionPath = path;
         }
 
-        public int Replicas { get; set; } = 1;
         public string? Args { get; set; }
         public string FunctionPath { get; }
         public string? FuncExecutablePath { get; set; }
         public string? ProjectFile { get; set; }
         public string? AzureFunctionsVersion { get; set; }
-        public List<EnvironmentVariableBuilder> EnvironmentVariables { get; } = new List<EnvironmentVariableBuilder>();
     }
 }

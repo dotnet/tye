@@ -253,6 +253,10 @@ namespace E2ETest
             }
         }
 
+         
+ 
+        
+        
         [ConditionalFact]
         [SkipIfDockerNotRunning]
         public async Task Generate_ConnectionStringDependency()
