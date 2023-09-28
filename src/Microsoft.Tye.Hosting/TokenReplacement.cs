@@ -23,11 +23,13 @@ namespace Microsoft.Tye.Hosting
                     throw new InvalidOperationException($"No available substitutions found for token '{token}'.");
                 }
 
-                text = selectedBinding.Value.Item2;
-                var selectedBindingtokens = GetTokens(selectedBinding.Value.Item2);
+                text = selectedBinding.Value.text;
+                
+                var selectedBindingtokens = GetTokens(selectedBinding.Value.text);
+                
                 foreach (var bindingtoken in selectedBindingtokens)
                 {
-                    var replacement = ReplaceValues(bindingtoken,selectedBinding.Value.Item1, bindings);
+                    var replacement = ReplaceValues(bindingtoken,selectedBinding.Value.binding, bindings);
                     text = text.Replace(bindingtoken, replacement);
                 }
 
@@ -35,6 +37,7 @@ namespace Microsoft.Tye.Hosting
 
             return text;
         }
+        
         public static string ReplaceValues(string text, EffectiveBinding binding, List<EffectiveBinding> bindings)
         {
             var tokens = GetTokens(text);
@@ -82,7 +85,7 @@ namespace Microsoft.Tye.Hosting
             return tokens;
         }
         
-         private static (EffectiveBinding, string?)? ResolveEnvironmentToken(string token, List<EffectiveBinding> bindings)
+        private static (EffectiveBinding binding, string? text)? ResolveEnvironmentToken(string token, List<EffectiveBinding> bindings)
         {
             // The language we support for tokens is meant to be pretty DRY. It supports a few different formats:
             //

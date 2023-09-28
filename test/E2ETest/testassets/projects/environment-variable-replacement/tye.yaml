@@ -13,11 +13,11 @@ services:
     - name: REDIS_CONNECTIONSTRING
       value: "${service:redis:connectionString}"
 - name: redis
-  image: redis
+  image: alpine # just need a tiny image to make the test run faster
   env:
     - name: RANDOMPASSWORD
       value: "mysupersecureP@ssword"
   bindings:
     - port: 6379
-      connectionString: ${host}:${port}:${env:RANDOMPASSWORD} #I know not a real password, but I just want to prove the relacement
+      connectionString: ${host}:${port}:${env:RANDOMPASSWORD} #I know not a real password, but I just want to prove the replacement
   
