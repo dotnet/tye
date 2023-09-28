@@ -16,7 +16,7 @@ services:
   image: alpine # just need a tiny image to make the test run faster
   env:
     - name: RANDOMPASSWORD
-      value: "mysupersecureP@ssword"
+      value: "pass@word1"
   bindings:
     - port: 6379
       connectionString: ${host}:${port}:${env:RANDOMPASSWORD} #I know not a real password, but I just want to prove the replacement
