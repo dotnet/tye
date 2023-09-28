@@ -148,9 +148,15 @@ services:
             {
                 var backendUri = await GetServiceUrl(client, uri, "dapr-test-project");
 
+                await Task.Delay(10000);
+                
                 var backendResponse = await client.GetAsync(backendUri);
-
+                
                 Assert.True(backendResponse.IsSuccessStatusCode);
+                
+                //The backend calls the Function app via Dapr InvokeMethod. So test that that func has a sidecar, and being proxied. 
+                var responseContent = await backendResponse.Content.ReadAsStringAsync();
+                Assert.Contains("Welcome to Azure Functions!", responseContent);
             });
         }
 

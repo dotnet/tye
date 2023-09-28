@@ -4,5 +4,7 @@ extensions:
   config: tracing
   log-level: debug
 services:
-- name: dapr-test-project
+- name: dapr-function-app
   azureFunction: function/
+- name: dapr-test-project
+  project: dapr/dapr.csproj
