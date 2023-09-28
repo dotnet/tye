@@ -22,19 +22,18 @@ namespace Microsoft.Tye.Hosting
                 {
                     throw new InvalidOperationException($"No available substitutions found for token '{token}'.");
                 }
-
+                
+                if (selectedBinding.Value.text == null) continue;
                 text = selectedBinding.Value.text;
-                
+
                 var selectedBindingtokens = GetTokens(selectedBinding.Value.text);
-                
                 foreach (var bindingtoken in selectedBindingtokens)
                 {
-                    var replacement = ReplaceValues(bindingtoken,selectedBinding.Value.binding, bindings);
+                    var replacement = ReplaceValues(bindingtoken, selectedBinding.Value.binding, bindings);
                     text = text.Replace(bindingtoken, replacement);
                 }
 
             }
-
             return text;
         }
         
@@ -117,12 +116,6 @@ namespace Microsoft.Tye.Hosting
                     "connectionString" => binding.ConnectionString,
                     _ => null,
                 };
-            }
-
-            static string? GetEnvironmentVariable(EffectiveBinding binding, string key)
-            {
-                var envVar = binding.Env.FirstOrDefault(e => string.Equals(e.Name, key, StringComparison.OrdinalIgnoreCase));
-                return envVar?.Value;
             }
         }
 
