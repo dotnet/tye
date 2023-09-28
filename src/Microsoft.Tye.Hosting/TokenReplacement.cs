@@ -12,6 +12,29 @@ namespace Microsoft.Tye.Hosting
 {
     internal static class TokenReplacement
     {
+        public static string ReplaceEnvironmentValues(string text, List<EffectiveBinding> bindings)
+        {
+            var tokens = GetTokens(text);
+            foreach (var token in tokens)
+            {
+                var selectedBinding = ResolveEnvironmentToken(token, bindings);
+                if (selectedBinding is null)
+                {
+                    throw new InvalidOperationException($"No available substitutions found for token '{token}'.");
+                }
+
+                text = selectedBinding.Value.Item2;
+                var selectedBindingtokens = GetTokens(selectedBinding.Value.Item2);
+                foreach (var bindingtoken in selectedBindingtokens)
+                {
+                    var replacement = ReplaceValues(bindingtoken,selectedBinding.Value.Item1, bindings);
+                    text = text.Replace(bindingtoken, replacement);
+                }
+
+            }
+
+            return text;
+        }
         public static string ReplaceValues(string text, EffectiveBinding binding, List<EffectiveBinding> bindings)
         {
             var tokens = GetTokens(text);
@@ -57,6 +80,47 @@ namespace Microsoft.Tye.Hosting
             }
 
             return tokens;
+        }
+        
+         private static (EffectiveBinding, string?)? ResolveEnvironmentToken(string token, List<EffectiveBinding> bindings)
+        {
+            // The language we support for tokens is meant to be pretty DRY. It supports a few different formats:
+            //
+            // - ${host}: only allowed inside a connection string, it can refer to the binding.
+            // - ${env:SOME_VAR}: allowed anywhere. It can refer to any environment variable defined for *this* service.
+            // - ${service:myservice:port}: allowed anywhere. It can refer to the protocol/host/port of bindings.
+           
+            var keys = token[2..^1].Split(':');
+            if (keys.Length == 3 && keys[0] == "service")
+            {
+                var binding = bindings.FirstOrDefault(b => b.Service == keys[1] && b.Name == null)!;
+                return (binding, GetValueFromBinding(binding, keys[2]));
+            }
+            else if (keys.Length == 4 && keys[0] == "service")
+            {
+                var binding  = bindings.FirstOrDefault(b => b.Service == keys[1] && b.Name == keys[2])!;
+                return (binding, GetValueFromBinding(binding, keys[3]));
+            }
+
+            return null;
+
+            string? GetValueFromBinding(EffectiveBinding binding, string key)
+            {
+                return key switch
+                {
+                    "protocol" => binding.Protocol,
+                    "host" => binding.Host,
+                    "port" => binding.Port?.ToString(CultureInfo.InvariantCulture),
+                    "connectionString" => binding.ConnectionString,
+                    _ => null,
+                };
+            }
+
+            static string? GetEnvironmentVariable(EffectiveBinding binding, string key)
+            {
+                var envVar = binding.Env.FirstOrDefault(e => string.Equals(e.Name, key, StringComparison.OrdinalIgnoreCase));
+                return envVar?.Value;
+            }
         }
 
         private static string? ResolveToken(string token, EffectiveBinding binding, List<EffectiveBinding> bindings)
