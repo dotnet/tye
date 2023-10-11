@@ -119,7 +119,7 @@ namespace Microsoft.Tye.Extensions.Dapr
 
                     if (componentsPath != null)
                     {
-                        proxy.Args += $" --components-path {componentsPath}";
+                        proxy.Args += $" --resources-path {componentsPath}";
                     }
 
                     string? daprConfig = serviceConfiguration?.Config ?? extensionConfiguration?.Config;
