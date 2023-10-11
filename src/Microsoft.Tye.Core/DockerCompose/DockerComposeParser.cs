@@ -273,6 +273,8 @@ namespace Tye.DockerCompose
                         break;
                     case "tty":
                         break;
+                    case "dependsOn":
+                        break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
