@@ -2,6 +2,8 @@ name: VotingSample
 services:
 - name: vote
   project: vote.csproj
+  dependsOn:
+    - redis
 - name: worker
   include: ../worker/tye.yaml
 - name: redis
