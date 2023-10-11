@@ -46,5 +46,7 @@ namespace Microsoft.Tye.ConfigModel
         public string? Version { get; set; }
         public string? Architecture { get; set; }
         public string? CloneDirectory { get; internal set; }
+        
+        public List<string> DependsOn { get; set; } = new List<string>();
     }
 }

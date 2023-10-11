@@ -164,6 +164,13 @@ namespace Tye.Serialization
                     case "cloneDirectory":
                         service.CloneDirectory = YamlParser.GetScalarValue(key, child.Value);
                         break;
+                    case "dependsOn":
+                        if (child.Value.NodeType != YamlNodeType.Sequence)
+                        {
+                            throw new TyeYamlException(child.Value.Start, CoreStrings.FormatExpectedYamlSequence(key));
+                        }
+                        HandleDependencies((child.Value as YamlSequenceNode)!, service.DependsOn);
+                        break;
                     default:
                         throw new TyeYamlException(child.Key.Start, CoreStrings.FormatUnrecognizedKey(key));
                 }
@@ -576,6 +583,15 @@ namespace Tye.Serialization
             {
                 var tag = YamlParser.GetScalarValue(child);
                 tags.Add(tag);
+            }
+        }
+        
+        private static void HandleDependencies(YamlSequenceNode yamlSequenceNode, List<string> dependencies)
+        {
+            foreach (var child in yamlSequenceNode!.Children)
+            {
+                var dependsOn = YamlParser.GetScalarValue(child);
+                dependencies.Add(dependsOn);
             }
         }
 
