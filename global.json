@@ -3,7 +3,7 @@
     "allowPrerelease": true
   },
   "tools": {
-    "dotnet": "8.0.100-rtm.23506.1",
+    "dotnet": "8.0.100",
     "runtimes": {
       "dotnet": [
         "6.0.0"
@@ -14,6 +14,6 @@
     }
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "9.0.0-beta.23563.1"
+    "Microsoft.DotNet.Arcade.Sdk": "9.0.0-beta.23564.3"
   }
 }
