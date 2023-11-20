@@ -11,6 +11,7 @@ namespace Microsoft.Tye
         public bool Dashboard { get; set; }
 
         public List<string> Debug { get; } = new List<string>();
+        public List<string> Watch { get; } = new List<string>();
 
         public string? DistributedTraceProvider { get; set; }
 
@@ -25,7 +26,5 @@ namespace Microsoft.Tye
         public int? Port { get; set; }
 
         public Verbosity LogVerbosity { get; set; } = Verbosity.Debug;
-
-        public bool Watch { get; set; }
     }
 }

@@ -7,7 +7,7 @@
 ## Synopsis
 
 ```text
-tye run [-?|-h|--help] [--no-build] [--port <port>] [--logs <logs>] [--dtrace <trace>] [--metrics <metrics>] [--debug <service>] [--docker] [--dashboard] [--watch] [-f|--framework <framework>] [--tags <tags>] [-v|--verbosity <Debug|Info|Quiet>] [<PATH>]
+tye run [-?|-h|--help] [--no-build] [--port <port>] [--logs <logs>] [--dtrace <trace>] [--metrics <metrics>] [--debug <service>] [--docker] [--dashboard] [--watch <service>] [-f|--framework <framework>] [--tags <tags>] [-v|--verbosity <Debug|Info|Quiet>] [<PATH>]
 ```
 
 ## Description
@@ -49,7 +49,7 @@ If a directory path is specified, `tye run` will default to using these files, i
 
 - `--debug <service>`
 
-    Waits for debugger attach to service. Specify `*` to wait to attach to all services.
+    Waits for debugger attach to dotnet service. Specify `*` to wait to attach to all dotnet services.
 
 - `--docker`
 
@@ -59,9 +59,9 @@ If a directory path is specified, `tye run` will default to using these files, i
 
     Launch dashboard on run.
 
-- `--watch`
+- `--watch <service>`
 
-    Watches for file changes in all projects that are built by tye. Uses [`dotnet watch`](https://docs.microsoft.com/en-us/aspnet/core/tutorials/dotnet-watch?view=aspnetcore-3.1) to monitor for file changes.
+    Watches for file changes in a dotnet project that is built by tye. Uses [`dotnet watch`](https://docs.microsoft.com/en-us/aspnet/core/tutorials/dotnet-watch?view=aspnetcore-3.1) to monitor for file changes. Specify `*` to watch all dotnet services.
 
 - `-f|--framework <framework>`
 

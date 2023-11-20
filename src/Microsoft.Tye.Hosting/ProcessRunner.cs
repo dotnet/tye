@@ -218,7 +218,7 @@ namespace Microsoft.Tye.Hosting
 
                 application.PopulateEnvironment(service, (k, v) => environment[k] = v);
 
-                if (_options.DebugMode && (_options.DebugAllServices || _options.ServicesToDebug!.Contains(serviceName, StringComparer.OrdinalIgnoreCase)))
+                if (_options.ShouldDebugService(serviceName))
                 {
                     environment["DOTNET_STARTUP_HOOKS"] = typeof(Hosting.Runtime.HostingRuntimeHelpers).Assembly.Location;
                 }
@@ -267,7 +267,7 @@ namespace Microsoft.Tye.Hosting
                     status.StoppingTokenSource = stoppingCts;
                     await using var _ = processInfo.StoppedTokenSource.Token.Register(() => status.StoppingTokenSource.Cancel());
 
-                    if (!_options.Watch)
+                    if (!_options.ShouldWatchService(serviceName))
                     {
                         service.Replicas[replica] = status;
                         service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Added, status));
@@ -327,7 +327,7 @@ namespace Microsoft.Tye.Hosting
 
                                 WriteReplicaToStore(pid.ToString());
 
-                                if (_options.Watch)
+                                if (_options.ShouldWatchService(serviceName))
                                 {
                                     // OnStart/OnStop will be called multiple times for watch.
                                     // Watch will constantly be adding and removing from the list, so only add here for watch.
@@ -346,7 +346,7 @@ namespace Microsoft.Tye.Hosting
                                     service.ReplicaEvents.OnNext(new ReplicaEvent(ReplicaState.Stopped, status));
                                 }
 
-                                if (!_options.Watch)
+                                if (!_options.ShouldWatchService(serviceName))
                                 {
                                     // Only increase backoff when not watching project as watch will wait for file changes before rebuild.
                                     backOff *= 2;
@@ -375,7 +375,7 @@ namespace Microsoft.Tye.Hosting
                             }
                         };
 
-                        if (_options.Watch && (service.Description.RunInfo is ProjectRunInfo runInfo))
+                        if (_options.ShouldWatchService(serviceName) && (service.Description.RunInfo is ProjectRunInfo runInfo))
                         {
                             var projectFile = runInfo.ProjectFile.FullName;
                             var fileSetFactory = new MsBuildFileSetFactory(_logger,
@@ -387,7 +387,7 @@ namespace Microsoft.Tye.Hosting
                             await new DotNetWatcher(_logger)
                                 .WatchAsync(processInfo, fileSetFactory, replica, status.StoppingTokenSource.Token);
                         }
-                        else if (_options.Watch && (service.Description.RunInfo is AzureFunctionRunInfo azureFunctionRunInfo) && !string.IsNullOrEmpty(azureFunctionRunInfo.ProjectFile))
+                        else if (_options.ShouldWatchService(serviceName) && (service.Description.RunInfo is AzureFunctionRunInfo azureFunctionRunInfo) && !string.IsNullOrEmpty(azureFunctionRunInfo.ProjectFile))
                         {
                             var projectFile = azureFunctionRunInfo.ProjectFile;
                             var fileSetFactory = new MsBuildFileSetFactory(_logger,
@@ -408,7 +408,7 @@ namespace Microsoft.Tye.Hosting
                     {
                         _logger.LogError(0, ex, "Failed to launch process for service {ServiceName}", replica);
 
-                        if (!_options.Watch)
+                        if (!_options.ShouldWatchService(serviceName))
                         {
                             // Only increase backoff when not watching project as watch will wait for file changes before rebuild.
                             backOff *= 2;

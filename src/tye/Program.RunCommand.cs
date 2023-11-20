@@ -3,11 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using Microsoft.Tye.Hosting;
 
@@ -56,7 +54,7 @@ namespace Microsoft.Tye
                     {
                         Arity = ArgumentArity.ZeroOrMore,
                     },
-                    Description = "Wait for debugger attach to specific service. Specify \"*\" to wait for all services.",
+                    Description = $"Wait for debugger attach to specific service. Specify {ProcessRunnerOptions.AllServices} to wait for all services.",
                     Required = false
                 },
                 new Option("--docker")
@@ -71,7 +69,11 @@ namespace Microsoft.Tye
                 },
                 new Option("--watch")
                 {
-                    Description = "Watches for code changes for all dotnet projects.",
+                    Argument = new Argument<string[]>("service")
+                    {
+                        Arity = ArgumentArity.ZeroOrMore,
+                    },
+                    Description = $"Watches a specific dotnet service for code changes. Specify {ProcessRunnerOptions.AllServices} to watch for all dotnet services.",
                     Required = false
                 },
                 StandardOptions.Framework,
@@ -111,9 +113,9 @@ namespace Microsoft.Tye
                     LoggingProvider = args.Logs,
                     MetricsProvider = args.Metrics,
                     LogVerbosity = args.Verbosity,
-                    Watch = args.Watch
                 };
                 options.Debug.AddRange(args.Debug);
+                options.Watch.AddRange(args.Watch);
 
                 await application.ProcessExtensionsAsync(options, output, ExtensionContext.OperationKind.LocalRun);
 
@@ -170,7 +172,7 @@ namespace Microsoft.Tye
 
             public Verbosity Verbosity { get; set; }
 
-            public bool Watch { get; set; }
+            public string[] Watch { get; set; } = Array.Empty<string>();
 
             public string Framework { get; set; } = default!;
 
