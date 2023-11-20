@@ -20,6 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Tye.Hosting.Ansi2Html;
 using Microsoft.Tye.Hosting.Diagnostics;
 using Microsoft.Tye.Hosting.Model;
 using Serilog;
@@ -204,6 +205,7 @@ namespace Microsoft.Tye.Hosting
                                     });
                             });
                     services.AddSingleton(application);
+                    services.AddTransient<Converter>();
                 })
                 .Build();
         }

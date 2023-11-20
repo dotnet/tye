@@ -12,13 +12,14 @@
 <table class="table service-table">
     <thead>
         <tr>
+            <th></th>
             <th>Name</th>
             <th>Type</th>
             <th>Source</th>
             <th>Bindings</th>
             <th>Replicas</th>
             <th>Restarts</th>
-            <th>Logs</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -26,7 +27,11 @@
         {
             var logsPath = $"logs/{service.Description.Name}";
             var servicePath = $"services/{service.Description.Name}";
+            var serviceState = service.State;
             <tr @key="service.Description.Name">
+                <td>
+                    <span class="badge @GetServiceStateClass(serviceState)">@serviceState</span>
+                </td>
                 <td>
                     @if(service.ServiceType == ServiceType.External)
                     {
@@ -34,7 +39,7 @@
                     }
                     else
                     {
-                        <a href="@servicePath">@service.Description.Name</a>
+                        <a href="@logsPath">@service.Description.Name</a>
                     }
                 </td>
                 <td>
@@ -91,7 +96,7 @@
                 {
                     <td>@service.Replicas.Count/@service.Description.Replicas</td>
                     <td>@service.Restarts</td>
-                    <td><NavLink href="@logsPath">View</NavLink></td>
+                    <td><NavLink href="@logsPath">Logs</NavLink> | <NavLink href="@servicePath">Metrics</NavLink></td>
                 }
             </tr>
         }
@@ -101,6 +106,16 @@
 @code {
 
     private List<IDisposable> _subscriptions = new List<IDisposable>();
+
+    string GetServiceStateClass(ServiceState serviceState) => serviceState switch
+    {
+        ServiceState.Starting => "badge-secondary",
+        ServiceState.Started => "badge-success",
+        ServiceState.Degraded => "badge-danger",
+        ServiceState.Failed => "badge-warning",
+        ServiceState.Stopped => "badge-light",
+        _ => "badge-dark"
+    };
 
     string GetUrl(ServiceBinding b)
     {
