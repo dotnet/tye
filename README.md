@@ -1,5 +1,7 @@
 # Project Tye
 
+**❗See here for an update about [the end of the tye experiment](https://github.com/dotnet/tye/issues/1622)**
+
 Tye is a developer tool that makes developing, testing, and deploying microservices and distributed applications easier. Project Tye includes a local orchestrator to make developing microservices easier and the ability to deploy microservices to Kubernetes with minimal configuration. 
 
 Tye can:
